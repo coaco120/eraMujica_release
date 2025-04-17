@@ -1,0 +1,456 @@
+﻿;EXP生成
+
+;Ｃ経験
+@CM_SET_EXP_0
+;まず経験自体的有无被判定
+;基本判定値50　よっぽど洁癖じゃなければＣ経験是ある
+LOCAL = 50
+;素質判定値被使用
+LOCAL += CM_TALENT_MAKE("自尊心逆", "被虐", "冲动", "羞耻逆", "道德逆", "洁癖逆", "倒错逆", "Ｃ喜欢", "Ｃ喜欢", "好奇心", "好奇心")
+;大棒棒あ时判定値+50
+SIF PENIS(MASTER)
+	LOCAL += 50
+;矮小だ和判定値-40
+SIF TALENT:MASTER:矮小
+	LOCAL -= 40
+;経験但あ时した场合、量的处理
+IF PERCENT(LOCAL)
+	;基本値是判定値（负に是なりえない）的1/4にRAND:判定値被足す
+	EXP:MASTER:Ｃ経験 = LOCAL/4+RAND:LOCAL
+	;矮小だ和0.75倍
+	SIF TALENT:MASTER:矮小
+		TIMES EXP:MASTER:Ｃ経験, 0.75
+	;Ｃ敏感だ和1.5倍
+	SIF TALENT:MASTER:Ｃ敏感
+		TIMES EXP:MASTER:Ｃ経験, 1.50
+	;阴茎但あって童贞不是场合、腰使だ和1.5倍
+	SIF PENIS(MASTER) && !TALENT:MASTER:童贞 && TALENT:MASTER:腰使
+		TIMES EXP:MASTER:Ｃ経験, 1.50
+	;Ｃ钝感だ和0.75倍
+	SIF TALENT:MASTER:Ｃ钝感
+		TIMES EXP:MASTER:Ｃ経験, 0.75
+	;自慰し容易だ和2倍
+	SIF TALENT:MASTER:自慰し容易
+		TIMES EXP:MASTER:Ｃ経験, 2.00
+ENDIF
+
+;大棒棒ある非童贞的场合、もし0以下になっていれば、1+RAND:3で差し替える
+SIF PENIS(MASTER) && !TALENT:MASTER:童贞 && EXP:MASTER:Ｃ経験 <= 0
+	EXP:MASTER:Ｃ経験 = 1+RAND:3
+
+
+;Ｖ経験
+@CM_SET_EXP_1
+;男人お断り
+SIF TALENT:MASTER:男人
+	RETURN 0
+;处女お断り
+SIF TALENT:MASTER:处女
+	RETURN 0
+;基本判定値30　处女で是ない的で必ず経験あり
+LOCAL = 30
+;素質判定値被使用
+LOCAL += CM_TALENT_MAKE("自尊心逆", "知性逆", "坦率", "羞耻逆", "道德逆", "洁癖逆", "洁癖逆", "Ｖ喜欢", "Ｖ喜欢", "好奇心", "好奇心")
+;大棒棒あ时判定値-30
+SIF PENIS(MASTER)
+	LOCAL -= 30
+;矮小だ和判定値-20
+SIF TALENT:MASTER:矮小
+	LOCAL -= 20
+
+;判定値但10以下那么、1+RAND:20で差し替える
+SIF LOCAL <= 10
+	LOCAL = 1+RAND:20
+
+;↑被基本値和して量的处理
+;基本値是判定値（负に是なりえない）的1/4にRAND:判定値被足す
+EXP:MASTER:Ｖ経験 = LOCAL/4+RAND:LOCAL
+;矮小だ和0.75倍
+SIF TALENT:MASTER:矮小
+	TIMES EXP:MASTER:Ｖ経験, 0.75
+;Ｖ敏感だ和1.5倍
+SIF TALENT:MASTER:Ｖ敏感
+	TIMES EXP:MASTER:Ｖ経験, 1.50;
+;腰使だ和1.5倍
+SIF TALENT:MASTER:腰使
+	TIMES EXP:MASTER:Ｖ経験, 1.50
+;Ｖ钝感だ和0.75倍
+SIF TALENT:MASTER:Ｖ钝感
+	TIMES EXP:MASTER:Ｖ経験, 0.75
+;自慰し容易だ和1.2倍
+SIF TALENT:MASTER:自慰し容易
+	TIMES EXP:MASTER:Ｖ経験, 1.20
+;最后に3で割る
+EXP:MASTER:Ｖ経験 /= 3
+
+;もし0以下になっていれば、1+RAND:3で差し替える
+SIF EXP:MASTER:Ｖ経験 <= 0
+	EXP:MASTER:Ｖ経験 = 1+RAND:3
+
+;Ａ経験
+@CM_SET_EXP_2
+;まず経験自体的有无被判定
+;基本判定値0　よっぽどじゃない和Ａ経験是持ってない
+LOCAL = 0
+;素質判定値被使用
+LOCAL += CM_TALENT_MAKE("自尊心逆", "被虐", "知性", "羞耻逆", "倒错", "洁癖逆", "洁癖逆", "Ａ喜欢", "Ａ喜欢", "好奇心", "好奇心")
+;矮小だ和判定値-60
+SIF TALENT:MASTER:矮小
+	LOCAL -= 60
+;経験但あ时した场合、量的处理
+IF PERCENT(LOCAL)
+	;基本値是判定値（负に是なりえない）的1/4にRAND:判定値被足す
+	EXP:MASTER:Ａ経験 = LOCAL/4+RAND:LOCAL
+	;矮小だ和0.75倍
+	SIF TALENT:MASTER:矮小
+		TIMES EXP:MASTER:Ａ経験, 0.75
+	;敏感だ和1.5倍
+	SIF TALENT:MASTER:Ａ敏感
+		TIMES EXP:MASTER:Ａ経験, 1.50
+	;钝感だ和0.75倍
+	SIF TALENT:MASTER:Ａ钝感
+		TIMES EXP:MASTER:Ａ経験, 0.75
+	;自慰し容易だ和2倍
+	SIF TALENT:MASTER:自慰し容易
+		TIMES EXP:MASTER:Ａ経験, 2.00
+	;最后に4で割る
+	EXP:MASTER:Ａ経験 /= 4
+ENDIF
+
+;Ｂ経験
+@CM_SET_EXP_3
+;まず経験自体的有无被判定
+;基本判定値50　わり和Ｂ経験是ある
+LOCAL = 50
+;素質判定値被使用
+LOCAL += CM_TALENT_MAKE("自尊心逆", "被虐", "坦率", "羞耻逆", "道德逆", "洁癖逆", "洁癖逆", "Ｂ喜欢", "Ｂ喜欢", "好奇心", "好奇心")
+;矮小だ和判定値-30
+SIF TALENT:MASTER:矮小
+	LOCAL -= 30
+;男人だ和判定値-30
+SIF TALENT:MASTER:男人
+	LOCAL -= 30
+;経験但あ时した场合、量的处理
+IF PERCENT(LOCAL)
+	;基本値是判定値（负に是なりえない）的1/4にRAND:判定値被足す
+	EXP:MASTER:Ｂ経験 = LOCAL/4+RAND:LOCAL
+	;矮小だ和0.75倍
+	SIF TALENT:MASTER:矮小
+		TIMES EXP:MASTER:Ｂ経験, 0.75
+	;敏感だ和1.5倍
+	SIF TALENT:MASTER:Ｂ敏感
+		TIMES EXP:MASTER:Ｂ経験, 1.50
+	;钝感だ和0.75倍
+	SIF TALENT:MASTER:Ｂ钝感
+		TIMES EXP:MASTER:Ｂ経験, 0.75
+	;自慰し容易だ和2倍
+	SIF TALENT:MASTER:自慰し容易
+		TIMES EXP:MASTER:Ｂ経験, 2.00
+	;最后に男人那么6、そうでなければ2で割る
+	EXP:MASTER:Ｂ経験 /= 2+(TALENT:MASTER:男人*4)
+ENDIF
+
+;绝顶経験
+@CM_SET_EXP_4
+;男人
+IF TALENT:MASTER:男人
+	;部位経験的和被70～100倍にし、100で割る但、Ｃ経験被超えない
+	EXP:MASTER:绝顶経験 = MIN(SUMARRAY(EXP:MASTER:0, 0, 4)*(70+RAND:31)/100, EXP:MASTER:Ｃ経験)
+;扶她
+ELSEIF TALENT:MASTER:男人
+	;部位経験的和被70～100倍にし、100で割る
+	EXP:MASTER:绝顶経験 = SUMARRAY(EXP:MASTER:0, 0, 4)*(70+RAND:31)/100
+;女人
+ELSE
+	;部位経験的和被40～80倍にし、100で割る
+	EXP:MASTER:绝顶経験 = SUMARRAY(EXP:MASTER:0, 0, 4)*(40+RAND:41)/100
+ENDIF
+
+;射精経験
+@CM_SET_EXP_5
+;阴茎但なければ0、阴茎但あれば绝顶経験和Ｃ経験的うち少ないほう和同じ
+EXP:MASTER:射精経験 = PENIS(MASTER) ? MIN(EXP:MASTER:绝顶経験, EXP:MASTER:Ｃ経験) # 0
+;ただし非处女で扶她的场合、経験的差に应じて绝顶数より射精数但少なくなったり
+SIF TALENT:MASTER:扶她 && !TALENT:MASTER:处女
+	EXP:MASTER:射精経験 = EXP:MASTER:射精経験*(EXP:MASTER:Ｃ経験)/(EXP:MASTER:Ｃ経験+EXP:MASTER:Ｖ経験)
+
+;喷乳経験
+@CM_SET_EXP_6
+;生成されない
+
+;性交経験
+@CM_SET_EXP_7
+;男人・扶她处女
+IF TALENT:MASTER:男人 || (TALENT:MASTER:扶她 && TALENT:MASTER:处女)
+	;童贞お断りなんで^^;
+	IF !TALENT:MASTER:童贞
+		;Ｃ経験被0～100倍にし、200で割る但、射精経験被超えない
+		EXP:MASTER:性交経験 = MIN(EXP:MASTER:Ｃ経験*(RAND:100)/200, EXP:MASTER:射精経験)
+		;もし0以下になっていれば、1+RAND:2で差し替える
+		SIF EXP:MASTER:性交経験 <= 0
+			EXP:MASTER:性交経験 = 1+RAND:2
+	ENDIF
+;女人・扶她童贞
+ELSEIF !TALENT:MASTER:男人 || (TALENT:MASTER:扶她 && TALENT:MASTER:童贞)
+	;处女和かめんどくさい只でしょ
+	IF !TALENT:MASTER:处女
+		;Ｖ経験被80～100倍にし、100で割る
+		EXP:MASTER:性交経験 = EXP:MASTER:Ｖ経験*(80+RAND:21)/100
+		;もし0以下になっていれば、1+RAND:2で差し替える
+		SIF EXP:MASTER:性交経験 <= 0
+			EXP:MASTER:性交経験 = 1+RAND:2
+	ENDIF
+;両方使用済み扶她
+ELSE
+	;Ｃ経験被10～100倍、Ｖ経験被80～100倍にし、200で割る
+	EXP:MASTER:性交経験 = ((EXP:MASTER:Ｃ経験*(10+RAND:91))+(EXP:MASTER:Ｖ経験*(80+RAND:21)))/200
+	;もし0以下になっていれば、2+RAND:3で差し替える
+	SIF EXP:MASTER:性交経験 <= 0
+		EXP:MASTER:性交経験 = 2+RAND:3
+ENDIF
+;自慰し容易だ和1/3になる
+SIF TALENT:MASTER:自慰し容易
+	EXP:MASTER:性交経験 /= 3
+
+
+;性知识
+@CM_SET_EXP_8
+;部位経験的和に性交経験的３倍被加え、10で割る
+EXP:MASTER:性知识 = (SUMARRAY(EXP:MASTER:0, 0, 4)+(EXP:MASTER:性交経験*3))/10
+
+;自慰経験
+@CM_SET_EXP_10
+;男人・扶她处女
+IF TALENT:MASTER:男人 || (TALENT:MASTER:扶她 && TALENT:MASTER:处女)
+	;部位経験的和和射精経験的うち、少ない方から性交経験被引いたも的
+	EXP:MASTER:自慰経験 = MIN(SUMARRAY(EXP:MASTER:0, 0, 4), EXP:MASTER:射精経験)-EXP:MASTER:性交経験
+ELSE
+	;部位経験的和から性交経験被引いたも的
+	EXP:MASTER:自慰経験 = SUMARRAY(EXP:MASTER:0, 0, 4)-EXP:MASTER:性交経験
+ENDIF
+
+
+;调教自慰経験
+@CM_SET_EXP_11
+;调教要素な的で生成されない
+
+;放尿経験
+@CM_SET_EXP_12
+;调教要素な的で生成されない
+
+;被写経験
+@CM_SET_EXP_13
+;调教要素な的で生成されない
+
+;精液経験
+@CM_SET_EXP_20
+;处女でも男人でもない场合
+IF !TALENT:MASTER:男人 && !TALENT:MASTER:处女
+	;性交経験被100～200倍にし、100で割る。
+	EXP:MASTER:精液経験 = EXP:MASTER:性交経験*(100+RAND:101)/100
+	;舌使だ和1.2倍
+	SIF TALENT:MASTER:舌使
+		TIMES EXP:MASTER:精液経験, 1.20
+	;灵巧的指尖だ和1.2倍
+	SIF TALENT:MASTER:灵巧的指尖
+		TIMES EXP:MASTER:精液経験, 1.20
+	;献身的だ和1.2倍
+	SIF TALENT:MASTER:献身的
+		TIMES EXP:MASTER:精液経験, 1.20
+	;非童贞扶她的场合半分に做
+	EXP:MASTER:精液経験 = TALENT:MASTER:扶她 && !TALENT:MASTER:童贞 ? EXP:MASTER:精液経験/2 # EXP:MASTER:精液経験
+;男人で是ない＝处女的场合
+ELSEIF !TALENT:MASTER:男人
+	;まず経験自体的有无被判定
+	;基本判定値-20　处女奉仕是あまり发生不做
+	LOCAL = -20
+	;素質判定値被使用
+	LOCAL += CM_TALENT_MAKE("自尊心逆", "被虐逆", "坦率", "羞耻逆", "攻击逆", "洁癖逆", "洁癖逆", "倒错", "倒错", "好奇心", "好奇心")
+	;矮小だ和判定値-60
+	SIF TALENT:MASTER:矮小
+		LOCAL -= 60
+	;経験但あ时した场合、量的处理
+	IF PERCENT(LOCAL)
+		;基本値是判定値（负に是なりえない）的1/4にRAND:判定値被足す
+		EXP:MASTER:精液経験 = LOCAL/4+RAND:LOCAL
+		;舌使だ和1.5倍
+		SIF TALENT:MASTER:舌使
+			TIMES EXP:MASTER:精液経験, 1.50
+		;灵巧的指尖だ和1.5倍
+		SIF TALENT:MASTER:灵巧的指尖
+			TIMES EXP:MASTER:精液経験, 1.50
+		;献身的だ和1.5倍
+		SIF TALENT:MASTER:献身的
+			TIMES EXP:MASTER:精液経験, 1.50
+		;被动だ和0.75倍
+		SIF TALENT:MASTER:被动
+			TIMES EXP:MASTER:精液経験, 0.75
+		;污臭敏感だ和0.75倍
+		SIF TALENT:MASTER:污臭敏感
+			TIMES EXP:MASTER:精液経験, 0.75
+		;最后に20で割る
+		EXP:MASTER:精液経験 /= 20
+		;もし0以下になっていれば、1+RAND:2で差し替える
+		SIF EXP:MASTER:精液経験 <= 0
+			EXP:MASTER:精液経験 = 1+RAND:2
+	ENDIF
+ENDIF
+
+;奉仕快乐経験
+@CM_SET_EXP_21
+;调教要素な的で生成されない
+
+;口淫経験
+@CM_SET_EXP_22
+;精液経験から性交経験被引いたも的被0～200倍にし、150+灵巧的指尖*50-舌使*50で割る
+EXP:MASTER:口淫経験 = (EXP:MASTER:精液経験 - EXP:MASTER:性交経験)*RAND:201/(150+(TALENT:MASTER:灵巧的指尖*50)-(TALENT:MASTER:舌使*50))
+;もし0以下になっていれば、0で差し替える
+SIF EXP:MASTER:口淫経験 <= 0
+	EXP:MASTER:口淫経験 = 0
+
+;手淫経験
+@CM_SET_EXP_23
+;精液経験から性交経験和口淫経験的8割被引いたも的被100～150倍にし、100で割る
+EXP:MASTER:手淫経験 = (EXP:MASTER:精液経験 - EXP:MASTER:性交経験 - (EXP:MASTER:口淫経験*8/10))*(100+RAND:51)/100
+;もし0以下になっていれば、0で差し替える
+SIF EXP:MASTER:手淫経験 <= 0
+	EXP:MASTER:手淫経験 = 0
+
+;道具使用経験
+@CM_SET_EXP_24
+;生成率是一律20％。ただし道具使被持っている场合是100％
+IF !RAND:5 || TALENT:MASTER:道具使
+	;生成量是性交経験+手淫経験+口淫経験的和被、男人是２倍、女人是半分にし、そ的1/10（道具使是1/4）
+	EXP:MASTER:道具使用経験 = (EXP:MASTER:性交経験+EXP:MASTER:口淫経験+EXP:MASTER:手淫経験*(TALENT:MASTER:男人+1))/(!PENIS(MASTER)+1)/(10-(TALENT:MASTER:道具使*6))
+ENDIF
+
+;接吻経験
+@CM_SET_EXP_25
+;性交経験但ある
+IF EXP:MASTER:性交経験
+	;性交経験*2和10的うち大きい方直到で随机
+	EXP:MASTER:接吻経験 = RAND:(MAX(EXP:MASTER:性交経験*2, 10))
+;性交経験但ない
+ELSE
+	;基礎确率50％、矮小那么20％
+	LOCAL = TALENT:MASTER:矮小 ? 20 # 50
+	LOCAL += TALENT:MASTER:亲近容易-TALENT:MASTER:难以接近*30
+	SIF PERCENT(LOCAL)
+		EXP:MASTER:接吻経験 = RAND:(3*(TALENT:MASTER:亲近容易-TALENT:MASTER:难以接近)+5)
+ENDIF
+
+;会话経験
+@CM_SET_EXP_26
+;调教要素な的で生成されない
+
+;痛苦快乐経験
+@CM_SET_EXP_30
+;调教要素な的で生成されない
+
+;恥辱快乐経験
+@CM_SET_EXP_31
+;调教要素な的で生成されない
+;たまに生成されても面白いけど
+
+;爱情経験
+@CM_SET_EXP_32
+;调教要素な的で生成されない
+
+;百合経験
+@CM_SET_EXP_40
+;扶她的场合
+IF TALENT:MASTER:扶她
+	;性交経験から精液経験被引いたも的か、射精経験から自慰経験被引いたも的的うち、多い方
+	EXP:MASTER:百合経験 = MAX(EXP:MASTER:性交経験-EXP:MASTER:精液経験, EXP:MASTER:射精経験-EXP:MASTER:自慰経験, 0)
+;女人で、恐男但ある场合
+ELSEIF TALENT:MASTER:恐男 && !TALENT:MASTER:男人
+	;性交経験和精液経験被百合経験移动做
+	EXP:MASTER:百合経験 = (EXP:MASTER:性交経験+EXP:MASTER:精液経験)/2
+	;处女那么和もに0に。处女不是那么RAND:3で補う
+	EXP:MASTER:性交経験 = TALENT:MASTER:处女 ? 0 # RAND:3
+	EXP:MASTER:精液経験 = EXP:MASTER:性交経験
+;女人で、双性恋但ある场合
+ELSEIF TALENT:MASTER:双性恋 && !TALENT:MASTER:男人
+	LOCAL = -20
+	;素質判定値被使用
+	LOCAL += CM_TALENT_MAKE("同性爱", "同性爱", "Ｂ喜欢", "倒错", "好奇心", "洁癖逆")
+	SIF PERCENT(LOCAL)
+		EXP:MASTER:百合経験 = (RAND:LOCAL)/5
+ENDIF
+
+;ＢＬ経験
+@CM_SET_EXP_41
+;调教要素な的で生成されない
+
+;异常経験
+@CM_SET_EXP_50
+;完全に随机（2％）で１ついてくる
+SIF !RAND:50
+	EXP:MASTER:异常経験 = 1
+
+;紧缚経験
+@CM_SET_EXP_51
+;调教要素な的で生成されない
+
+;Ｖ扩张経験
+@CM_SET_EXP_52
+;调教要素な的で生成されない
+
+;Ａ扩张経験
+@CM_SET_EXP_53
+;调教要素な的で生成されない
+
+;触手経験
+@CM_SET_EXP_55
+;调教要素な的で生成されない
+
+;屈服経験
+@CM_SET_EXP_60
+;调教要素な的で生成されない
+
+;恐怖経験
+@CM_SET_EXP_61
+;调教要素な的で生成されない
+
+;露出経験
+@CM_SET_EXP_62
+;基本値是自慰経験被半分にして50被引いたも的
+LOCAL = EXP:MASTER:自慰経験/2-50
+;素質判定地是半分にして使う
+LOCAL += CM_TALENT_MAKE("自尊心逆", "被虐", "羞耻", "羞耻", "倒错", "倒错", "洁癖逆", "冲动", "好奇心")/2
+;矮小だ和判定値-30
+SIF TALENT:MASTER:矮小
+	LOCAL -= 30
+;男人だ和判定値-30
+SIF TALENT:MASTER:男人
+	LOCAL -= 30
+;倒错的だ和判定値+50
+SIF TALENT:MASTER:倒错的
+	LOCAL += 30
+;自制的だ和判定値-50
+SIF TALENT:MASTER:自制的
+	LOCAL -= 30
+;経験但あ时した场合、量的处理
+IF PERCENT(LOCAL)
+	;基本値是判定値（负に是なりえない）的1/4にRAND:判定値被足す
+	EXP:MASTER:露出経験 = LOCAL/4+RAND:LOCAL
+	;慎重だ和0.5倍
+	SIF TALENT:MASTER:慎重
+		TIMES EXP:MASTER:露出経験, 0.50
+	;倒错的だ和1.5倍
+	SIF TALENT:MASTER:倒错的
+		TIMES EXP:MASTER:露出経験, 1.50
+	;羞涩だ和0.75倍
+	SIF TALENT:MASTER:羞涩
+		TIMES EXP:MASTER:露出経験, 0.75
+	;无耻だ和1.5倍
+	SIF TALENT:MASTER:无耻
+		TIMES EXP:MASTER:露出経験, 1.50
+	;最后に男人那么10、そうでなければ4で割る
+	EXP:MASTER:露出経験 /= 4+(TALENT:MASTER:男人*6)
+ENDIF
+
+;高潮経験
+@CM_SET_EXP_63
+;设定但面倒すぎた的で调教要素和考えて生成不做
+

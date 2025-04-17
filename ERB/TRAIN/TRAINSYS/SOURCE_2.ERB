@@ -1,0 +1,196 @@
+﻿;────────────────────────────────────
+;接触的ソース（恐怖ソース、欲望、恭顺、害羞、不快、好感度）
+;────────────────────────────────────
+@CALC_SOURCE10
+#DIM 害羞増減
+#DIM 欲望増減
+#DIM 恭顺増減
+#DIM 不快増減
+
+;变数初期化
+害羞増減 = SOURCE:MASTER:接触
+欲望増減 = SOURCE:MASTER:接触
+恭顺増減 = SOURCE:MASTER:接触
+不快増減 = SOURCE:MASTER:接触
+
+;好感度基礎増減
+TFLAG:好感度上升 += MIN(SOURCE:MASTER:接触 / 100, 10)
+
+;顺从和调教度合い被みる
+LOCAL = ABL:MASTER:欲望 * 2 + CFLAG:MASTER:调教等级
+;害羞、恭顺、好感度(M→T)増減
+害羞増減 = 害羞増減 * LINE_CALC(LOCAL, "0→150,18→0,LIMIT/1～150") / 100
+恭顺増減 = 恭顺増減 * LINE_CALC(LOCAL, "0→0,18→100,LIMIT/5～100") / 100
+TFLAG:好感度上升 += LINE_CALC(LOCAL, "0→-200,18→200,LIMIT/-200～200") / 100
+
+;欲望被みる
+LOCAL = 0
+SIF TEQUIP:媚药
+	LOCAL += 1
+SIF TCVAR:MASTER:状态变化 == 5
+	LOCAL += 2
+LOCAL += ABL:MASTER:欲望 * 2 + CFLAG:M好感 / 500
+;欲望、不快、好感度(M→T)増減
+欲望増減 = 欲望増減 * LINE_CALC(LOCAL, "0→10,15→125,LIMIT/10～125") / 100
+不快増減 = 不快増減 * LINE_CALC(LOCAL, "0→120,15→0,LIMIT/1～120") / 100
+TFLAG:好感度上升 += LINE_CALC(LOCAL, "0→-2,15→2,LIMIT/-2～2")
+
+;同性的场合
+IF TALENT:MASTER:男人 && TALENT:男人
+	;ＢＬ气质/百合气质被取得
+	LOCAL = TALENT:男人 ? ABL:MASTER:ＢＬ气质 # ABL:MASTER:百合气质
+	;害羞、欲望、恭顺、不快、好感度(M→T)増減
+	害羞増減 = 害羞増減 * LINE_CALC(LOCAL, "0→100,5→15,LIMIT/15～100")
+	欲望増減 = 欲望増減 * LINE_CALC(LOCAL, "0→0,5→120,LIMIT/0～120")
+	恭顺増減 = 恭顺増減 * LINE_CALC(LOCAL, "0→10,5→100,LIMIT/10～100")
+	不快増減 = 不快増減 * LINE_CALC(LOCAL, "0→200,5→0,LIMIT/1～200")
+	TFLAG:好感度上升 += LINE_CALC(LOCAL, "0→-3,5→5,LIMIT/-3～5")
+	;百合的场合
+	IF !TALENT:男人
+		欲望増減 = 欲望増減 * (5 + ABL:MASTER:百合中毒) / 5
+		不快増減 = 不快増減 * (6 - ABL:MASTER:百合中毒) / 6
+	ENDIF
+ENDIF
+
+;实際的増減处理
+CUP:MASTER:害羞 += 害羞増減
+CUP:MASTER:欲望 += 欲望増減
+CUP:MASTER:恭顺 += 恭顺増減
+CUP:MASTER:不快 += 不快増減
+
+;害羞増減量和同じ只恐怖SOURCE増減
+SOURCE:MASTER:恐怖 += 害羞増減
+
+;────────────────────────────────────
+;情爱的ソース（乐趣ソース、恭顺、欲望、好感度）
+;────────────────────────────────────
+@CALC_SOURCE11
+
+;性別、同性など的处理
+;恐男时情爱SOURCE減衰
+SIF TALENT:MASTER:男人 && TALENT:恐男 && CFLAG:MASTER:调教等级 + CFLAG:调教等级 < 10
+	TIMES SOURCE:MASTER:情爱 , 0.60
+;同性时、ABLにより情爱SOURCE増減
+IF TALENT:MASTER:男人 && TALENT:男人
+	SOURCE:MASTER:情爱 = SOURCE:MASTER:情爱 * (ABL:MASTER:ＢＬ气质 + 1) / 5
+ELSEIF !TALENT:MASTER:男人 && !TALENT:男人
+	SOURCE:MASTER:情爱 = SOURCE:MASTER:情爱 * (ABL:MASTER:百合气质 + 1) / 5
+	SOURCE:MASTER:情爱 = SOURCE:MASTER:情爱 * (ABL:MASTER:百合中毒 + 5) / 5
+ENDIF
+
+;欲望、恭顺、乐趣SOURCE増減
+CUP:MASTER:欲望 += SOURCE:MASTER:情爱 * (ABL:MASTER:欲望 + 5) / 10
+CUP:MASTER:恭顺 += SOURCE:MASTER:情爱 * (ABL:MASTER:顺从 + 5) / 5
+SOURCE:MASTER:乐趣 += SOURCE:MASTER:情爱 * (ABL:MASTER:欲望 + 5) / 10
+
+;好感度(M→T)増減
+TFLAG:好感度上升 += LINE_CALC(SOURCE:MASTER:情爱, "0→0,2500→10,LIMIT/0～10")
+
+;────────────────────────────────────
+;性行动的ソース（不快、抑郁、体力、气力、好感度、経験値追加）
+;────────────────────────────────────
+@CALC_SOURCE12
+
+;欲望但低场合是PALAM:MASTER:不快但あ但る
+SIF PALAM:MASTER:欲望 < 5000
+	CUP:MASTER:不快 += SOURCE:MASTER:性行动 / LINE_CALC(PALAM:MASTER:欲望, "0→1,5000→6,LIMIT/1～6")
+
+;压抑か抵抗但ある场合是PALAM:MASTER:抑郁但上但る
+;ABL:奉仕精神被みる
+SIF TALENT:MASTER:压抑 || TALENT:MASTER:反抗的
+	CUP:MASTER:抑郁 += SOURCE:MASTER:性行动 * LINE_CALC(ABL:MASTER:奉仕精神, "0→180,5→30,LIMIT/30～180") / 500
+
+;性行动SOURCEから修正値被作る
+LOCAL = SOURCE:MASTER:性行动 * (100 - CFLAG:MASTER:调教等级) * (100 - CFLAG:调教等级) / 20000
+LOCAL = LIMIT(LOCAL, 10, 500)
+
+;调教对象体力、气力被消费
+DOWNBASE:MASTER:体力 += 50 + LOCAL * 2 / 3
+DOWNBASE:MASTER:气力 += LOCAL / 2
+
+;性行动但过激、十分な顺从ABL但あ时き好感度(M→T)上升
+LOCAL = MIN(SOURCE:MASTER:性行动, ABL:MASTER:顺从 * 750)
+TFLAG:好感度上升 += LIMIT(LOCAL / 250, 0, 12)
+
+;経験値追加
+TFLAG:経験値上升 += SOURCE:MASTER:性行动 / 200
+
+;────────────────────────────────────
+;疼痛的ソース（达成ソース、恐怖ソース、欲望、痛苦、体力、气力、理性、出血）
+;────────────────────────────────────
+@CALC_SOURCE13
+
+;痛苦。矮小や巨躯时、縛られている时に修正
+CUP:MASTER:痛苦 += SOURCE:MASTER:疼痛 * (5 + TALENT:MASTER:矮小 - TALENT:MASTER:高大) * (SOURCE:MASTER:捆绑 + 10000) / 50000
+
+;达成ソース、惩罚模式中那么痛めつけるこ和で满足		SOURCE:MASTER:反抗和なっていたSQR由来的负的遺産被ケジメ@/L
+SIF TFLAG:惩罚标志 > 0
+	SOURCE:MASTER:达成 += CUP:MASTER:痛苦 * (10 - ABL:MASTER:痛苦中毒) / 50
+
+;恐怖的ソース、耐痛/弱い的影响被受け、受虐气质和痛苦中毒但上但ればほ和んど消え增加
+SOURCE:MASTER:恐怖 += SOURCE:MASTER:疼痛 * (20 - ABL:MASTER:受虐气质 - ABL:MASTER:痛苦中毒 * 2 + TALENT:MASTER:怕疼 * 5 - TALENT:MASTER:耐痛 * 3) / 20
+
+;欲望、受虐气质和痛苦中毒、抖Ｍ、然后调教者的虐待狂被见る
+CUP:MASTER:欲望 += SOURCE:MASTER:疼痛 * (ABL:MASTER:受虐气质 + ABL:MASTER:痛苦中毒 * 2 + TALENT:MASTER:抖Ｍ * 5) * (3 + TALENT:虐待狂) / 60
+
+;疼痛SOURCEから修正値被作る
+LOCAL = 50 + (SOURCE:MASTER:疼痛 - 50) * (50 - CFLAG:MASTER:调教等级 - ABL:MASTER:顺从 * 2) / 200
+;500被突破做和上升しにくくなる处理
+;必要かどうか被见极めるため試験的に注释アウト@これみ
+;B = (A - 500) / 3
+;SIF B > 0
+;	A = 500 + RAND:B
+LOCAL = MAX(LOCAL, 10)
+
+DOWNBASE:MASTER:体力 += LOCAL
+DOWNBASE:MASTER:气力 += LOCAL / 2
+DOWNBASE:MASTER:理性 += LOCAL * (5 + TALENT:MASTER:怕疼 - TALENT:MASTER:耐痛 + TALENT:MASTER:感情丰富 - TALENT:MASTER:缺乏感情) * (900 + RAND:100 + 1) / 7000
+
+;痛苦导致的理性低下的标志
+TFLAG:痛苦导致的理性低下 = 1
+
+;出血
+;疼痛但强和どこかから出血做
+;適当すぎる的で和りあえず静かにしててもらう@これみ
+[SKIPSTART]
+SIF LOCAL > 500 && RAND:3 > 0
+	STAIN:MASTER:口 |= 32
+SIF LOCAL > 500 && RAND:4 > 0
+	STAIN:MASTER:足 |= 32
+SIF LOCAL > 750 && RAND:3 > 0
+	STAIN:MASTER:胸 |= 32
+SIF LOCAL > 750 && RAND:4 > 0
+	STAIN:MASTER:手 |= 32
+[SKIPEND]
+
+;────────────────────────────────────
+;捆绑的ソース（欲望、屈服、痛苦、不快、抑郁、体力、气力）
+;────────────────────────────────────
+@CALC_SOURCE14
+
+;欲望、受虐气质和捆绑中毒、抖Ｍ、然后调教者的虐待狂被见る
+CUP:MASTER:欲望 += SOURCE:MASTER:捆绑 * (ABL:MASTER:受虐气质 + ABL:MASTER:捆绑中毒 * 2 + TALENT:MASTER:抖Ｍ * 5) * (3 + TALENT:虐待狂) / 60
+
+;屈服、顺从被みる
+CUP:MASTER:屈服 += SOURCE:MASTER:捆绑 * (5 + ABL:MASTER:顺从) / 25
+
+;痛苦、顺从被见る
+CUP:MASTER:痛苦 += SOURCE:MASTER:捆绑 * (11 - ABL:MASTER:顺从 * 2) / 50
+;痛苦上升但マイナス那么0に差し替える
+SIF CUP:MASTER:痛苦 < 0
+	CUP:MASTER:痛苦 = 0
+
+;不快
+CUP:MASTER:不快 += SOURCE:MASTER:捆绑 * (61 - ABL:MASTER:受虐气质 - ABL:MASTER:捆绑中毒 * 3 - CFLAG:MASTER:调教等级 - TALENT:MASTER:抖Ｍ * 5) / 50
+;不快上升但マイナス那么0に差し替える
+SIF CUP:MASTER:不快 < 0
+	CUP:MASTER:不快 = 0
+
+;抑郁
+CUP:MASTER:抑郁 += SOURCE:MASTER:捆绑 * (2 + TALENT:MASTER:悲观的 - TALENT:MASTER:乐观的) / (3 + CFLAG:MASTER:调教等级 + ABL:MASTER:捆绑中毒 * 3 + TALENT:MASTER:抖Ｍ * 10)
+
+;调教对象体力、气力
+LOCAL = SOURCE:MASTER:捆绑 * (50 - CFLAG:MASTER:调教等级 - ABL:MASTER:顺从 * 3) / 600
+DOWNBASE:MASTER:体力 += 30 + LOCAL * 2 / 3
+DOWNBASE:MASTER:气力 += LOCAL
+

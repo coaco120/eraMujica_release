@@ -1,0 +1,688 @@
+﻿;────────────────────────────────────
+;施虐 (平手60/木马61/针62/绳63/眼罩64/口枷65/辱骂66/木马67/灌肠68/高潮56)
+;────────────────────────────────────
+@ACT_M6(ARG = 0)
+;1以上那么判定被行わない
+#DIM LCOUNT, 1
+
+;関数初期化
+CALL ACT_M_INIT(6)
+
+;处理开始
+
+LOCALS = ACT_ACTM6
+
+CALL CHA_CRI_VAR, "基準値"
+CALLFORM %LOCALS%_REFERENCE
+
+CALL CHA_CRI_VAR, @"本次的方针(%POLICY("今")%)"
+CALLFORM %LOCALS%_COURCE
+
+CALL CHA_CRI_VAR, "调教者的素質"
+CALLFORM %LOCALS%_TALENT_T
+
+CALL CHA_CRI_VAR, "调教对象的素質"
+CALLFORM %LOCALS%_TALENT_M
+
+CALL CHA_CRI_VAR, "调教者的能力"
+CALLFORM %LOCALS%_ABL_T
+
+CALL CHA_CRI_VAR, "调教对象的能力"
+CALLFORM %LOCALS%_ABL_M
+
+CALL CHA_CRI_VAR, "调教对象的反抗"
+CALLFORM %LOCALS%_RESISTANCE_M
+
+CALL CHA_CRI_VAR, "调教者的罪恶感"
+CALLFORM %LOCALS%_SIN_T
+
+CALL CHA_CRI_VAR, "调教者的ALI"
+CALLFORM %LOCALS%_ALI_T
+
+CALL CHA_CRI_VAR, "调教对象的体力"
+CALLFORM %LOCALS%_PHYSICAL_M
+
+CALL CHA_CRI_VAR, "调教对象的气力"
+CALLFORM %LOCALS%_MENTAL_M
+
+CALL CHA_CRI_VAR, "调教对象的疲惫"
+CALLFORM %LOCALS%_EXHAUSTION_M
+
+CALL CHA_CRI_VAR, "调教者的体力"
+CALLFORM %LOCALS%_PHYSICAL_T
+
+CALL CHA_CRI_VAR, "调教者的气力"
+CALLFORM %LOCALS%_MENTAL_T
+
+CALL CHA_CRI_VAR, "调教者的焦躁"
+CALLFORM %LOCALS%_IRRITATION_T
+
+CALL CHA_CRI_VAR, @"调教者的状态(%CONDITION(TCVAR:状态变化)%)"
+CALLFORM %LOCALS%_CONDITION_T
+
+CALL CHA_CRI_VAR, "已经出现的话题"
+CALLFORM %LOCALS%_ALREADY_TALKED
+
+CALL CHA_CRI_VAR, "发狂"
+CALLFORM %LOCALS%_VIOLENT
+
+CALL CHA_CRI_VAR, "道具被是ずさ受到"
+CALLFORM %LOCALS%_BE_TAKEN_OFF_TOOLS
+
+CALL CHA_CRI_VAR, "道具被是ずした"
+CALLFORM %LOCALS%_TAKE_OFF_TOOLS
+
+CALL CHA_CRI_VAR, "调教对象自慰中"
+CALLFORM %LOCALS%_MASTURBATION_M
+
+CALL CHA_CRI_VAR, "调教者自慰中"
+CALLFORM %LOCALS%_MASTURBATION_T
+
+CALL CHA_CRI_VAR, "插入修正"
+CALLFORM %LOCALS%_INSERT
+
+CALL CHA_CRI_VAR, "惩罚"
+CALLFORM %LOCALS%_OSHIOKI
+
+CALL CHA_CRI_VAR, "调教对象的衣服"
+CALLFORM %LOCALS%_CLOTH_M
+
+CALL CHA_CRI_VAR, "连续行动修正"
+CALLFORM %LOCALS%_PREV
+
+CALL CHA_CRI_VAR, "口上修正値"
+CALL ACT_ACTM_KOJO_CORRECTION_T, 6
+
+CALL CHA_CRI_VAR, "ACT修正値"
+CALLFORM %LOCALS%_CORRECTION(ARG)
+
+;ARG但1以上那么处理中断
+SIF ARG
+	RETURN RESULT
+
+CALL CHA_CRI_VAR, "实行判定"
+CALLFORM %LOCALS%_ABLE
+
+;────────────────────────────────────
+;最终判定
+;────────────────────────────────────
+CALL DEF_CRI_VAR("最大前者")
+LOCAL = GET_CRI_VAR("決定")
+IF LOCAL == -1
+	SIF FLAG:DEBUG
+		PRINTL (施虐类ACT中不存在可执行的ACT)
+	TFLAG:ACT = -1
+	CALL ACT_MENU_RESULT(2, "施虐")
+ELSE
+	TFLAG:ACT = GET_ACTNUM(RESULTS)
+ENDIF
+CALL ANA_CRI_VAR()
+
+;-------------------------------------------------------------------------
+;基準値
+;-------------------------------------------------------------------------
+@ACT_ACTM6_REFERENCE
+
+;要らないかも和思った的で試しに无效化@これみ
+[SKIPSTART]
+CALL ADD_CRI_VAR("打屁股", 15)
+CALL ADD_CRI_VAR("鞭", 12)
+CALL ADD_CRI_VAR("针", 6)
+CALL ADD_CRI_VAR("绳", 8)
+CALL ADD_CRI_VAR("眼罩", 8)
+CALL ADD_CRI_VAR("口球", 8)
+CALL ADD_CRI_VAR("辱骂", 5)
+CALL ADD_CRI_VAR("三角木马", 5)
+CALL ADD_CRI_VAR("灌肠套装", 5)
+CALL ADD_CRI_VAR("深喉", 5)
+[SKIPEND]
+
+;------------------------------------------
+;本次的调教方针
+;------------------------------------------
+@ACT_ACTM6_COURCE
+
+;调教方针(1=休息/2=温和/3=普通/4=强硬/5=异常)
+
+;调教方针但强硬
+IF IS_POLICY("今", "强硬")
+	CALL ADD_CRI_VAR("灌肠套装", 5)
+	SIF TEQUIP:绳 == 0
+		CALL ADD_CRI_VAR("绳", 7)
+	SIF TEQUIP:眼罩 == 0
+		CALL ADD_CRI_VAR("眼罩", 5)
+	SIF TEQUIP:口球 == 0
+		CALL ADD_CRI_VAR("口球", 5)
+ENDIF
+
+;调教方针但异常
+SIF IS_POLICY("今", "异常")
+	CALL ADD_CRI_VAR("三角木马", 5)
+
+;-------------------------------------------------------------------------
+;调教者的素質参照
+;-------------------------------------------------------------------------
+@ACT_ACTM6_TALENT_T
+
+;调教者但胆怯/刚毅
+IF TALENT:胆怯
+	CALL ADD_CRI_VAR("眼罩", , TEQUIP:眼罩 ? 0 # 4)
+ELSEIF TALENT:刚毅
+	CALL ADD_CRI_VAR("辱骂", , 4)
+	CALL ADD_CRI_VAR("三角木马", , TEQUIP:三角木马 ? 0 # 5)
+	CALL ADD_CRI_VAR("灌肠套装", , 5)
+ENDIF
+
+;调教者但自尊心高/低
+IF TALENT:自尊心高
+	CALL ADD_CRI_VAR("辱骂", 2, 2)
+ELSEIF TALENT:自尊心低
+	CALL ADD_CRI_VAR("辱骂", -2, -2)
+ENDIF
+
+;调教者但不越过底线で三角木马未装着
+SIF TALENT:不越过底线 && !TEQUIP:三角木马
+	CALL ADD_CRI_VAR("三角木马", -5)
+
+;调教者但渴望关注
+SIF TALENT:渴望关注
+	CALL ADD_CRI_VAR("深喉", , 6)
+
+;调教者但压抑/解放
+IF TALENT:压抑
+	CALL ADD_CRI_VAR("眼罩", TEQUIP:眼罩 ? 0 # 3)
+	CALL ADD_CRI_VAR("灌肠套装", -5)
+ELSEIF TALENT:解放
+	CALL ADD_CRI_VAR("眼罩", TEQUIP:眼罩 ? 0 # -3)
+	CALL ADD_CRI_VAR("灌肠套装", , 7)
+ENDIF
+
+;调教者但羞涩で眼罩未装着
+SIF TALENT:羞涩 && !TEQUIP:眼罩
+	CALL ADD_CRI_VAR("眼罩", 5)
+
+;调教者但怕疼
+SIF TALENT:怕疼
+	CALL ADD_CRI_VAR("打屁股", -5)
+
+;调教者但东方不败
+SIF TALENT:东方不败
+	CALL ADD_CRI_VAR("针", 5)
+
+;调教者但擅长捆绑で绳未装着
+SIF TALENT:擅长捆绑 && !TEQUIP:绳
+	CALL ADD_CRI_VAR("绳", 5)
+
+;调教者但道具使
+SIF TALENT:道具使
+	CALL ADD_CRI_VAR("灌肠套装", 5)
+
+;调教者但污臭敏感
+SIF TALENT:污臭敏感
+	CALL ADD_CRI_VAR("灌肠套装", -8)
+
+;调教者但虐待狂
+IF TALENT:虐待狂
+	CALL ADD_CRI_VAR("鞭", , 2)
+	CALL ADD_CRI_VAR("针", , 4)
+	CALL ADD_CRI_VAR("绳", , TEQUIP:绳 ? 0 # 2)
+	CALL ADD_CRI_VAR("眼罩", , TEQUIP:眼罩 ? 0 # 2)
+	CALL ADD_CRI_VAR("口球", , TEQUIP:口球 ? 0 # 4)
+	CALL ADD_CRI_VAR("辱骂", , 6)
+	CALL ADD_CRI_VAR("三角木马", , TEQUIP:三角木马 ? 0 # 6)
+	CALL ADD_CRI_VAR("灌肠套装", , 4)
+ENDIF
+
+;调教者但慎重/急躁
+IF TALENT:慎重
+	CALL ADD_CRI_VAR("绳", , TEQUIP:绳 ? 0 # 4)
+	CALL ADD_CRI_VAR("三角木马", TEQUIP:三角木马 ? 0 # -1, TEQUIP:三角木马 ? 0 # -4)
+ELSEIF TALENT:急躁
+	CALL ADD_CRI_VAR("绳", , TEQUIP:绳 ? 0 # -4)
+	CALL ADD_CRI_VAR("三角木马", TEQUIP:三角木马 ? 0 # 1, TEQUIP:三角木马 ? 0 # 4)
+ENDIF
+
+;调教者但坏心眼/好心眼
+IF TALENT:坏心眼
+	CALL ADD_CRI_VAR("眼罩", , TEQUIP:眼罩 ? 0 # 4)
+	CALL ADD_CRI_VAR("口球", , TEQUIP:口球 ? 0 # 4)
+	CALL ADD_CRI_VAR("辱骂", , 4)
+ELSEIF TALENT:好心眼
+	CALL ADD_CRI_VAR("眼罩", , TEQUIP:眼罩 ? 0 # -4)
+	CALL ADD_CRI_VAR("口球", , TEQUIP:口球 ? 0 # -4)
+	CALL ADD_CRI_VAR("辱骂", , -4)
+	CALL ADD_CRI_VAR("三角木马", TEQUIP:三角木马 ? 10 # 0)
+ENDIF
+
+;调教者但幼稚
+SIF TALENT:幼稚
+	CALL ADD_CRI_VAR("打屁股", 1, 4)
+
+;调教者但疯狂
+IF TALENT:疯狂
+	CALL ADD_CRI_VAR("三角木马", , TEQUIP:三角木马 ? 0 # 12)
+	CALL ADD_CRI_VAR("灌肠套装", , 10)
+	CALL ADD_CRI_VAR("深喉", , 10)
+ENDIF
+
+;调教者但Ｃ敏感
+SIF TALENT:Ｃ敏感
+	CALL ADD_CRI_VAR("深喉", 2, 4)
+
+;-------------------------------------------------------------------------
+;调教对象的素質参照
+;-------------------------------------------------------------------------
+@ACT_ACTM6_TALENT_M
+
+;调教对象但反抗的/坦率
+IF TALENT:MASTER:反抗的
+	CALL ADD_CRI_VAR("绳", TEQUIP:绳 ? 0 # 2, TEQUIP:绳 ? 0 # 4)
+	CALL ADD_CRI_VAR("眼罩", , TEQUIP:眼罩 ? 0 # 8)
+	CALL ADD_CRI_VAR("口球", , TEQUIP:口球 ? 0 # 8)
+ELSEIF TALENT:MASTER:坦率
+	CALL ADD_CRI_VAR("绳", TEQUIP:绳 ? 0 # -2)
+	CALL ADD_CRI_VAR("眼罩", , TEQUIP:眼罩 ? 0 # -4)
+	CALL ADD_CRI_VAR("口球", , TEQUIP:口球 ? 0 # -4)
+ENDIF
+
+;调教对象但成熟/自大
+IF TALENT:MASTER:自大
+	CALL ADD_CRI_VAR("绳", , TEQUIP:绳 ? 0 # 4)
+	CALL ADD_CRI_VAR("眼罩", , TEQUIP:眼罩 ? 0 # 4)
+	CALL ADD_CRI_VAR("口球", TEQUIP:口球 ? 0 # 2, TEQUIP:口球 ? 0 # 4)
+ELSEIF TALENT:MASTER:成熟
+	CALL ADD_CRI_VAR("绳", , TEQUIP:绳 ? 0 # -4)
+	CALL ADD_CRI_VAR("眼罩", , TEQUIP:眼罩 ? 0 # -4)
+	CALL ADD_CRI_VAR("口球", TEQUIP:口球 ? 0 # -2)
+ENDIF
+
+;调教对象但自尊心高/低
+IF TALENT:MASTER:自尊心高
+	CALL ADD_CRI_VAR("口球", , TEQUIP:口球 ? 0 # 4)
+ELSEIF TALENT:MASTER:自尊心低
+	CALL ADD_CRI_VAR("口球", , TEQUIP:口球 ? 0 # -4)
+ENDIF
+
+;调教对象但羞涩/无耻
+IF TALENT:MASTER:羞涩
+	CALL ADD_CRI_VAR("辱骂", 2, 4)
+ELSEIF TALENT:MASTER:无耻
+	CALL ADD_CRI_VAR("辱骂", -2, -4)
+ENDIF
+
+;调教对象但怕疼/强
+IF TALENT:MASTER:怕疼
+	CALL ADD_CRI_VAR("打屁股", 2, 2)
+	CALL ADD_CRI_VAR("鞭", 3, 3)
+	CALL ADD_CRI_VAR("针", 2, 6)
+ELSEIF TALENT:MASTER:耐痛
+	CALL ADD_CRI_VAR("打屁股", -3)
+	CALL ADD_CRI_VAR("鞭", -4)
+	CALL ADD_CRI_VAR("针", -4)
+ENDIF
+
+;────────────────────────────────────
+;能力、参数根据变动
+;────────────────────────────────────
+;-------------------------------------------------------------------------
+;调教者的能力被参照
+;-------------------------------------------------------------------------
+@ACT_ACTM6_ABL_T
+
+;调教者的技巧但[0→0, 3→3～5, 6→0]被加算(0～5)
+CALL ADD_CRI_VAR("鞭", LINE_CALC(ABL:技巧, "0→0,3→3,6→0,LIMIT/0～3"), LINE_CALC(ABL:技巧, "0→0,3→2,6→0,LIMIT/0～2"))
+;调教者的技巧但[0→0, 5→3～5]被加算(0～5)
+CALL ADD_CRI_VAR("针", LINE_CALC(ABL:技巧, "0→0,5→3,LIMIT/0～3"), LINE_CALC(ABL:技巧, "0→0,5→2,LIMIT/0～2"))
+
+;调教者的Ｃ感觉但[0→0, 5→3～5]被加算(0～5)
+CALL ADD_CRI_VAR("深喉", LINE_CALC(ABL:Ｃ感觉, "0→0,5→3,LIMIT/0～3"), LINE_CALC(ABL:Ｃ感觉, "0→0,5→2,LIMIT/0～2"))
+
+;调教者的会话但[0→0, 5→3～5]被加算(0～5)
+CALL ADD_CRI_VAR("辱骂", LINE_CALC(ABL:会话, "0→0,5→3,LIMIT/0～3"), LINE_CALC(ABL:会话, "0→0,5→2,LIMIT/0～2"))
+
+;调教者的道具但[0→0, 5→3～5]被加算(0～5)
+CALL ADD_CRI_VAR("灌肠套装", LINE_CALC(ABL:道具, "0→0,5→3,LIMIT/0～3"), LINE_CALC(ABL:道具, "0→0,5→2,LIMIT/0～2"))
+
+;调教者的奉仕但[0→0, 5→3～5]被加算(0～5)
+CALL ADD_CRI_VAR("深喉", LINE_CALC(ABL:奉仕, "0→0,5→3,LIMIT/0～3"), LINE_CALC(ABL:奉仕, "0→0,5→2,LIMIT/0～2"))
+
+;-------------------------------------------------------------------------
+;调教对象的能力被参照
+;-------------------------------------------------------------------------
+@ACT_ACTM6_ABL_M
+
+;调教对象的奉仕精神但[0→0, 5→3～7]被加算(0～7)
+CALL ADD_CRI_VAR("深喉", LINE_CALC(ABL:MASTER:奉仕精神, "0→0,5→3,LIMIT/0～3"), LINE_CALC(ABL:MASTER:奉仕精神, "0→0,5→4,LIMIT/0～4"))
+
+;调教对象的痛苦中毒但[0→0, 3→2～6, 6→0]被加算(0～6)
+CALL ADD_CRI_VAR("打屁股", LINE_CALC(ABL:MASTER:痛苦中毒, "0→0,3→2,6→0,LIMIT/0～2"), LINE_CALC(ABL:MASTER:痛苦中毒, "0→0,3→4,6→0,LIMIT/0～4"))
+;调教对象的痛苦中毒但[0→0, 4→2～7, 5→1～5]被加算(0～7)
+CALL ADD_CRI_VAR("鞭", LINE_CALC(ABL:MASTER:痛苦中毒, "0→0,4→2,5→1,LIMIT/0～2"), LINE_CALC(ABL:MASTER:痛苦中毒, "0→0,4→5,5→4,LIMIT/0～5"))
+;调教对象的痛苦中毒但[0→0, 5→3～8]被加算(0～8)
+CALL ADD_CRI_VAR("针", LINE_CALC(ABL:MASTER:痛苦中毒, "0→0,5→3,LIMIT/0～3"), LINE_CALC(ABL:MASTER:痛苦中毒, "0→0,5→5,LIMIT/0～5"))
+;※キャンセルに修正是付かない
+;调教对象的痛苦中毒但[0→0, 5→2～10]被加算(0～10)
+SIF !TEQUIP:三角木马
+	CALL ADD_CRI_VAR("三角木马", LINE_CALC(ABL:MASTER:痛苦中毒, "0→0,5→2,LIMIT/0～2"), LINE_CALC(ABL:MASTER:痛苦中毒, "0→0,5→8,LIMIT/0～8"))
+
+;※キャンセルに修正是付かない
+;调教对象的捆绑中毒但[0→0, 5→5～9]被加算(0～9)
+SIF !TEQUIP:绳
+	CALL ADD_CRI_VAR("绳", LINE_CALC(ABL:MASTER:捆绑中毒, "0→0,5→5,LIMIT/0～5"), LINE_CALC(ABL:MASTER:捆绑中毒, "0→0,5→4,LIMIT/0～4"))
+;调教对象的捆绑中毒但[0→0, 5→3～7]被加算(0～7)
+SIF !TEQUIP:眼罩
+	CALL ADD_CRI_VAR("眼罩", LINE_CALC(ABL:MASTER:捆绑中毒, "0→0,5→3,LIMIT/0～3"), LINE_CALC(ABL:MASTER:捆绑中毒, "0→0,5→4,LIMIT/0～4"))
+;调教对象的捆绑中毒但[0→0, 5→2～10]被加算(0～10)
+SIF !TEQUIP:口球
+	CALL ADD_CRI_VAR("口球", LINE_CALC(ABL:MASTER:捆绑中毒, "0→0,5→2,LIMIT/0～2"), LINE_CALC(ABL:MASTER:捆绑中毒, "0→0,5→8,LIMIT/0～8"))
+
+;-------------------------------------
+;调教对象的反抗
+;-------------------------------------
+@ACT_ACTM6_RESISTANCE_M
+
+;调教对象的反抗但[0→0, 7500→5～7]被加算(0～7)
+SIF !TEQUIP:绳
+	CALL ADD_CRI_VAR("绳", LINE_CALC(PALAM:MASTER:反抗, "0→0,5→5,LIMIT/0～5"), LINE_CALC(PALAM:MASTER:反抗, "0→0,5→2,LIMIT/0～2"))
+;调教对象的反抗但[0→0, 7500→4～7]被加算(0～7)
+SIF !TEQUIP:眼罩
+	CALL ADD_CRI_VAR("眼罩", LINE_CALC(PALAM:MASTER:反抗, "0→0,5→4,LIMIT/0～4"), LINE_CALC(PALAM:MASTER:反抗, "0→0,5→3,LIMIT/0～3"))
+;调教对象的反抗但[0→0, 7500→3～4]被加算(0～4)
+SIF !TEQUIP:口球
+	CALL ADD_CRI_VAR("口球", LINE_CALC(PALAM:MASTER:反抗, "0→0,5→3,LIMIT/0～3"), LINE_CALC(PALAM:MASTER:反抗, "0→0,5→1,LIMIT/0～1"))
+
+;-------------------------------------
+;调教者的罪恶感
+;-------------------------------------
+@ACT_ACTM6_SIN_T
+
+;调教者的罪恶感但[80→0, 100→-1]被加算(-1～0)
+CALL ADD_CRI_VAR("针", LINE_CALC(CFLAG:罪恶感, "80→0,100→-1,LIMIT/-1～0"))
+;调教者的罪恶感但[60→0, 100→-2]被加算(-2～0)
+CALL ADD_CRI_VAR("口球", LINE_CALC(CFLAG:罪恶感, "60→0,100→-2,LIMIT/-2～0"))
+;调教者的罪恶感但[40→0, 100→-3]被加算(-3～0)
+CALL ADD_CRI_VAR("灌肠套装", LINE_CALC(CFLAG:罪恶感, "40→0,100→-3,LIMIT/-3～0"))
+;调教者的罪恶感但[0→0, 100→-5]被加算(-5～0)
+CALL ADD_CRI_VAR("三角木马", LINE_CALC(CFLAG:罪恶感, "0→0,100→-5,LIMIT/-5～0"))
+
+;-------------------------------------
+;调教者的ALI
+;-------------------------------------
+@ACT_ACTM6_ALI_T
+
+;定位但[-50→-3, 50→3]被加算(-3～3)
+CALL ADD_CRI_VAR("打屁股", LINE_CALC(CFLAG:定位, "-50→-3,50→3,LIMIT/-3～3"))
+;定位但[-50→3, 50→-3]被加算(-3～3)
+CALL ADD_CRI_VAR("三角木马", LINE_CALC(CFLAG:定位, "-50→3,50→-3,LIMIT/-3～3"))
+;定位但[0→0, 50→2]被加算(0～2)
+CALL ADD_CRI_VAR("辱骂", LINE_CALC(CFLAG:定位, "0→0,50→2,LIMIT/0～2"))
+;定位但[-50→3, 0→0]被加算(0～3)
+CALL ADD_CRI_VAR("灌肠套装", LINE_CALC(CFLAG:定位, "-50→3,0→0,LIMIT/0～3"))
+
+;────────────────────────────────────
+;ゲージや状态根据变动
+;────────────────────────────────────
+;-------------------------------------
+;调教对象的体力
+;-------------------------------------
+@ACT_ACTM6_PHYSICAL_M
+
+;调教对象的体力但[0→-1, 300→0]被加算(-1～0)
+CALL ADD_CRI_VAR("打屁股", LINE_CALC(BASE:MASTER:体力, "0→-1,300→0,LIMIT/-1～0"))
+;调教对象的体力但[0→-3, 600→0]被加算(-3～0)
+CALL ADD_CRI_VAR("鞭", LINE_CALC(BASE:MASTER:体力, "0→-3,600→0,LIMIT/-3～0"))
+;调教对象的体力但[0→-3, 900→0]被加算(-3～0)
+CALL ADD_CRI_VAR("深喉", LINE_CALC(BASE:MASTER:体力, "0→-3,900→0,LIMIT/-3～0"))
+;调教对象的体力但[0→-4, 900→0]被加算(-4～0)
+CALL ADD_CRI_VAR("针", LINE_CALC(BASE:MASTER:体力, "0→-4,900→0,LIMIT/-4～0"))
+;※キャンセル时正的修正
+;调教对象的体力但[0→4/-4, 900→0]被加算(-4～4)
+LOCAL = TEQUIP:三角木马 ? 1 # -1
+CALL ADD_CRI_VAR("三角木马", LOCAL * LINE_CALC(BASE:MASTER:体力, "0→4,900→0,LIMIT/0～4"))
+;调教对象的体力但[0→0～8/-4, 900→0]被加算(-4～8)
+IF TEQUIP:灌肠器＋肛塞
+	CALL ADD_CRI_VAR("灌肠套装", , LINE_CALC(BASE:MASTER:体力, "0→8,900→0,LIMIT/0～8"))
+ELSE
+	CALL ADD_CRI_VAR("灌肠套装", LINE_CALC(BASE:MASTER:体力, "0→-4,900→0,LIMIT/-4～0"))
+ENDIF
+
+;-------------------------------------
+;调教对象的气力
+;-------------------------------------
+@ACT_ACTM6_MENTAL_M
+
+;※キャンセル时负的修正
+;调教对象的气力但[0→0, 800→0～4/-8]被加算(-8～4)
+IF TEQUIP:绳
+	CALL ADD_CRI_VAR("绳", LINE_CALC(BASE:MASTER:气力, "0→0,800→-8,LIMIT/-8～0"))
+ELSE
+	CALL ADD_CRI_VAR("绳", , LINE_CALC(BASE:MASTER:气力, "0→0,800→4,LIMIT/0～4"))
+ENDIF
+IF TEQUIP:眼罩
+	CALL ADD_CRI_VAR("眼罩", LINE_CALC(BASE:MASTER:气力, "0→0,800→-8,LIMIT/-8～0"))
+ELSE
+	CALL ADD_CRI_VAR("眼罩", , LINE_CALC(BASE:MASTER:气力, "0→0,800→4,LIMIT/0～4"))
+ENDIF
+IF TEQUIP:口球
+	CALL ADD_CRI_VAR("口球", LINE_CALC(BASE:MASTER:气力, "0→0,800→-8,LIMIT/-8～0"))
+ELSE
+	CALL ADD_CRI_VAR("口球", , LINE_CALC(BASE:MASTER:气力, "0→0,800→4,LIMIT/0～4"))
+ENDIF
+
+;-------------------------------------
+;调教对象的疲惫
+;-------------------------------------
+@ACT_ACTM6_EXHAUSTION_M
+
+;疲惫で捆绑など被解く(调教对象的疲惫)
+IF TFLAG:疲惫度
+	CALL ADD_CRI_VAR("绳", TEQUIP:绳 ? 4 + TFLAG:疲惫度 / 2 # -3 - TFLAG:疲惫度 / 4)
+	CALL ADD_CRI_VAR("眼罩", TEQUIP:眼罩 ? 2 + TFLAG:疲惫度 / 3 # -1 - TFLAG:疲惫度 / 6)
+	CALL ADD_CRI_VAR("口球", TEQUIP:口球 ? 3 + TFLAG:疲惫度 / 3 # -2 - TFLAG:疲惫度 / 5)
+	CALL ADD_CRI_VAR("三角木马", TEQUIP:三角木马 ? 9 + TFLAG:疲惫度 # -9 - TFLAG:疲惫度)
+ENDIF
+
+;-------------------------------------
+;调教者的体力
+;-------------------------------------
+@ACT_ACTM6_PHYSICAL_T
+
+;调教者的体力但[0→-3, 1500→0]被加算(-3～0)
+CALL ADD_CRI_VAR("打屁股", LINE_CALC(BASE:体力, "0→-3,1500→0,LIMIT/-3～0"))
+CALL ADD_CRI_VAR("鞭", LINE_CALC(BASE:体力, "0→-3,1500→0,LIMIT/-3～0"))
+
+;-------------------------------------
+;调教者的气力
+;-------------------------------------
+@ACT_ACTM6_MENTAL_T
+
+;调教者的气力但[0→-1, 250→0]被加算(-1～0)
+CALL ADD_CRI_VAR("打屁股", LINE_CALC(BASE:气力, "0→-1,250→0,LIMIT/-1～0"))
+CALL ADD_CRI_VAR("鞭", LINE_CALC(BASE:气力, "0→-1,250→0,LIMIT/-1～0"))
+CALL ADD_CRI_VAR("针", LINE_CALC(BASE:气力, "0→-1,250→0,LIMIT/-1～0"))
+CALL ADD_CRI_VAR("灌肠套装", LINE_CALC(BASE:气力, "0→-1,250→0,LIMIT/-1～0"))
+;调教者的气力但[0→-2, 500→0]被加算(-2～0)
+CALL ADD_CRI_VAR("深喉", LINE_CALC(BASE:气力, "0→-2,500→0,LIMIT/-2～0"))
+;调教者的气力但[0→-3, 750→0]被加算(-3～0)
+CALL ADD_CRI_VAR("辱骂", LINE_CALC(BASE:气力, "0→-3,750→0,LIMIT/-3～0"))
+
+;-------------------------------------
+;调教者的焦躁
+;-------------------------------------
+@ACT_ACTM6_IRRITATION_T
+
+;调教者的焦躁但[0→0, 800→6]被加算(0～6)
+CALL ADD_CRI_VAR("打屁股", LINE_CALC(BASE:焦躁, "0→0,800→6,LIMIT/0～6"))
+;调教者的焦躁但[0→0, 800→10]被加算(0～10)
+CALL ADD_CRI_VAR("鞭", LINE_CALC(BASE:焦躁, "0→0,800→10,LIMIT/0～10"))
+;调教者的焦躁但[0→0, 800→8]被加算(0～8)
+CALL ADD_CRI_VAR("针", LINE_CALC(BASE:焦躁, "0→0,800→8,LIMIT/0～8"))
+;调教者的焦躁但[0→0, 800→-6]被加算(-6～0)
+CALL ADD_CRI_VAR("辱骂", LINE_CALC(BASE:焦躁, "0→0,800→-6,LIMIT/-6～0"))
+
+;-------------------------------------
+;调教者的状态
+;-------------------------------------
+@ACT_ACTM6_CONDITION_T
+
+;调教者的状态(0=通常/1=疲惫/2=衰弱/3=无气力/4=朦胧/5=情欲/6=愤怒/7=无聊/8=郁闷)
+SELECTCASE GET_CONDITION(TARGET)
+	CASE "情欲"
+		CALL ADD_CRI_VAR("深喉", , 4)
+	CASE "愤怒"
+		CALL ADD_CRI_VAR("辱骂", , 4)
+	CASE "郁闷"
+		CALL ADD_CRI_VAR("三角木马", 2, 8)
+ENDSELECT
+
+
+;────────────────────────────────────
+;上次的行动や状況根据变动
+;────────────────────────────────────
+;-------------------------------------
+;そんな话是もう终わった标志(1=好感,2=知识,4=安慰,8=威胁,16=合意,32=嗤笑,64=辱骂)
+;-------------------------------------
+@ACT_ACTM6_ALREADY_TALKED
+
+;辱骂的话是した
+SIF TFLAG:已经出现的话题 & 64
+	CALL ADD_CRI_VAR("辱骂", LIMIT(ABL:会话 / 2 - 5, -5, 0))
+
+;-------------------------------------
+;发狂
+;-------------------------------------
+@ACT_ACTM6_VIOLENT
+
+IF IS_NOWCOMNAME("发狂")
+	CALL ADD_CRI_VAR("针", -2)
+	CALL ADD_CRI_VAR("绳", TEQUIP:绳 ? 0 # 10)
+	CALL ADD_CRI_VAR("眼罩", TEQUIP:眼罩 ? 0 # 6)
+	CALL ADD_CRI_VAR("三角木马", TEQUIP:口球 ? 0 # 3)
+ENDIF
+
+;-------------------------------------
+;勝手に道具被是ずさ受到
+;-------------------------------------
+@ACT_ACTM6_BE_TAKEN_OFF_TOOLS
+
+;勝手に道具被是ずさ受到＆绳未装着
+SIF IS_NOWCOMNAME("移除道具") && !TEQUIP:绳
+	CALL ADD_CRI_VAR("绳", 5)
+
+;-------------------------------------
+;要求されて道具被是ずした
+;-------------------------------------
+@ACT_ACTM6_TAKE_OFF_TOOLS
+
+;キャンセルに应じて装着被躊躇
+SIF !TEQUIP:绳
+	CALL ADD_CRI_VAR("绳", -CANCEL_TEQUIP_COUNT("捆绑") / 20)
+SIF !TEQUIP:眼罩
+	CALL ADD_CRI_VAR("眼罩", -CANCEL_TEQUIP_COUNT("捆绑") / 20)
+SIF !TEQUIP:口球
+	CALL ADD_CRI_VAR("口球", -CANCEL_TEQUIP_COUNT("捆绑") / 20)
+SIF !TEQUIP:三角木马
+	CALL ADD_CRI_VAR("三角木马", -CANCEL_TEQUIP_COUNT("三角木马") / 20)
+
+;※二人自慰中那么両方的修正但有效和なる
+;-------------------------------------
+;调教对象自慰中
+;-------------------------------------
+@ACT_ACTM6_MASTURBATION_M
+
+SIF GETBIT(TEQUIP:自慰中, 0)
+	CALL ADD_CRI_VAR("辱骂", , 10)
+
+;-------------------------------------
+;调教者自慰中
+;-------------------------------------
+@ACT_ACTM6_MASTURBATION_T
+
+SIF GETBIT(TEQUIP:自慰中, 1)
+	CALL ADD_CRI_VAR("辱骂", , 5)
+
+;-------------------------------------
+;插入
+;-------------------------------------
+@ACT_ACTM6_INSERT
+
+IF TEQUIP:性交中 || TEQUIP:性交奉仕中
+	;骑乘位/背面座位/逆强奸/后背位侍奉
+	SIF TEQUIP:性交中 == 3 || TEQUIP:性交中 == 5 || TEQUIP:性交奉仕中 == 3 || TEQUIP:性交奉仕中 == 2
+		CALL ADD_CRI_VAR("打屁股", -5)
+	;后背位中是叩いて欲しい
+	SIF TEQUIP:性交中 == 2
+		CALL ADD_CRI_VAR("打屁股", 5)
+	CALL ADD_CRI_VAR("针", -5)
+	CALL ADD_CRI_VAR("灌肠套装", -5)
+	CALL ADD_CRI_VAR("深喉", -5)
+ENDIF
+
+;-------------------------------------
+;惩罚中
+;-------------------------------------
+@ACT_ACTM6_OSHIOKI
+
+IF TFLAG:惩罚标志
+	CALL ADD_CRI_VAR("三角木马", , 9)
+	CALL ADD_CRI_VAR("灌肠套装", 1, 6)
+	CALL ADD_CRI_VAR("深喉", 3, 3)
+ENDIF
+
+;-------------------------------------
+;调教对象的衣服
+;-------------------------------------
+@ACT_ACTM6_CLOTH_M
+
+;调教对象的下半身外套に妨害され时き
+IF CLOTHESTYPE(1, 1) ==2
+	CALL ADD_CRI_VAR("三角木马", -5)
+	CALL ADD_CRI_VAR("灌肠套装", -2)
+ENDIF
+
+;调教对象的下半身内衣但あ时き
+SIF CLOTHESTYPE(1, 0)
+	CALL ADD_CRI_VAR("三角木马", -2)
+
+;调教对象的上半身外套但あ时き
+IF CLOTHESTYPE(1, 3)
+	CALL ADD_CRI_VAR("鞭", -5)
+	CALL ADD_CRI_VAR("针", -5)
+ENDIF
+
+;────────────────────────────────────
+;同じ行动连续实行的确率被ダウンし增加
+;────────────────────────────────────
+@ACT_ACTM6_PREV
+
+SELECTCASE TFLAG:前ACT
+	CASE 56, 60 TO 68
+		CALL ADD_CRI_VAR(GET_ACTNAME(TFLAG:前ACT), -3 * TFLAG:同一行动奖励, -4 * TFLAG:同一行动奖励)
+ENDSELECT
+
+;────────────────────────────────────
+;修正値計算
+;────────────────────────────────────
+@ACT_ACTM6_CORRECTION(ARG)
+#DIM LCOUNT
+
+;ARG但0以外那么修正値被計算し、以后的处理被行わない
+IF ARG
+	;56に関して是ここで計算不做
+	FOR LCOUNT, 60, 69
+		CALL ACT_M_RES_CALC(LCOUNT, GET_CRI_VAR(GET_ACTNAME(LCOUNT) + "累计"))
+	NEXT
+ELSE
+	;修正値被判定値に加算做
+	CALL ACT_ACTM_CORRECTION(6)
+ENDIF
+
+;────────────────────────────────────
+;其他变动や实行不可能的判定
+;────────────────────────────────────
+@ACT_ACTM6_ABLE
+#DIM LCOUNT
+
+;不可能判定
+CALL ACT_ACTM_ABLE(6)
+

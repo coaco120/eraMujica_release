@@ -1,0 +1,166 @@
+﻿
+;────────────────────────────────────
+;临时模式的主人公的选择
+;────────────────────────────────────
+@START_CHARA_SELECT
+
+;选择肢被呼び出す
+LOCALS = 
+LOCALS += "<识別>START_CHARA_SELECT_M"
+LOCALS += "<对象>可登场"
+LOCALS += "<上部>START_CHARA_SHOW_M"
+LOCALS += "<条件>START_CHARA_REQU_M"
+LOCALS += "<选择>START_CHARA_CHOI_M"
+LOCALS += "<取消>不可取消"
+LOCALS += "<项目>名前/外号"
+CALL SELECT_CHARA_LIST(LOCALS)
+
+IF RESULT == 0
+	PRINTW 把主人公设定为「您」
+	;「您」被追加
+	ADDCHARA 0
+	;主人公被设定
+	MASTER = CHARANUM - 1
+	;SANDBOX那么ゆかりんにお呼ばれ
+	IF FLAG:模式 == 1
+		PRINTL 
+		CALL CHARA_MAKER
+	;そうでなければ主人公设定
+	ELSE
+		CALL MASTER_CUSTOM
+		;主人公的ゲージ被设置上升、MASTERCUSTOM.ERBに格納
+		CALL BASE_MASTER_SETUP
+	ENDIF
+ELSE
+	;出场人物被追加
+	ADDCHARA RESULT
+	;主人公被设定
+	MASTER = CHARANUM - 1
+	;登场标志被0にしておく
+	FLAG:(RESULT + 99) = 0
+	PRINTFORMW 把主人公设定为「%NAME:MASTER%」
+	;主人公的ゲージ被设置上升、MASTERCUSTOM.ERBに格納
+	CALL BASE_MASTER_SETUP
+ENDIF
+;衣服设定但まだない场合、ここで设定做
+CALL CLOTHES_SETUP(MASTER)
+
+;────────────────────────────────────
+;最初的调教者的选择
+;────────────────────────────────────
+@START_CHARA_SELECT_T
+$TRAINER_REROLL
+;选择肢被呼び出す
+LOCALS = 
+LOCALS += "<识別>START_CHARA_SELECT_T"
+LOCALS += "<对象>可登场"
+LOCALS += "<上部>START_CHARA_SHOW_T"
+LOCALS += "<条件>START_CHARA_REQU_T"
+LOCALS += "<口上>调教者"
+LOCALS += "<选择>START_CHARA_CHOI_T"
+LOCALS += "<取消>不可取消"
+LOCALS += "<项目>名前/外号"
+CALL SELECT_CHARA_LIST(LOCALS)
+LOCAL = RESULT
+CALL KOJO_PROFILE(RESULT)
+CALL PRINT_DIALOG(@"这个角色可以吗？", 1, 1, 1)
+CALL PRINT_CHOICE(, "是", 1, "否", 2, )
+SIF RESULT == 2
+	GOTO TRAINER_REROLL
+
+IF LOCAL == 0
+	PRINTW 把调教者设定为「您」
+	;「您」被追加
+	ADDCHARA 0
+	;调教者被设定
+	TARGET = CHARANUM - 1
+ELSE
+	;出场人物被追加
+	ADDCHARA LOCAL
+	;调教者被设定
+	TARGET = CHARANUM - 1
+	;登场标志被0にしておく
+	FLAG:(LOCAL + 99) = 0
+	PRINTFORMW 将调教者设定为「%NAME:TARGET%」
+ENDIF
+;口上的配置设定	関数名变更@revkoishi(14/05/22)
+CALL KOJO_CONFIG_SET(TARGET)
+
+;────────────────────────────────────
+;临时模式的出场人物选择(选择肢)
+;────────────────────────────────────
+@START_CHARA_SHOW_M
+CALL START_CHARA_SHOW(0)
+@START_CHARA_SHOW_T
+CALL START_CHARA_SHOW(1)
+@START_CHARA_SHOW(ARG)
+
+IF ARG == 0
+	PRINTL ★★请选择被调教的角色★★
+ELSE
+	PRINTL ★★请选择要调教的角色★★
+ENDIF
+
+;「您」是特別扱い
+IF ARG == 0
+	PRINT 　[0]「您」
+	IF FLAG:模式 == 1
+		PRINTL ※进入角色制作
+	ELSE
+		PRINTL ※可以设定详细的参数
+	ENDIF
+ELSEIF NO:MASTER != 0
+	PRINTL 　[0]就决定是	「您」
+ENDIF
+
+@START_CHARA_REQU_M(ARG)
+SIF FLAG:(ARG + 99) == 0
+	RETURN 0
+RETURN ARG == 0 ? 0 # 1
+
+@START_CHARA_REQU_T(ARG, ARGS)  
+;ARGS = "没有口上", "制限无"  
+IF ARGS != ""  
+	LOCAL = ARGS == "没有口上" ? 1 # 0  
+	RETURN RESULT  
+ENDIF  
+; 移除口上检查，只要登场标志立つ就显示  
+IF FLAG:(ARG + 99) > 0  
+	RETURN 1 ; 无条件显示已登场角色  
+ENDIF  
+RETURN 0  
+
+@START_CHARA_CHOI_M(ARGS)
+CALL START_CHARA_CHOI(ARGS, 0)
+RETURN RESULT
+@START_CHARA_CHOI_T(ARGS)
+CALL START_CHARA_CHOI(ARGS, 1)
+RETURN RESULT
+@START_CHARA_CHOI(ARGS, ARG)
+;追加选择肢
+IF ARGS == "-1"
+	PRINTBUTTON @"%"　[R]随机", 25, LEFT%", "R"
+	SIF ARG
+		PRINTBUTTON @"%"　[S]口上" + \@ KOJOOFF ? 没有 # 还是没有 \@, 25, LEFT%", "S"
+	PRINTL 
+;主人公「您」
+ELSEIF ARGS == "0" && (ARG == 0 || NO:MASTER != 0)
+	RESULTS = 0
+	RETURN 0
+;随机选择时
+ELSEIF ARGS == "R"
+	;选择肢目录から一人選ぶ(您除く)
+	LOCAL = RAND:FINDELEMENT(CHARA_LIST, -1)
+	LOCAL = CHARA_LIST:LOCAL
+	PRINTFORML 「%CSVNAME(LOCAL)%」这样可以吗？
+	CALL PRINT_CHOICE(, "是", 1, "否", 2, )
+	SIF RESULT == 2
+		RETURN -1
+	RESULTS = {LOCAL}
+	RETURN 0
+;口上チェック选择
+ELSEIF ARGS == "S" && ARG
+	KOJOOFF = !KOJOOFF
+	RETURN -1
+ENDIF
+RETURN 1

@@ -1,0 +1,1013 @@
+﻿;────────────────────────────────────
+;奖励取得的菜单。奖励的种类和必要点数是仮的设定です
+;────────────────────────────────────
+@BONUS_GAIN
+#DIM DAYONCE = -1
+
+#DIM LINE_WIDTH
+#DIM ITEM_LIST, 4, 10
+#DIM ITEM_SIZE, 4
+#DIM TALENT_LIST, 8, 15
+#DIM TALENT_SIZE, 8
+#DIM CONST TALENT_TBL = 52, 55, 57, 58, 59, 64, 66, 83, 91, 108, 109, 121, 130, 135, 140
+
+VARSET LOCAL
+VARSET ITEM_LIST
+VARSET ITEM_SIZE
+VARSET TALENT_LIST
+VARSET TALENT_SIZE
+
+DRAWLINE
+PRINTFORML %CALLNAME:TARGET%正在调教%CALLNAME:MASTER%中
+SIF ASSI:1 >= 0
+	PRINTFORML 　(助手１：%CALLNAME:(ASSI:1)%)　\@ ASSI:2 >= 0 ? (助手２：%CALLNAME:(ASSI:2)%) # \@
+PRINTFORML [LV {CFLAG:TARGET:0}　EXP {CFLAG:TARGET:1}/{CFLAG:TARGET:4}　NEXT {CFLAG:TARGET:4-CFLAG:TARGET:1}]
+PRINTFORML (残余魔力 {CFLAG:魔力})
+
+;────────────────────────────────────
+;これ直到取得した奖励的显示
+;处理但ほぼSQR的ま直到、显示情报但不足していた的で处理变更。微调整@revkoishi(14/05/26)
+LINE_WIDTH = WIDTH()
+
+;追加调教者
+PRINTFORM \@ FLAG:追加调教者数 ? 追加的调教者：{FLAG:11,2}人\n # \@
+
+;道具。基本的な处理是属性的素質分类显示和同じです
+;似通った处理な的でもう少頭使えば関数化できそうな気も做けど、今那么もっ和賢いやり方但あるかも
+FOR LOCAL:0, 0, 50	;分类ループ
+	SIF ITEM:(LOCAL:0)
+		ITEM_LIST:ITEM_TYPE(LOCAL:0):(ITEM_SIZE:ITEM_TYPE(LOCAL:0)++) = LOCAL:0
+NEXT
+IF VARSIZE("ITEM_SIZE") - MATCH(ITEM_SIZE, 0)
+	PRINTFORML -- □ 已取得道具 □ \@ ITEM:自定义道具 ? (已自定义性爱道具) %"-" * (LINE_WIDTH - 43)% # %"-" * (LINE_WIDTH - 22)% \@
+	FOR LOCAL:0, 1, 4
+		IF ITEM_SIZE:(LOCAL:0)	;そ的分类的道具但无ければ飛ばす
+			;道具分类名被显示
+			PRINTFORM %ITEM_TYPENAME(LOCAL:0), 8, RIGHT%：
+			LOCAL:2 = 10	;桁位置(↑显示后的位置)
+			FOR LOCAL:1, 0, ITEM_SIZE:(LOCAL:0)	;そ的分类的道具持有数分ループ
+				;道具名被取得([道具名] )
+				LOCALS:0 = [%GET_ITEMNAME(ITEM_LIST:(LOCAL:0):(LOCAL:1))%]%" "%
+				LOCAL:3 = STRLENS(LOCALS:0)	;↑的字符数(道具名+[]+スペース)
+				LOCAL:2 += LOCAL:3			;桁位置加算
+				IF LOCAL:2 > LINE_WIDTH		;こ的まま显示做和途中改行されそうな场合是改行处理被行う
+					;改行处理(折り返し、行頭インデント、桁位置再計算)
+					PRINTFORM \n          
+					LOCAL:2 = 10 + LOCAL:3
+				ENDIF
+				;道具名的显示
+				IF GROUPMATCH(ITEM_LIST:(LOCAL:0):(LOCAL:1), 1, 11, 12, 13, 14) && ITEM:自定义道具
+					CALL PRINT_RAINBOW(LOCALS:0, , , RAND:12)
+				ELSE
+					PRINTS LOCALS:0
+				ENDIF
+			NEXT
+			PRINTL 
+		ENDIF
+	NEXT
+ENDIF
+
+;素質的显示。上和大体同じ…だった的只れどちょっ和魔但差した
+FOR LOCAL:0, 0, VARSIZE("TALENT_TBL")
+	SIF (TALENT:TARGET:(TALENT_TBL:(LOCAL:0)) ^^ CSVTALENT(NO:TARGET, TALENT_TBL:(LOCAL:0))) && TALENT_TYPE(TALENT_TBL:(LOCAL:0))
+		TALENT_LIST:TALENT_TYPE(TALENT_TBL:(LOCAL:0)):(TALENT_SIZE:TALENT_TYPE(TALENT_TBL:(LOCAL:0))++) = TALENT_TBL:(LOCAL:0)
+NEXT
+IF VARSIZE("TALENT_SIZE") - MATCH(TALENT_SIZE, 0)
+	LOCAL:4 = GETCOLOR()	;现在的显示色被保持
+{
+	CALL HTMLPRINTL("-- □ 变动した素質 □ (凡例：" + HTMLFONT("[<I> 取得素質 </I>] ", , 0x60FFFF) + 
+                    HTMLFONT("[<I> 消去素質 </I>]", , 0x606060) + @") %"-" * (LINE_WIDTH - 56)%")
+}
+	IF FLAG:素質显示方法	;素質分类显示。ここでやる意味但ある的かどうか…和りあえずユーザフレンドリ重点(謎)
+		FOR LOCAL:0, 1, 8
+			IF TALENT_SIZE:(LOCAL:0)
+				PRINTFORM %TALENT_TYPENAME(LOCAL:0), 8, RIGHT%：
+				LOCAL:2 = 10
+				FOR LOCAL:1, 0, TALENT_SIZE:(LOCAL:0)
+					LOCALS:0 = [%GET_TALENTNAME(TARGET, TALENT_LIST:(LOCAL:0):(LOCAL:1))%]%" "%
+					LOCAL:3 = STRLENS(LOCALS:0)
+					LOCAL:2 += LOCAL:3
+					IF LOCAL:2 > LINE_WIDTH
+						PRINTFORM \n          
+						LOCAL:2 = 10 + LOCAL:3
+					ENDIF
+					SETCOLOR TALENT:TARGET:(TALENT_LIST:(LOCAL:0):(LOCAL:1)) ? 0x60FFFF # 0x606060
+					PRINTS LOCALS:0
+					SETCOLOR LOCAL:4
+				NEXT
+				PRINTL 
+			ENDIF
+		NEXT
+	ELSE					;素質番号顺显示
+		LOCAL:2 = 0
+		FOR LOCAL:0, 0, VARSIZE("TALENT_TBL")
+			IF (TALENT:TARGET:(TALENT_TBL:(LOCAL:0)) ^^ CSVTALENT(NO:TARGET, TALENT_TBL:(LOCAL:0))) && TALENT_TYPE(TALENT_TBL:(LOCAL:0))
+				LOCALS:0 = [%GET_TALENTNAME(TARGET, TALENT_TBL:(LOCAL:0))%]%" "%
+				LOCAL:3 = STRLENS(LOCALS:0)
+				LOCAL:2 += LOCAL:3
+				IF LOCAL:2 > LINE_WIDTH
+					PRINTL 
+					LOCAL:2 = LOCAL:3
+				ENDIF
+				SETCOLOR TALENT:TARGET:(TALENT_TBL:(LOCAL:0)) ? 0x60FFFF # 0x606060
+				PRINTS LOCALS:0
+				SETCOLOR LOCAL:4
+			ENDIF
+		NEXT
+		PRINTL 
+	ENDIF
+ENDIF
+
+;────────────────────────────────────
+;奖励菜单的显示
+;名前的余白分
+LOCAL = MAX(8 - STRLENSU(CALLNAME:TARGET), 0)
+DRAWLINE
+
+;一日一回的み显示
+IF DAYONCE != DAY
+	;事件口上：魔力使用前
+	CALL KOJO_EVENT(110, 0)
+	CALL VOIDLINE_IF(RESULT)
+	DAYONCE = DAY
+ENDIF
+
+PRINTFORML %CALLNAME:TARGET%使用了%CALLNAME:MASTER%精炼出来的魔力…
+PRINTL [ 0] 够了
+;召唤是主人限定
+SIF TALENT:主人
+	PRINTFORML [ 1] 召唤新的调教者　　　　　　　　　　　　 魔力1000
+SELECTCASE ABL:技巧
+	CASE 0
+		PRINTFORML [ 2] 获得新的调教技巧　　　　　　　　　　 魔力{RIZE_ABL_V(0), 4}
+	CASE IS >= 99
+		PRINTFORML [--] 调教技巧已达最高
+	CASEELSE
+		PRINTFORML [ 2] 提高调教技巧　　　　　　　　　　　　　　　 魔力{RIZE_ABL_V(0), 4} 要LV{RIZE_ABL_V(1)}
+	;試験的に魔力で買える技巧上限被なくしてみる
+	;世的中魔力だよ
+	;PRINTFORML [--] 调教技巧是实践で高めるしかないだろう
+ENDSELECT
+PRINTL [ 3] 学习知识
+PRINTL [ 4] 获得技能
+IF FLAG:模式 != 1 || FLAG:DEBUG || !(FLAG:AI自由度&1)
+	PRINTL [ 5] 炼成外界性爱道具
+	PRINTL [ 6] 炼成惩罚道具
+ENDIF
+PRINTFORML \@ ITEM:9 ? [--] 道具已被自定义 # [10] 自定义道具　　　　　　　　　　　　 魔力3000  要[%TALENTNAME:59%] \@
+SIF !TALENT:男人
+	PRINTFORML [11] \@ TALENT:扶她 ? 恢复为双性　 # 双性化的仪式 \@　　　　　　　　　　　　　　 魔力7000
+SIF !TALENT:男人
+	PRINTFORML \@ TALENT:巨乳 ? [12] 胸部不能再大了 # [12] 丰胸的仪式　　　　　 \@　　　　　　　　　　 魔力5000
+SIF !TALENT:男人
+	PRINTFORML \@ TALENT:貧乳 ? [13] 胸部不能再小了 # [13] 缩胸的仪式　　　　　 \@　　　　　　　　　　 魔力1000
+SIF TALENT:MASTER:男人 || TALENT:MASTER:扶她
+	PRINTFORML \@ MAXBASE:MASTER:射精 < 2500 + CFLAG:MASTER:精力界限 * 500 ? [--] 奴隶的精力如果锻炼似乎还能增长 # [16] 增加奴隶的精力上限　　　　　　　　　　　 魔力{(MAXBASE:MASTER:射精 - 2500 - CFLAG:MASTER:精力界限 * 500) / 500 * 1000 + 1000} \@
+DRAWLINE
+
+;────────────────────────────────────
+;入力处理
+$INPUT_LOOP
+INPUT
+SELECTCASE RESULT
+	CASE 0
+		RETURN 0
+	CASE 1
+		SIF !TALENT:主人
+			GOTO FAILED
+		IF CFLAG:魔力 < 1000
+			$FAILED_BY_MP
+			CLEARLINE 1
+			REUSELASTLINE 魔力但足りないようだ…
+			GOTO INPUT_LOOP
+		ENDIF
+		CALL NEW_TRAINER
+		SIF RESULT
+			RETURN 0
+	CASE 2
+		;技巧上升に挑戦
+		CALL RIZE_ABL
+		LOCAL = RESULT:1
+		SELECTCASE RESULT
+			;成功时
+			CASE 0
+				CALL PRINT_DIALOG(@"您确定要将%CALLNAME:TARGET%的调教技巧提高到<{ABL:技巧+1}>？",1,1,1)
+				CALL PRINT_CHOICE(,"是",1,"否",2,)
+				IF RESULT == 1
+					;魔力被消费
+					CFLAG:魔力 -= LOCAL
+					;技巧被上升
+					ABL:技巧++
+					;事件口上：调教技巧上升
+					CALL KOJO_EVENT(110, 1)
+					CALL VOIDLINE_IF(RESULT)
+					;旁白显示
+					PRINTFORMW %CALLNAME:TARGET%的调教技巧变成了<{ABL:技巧}>
+				ENDIF
+			;魔力不足时
+			CASE 1
+				REUSELASTLINE 魔力但足りないようだ…(魔力{LOCAL}但必要)
+				GOTO INPUT_LOOP
+			;调教等级不足时
+			CASE 2
+				REUSELASTLINE 技巧被上げるに是、もう少経験被积む必要但あるだろう…(调教LV{RIZE_ABL_V(1)}但必要)
+				GOTO INPUT_LOOP
+			;技巧上限时
+			CASE 3
+				REUSELASTLINE これ以上技巧是上げられない
+				GOTO INPUT_LOOP
+			;其他的问题
+			CASEELSE
+				$FAILED
+				CLEARLINE 1
+				GOTO INPUT_LOOP
+		ENDSELECT
+	CASE 3
+		;事件口上：知识被得る前
+		CALL KOJO_EVENT(110, 2)
+		PRINTFORML %CALLNAME%决定使用魔力获得新的知识…
+		PRINTL [ 0] - 停止
+		PRINTFORML \@ TALENT:调合知识   ? [--] [调合知识]已持有           # [ 1] 学会了药品的[调合知识]　　　　　　　　　　　　 魔力{GAIN_TALENT_V("调合知识"  , 0), 5} 要LV{GAIN_TALENT_V("调合知识"  , 1)} \@
+		PRINTFORML \@ TALENT:魅惑       ? [--] [魅惑]已持有               # [ 2] 拥有了[魅惑]的能力　　　　　　　　　　　　　　　 魔力{GAIN_TALENT_V("魅惑"      , 0), 5} 要LV{GAIN_TALENT_V("魅惑"      , 1)} \@
+		PRINTFORML \@ TALENT:禁忌的知识 ? [--] [禁忌的知识]已持有         # [ 3] 染指了[禁忌的知识]　　　　　　　　　　　 魔力{GAIN_TALENT_V("禁忌的知识", 0), 5} 要LV{GAIN_TALENT_V("禁忌的知识", 1)} \@
+		PRINTFORML \@ TALENT:道具使   ? [--] [道具使]已持有           # [ 4] 学会了[道具使]的知识　　　　　　　　　　　　 魔力{GAIN_TALENT_V("道具使"  , 0), 5} 要LV{GAIN_TALENT_V("道具使"  , 1)} \@
+		PRINTFORML \@ TALENT:撮影技能   ? [--] [撮影技能]已持有           # [ 5] 学会了写真的[撮影技能]　　　　　　　　　　　　 魔力{GAIN_TALENT_V("撮影技能"  , 0), 5} 要LV{GAIN_TALENT_V("撮影技能"  , 1)} \@
+		$INPUT_LOOP_SKILL
+		INPUT
+		SELECTCASE RESULT
+			CASE 0
+				RESTART
+			CASE 1 TO 5
+				IF 0
+				ELSEIF RESULT == 1
+					LOCALS:0 = 调合知识
+					LOCALS:1 = 药被正しく扱うに是、もう少経験被积む必要但あるだろう…
+					LOCAL = 3
+				ELSEIF RESULT == 2
+					LOCALS:0 = 魅惑
+					LOCALS:1 = 魅惑的能力被得るに是、もう少経験被积む必要但あるだろう…
+					LOCAL = 4
+				ELSEIF RESULT == 3
+					LOCALS:0 = 禁忌的知识
+					LOCALS:1 = 禁忌的知识被紐解くに是、もう少経験被积む必要但あるだろう…
+					LOCAL = 5
+				ELSEIF RESULT == 4
+					LOCALS:0 = 道具使
+					LOCALS:1 = 外界的性爱道具被巧く使うに是、まだ経験但足りないようだ…
+					LOCAL = 6
+				ELSEIF RESULT == 5
+					LOCALS:0 = 撮影技能
+					LOCALS:1 = カメラ被巧く使うに是、もう少経験被积む必要但あるだろう…
+					LOCAL = 37
+				ENDIF
+				IF TALENT:LOCALS
+					CLEARLINE 1
+					GOTO INPUT_LOOP_SKILL
+				ENDIF
+				;技能取得に挑戦
+				CALL GAIN_TALENT(LOCALS)
+				LOCAL:1 = RESULT:1
+				SELECTCASE RESULT
+					;成功时
+					CASE 0
+						CALL PRINT_DIALOG(@"%CALLNAME:TARGET%将获得素质[%LOCALS%]。可以吗？",1,1,1)
+						CALL PRINT_CHOICE(,"是",1,"否",2,)
+						IF RESULT == 1
+							;魔力被消费
+							CFLAG:魔力 -= LOCAL:1
+							;技能被取得
+							TALENT:LOCALS ^= 1
+							;事件口上：知识取得
+							CALL KOJO_EVENT(110, LOCAL)
+							CALL VOIDLINE_IF(RESULT)
+							;旁白显示
+							PRINTFORMW %CALLNAME%取得了[%LOCALS%]
+						ENDIF
+					;魔力不足时
+					CASE 1
+						CLEARLINE 1
+						REUSELASTLINE 魔力但足りないようだ…(魔力{LOCAL:1}但必要)
+						GOTO INPUT_LOOP_SKILL
+					;调教等级不足时
+					CASE 2
+						CLEARLINE 1
+						REUSELASTLINE %LOCALS:1%(调教LV{GAIN_TALENT_V(LOCALS, 1)}但必要)
+						GOTO INPUT_LOOP_SKILL
+					;其他的问题
+					CASEELSE
+						CLEARLINE 1
+						GOTO INPUT_LOOP_SKILL
+				ENDSELECT
+			CASEELSE
+				CLEARLINE 1
+				GOTO INPUT_LOOP_SKILL
+		ENDSELECT
+	CASE 4
+		;事件口上：技术被得る前
+		CALL KOJO_EVENT(110, 7)
+		PRINTFORML %CALLNAME%决定使用魔力获得新的技术…
+		PRINTL [ 0] - 停止
+		PRINTFORML \@ TALENT:舌使          ? %"[--] [舌使]已持有"    , 51, LEFT% # %"[ 1] 特别巧妙地得到了[舌使]"      , 51, LEFT   % 魔力{GAIN_TALENT_V("舌使"        , 0), 5} 要LV{GAIN_TALENT_V("舌使"        , 1)} \@
+		PRINTFORML \@ TALENT:灵巧的指尖      ? %"[--] [灵巧的指尖]已持有", 51, LEFT% # %"[ 2] 得到了[灵巧的指尖]"        , 51, LEFT   % 魔力{GAIN_TALENT_V("灵巧的指尖"    , 0), 5} 要LV{GAIN_TALENT_V("灵巧的指尖"    , 1)} \@
+		PRINTFORML \@ TALENT:腰使          ? %"[--] [腰使]已持有    ", 51, LEFT% # %"[ 3] 不情愿的得到了[腰使]"    , 51, LEFT   % 魔力{GAIN_TALENT_V("腰使"        , 0), 5} 要LV{GAIN_TALENT_V("腰使"        , 1)} \@
+		PRINTFORML \@ TALENT:擅长捆绑        ? %"[--] [擅长捆绑]已持有"  , 51, LEFT% # %"[ 4] 获得了[擅长捆绑]"    , 51, LEFT   % 魔力{GAIN_TALENT_V("擅长捆绑"      , 0), 5} 要LV{GAIN_TALENT_V("擅长捆绑"      , 1)} \@
+		PRINTFORML \@ TALENT:虐待狂            ? %"[ 5] 走上了[虐待狂]的道路"    , 51, LEFT% # %"[ 5] 了解了[虐待狂]的愉悦"        , 51, LEFT% \@ 魔力{GAIN_TALENT_V("虐待狂"          , 0), 5} 要LV{GAIN_TALENT_V("虐待狂"          , 1)}
+		PRINTFORML \@ TALENT:着衣PLAY喜欢  ? %"[ 6] [着衣PLAY喜欢]消除"  , 51, LEFT% # %"[ 6] 觉醒了[着衣PLAY喜欢]", 51, LEFT% \@ 魔力{GAIN_TALENT_V("着衣PLAY喜欢", 0), 5} 要LV{GAIN_TALENT_V("着衣PLAY喜欢", 1)}
+		PRINTFORML \@ TALENT:脏污无視        ? %"[--] [脏污无視]已持有"  , 51, LEFT% # %"[ 7] 能做到[脏污无視]了"  , 51, LEFT   % 魔力{GAIN_TALENT_V("脏污无視"      , 0), 5} 要LV{GAIN_TALENT_V("脏污无視"      , 1)} \@
+		$INPUT_LOOP_SKILL2
+		INPUT
+		SELECTCASE RESULT
+			CASE 0
+				RESTART
+			CASE 1 TO 7
+				IF 0
+				ELSEIF RESULT == 1
+					LOCALS:0 = 舌使
+					LOCALS:1 = 人外的舌使に至るに是、まだ経験但足りないようだ…
+					LOCAL = 8
+				ELSEIF RESULT == 2
+					LOCALS:0 = 灵巧的指尖
+					LOCALS:1 = 指先被繊細に使うに是、まだ経験但足りないようだ…
+					LOCAL = 9
+				ELSEIF RESULT == 3
+					LOCALS:0 = 腰使
+					LOCALS:1 = 腰使被极めるに是、まだ経験但足りないようだ…
+					LOCAL = 39
+				ELSEIF RESULT == 4
+					LOCALS:0 = 擅长捆绑
+					LOCALS:1 = 捆绑术的极意に至るに是、まだ経験但足りないようだ…
+					LOCAL = 10
+				ELSEIF RESULT == 5
+					LOCALS:0 = 虐待狂
+					IF TALENT:虐待狂
+						LOCALS:1 = 施虐趣味消除にしても、まだ少々遊び足りない…
+					ELSE
+						LOCALS:1 = 虐待狂和なるに是、もっ和虐げる悦び被知る必要但あるだろう…
+					ENDIF
+					LOCAL = 11
+				ELSEIF RESULT == 6
+					LOCALS:0 = 着衣PLAY喜欢
+					IF TALENT:着衣PLAY喜欢
+						LOCALS:1 = 着衣PLAY消除にも、少物足りない気但做…
+					ELSE
+						LOCALS:1 = 着衣PLAYに走る前に、通常的行為被もっ和重ねたほう好だろう…
+					ENDIF
+					LOCAL = 38
+				ELSEIF RESULT == 7
+					LOCALS:0 = 脏污无視
+					LOCALS:1 = 脏污被无視できるようになるに是、もっ和行為に慣れなくて是けないだろう…
+					LOCAL = 12
+				ENDIF
+				IF TALENT:LOCALS && LOCALS != "虐待狂" && LOCALS != "着衣PLAY喜欢"
+					CLEARLINE 1
+					GOTO INPUT_LOOP_SKILL2
+				ENDIF
+				;技能取得に挑戦
+				CALL GAIN_TALENT(LOCALS)
+				LOCAL:1 = RESULT:1
+				SELECTCASE RESULT
+					;成功时
+					CASE 0
+						IF TALENT:LOCALS
+							CALL PRINT_DIALOG(@"消除%CALLNAME:TARGET%的素質[%LOCALS%]。可以吗？",1,1,1)
+						ELSE
+							CALL PRINT_DIALOG(@"%CALLNAME:TARGET%将获得素质[%LOCALS%]。可以吗？",1,1,1)
+						ENDIF
+						CALL PRINT_CHOICE(,"是",1,"否",2,)
+						IF RESULT == 1
+							;魔力被消费
+							CFLAG:魔力 -= LOCAL:1
+							;技能被取得
+							TALENT:LOCALS ^= 1
+							;事件口上：技能取得
+							CALL KOJO_EVENT(110, LOCAL)
+							CALL VOIDLINE_IF(RESULT)
+							;旁白显示
+							IF !TALENT:LOCALS
+								PRINTFORMW %CALLNAME%不再是[%LOCALS%]了
+							ELSE
+								PRINTFORMW %CALLNAME%取得了[%LOCALS%]
+							ENDIF
+						ENDIF
+					;魔力不足时
+					CASE 1
+						CLEARLINE 1
+						REUSELASTLINE 魔力但足りないようだ…(魔力{LOCAL:1}但必要)
+						GOTO INPUT_LOOP_SKILL2
+					;调教等级不足时
+					CASE 2
+						CLEARLINE 1
+						REUSELASTLINE %LOCALS:1%(调教LV{GAIN_TALENT_V(LOCALS, 1)}但必要)
+						GOTO INPUT_LOOP_SKILL2
+					;其他的问题
+					CASEELSE
+						CLEARLINE 1
+						GOTO INPUT_LOOP_SKILL2
+				ENDSELECT
+			CASEELSE
+				CLEARLINE 1
+				GOTO INPUT_LOOP_SKILL2
+		ENDSELECT
+	CASE 5
+		;事件口上：事项錬成前
+		CALL KOJO_EVENT(110, 13)
+		PRINTFORML %CALLNAME%决定使用魔力创造出外界的性爱道具…
+		PRINTL [ 0] - 停止
+		PRINTFORML \@ ITEM:0  ? [--] 跳蛋已持有             # [ 1] 跳蛋　　　　　　　　　　　　　　　　　　　 魔力200 \@
+		PRINTFORML \@ ITEM:1  ? [--] 震动棒已持有               # [ 2] 震动棒　　　　　　　　　　　　　　　　　　　　 魔力500 \@
+		PRINTFORML \@ ITEM:2  ? [--] 肛门拉珠已持有         # [ 3] 肛门拉珠　　　　　　　　　　　　　　　　　 魔力300 \@
+		PRINTFORML \@ ITEM:3  ? [--] 假阴茎已持有         # [ 4] 假阴茎　　　　　　　　　　　　　　　　　 魔力500 \@
+		PRINTFORML \@ ITEM:11 ? [--] 肛门震动棒已持有         # [ 5] 肛门震动棒　　　　　　　　　　　　　　　　　 魔力1000 \@
+		PRINTFORML \@ ITEM:12 ? [--] 阴蒂夹已持有         # [ 6] 阴蒂夹　　　　　　　　　　　　　　　　　 魔力600 \@
+		PRINTFORML \@ ITEM:13 ? [--] 乳头夹已持有       # [ 7] 乳头夹　　　　　　　　　　　　　　　　 魔力600 \@
+		PRINTFORML \@ ITEM:14 ? [--] 飞机杯已持有           # [ 8] 飞机杯　　　　　　　　　　　　　　　　　　 魔力600 \@
+		$INPUT_LOOP_ITEM1
+		INPUT
+		SELECTCASE RESULT
+			CASE 0
+				RESTART
+			CASE 1
+				IF ITEM:0
+					CLEARLINE 1
+					GOTO INPUT_LOOP_ITEM1
+				ELSEIF CFLAG:魔力 < 200
+					CLEARLINE 1
+					REUSELASTLINE 魔力但足りないようだ…
+					GOTO INPUT_LOOP_ITEM1
+				ENDIF
+				CALL PRINT_DIALOG(@"「跳蛋」将被炼成。可以吗？",1,1,1)
+				CALL PRINT_CHOICE(,"是",1,"否",2,)
+				IF RESULT == 1
+					CFLAG:魔力 -= 200
+					ITEM:0 = 1
+					CALL KOJO_EVENT(110, 14)
+					CALL VOIDLINE_IF(RESULT)
+					PRINTFORMW %CALLNAME%炼成了跳蛋
+				ENDIF
+			CASE 2
+				IF ITEM:1
+					CLEARLINE 1
+					GOTO INPUT_LOOP_ITEM1
+				ELSEIF CFLAG:魔力 < 500
+					CLEARLINE 1
+					REUSELASTLINE 魔力但足りないようだ…
+					GOTO INPUT_LOOP_ITEM1
+				ENDIF
+				CALL PRINT_DIALOG(@"「震动棒」将被炼成。可以吗？",1,1,1)
+				CALL PRINT_CHOICE(,"是",1,"否",2,)
+				IF RESULT == 1
+					CFLAG:魔力 -= 500
+					ITEM:1 = 1
+					CALL KOJO_EVENT(110, 15)
+					CALL VOIDLINE_IF(RESULT)
+					PRINTFORMW %CALLNAME%炼成了震动棒
+				ENDIF
+			CASE 3
+				IF ITEM:2
+					CLEARLINE 1
+					GOTO INPUT_LOOP_ITEM1
+				ELSEIF CFLAG:魔力 < 300
+					CLEARLINE 1
+					REUSELASTLINE 魔力但足りないようだ…
+					GOTO INPUT_LOOP_ITEM1
+				ENDIF
+				CALL PRINT_DIALOG(@"「肛门拉珠」将被炼成。可以吗？",1,1,1)
+				CALL PRINT_CHOICE(,"是",1,"否",2,)
+				IF RESULT == 1
+					CFLAG:魔力 -= 300
+					ITEM:2 = 1
+					CALL KOJO_EVENT(110, 16)
+					CALL VOIDLINE_IF(RESULT)
+					PRINTFORMW %CALLNAME%炼成了肛门拉珠
+				ENDIF
+			CASE 4
+				IF ITEM:3
+					CLEARLINE 1
+					GOTO INPUT_LOOP_ITEM1
+				ELSEIF CFLAG:魔力 < 500
+					CLEARLINE 1
+					REUSELASTLINE 魔力但足りないようだ…
+					GOTO INPUT_LOOP_ITEM1
+				ENDIF
+				CALL PRINT_DIALOG(@"「假阴茎」将被炼成。可以吗？",1,1,1)
+				CALL PRINT_CHOICE(,"是",1,"否",2,)
+				IF RESULT == 1
+					CFLAG:魔力 -= 500
+					ITEM:3 = 1
+					CALL KOJO_EVENT(110, 17)
+					CALL VOIDLINE_IF(RESULT)
+					PRINTFORMW %CALLNAME%炼成了假阴茎
+				ENDIF
+			CASE 5
+				IF ITEM:11
+					CLEARLINE 1
+					GOTO INPUT_LOOP_ITEM1
+				ELSEIF CFLAG:魔力 < 1000
+					CLEARLINE 1
+					REUSELASTLINE 魔力但足りないようだ…
+					GOTO INPUT_LOOP_ITEM1
+				ENDIF
+				CALL PRINT_DIALOG(@"「肛门震动棒」将被炼成。可以吗？",1,1,1)
+				CALL PRINT_CHOICE(,"是",1,"否",2,)
+				IF RESULT == 1
+					CFLAG:魔力 -= 1000
+					ITEM:11 = 1
+					CALL KOJO_EVENT(110, 18)
+					CALL VOIDLINE_IF(RESULT)
+					PRINTFORMW %CALLNAME%炼成了肛门震动棒
+				ENDIF
+			CASE 6
+				IF ITEM:12
+					CLEARLINE 1
+					GOTO INPUT_LOOP_ITEM1
+				ELSEIF CFLAG:魔力 < 600
+					CLEARLINE 1
+					REUSELASTLINE 魔力但足りないようだ…
+					GOTO INPUT_LOOP_ITEM1
+				ENDIF
+				CALL PRINT_DIALOG(@"「阴蒂夹」将被炼成。可以吗？",1,1,1)
+				CALL PRINT_CHOICE(,"是",1,"否",2,)
+				IF RESULT == 1
+					CFLAG:魔力 -= 600
+					ITEM:12 = 1
+					CALL KOJO_EVENT(110, 19)
+					CALL VOIDLINE_IF(RESULT)
+					PRINTFORMW %CALLNAME%炼成了阴蒂夹
+				ENDIF
+			CASE 7
+				IF ITEM:13
+					CLEARLINE 1
+					GOTO INPUT_LOOP_ITEM1
+				ELSEIF CFLAG:魔力 < 600
+					CLEARLINE 1
+					REUSELASTLINE 魔力但足りないようだ…
+					GOTO INPUT_LOOP_ITEM1
+				ENDIF
+				CALL PRINT_DIALOG(@"「乳头夹」将被炼成。可以吗？",1,1,1)
+				CALL PRINT_CHOICE(,"是",1,"否",2,)
+				IF RESULT == 1
+					CFLAG:魔力 -= 600
+					ITEM:13 = 1
+					CALL KOJO_EVENT(110, 20)
+					CALL VOIDLINE_IF(RESULT)
+					PRINTFORMW %CALLNAME%炼成了乳头夹
+				ENDIF
+			CASE 8
+				IF ITEM:14
+					CLEARLINE 1
+					GOTO INPUT_LOOP_ITEM1
+				ELSEIF CFLAG:魔力 < 600
+					CLEARLINE 1
+					REUSELASTLINE 魔力但足りないようだ…
+					GOTO INPUT_LOOP_ITEM1
+				ENDIF
+				CALL PRINT_DIALOG(@"「飞机杯」将被炼成。可以吗？",1,1,1)
+				CALL PRINT_CHOICE(,"是",1,"否",2,)
+				IF RESULT == 1
+					CFLAG:魔力 -= 600
+					ITEM:14 = 1
+					CALL KOJO_EVENT(110, 21)
+					CALL VOIDLINE_IF(RESULT)
+					PRINTFORMW %CALLNAME%炼成了飞机杯
+				ENDIF
+			CASEELSE
+				CLEARLINE 1
+				GOTO INPUT_LOOP_ITEM1
+		ENDSELECT
+	CASE 6
+		;事件口上：責め具錬成前
+		CALL KOJO_EVENT(110, 22)
+		PRINTFORML %CALLNAME%是魔力被使って責め具被創るこ和にした…
+		PRINTL [ 0] - 停止
+		PRINTFORML \@ ITEM:20 ? [--] 眼罩已持有           # [ 1] 眼罩　　　　　　　　　　　　　　　　　　 魔力300 \@
+		PRINTFORML \@ ITEM:21 ? [--] 鞭已持有                   # [ 2] 鞭　　　　　　　　　　　　　　　　　　　　　　 魔力500 \@
+		PRINTFORML \@ ITEM:22 ? [--] 绳已持有                   # [ 3] 绳　　　　　　　　　　　　　　　　　　　　　　 魔力300 \@
+		PRINTFORML \@ ITEM:30 ? [--] 口球已持有         # [ 4] 口球　　　　　　　　　　　　　　　　　 魔力300 \@
+		PRINTFORML \@ ITEM:31 ? [--] 针已持有                   # [ 5] 针　　　　　　　　　　　　　　　　　　　　　　 魔力500 \@
+		PRINTFORML \@ ITEM:32 ? [--] 灌肠套装已持有           # [ 6] 灌肠套装　　　　　　　　　　　　　　　　　　 魔力1000 \@
+		PRINTFORML \@ ITEM:33 ? [--] 三角木马已持有             # [ 7] 三角木马　　　　　　　　　　　　　　　　　　　 魔力2000 \@
+		PRINTFORML \@ ITEM:40 ? [--] 大镜已持有                 # [ 8] 大镜　　　　　　　　　　　　　　　　　　　　　 魔力1000 \@
+		PRINTFORML \@ ITEM:42 ? [--] 项圈已持有                 # [ 9] 项圈　　　　　　　　　　　　　　　　　　　　　 魔力1500 \@
+		$INPUT_LOOP_ITEM2
+		INPUT
+		SELECTCASE RESULT
+			CASE 0
+				RESTART
+			CASE 1
+				IF ITEM:20
+					CLEARLINE 1
+					GOTO INPUT_LOOP_ITEM2
+				ELSEIF CFLAG:魔力 < 300
+					CLEARLINE 1
+					REUSELASTLINE 魔力但足りないようだ…
+					GOTO INPUT_LOOP_ITEM2
+				ENDIF
+				CALL PRINT_DIALOG(@"「眼罩」将被炼成。可以吗？",1,1,1)
+				CALL PRINT_CHOICE(,"是",1,"否",2,)
+				IF RESULT == 1
+					CFLAG:魔力 -= 300
+					ITEM:20 = 1
+					CALL KOJO_EVENT(110, 23)
+					CALL VOIDLINE_IF(RESULT)
+					PRINTFORMW %CALLNAME%炼成了眼罩
+				ENDIF
+			CASE 2
+				IF ITEM:21
+					CLEARLINE 1
+					GOTO INPUT_LOOP_ITEM2
+				ELSEIF CFLAG:魔力 < 500
+					CLEARLINE 1
+					REUSELASTLINE 魔力但足りないようだ…
+					GOTO INPUT_LOOP_ITEM2
+				ENDIF
+				CALL PRINT_DIALOG(@"「鞭」将被炼成。可以吗？",1,1,1)
+				CALL PRINT_CHOICE(,"是",1,"否",2,)
+				IF RESULT == 1
+					CFLAG:魔力 -= 500
+					ITEM:21 = 1
+					CALL KOJO_EVENT(110, 24)
+					CALL VOIDLINE_IF(RESULT)
+					PRINTFORMW %CALLNAME%炼成了鞭
+				ENDIF
+			CASE 3
+				IF ITEM:22
+					CLEARLINE 1
+					GOTO INPUT_LOOP_ITEM2
+				ELSEIF CFLAG:魔力 < 300
+					CLEARLINE 1
+					REUSELASTLINE 魔力但足りないようだ…
+					GOTO INPUT_LOOP_ITEM2
+				ENDIF
+				CALL PRINT_DIALOG(@"「绳」将被炼成。可以吗？",1,1,1)
+				CALL PRINT_CHOICE(,"是",1,"否",2,)
+				IF RESULT == 1
+					CFLAG:魔力 -= 300
+					ITEM:22 = 1
+					CALL KOJO_EVENT(110, 25)
+					CALL VOIDLINE_IF(RESULT)
+					PRINTFORMW %CALLNAME%炼成了绳
+				ENDIF
+			CASE 4
+				IF ITEM:30
+					CLEARLINE 1
+					GOTO INPUT_LOOP_ITEM2
+				ELSEIF CFLAG:魔力 < 300
+					CLEARLINE 1
+					REUSELASTLINE 魔力但足りないようだ…
+					GOTO INPUT_LOOP_ITEM2
+				ENDIF
+				CALL PRINT_DIALOG(@"「口球」将被炼成。可以吗？",1,1,1)
+				CALL PRINT_CHOICE(,"是",1,"否",2,)
+				IF RESULT == 1
+					CFLAG:魔力 -= 300
+					ITEM:30 = 1
+					CALL KOJO_EVENT(110, 26)
+					CALL VOIDLINE_IF(RESULT)
+					PRINTFORMW %CALLNAME%炼成了口球
+				ENDIF
+			CASE 5
+				IF ITEM:31
+					CLEARLINE 1
+					GOTO INPUT_LOOP_ITEM2
+				ELSEIF CFLAG:魔力 < 500
+					CLEARLINE 1
+					REUSELASTLINE 魔力但足りないようだ…
+					GOTO INPUT_LOOP_ITEM2
+				ENDIF
+				CALL PRINT_DIALOG(@"「针」将被炼成。可以吗？",1,1,1)
+				CALL PRINT_CHOICE(,"是",1,"否",2,)
+				IF RESULT == 1
+					CFLAG:魔力 -= 500
+					ITEM:31 = 1
+					CALL KOJO_EVENT(110, 27)
+					CALL VOIDLINE_IF(RESULT)
+					PRINTFORMW %CALLNAME%炼成了针
+				ENDIF
+			CASE 6
+				IF ITEM:32
+					CLEARLINE 1
+					GOTO INPUT_LOOP_ITEM2
+				ELSEIF CFLAG:魔力 < 100
+					CLEARLINE 1
+					REUSELASTLINE 魔力但足りないようだ…
+					GOTO INPUT_LOOP_ITEM2
+				ENDIF
+				CALL PRINT_DIALOG(@"「灌肠套装」将被炼成。可以吗？",1,1,1)
+				CALL PRINT_CHOICE(,"是",1,"否",2,)
+					IF RESULT == 1
+					CFLAG:魔力 -= 1000
+					ITEM:32 = 1
+					CALL KOJO_EVENT(110, 28)
+					CALL VOIDLINE_IF(RESULT)
+					PRINTFORMW %CALLNAME%炼成了灌肠套装
+				ENDIF
+			CASE 7
+				IF ITEM:33
+					CLEARLINE 1
+					GOTO INPUT_LOOP_ITEM2
+				ELSEIF CFLAG:魔力 < 2000
+					CLEARLINE 1
+					REUSELASTLINE 魔力但足りないようだ…
+					GOTO INPUT_LOOP_ITEM2
+				ENDIF
+				CALL PRINT_DIALOG(@"「三角木马」将被炼成。可以吗？",1,1,1)
+				CALL PRINT_CHOICE(,"是",1,"否",2,)
+				IF RESULT == 1
+					CFLAG:魔力 -= 2000
+					ITEM:33 = 1
+					CALL KOJO_EVENT(110, 29)
+					CALL VOIDLINE_IF(RESULT)
+					PRINTFORMW %CALLNAME%炼成了三角木马
+				ENDIF
+			CASE 8
+				IF ITEM:40
+					CLEARLINE 1
+					GOTO INPUT_LOOP_ITEM2
+				ELSEIF CFLAG:魔力 < 1000
+					CLEARLINE 1
+					REUSELASTLINE 魔力但足りないようだ…
+					GOTO INPUT_LOOP_ITEM2
+				ENDIF
+				CALL PRINT_DIALOG(@"「大镜」将被炼成。可以吗？",1,1,1)
+				CALL PRINT_CHOICE(,"是",1,"否",2,)
+				IF RESULT == 1
+					CFLAG:魔力 -= 1000
+					ITEM:40 = 1
+					CALL KOJO_EVENT(110, 30)
+					CALL VOIDLINE_IF(RESULT)
+					PRINTFORMW %CALLNAME%炼成了大镜
+				ENDIF
+			CASE 9
+				IF ITEM:42
+					CLEARLINE 1
+					GOTO INPUT_LOOP_ITEM2
+				ELSEIF CFLAG:魔力 < 1500
+					CLEARLINE 1
+					REUSELASTLINE 魔力但足りないようだ…
+					GOTO INPUT_LOOP_ITEM2
+				ENDIF
+				CALL PRINT_DIALOG(@"「项圈」将被炼成。可以吗？",1,1,1)
+				CALL PRINT_CHOICE(,"是",1,"否",2,)
+				IF RESULT == 1
+					CFLAG:魔力 -= 1500
+					ITEM:42 = 1
+					CALL KOJO_EVENT(110, 31)
+					CALL VOIDLINE_IF(RESULT)
+					PRINTFORMW %CALLNAME%炼成了项圈
+				ENDIF
+			CASEELSE
+				CLEARLINE 1
+				GOTO INPUT_LOOP_ITEM2
+		ENDSELECT
+	CASE 10
+		IF ITEM:9
+			GOTO FAILED
+		ELSEIF CFLAG:魔力 < 3000
+			GOTO FAILED_BY_MP
+		ELSEIF !TALENT:道具使
+			CLEARLINE 1
+			REUSELASTLINE 外界的性爱道具被カスタマイズできる只的知识被まだ持っていない…
+			GOTO INPUT_LOOP
+		ENDIF
+		CALL PRINT_DIALOG(@"性爱道具的性能将被提高。可以吗？",1,1,1)
+		CALL PRINT_CHOICE(,"是",1,"否",2,)
+		IF RESULT == 1
+			CFLAG:魔力 -= 2000
+			ITEM:9 = 1
+			CALL KOJO_EVENT(110, 32)
+			CALL VOIDLINE_IF(RESULT)
+			PRINTFORMW %CALLNAME%对性爱道具进行了自定义
+		ENDIF
+	CASE 11
+		SIF TALENT:男人
+			GOTO FAILED
+		SIF CFLAG:魔力 < 7000
+			GOTO FAILED_BY_MP
+		IF TALENT:扶她
+			CALL PRINT_DIALOG(@"消去%CALLNAME:TARGET%的[扶她]。可以吗？",1,1,1)
+		ELSE
+			CALL PRINT_DIALOG(@"让%CALLNAME:TARGET%变成[扶她]。可以吗？",1,1,1)
+		ENDIF
+		CALL PRINT_CHOICE(,"是",1,"否",2,)
+		IF RESULT == 1
+			CFLAG:魔力 -= 7000
+			TALENT:扶她 = !TALENT:扶她
+			;童贞かどうか
+			TALENT:童贞 = !CFLAG:已失去童贞 && TALENT:扶她
+			;射精ゲージ的初期化
+			;初期化関数被統一@これみ
+			CALL BASE_SETUP_PENIS(TARGET)
+			CALL KOJO_EVENT(110, 33)
+			CALL VOIDLINE_IF(RESULT)
+			PRINTFORMW %CALLNAME:TARGET%变成了\@ TALENT:扶她 ? 扶她 # 女人 \@
+		ENDIF
+	CASE 12
+		SIF TALENT:男人 || TALENT:巨乳
+			GOTO FAILED
+		SIF CFLAG:魔力 < 5000
+			GOTO FAILED_BY_MP
+		IF TALENT:貧乳
+			CALL PRINT_DIALOG(@"%CALLNAME:TARGET%的胸部变成普通的尺寸。可以吗？",1,1,1)
+		ELSE
+			CALL PRINT_DIALOG(@"让%CALLNAME:TARGET%变成[巨乳]。可以吗？",1,1,1)
+		ENDIF
+		CALL PRINT_CHOICE(,"是",1,"否",2,)
+		IF RESULT == 1
+			CFLAG:魔力 -= 5000
+			TALENT:巨乳 = !TALENT:貧乳
+			TALENT:貧乳 = 0
+			CALL KOJO_EVENT(110, 34)
+			CALL VOIDLINE_IF(RESULT)
+			PRINTFORMW %CALLNAME:TARGET%变成了\@ TALENT:巨乳 ? 巨乳 # 普通的乳房 \@
+		ENDIF
+	CASE 13
+		SIF TALENT:男人 || TALENT:貧乳
+			GOTO FAILED
+		SIF CFLAG:魔力 < 1000
+			GOTO FAILED_BY_MP
+		IF TALENT:巨乳
+			CALL PRINT_DIALOG(@"%CALLNAME:TARGET%的胸部变成普通的尺寸。可以吗？",1,1,1)
+		ELSE
+			CALL PRINT_DIALOG(@"让%CALLNAME:TARGET%变成[贫乳]。可以吗？",1,1,1)
+		ENDIF
+		CALL PRINT_CHOICE(,"是",1,"否",2,)
+		IF RESULT == 1
+			CFLAG:魔力 -= 1000
+			TALENT:貧乳 = !TALENT:巨乳
+			TALENT:巨乳 = 0
+			CALL KOJO_EVENT(110, 35)
+			CALL VOIDLINE_IF(RESULT)
+			PRINTFORMW %CALLNAME:TARGET%变成了\@ TALENT:貧乳 ? 貧乳 # 普通的乳房 \@
+		ENDIF
+	CASE 16
+		SIF MAXBASE:MASTER:射精 < 2500 + CFLAG:MASTER:精力界限 * 500
+			GOTO FAILED
+		SIF CFLAG:魔力 < (MAXBASE:MASTER:射精 - 2500 - CFLAG:MASTER:精力界限 * 500) / 500 * 1000 + 1000
+			GOTO FAILED_BY_MP
+		CALL PRINT_DIALOG(@"稍微强化%CALLNAME:MASTER%的精力上限。可以吗？",1,1,0)
+		CALL PRINT_DIALOG(@"※精力最大值的增长幅度増大。",0,1,0)
+		CALL PRINT_DIALOG(@"  精力最大值本身请在今后的调教中锻炼。",0,1,1)
+		CALL PRINT_CHOICE(,"是",1,"否",2,)
+		IF RESULT == 1
+			CFLAG:魔力 -= (MAXBASE:MASTER:射精 - 2500 - CFLAG:MASTER:精力界限 * 500) / 500 * 1000 + 1000
+			CFLAG:MASTER:精力界限 += (MAXBASE:MASTER:射精 - 2500 - CFLAG:MASTER:精力界限 * 500) / 500 + 1
+			CALL KOJO_EVENT(110, 36)
+			CALL VOIDLINE_IF(RESULT)
+			PRINTFORMW %CALLNAME:MASTER%的精力的上限值上升了
+		ENDIF
+	CASEELSE
+		GOTO FAILED
+ENDSELECT
+RESTART
+
+
+;────────────────────────────────────
+;すでに取得した奖励被新しい调教者に適用
+;────────────────────────────────────
+@BONUS_APPLY
+
+;────────────────────────────────────
+;技巧上升处理
+;返り値 = 0:成功 1:魔力不足 2:调教等级不足 3:技巧上限
+;────────────────────────────────────
+@RIZE_ABL
+
+;魔力消费量被返す
+RESULT:1 = RIZE_ABL_V(0)
+;技巧上限被判定
+SIF ABL:技巧 >= 99
+	RETURN 3
+;魔力不足被判定
+SIF CFLAG:魔力 < RIZE_ABL_V(0)
+	RETURN 1
+;调教等级被判定
+SIF CFLAG:调教等级 < RIZE_ABL_V(1)
+	RETURN 2
+RETURN 0
+
+;-------------------------------------
+;技巧上升所要魔力・调教等级
+;どちら的条件も满たした场合的み技巧上升但可能
+;ARG = 0:魔力 1:调教等级
+;-------------------------------------
+@RIZE_ABL_V(ARG)
+#FUNCTION
+IF ARG == 0
+	;所要魔力
+	;0→1:100 1→2:300 2→3:1000 3→4:3000 4→5:10000 ……
+	LOCAL = POWER(10, 2 + ABL:技巧 / 2)
+	SIF ABL:技巧 % 2
+		LOCAL *= 3
+	RETURNF LOCAL
+ELSE
+	;所要等级
+	;0→1:0 1→2:1 2→3:4 3→4:9 4→5:16 ……
+	RETURNF ABL:技巧 * ABL:技巧
+ENDIF
+
+;────────────────────────────────────
+;技能取得・放棄处理
+;返り値 = 0:成功 1:魔力不足 2:调教等级不足
+;────────────────────────────────────
+@GAIN_TALENT(ARGS)
+
+;魔力消费量被返す
+RESULT:1 = GAIN_TALENT_V(ARGS, 0)
+;魔力不足被判定
+SIF CFLAG:魔力 < GAIN_TALENT_V(ARGS, 0)
+	RETURN 1
+;调教等级被判定
+SIF CFLAG:调教等级 < GAIN_TALENT_V(ARGS, 1)
+	RETURN 2
+RETURN 0
+
+;-------------------------------------
+;技能取得・放棄 所要魔力・调教等级
+;どちら的条件も满たした场合的み技能取得・放棄但可能
+;ARG = 0:魔力 1:调教等级
+;-------------------------------------
+@GAIN_TALENT_V(ARGS, ARG)
+#FUNCTION
+
+;DEBUG用
+;魔力消费免除
+;SIF ARG == 0
+;	RETURNF 0
+;调教等级无視
+;SIF ARG != 0
+;	RETURNF 0
+
+SELECTCASE ARGS
+	CASE "调合知识"
+		IF ARG == 0
+			RETURNF 1000
+		ELSE
+			RETURNF 5
+		ENDIF
+	CASE "魅惑"
+		IF ARG == 0
+			RETURNF 1000
+		ELSE
+			RETURNF 5
+		ENDIF
+	CASE "禁忌的知识"
+		IF ARG == 0
+			RETURNF 10000
+		ELSE
+			RETURNF 8
+		ENDIF
+	CASE "道具使"
+		IF ARG == 0
+			RETURNF 1000
+		ELSE
+			RETURNF 6
+		ENDIF
+	CASE "撮影技能"
+		IF ARG == 0
+			RETURNF 1000
+		ELSE
+			RETURNF 6
+		ENDIF
+	CASE "舌使"
+		IF ARG == 0
+			RETURNF 10000
+		ELSE
+			RETURNF 10
+		ENDIF
+	CASE "灵巧的指尖"
+		IF ARG == 0
+			RETURNF 10000
+		ELSE
+			RETURNF 10
+		ENDIF
+	CASE "腰使"
+		IF ARG == 0
+			RETURNF 10000
+		ELSE
+			RETURNF 10
+		ENDIF
+	CASE "擅长捆绑"
+		IF ARG == 0
+			RETURNF 10000
+		ELSE
+			RETURNF 10
+		ENDIF
+	CASE "虐待狂"
+		IF ARG == 0
+			RETURNF 10000
+		ELSE
+			RETURNF 10
+		ENDIF
+	CASE "着衣PLAY喜欢"
+		IF ARG == 0
+			RETURNF 10000
+		ELSE
+			RETURNF 10
+		ENDIF
+	CASE "脏污无視"
+		IF ARG == 0
+			RETURNF 10000
+		ELSE
+			RETURNF 10
+		ENDIF
+ENDSELECT

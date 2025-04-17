@@ -1,0 +1,138 @@
+﻿;特殊能力行动的試作案です。是っきり言えばかなり手抜きです但、こ的やり方是调教者思考ルーチンへ的负担但一番少ないです
+;────────────────────────────────────
+;调教者的特殊能力的チェック。特定的调教者和行动的組み合わせによって特殊能力行动に变化し增加
+;────────────────────────────────────
+@SP_CHECK
+IF NO:TARGET == 1
+	;针＝＞信仰之针
+	IF IS_NOWACTNAME("针") && CFLAG:调教等级 > 0
+		TFLAG:ＳＰ行动 = 200
+	;绳子紧绑＝＞八方鬼縛阵
+	ELSEIF IS_NOWACTNAME("绳") && ABL:技巧 > 2
+		TFLAG:ＳＰ行动 = 201
+	ENDIF
+ELSEIF NO:TARGET == 28
+	;令人毛骨悚然な微笑み＝＞狂气之瞳
+	IF IS_NOWACTNAME("令人毛骨悚然的笑") && ABL:异常 > 1
+		TFLAG:ＳＰ行动 = 202
+	;こ的出场人物的新しい特殊能力被作り想要时こ的ように扩张してください
+	;ELSEIF TFLAG:ACT == XX && CFLAG:调教等级 > X && ABL:X > X && ...
+	;	TFLAG:ＳＰ行动 = 2XX
+	ENDIF
+;新しい出场人物的特殊能力被作り想要时こちらから扩张してください
+;ELSEIF NO:TARGET == XX
+ENDIF
+
+
+;────────────────────────────────────
+;调教者的特殊能力行动的实行。（）的中にベース和なる调教指令から的变更点被说明
+;────────────────────────────────────
+@SP_ACTION
+;────────────────────────────────────
+;信仰之针（疼痛修正、调教时间短縮）
+;────────────────────────────────────
+IF TFLAG:ＳＰ行动 == 200
+	SOURCE:MASTER:疼痛 = 320 * (TALENT:虐待狂 + 2) + (ABL:技巧 + 1) * (ABL:施虐 + 2) * (2 + TALENT:东方不败 * 3) + (ABL:技巧 * 2 + CFLAG:调教等级) * (TALENT:虐待狂 + TALENT:东方不败 * 2 + 1) * (12 + TALENT:虐待狂)
+	SIF TALENT:好心眼
+		TIMES SOURCE:MASTER:疼痛 , 0.80
+	SOURCE:MASTER:逃脱 = 200 + SOURCE:MASTER:疼痛 / 2 - CFLAG:MASTER:调教等级 * 30 - ABL:MASTER:受虐气质 * 60 - ABL:MASTER:痛苦中毒 * 200
+	SIF SOURCE:MASTER:逃脱 < 0
+		SOURCE:MASTER:逃脱 = 0
+	SOURCE:MASTER:中毒充足 = ABL:MASTER:受虐气质 * (ABL:MASTER:痛苦中毒 - 1) * (ABL:MASTER:痛苦中毒 + 1) * SOURCE:MASTER:疼痛 / 100
+	SIF SOURCE:MASTER:中毒充足 < 0
+		SOURCE:MASTER:中毒充足 = 0
+	SOURCE:MASTER:心理创伤 = SOURCE:MASTER:疼痛 / 2 - SOURCE:MASTER:中毒充足
+	SIF SOURCE:MASTER:心理创伤 < 0
+		SOURCE:MASTER:心理创伤 = 0
+	SIF CFLAG:MASTER:心理创伤 == 62
+		TIMES SOURCE:MASTER:心理创伤 , 1.50
+	;出血
+	IF TALENT:MASTER:男人 || TALENT:MASTER:扶她
+		STAIN:MASTER:阴茎 |= 32
+	ELSE
+		STAIN:MASTER:小穴 |= 32
+	ENDIF
+	STAIN:MASTER:胸 |= 32
+	SIF TEQUIP:自慰中
+		TEQUIP:自慰中 = 0
+	SIF TEQUIP:性交中
+		TEQUIP:性交中 = 0
+	TFLAG:经过时间 += 1
+;────────────────────────────────────
+;八方鬼縛阵（捆绑修正、调教时间短縮）
+;────────────────────────────────────
+ELSEIF TFLAG:ＳＰ行动 == 201
+	IF TEQUIP:绳 == 0
+		SOURCE:MASTER:捆绑 = 120 + (MARK:反抗刻印 + CFLAG:调教等级 * 2 + 1) * (ABL:技巧 * 2 + 1) * 5 * (TALENT:擅长捆绑 * 3 + 2)
+		SOURCE:MASTER:中毒充足 = ABL:MASTER:受虐气质 * (ABL:MASTER:捆绑中毒 - 1) * (ABL:MASTER:捆绑中毒 + 1) * SOURCE:MASTER:捆绑 / 100
+		;装備番号是变わらない但、INFO.ERB和USERCOM.ERBで显示做メッセージ被设定でき增加
+		TEQUIP:绳 = 1 + SOURCE:MASTER:捆绑 / 500
+	ELSE
+		TEQUIP:绳 = 0
+	ENDIF
+	SIF TEQUIP:自慰中
+		TEQUIP:自慰中 = 0
+	SIF TEQUIP:性交中
+		TEQUIP:性交中 = 0
+	TFLAG:经过时间 += 1
+;────────────────────────────────────
+;狂气之瞳（随机参数上升、逃脱に修正）
+;────────────────────────────────────
+ELSEIF TFLAG:ＳＰ行动 == 202
+	SIF RAND:6 > 2
+		TFLAG:强制脱衣 = 6
+	SIF RAND:6 > 2
+		TFLAG:自主脱衣 = 6
+	A = RAND:14
+	B = RAND:14
+	SIF B == A
+		B += 1 + RAND:3
+	SIF B > 13
+		B -= 13
+	PALAM:MASTER:A += 500 + RAND:500
+	PALAM:MASTER:B += 300 + RAND:300
+	SOURCE:MASTER:逃脱 = (3 + RAND:5) * (CFLAG:调教等级 + 3) * 50
+	SOURCE:MASTER:心理创伤 = 250 + RAND:5 * 100
+	SIF CFLAG:MASTER:心理创伤 == 9
+		TIMES SOURCE:MASTER:心理创伤 , 1.50
+	SIF TEQUIP:自慰中 == 2
+		TEQUIP:自慰中 = 0
+	SIF TEQUIP:自慰中 == 3
+		TEQUIP:自慰中 = 1
+	SIF TEQUIP:性交中
+		TEQUIP:性交中 = 0
+	TFLAG:经过时间 += 1
+	TFLAG:已经出现的话题 |= 32
+ENDIF
+@SP_TRAIN_MESSAGE
+;信仰之针
+IF TFLAG:ＳＰ行动 == 200
+	IF PENIS(MASTER)
+		PRINTFORML %CALLNAME:TARGET%在%CALLNAME:MASTER%的身体里
+		PRINTFORML 用熟练的手势刺入了退魔之针…
+	ELSE
+		PRINTFORML %CALLNAME:TARGET%将%CALLNAME:MASTER%的乳头和阴蒂
+		PRINTFORML 用熟练的手势刺入了退魔之针…
+	ENDIF
+;八方鬼縛阵
+ELSEIF TFLAG:ＳＰ行动 == 201
+	;解除
+	IF TFLAG:ACT派生 == 1
+		PRINTFORML %CALLNAME:TARGET%凭借不可思议的力量、
+		PRINTFORML 束缚着%CALLNAME:MASTER%的神符一瞬间回到了%CALLNAME:TARGET%的手中…
+	;通常
+	ELSE
+		PRINTFORML %CALLNAME:TARGET%使用神符张开了结界
+		PRINTFORML 用意念夺去了%CALLNAME:MASTER%身体的自由…
+	ENDIF
+ELSEIF TFLAG:ＳＰ行动 == 202
+	;PRINTL ＜シックスナイン＞
+	IF TSTR:上次调教指令 == "シックスナイン"
+		PRINTFORML %CALLNAME:TARGET%就这样继续跨在%CALLNAME:MASTER%的脸上
+		PRINTFORML 叼着阴茎不放…
+	ELSE
+		PRINTFORML %CALLNAME:TARGET%骑在%CALLNAME:MASTER%的脸上将其推倒
+		PRINTFORML 开始用舌头在毫无防备的股间舔来舔去…
+	ENDIF
+ENDIF
+

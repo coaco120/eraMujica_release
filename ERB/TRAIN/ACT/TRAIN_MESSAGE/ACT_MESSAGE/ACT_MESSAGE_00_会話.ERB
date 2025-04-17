@@ -1,0 +1,328 @@
+﻿;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+
+;		会话系メッセージ
+
+;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+
+;────────────────────────────────────
+;000,询问今天的心情
+;────────────────────────────────────
+;★反应前★
+@TRAIN_MESSAGE_0
+PRINTFORML %CALLNAME:TARGET%试着听了听%TARGET_DESCRIPTION("一面、")%%EQUIPACTION_DESCRIPTION()%现在的心情…
+
+;☆反应后☆
+@TRAIN_MESSAGE2_0
+PRINTL 
+SELECTCASE TFLAG:ACT派生
+	CASE 0                              ;ACT派生但歯切れ恶く質問に答えた
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%无法完全回答%CALLNAME:TARGET%提出的问题…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME:MASTER%有些含糊的回答了%CALLNAME:TARGET%的问题…
+			CASE "无理被した行动"
+				PRINTFORML %CALLNAME:MASTER%把到嘴边的话给咽了下去，转而含糊其辞…
+		ENDSELECT
+		RETURN 1
+	CASE 1                              ;ACT派生但勇気被出して强く当たった
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:TARGET%对%CALLNAME:MASTER%说了很严厉的话…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME:MASTER%鼓起勇气狠狠地击中了%CALLNAME:TARGET%…
+			CASE "无理被した行动"
+				PRINTFORML %CALLNAME:MASTER%把目光从%CALLNAME:TARGET%身上移开，只有嘴上表现得很强硬…
+		ENDSELECT
+		RETURN 1
+	CASE 2                              ;ACT派生但皮肉「今的心情是、和聞かれても」
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%带着一脸从容的笑容耸了耸肩膀、回答道「就算你问我现在的心情」。
+				PRINTFORML %CALLNAME:TARGET%觉得调教似乎还不够…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME:MASTER%稍微想了想、回答说「就算你问我现在的心情」。
+				PRINTFORML %CALLNAME:TARGET%觉得调教似乎还不够…
+			CASE "无理被した行动"
+				PRINTFORML %CALLNAME:MASTER%低垂着视线，沉默了一会儿
+				PRINTFORML 用无力的声音带着讽刺勉强回答…
+		ENDSELECT
+		RETURN 1
+	CASE 3                              ;ACT派生但是っきり和今的感受被告げた
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%坦率地说，能和%CALLNAME:TARGET%在一起很开心…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME:MASTER%清楚地告诉了%CALLNAME:TARGET%现在的心情…
+			CASE "无理被した行动"
+				PRINTFORML %CALLNAME:MASTER%为了不让%CALLNAME:TARGET%心情不好，假装认真回答了…
+		ENDSELECT
+		RETURN 1
+	CASE 4                              ;ACT派生但まあまあ恶く是ない
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%回答说觉得和%CALLNAME:TARGET%在一起其实也没有那么坏…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME:MASTER%对%CALLNAME:TARGET%说「也不算很差」…
+			CASE "无理被した行动"
+				IF COMCOR_POSI()                  ;实是积极
+					PRINTFORML %CALLNAME:MASTER%从%CALLNAME:TARGET%身上移开视线，嘟囔着自己没有错…
+				ELSE                              ;实是嫌
+					PRINTFORML %CALLNAME:MASTER%竭尽全力逞强着，咬着牙回答还不错…
+				ENDIF
+		ENDSELECT
+		RETURN 1
+	CASE 5                              ;ACT派生但心情舒畅こ和し想要
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%说想和%CALLNAME:TARGET%一起变得舒服起来…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME:MASTER%对%CALLNAME:TARGET%说，想做能让人心情舒畅的事情…
+			CASE "无理被した行动"
+				PRINTFORML %CALLNAME:MASTER%为了向%CALLNAME:TARGET%献媚，故意做出诱惑的行为…
+		ENDSELECT
+		RETURN 1
+ENDSELECT
+
+;────────────────────────────────────
+;001,主动的事被どう思うか被询问
+;────────────────────────────────────
+;★反应前★
+@TRAIN_MESSAGE_1
+PRINTFORML %CALLNAME:TARGET%问了问%TARGET_DESCRIPTION("保持、")%%EQUIPACTION_DESCRIPTION()%对自己有什么看法…
+
+;☆反应后☆
+@TRAIN_MESSAGE2_1
+PRINTL 
+SELECTCASE TFLAG:ACT派生
+	CASE 0                              ;ACT派生但嫌いじゃない…かも知れない…
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%无论如何也说不出讨厌%CALLNAME%的话…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME:MASTER%小声地回答「也许不讨厌…」…
+			CASE "无理被した行动"
+				PRINTFORML %CALLNAME:MASTER%隐藏了自己的真正想法、回答道「不讨厌…也许…」…
+		ENDSELECT
+		RETURN 1
+	CASE 1                              ;ACT派生但そんなこ和あるわけない！
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%瞪着%CALLNAME%、强硬的回答道「我不可能喜欢你！」…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME:MASTER%对%CALLNAME:TARGET%说「怎么可能有那种事！」说了这样的话…
+			CASE "无理被した行动"
+				PRINTFORML %CALLNAME:MASTER%像是拼命否定感情般摇头、回答道「我讨厌%CNAME(TARGET, MASTER)%！」…
+		ENDSELECT
+		RETURN 1
+	CASE 2                              ;ACT派生但皮肉「困るねぇ…喜欢じゃない和いったら怒る？」
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%笑着回答道「…不会还以为我喜欢你吧？」。
+				PRINTFORML %CALLNAME:TARGET%觉得调教似乎还不够…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME:MASTER%稍微想了想、回答道「真为难啊…说不喜欢你会生气吗？」。
+				PRINTFORML %CALLNAME:TARGET%觉得调教似乎还不够…
+			CASE "无理被した行动"
+				PRINTFORML %CALLNAME:MASTER%吞吞吐吐地纠正姿势，犹豫地看着%CALLNAME%
+				PRINTFORML 回答道「%CNAME(TARGET, MASTER)%想被人喜欢吗？」…
+		ENDSELECT
+		RETURN 1
+	CASE 3                              ;ACT派生但もう酷いこ和しなければ、もっ和喜欢になれるかもしれない
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%对%CALLNAME:TARGET%回答说「我想变得喜欢你，所以请不要做太过分的事」…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME:MASTER%对%CALLNAME:TARGET%回答说「如果你不做太過分的事情，也许会喜欢上你也说不定」…
+			CASE "无理被した行动"
+				PRINTFORML %CALLNAME:MASTER%在偷偷看了%CALLNAME:TARGET%的眼色之后、
+				PRINTFORML 回答说「我讨厌总是做過分的事的人」…
+		ENDSELECT
+		RETURN 1
+	CASE 4                              ;ACT派生但是っきり和喜欢和告げた
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%友善地笑着回答说最喜欢%CALLNAME:TARGET%了…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME:MASTER%经过一瞬间的思考后，清楚地告诉%CALLNAME:TARGET%自己喜欢她…
+			CASE "无理被した行动"
+				PRINTFORML %CALLNAME:MASTER%回想了%CALLNAME:TARGET%的行为，思考了之后
+				PRINTFORML 脸上浮现出假笑，回答说喜欢你…
+		ENDSELECT
+		RETURN 1
+	CASE 5                              ;ACT派生但もっ和すごいこ和してくれば、もっ和喜欢になれるかも
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%对%CALLNAME:TARGET%回答说「如果你能做更…的事，也许会更喜欢你也说不定」…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME:MASTER%对%CALLNAME:TARGET%回答说「希望你能更加喜欢，更加疼爱我」…
+			CASE "无理被した行动"
+				PRINTFORML %CALLNAME:MASTER%拼命压抑自己的心情，期待着%CALLNAME:TARGET%的反应
+				PRINTFORML 回答道「只要你做了能让我喜欢上你的事情就好了」…
+		ENDSELECT
+		RETURN 1
+ENDSELECT
+
+;────────────────────────────────────
+;002,谈论性的话题
+;────────────────────────────────────
+@TRAIN_MESSAGE_2
+PRINTFORML %CALLNAME:TARGET%开始向%TARGET_DESCRIPTION("一边、")%%EQUIPACTION_DESCRIPTION()%讲述关于性的知识…
+
+;────────────────────────────────────
+;003,温柔的安慰
+;────────────────────────────────────
+@TRAIN_MESSAGE_3
+PRINTFORML %TARGET_DESCRIPTION("保持、")%%CALLNAME:TARGET%用温柔的话语安慰了%EQUIPACTION_DESCRIPTION()%…
+
+;────────────────────────────────────
+;004,严厉的威胁
+;────────────────────────────────────
+@TRAIN_MESSAGE_4
+PRINTFORML %CALLNAME:TARGET%用严厉的言辞试着威胁了%TARGET_DESCRIPTION("一面、")%%CALLNAME:MASTER%…
+
+;────────────────────────────────────
+;005,服被脱いで/服被着て和命じる
+;────────────────────────────────────
+;★反应前★
+@TRAIN_MESSAGE_5
+IF TFLAG:ACT派生                        ;着衣指示
+	PRINTFORML %CALLNAME:TARGET%命令%CALLNAME:MASTER%穿上衣服…
+;脱衣指示
+ELSE                                    ;脱衣指示
+	PRINTFORML %CALLNAME:TARGET%命令%CALLNAME:MASTER%脱下衣服…
+ENDIF
+
+;☆反应后☆
+@TRAIN_MESSAGE2_5
+PRINTL 
+IF TFLAG:ACT派生 == 0                   ;服被脱いで的场合
+	SELECTCASE COMGRONAME(TFLAG:REACT分类)
+		CASE "消极的服从", "接受"           ;消极的服从/接受那么一枚脱ぐ
+			IF (TEQUIP:MASTER:配饰 + TEQUIP:MASTER:袜子 + TEQUIP:MASTER:下半身内衣 + TEQUIP:MASTER:上半身内衣 + TEQUIP:MASTER:下半身外套 + TEQUIP:MASTER:上半身外套 + TEQUIP:MASTER:全身外套) == 0
+				IF IS_COMGRONAME("接受")
+					PRINTFORML %CALLNAME:MASTER%全裸着身子，因期待和兴奋而感到浑身都热了起来…
+				ELSE
+					PRINTFORML %CALLNAME:MASTER%无奈的脱下最后一件衣服，变成了全裸…
+				ENDIF
+			ELSE
+				IF IS_COMGRONAME("接受")
+					PRINTFORML %CALLNAME:MASTER%用缓慢的动作脱下一件衣服…
+				ELSE
+					PRINTFORML %CALLNAME:MASTER%只好脱下一件衣服…
+				ENDIF
+			ENDIF
+		CASE "积极的服从", "淡然的服从"           ;积极的服从/淡然的服从那么二枚脱ぐ
+			IF (TEQUIP:MASTER:配饰 + TEQUIP:MASTER:袜子 + TEQUIP:MASTER:下半身内衣 + TEQUIP:MASTER:上半身内衣 + TEQUIP:MASTER:下半身外套 + TEQUIP:MASTER:上半身外套 + TEQUIP:MASTER:全身外套) == 0
+				PRINTFORML %CALLNAME:MASTER%\@ IS_COMGRONAME("积极的服从") ? 积极的 # 麻利的 \@脱去衣服，全裸了…
+				PRINTFORML 因为期待和兴奋而滚烫的皮肤，已经激动的渗出汗水…
+			;ELSEIF ACTION_APPLY2_5V(-1) == 2
+			;	PRINTFORML %CALLNAME:MASTER%是服被二枚脱下后扔掉了…
+			ELSEIF IS_COMGRONAME("积极的服从")
+				PRINTFORML %CALLNAME:MASTER%积极的脱下衣服扔掉了…
+			ELSE
+				PRINTFORML %CALLNAME:MASTER%迅速地脱下衣服扔掉了…
+			ENDIF
+		CASEELSE                                  ;其他反应那么脱但ない
+			IF PALAM:MASTER:害羞 > PALAM:MASTER:反抗        ;害羞先行
+				PRINTFORMW %CALLNAME:MASTER%因为害羞没能按照%CALLNAME:TARGET%的命令脱掉衣服。%CALLNAME:TARGET%对此好像很不满…
+			ELSE                                            ;反抗先行
+				PRINTFORMW %CALLNAME:MASTER%因为讨厌没有回应%CALLNAME:TARGET%的要求。%CALLNAME:TARGET%对此好像很不满…
+			ENDIF
+	ENDSELECT
+ELSE                                    ;服被着て的场合
+	SELECTCASE COMGRONAME(TFLAG:REACT分类)
+		CASE "消极的服从", "接受"           ;消极的服从/接受那么一枚着る
+			PRINTFORML %CALLNAME:MASTER%按照命令穿上了一件衣服…
+		CASE "积极的服从", "淡然的服从"           ;积极的服从/淡然的服从那么二枚着る
+			PRINTFORML %CALLNAME:MASTER%按照命令穿上了衣服…
+		CASEELSE                                  ;其他反应那么着ない
+			PRINTFORMW %CALLNAME:MASTER%因为讨厌没有回应%CALLNAME:TARGET%的要求。%CALLNAME:TARGET%对此好像很不满…
+	ENDSELECT
+ENDIF
+CALL TRAIN_MESSAGE2_5_ANIME
+WAIT
+;REACTION_MESSAGE被呼び出さないようにしてみる
+RETURN 1
+;RETURN 0
+
+;────────────────────────────────────
+;006,征求同意
+;────────────────────────────────────
+;★反应前★
+@TRAIN_MESSAGE_6
+PRINTFORML %TARGET_DESCRIPTION("一边、")%%CALLNAME:TARGET%询问%CALLNAME:MASTER%能否有幸得到第一次…
+
+;☆反应后☆
+@TRAIN_MESSAGE2_6
+SELECTCASE COMGRONAME(TFLAG:REACT分类)
+	CASE "消极的服从"                             ;REACT分类但消极的服从的场合
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%做好了觉悟，小声地答应了…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME:MASTER%小声答应了…
+			CASE "无理被した行动"
+				IF COMCOR_POSI()                            ;实是积极
+					PRINTFORML %CALLNAME:MASTER%用害羞的声音答应了…
+				ELSE                                        ;实是嫌
+					PRINTFORML %CALLNAME:MASTER%懊悔地扭曲着脸同意了…
+				ENDIF
+		ENDSELECT
+	CASE "淡然的服从"                             ;REACT分类但淡然的服从的场合
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%对%CALLNAME:TARGET%说并不讨厌…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME:MASTER%对%CALLNAME:TARGET%回答喜欢就行了…
+			CASE "无理被した行动"
+				IF COMCOR_POSI()                            ;实是积极
+					PRINTFORML %CALLNAME:MASTER%对%CALLNAME:TARGET%说是想做的话就可以了…
+				ELSE                                        ;实是嫌
+					PRINTFORML %CALLNAME:MASTER%回答%CALLNAME:TARGET%说随便吧…
+				ENDIF
+		ENDSELECT
+	CASE "积极的服从"                             ;REACT分类但积极的服从的场合
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%回答说第一次给了%CALLNAME:TARGET%很高兴…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME:MASTER%下定决心告诉%CALLNAME:TARGET%可以奉献出自己的第一次…
+			CASE "无理被した行动"
+				PRINTFORML 如果已经不能守护%CALLNAME:MASTER%也至少要温柔的对待、
+				PRINTFORML 高兴的同意了向%CALLNAME%献上第一次…
+		ENDSELECT
+	CASE "接受"                             ;REACT分类但接受的场合
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%因为将第一次献给了%CALLNAME:TARGET%、
+				PRINTFORML 说希望可以更加舒服…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME:MASTER%稍微烦恼之后，心情很快又好起来了
+				PRINTFORML 回答说第一次给%CALLNAME:TARGET%也可以…
+			CASE "无理被した行动"
+				PRINTFORML %CALLNAME:MASTER%如果说要把第一次献给%CALLNAME:TARGET%的话
+				PRINTFORML 说希望能舒服到忘记疼痛的程度…
+		ENDSELECT
+	CASEELSE                                      ;REACT分类但其他的场合那么合意不做
+		PRINTFORML 没有得到%CALLNAME:MASTER%同意的%CALLNAME:TARGET%似乎有点失望…
+ENDSELECT
+RETURN 1
+
+;────────────────────────────────────
+;007,宣称要进行惩罚
+;────────────────────────────────────
+@TRAIN_MESSAGE_7
+PRINTFORML %CALLNAME:TARGET%对%CALLNAME:MASTER%说要进行惩罚…
+
+;────────────────────────────────────
+;008,大喊大叫
+;────────────────────────────────────
+@TRAIN_MESSAGE_8
+PRINTFORML %CALLNAME:TARGET%大声地吼着%CALLNAME:MASTER%…
+
+;────────────────────────────────────
+;009,令人毛骨悚然的笑
+;────────────────────────────────────
+@TRAIN_MESSAGE_9
+PRINTFORML %CALLNAME:TARGET%对着%TARGET_DESCRIPTION("一面、")%%CALLNAME:MASTER%露出了可怕的微笑…

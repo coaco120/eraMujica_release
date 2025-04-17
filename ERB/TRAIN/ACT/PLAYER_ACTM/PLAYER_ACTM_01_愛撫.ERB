@@ -1,0 +1,1068 @@
+﻿;────────────────────────────────────
+;爱抚 (用手10/胸部11/用口12/Ａ手13/Ａ口14/接吻15/Ｃ擦16/Ｂ擦17/用脚18/Ｖ手19/跳蛋20/推倒27)
+;────────────────────────────────────
+@ACT_M1(ARG = 0)
+;1以上那么判定被行わない
+#DIM LCOUNT, 1
+
+;関数初期化
+CALL ACT_M_INIT(1)
+
+;处理开始
+
+LOCALS = ACT_ACTM1
+
+CALL CHA_CRI_VAR, "基準値"
+CALLFORM %LOCALS%_REFERENCE
+
+CALL CHA_CRI_VAR, @"本日的方针(%POLICY("今日")%)"
+CALLFORM %LOCALS%_POLYCY
+
+CALL CHA_CRI_VAR, "调教者的素質"
+CALLFORM %LOCALS%_TALENT_T
+
+CALL CHA_CRI_VAR, "调教对象的素質"
+CALLFORM %LOCALS%_TALENT_M
+
+CALL CHA_CRI_VAR, "性別根据修正"
+CALLFORM %LOCALS%_SEX
+
+CALL CHA_CRI_VAR, "调教者的技巧"
+CALLFORM %LOCALS%_TECHNIQUE_T
+
+CALL CHA_CRI_VAR, "ABL根据推倒修正"
+CALLFORM %LOCALS%_PUSH_ABL
+
+CALL CHA_CRI_VAR, "LV根据推倒修正"
+CALLFORM %LOCALS%_ITEM_ABL_T
+
+CALL CHA_CRI_VAR, "ABL道具修正"
+CALLFORM %LOCALS%_PUSH_LV
+
+CALL CHA_CRI_VAR, "调教对象的Ｃ感觉"
+CALLFORM %LOCALS%_C_M
+
+CALL CHA_CRI_VAR, "调教对象的Ａ感觉"
+CALLFORM %LOCALS%_A_M
+
+CALL CHA_CRI_VAR, "调教对象的Ｂ感觉"
+CALLFORM %LOCALS%_B_M
+
+CALL CHA_CRI_VAR, "调教对象的Ｖ感觉"
+CALLFORM %LOCALS%_V_M
+
+CALL CHA_CRI_VAR, "调教者的罪恶感"
+CALLFORM %LOCALS%_SIN_T
+
+CALL CHA_CRI_VAR, "调教者的ALI"
+CALLFORM %LOCALS%_ALI_T
+
+CALL CHA_CRI_VAR, "调教者的体力"
+CALLFORM %LOCALS%_PHYSICAL_T
+
+CALL CHA_CRI_VAR, "调教者的气力"
+CALLFORM %LOCALS%_MENTAL_T
+
+CALL CHA_CRI_VAR, "调教者的理性"
+CALLFORM %LOCALS%_REASON_T
+
+CALL CHA_CRI_VAR, "调合知识的媚药修正"
+CALLFORM %LOCALS%_DRUG
+
+CALL CHA_CRI_VAR, "震动棒插入中"
+CALLFORM %LOCALS%_VIBE
+
+CALL CHA_CRI_VAR, "A震动棒拉珠插入中"
+CALLFORM %LOCALS%_AVIBE
+
+CALL CHA_CRI_VAR, "シックスナイン誘发"
+CALLFORM %LOCALS%_69
+
+CALL CHA_CRI_VAR, "推到修正"
+CALLFORM %LOCALS%_ONPUSH
+
+CALL CHA_CRI_VAR, "兴趣根据推倒修正"
+CALLFORM %LOCALS%_INTEREST
+
+CALL CHA_CRI_VAR, "调教对象自慰中"
+CALLFORM %LOCALS%_MASTURBATION_T
+
+CALL CHA_CRI_VAR, "调教者自慰中"
+CALLFORM %LOCALS%_MASTURBATION_M
+
+CALL CHA_CRI_VAR, "调教者的衣服"
+CALLFORM %LOCALS%_CLOTH_T
+
+CALL CHA_CRI_VAR, "调教对象的衣服"
+CALLFORM %LOCALS%_CLOTH_M
+
+CALL CHA_CRI_VAR, "调教对象的脏污"
+CALLFORM %LOCALS%_STAIN_M
+
+CALL CHA_CRI_VAR, "需要强制勃起模式"
+CALLFORM %LOCALS%_ERECTION
+
+CALL CHA_CRI_VAR, "连续行动修正"
+CALLFORM %LOCALS%_PREV
+
+CALL CHA_CRI_VAR, "口上修正値"
+CALL ACT_ACTM_KOJO_CORRECTION_T, 1
+
+CALL CHA_CRI_VAR, "ACT修正値"
+CALLFORM %LOCALS%_CORRECTION(ARG)
+
+
+;ARG但1以上那么处理中断
+SIF ARG
+	RETURN RESULT
+
+;↓暫定
+CALL CHA_CRI_VAR, "道具自定义奖励"
+CALLFORM %LOCALS%_CUSTOM
+
+CALL CHA_CRI_VAR, "实行判定"
+CALLFORM %LOCALS%_ABLE
+
+;────────────────────────────────────
+;最终判定
+;────────────────────────────────────
+CALL DEF_CRI_VAR("最大前者")
+LOCAL = GET_CRI_VAR("決定")
+IF LOCAL == -1
+	SIF FLAG:DEBUG
+		PRINTL (爱抚类ACT中不存在可执行的ACT)
+	TFLAG:ACT = -1
+	CALL ACT_MENU_RESULT(2, "爱抚")
+ELSE
+	TFLAG:ACT = GET_ACTNUM(RESULTS)
+ENDIF
+CALL ANA_CRI_VAR()
+
+;-------------------------------------------
+;基準値
+;こ的値是固定
+;-------------------------------------------
+@ACT_ACTM1_REFERENCE
+
+;要らないかも和思った的で試しに无效化@これみ
+[SKIPSTART]
+CALL ADD_CRI_VAR("用手爱抚", 14)
+CALL ADD_CRI_VAR("胸爱抚", 14)
+CALL ADD_CRI_VAR("用口爱抚", 12)
+CALL ADD_CRI_VAR("肛门爱抚", 10)
+CALL ADD_CRI_VAR("舔肛门", 10)
+CALL ADD_CRI_VAR("摩擦性器", 10)
+CALL ADD_CRI_VAR("进行乳交", 10)
+CALL ADD_CRI_VAR("进行足交", 5)
+CALL ADD_CRI_VAR("跳蛋", 0)
+CALL ADD_CRI_VAR("推倒", 0)
+[SKIPEND]
+
+;-------------------------------------------------------------
+;本日的方针
+;本日的方针(0=平时どおり/1=A开发/2=惩罚/3=强硬/4=调情/5=异常/6=野外/7=做小孩/8=休息/9=抱住/10=ご奉仕/11=宠爱)
+;-------------------------------------------------------------
+@ACT_ACTM1_POLYCY
+SELECTCASE POLICY("今日")
+	CASE "肛门"
+		CALL ADD_CRI_VAR("肛门爱抚", 15)
+		CALL ADD_CRI_VAR("舔肛门", 15)
+	CASE "调情"
+		CALL ADD_CRI_VAR("接吻", 15)
+	CASE "宠爱"
+		CALL ADD_CRI_VAR("用手爱抚", -10)
+		CALL ADD_CRI_VAR("胸爱抚", TALENT:MASTER:扶她 ? 5 # 20)
+		CALL ADD_CRI_VAR("肛门爱抚", -10)
+		CALL ADD_CRI_VAR("用口爱抚", 15)
+		CALL ADD_CRI_VAR("接吻", 15)
+		CALL ADD_CRI_VAR("进行足交", -10)
+		SIF PENIS(MASTER)
+			CALL ADD_CRI_VAR("进行乳交", 15)
+	CASEELSE
+		;none
+ENDSELECT
+
+;-------------------------------------------------------------------------
+;调教者的素質参照
+;-------------------------------------------------------------------------
+@ACT_ACTM1_TALENT_T, ARG = -1, ARG:1 = -1
+#LOCALSIZE 2
+LOCAL = ARG == -1 ? TARGET # ARG
+LOCAL:1 = ARG:1 == -1 ? MASTER # ARG:1
+
+;调教者但胆怯/刚毅
+IF TALENT:LOCAL:胆怯
+	CALL ADD_CRI_VAR("用手爱抚", -1)
+	CALL ADD_CRI_VAR("胸爱抚", -1)
+	CALL ADD_CRI_VAR("用口爱抚", -3)
+	CALL ADD_CRI_VAR("肛门爱抚", -5)
+	CALL ADD_CRI_VAR("舔肛门", -7)
+	CALL ADD_CRI_VAR("摩擦性器", -7)
+	CALL ADD_CRI_VAR("进行乳交", -5)
+	CALL ADD_CRI_VAR("进行足交", -3)
+	CALL ADD_CRI_VAR("推倒", -5)
+	CALL ADD_CRI_VAR("指插入", -3)
+ELSEIF TALENT:LOCAL:刚毅
+	CALL ADD_CRI_VAR("摩擦性器", 0, 2)
+ENDIF
+
+;调教者但成熟/自大
+IF TALENT:LOCAL:成熟
+	CALL ADD_CRI_VAR("接吻", 3)
+	CALL ADD_CRI_VAR("进行足交", -2, -2)
+	CALL ADD_CRI_VAR("推倒", -3)
+ELSEIF TALENT:LOCAL:自大
+	CALL ADD_CRI_VAR("接吻", -3)
+	CALL ADD_CRI_VAR("进行足交", 2, 2)
+	CALL ADD_CRI_VAR("推倒", 3)
+ENDIF
+
+;调教者但自尊心高/低
+IF TALENT:LOCAL:自尊心高
+	CALL ADD_CRI_VAR("用口爱抚", -5)
+	CALL ADD_CRI_VAR("舔肛门", -7)
+	CALL ADD_CRI_VAR("进行乳交", -5)
+	CALL ADD_CRI_VAR("进行足交", 1, 6)
+ELSEIF TALENT:LOCAL:自尊心低
+	CALL ADD_CRI_VAR("用口爱抚", 5)
+	CALL ADD_CRI_VAR("舔肛门", TALENT:LOCAL:倒错的 * 3, 3)
+	CALL ADD_CRI_VAR("进行乳交", 5)
+	CALL ADD_CRI_VAR("进行足交", -5)
+ENDIF
+
+;调教者但缺乏感情/感情丰富
+IF TALENT:LOCAL:缺乏感情
+	CALL ADD_CRI_VAR("接吻", -5)
+	CALL ADD_CRI_VAR("跳蛋", 0, 5)
+ELSEIF TALENT:LOCAL:感情丰富
+	CALL ADD_CRI_VAR("接吻", 5)
+	CALL ADD_CRI_VAR("跳蛋", 0, -5)
+ENDIF
+
+;调教者但不越过底线
+IF TALENT:LOCAL:不越过底线
+	CALL ADD_CRI_VAR("摩擦性器", -5)
+	CALL ADD_CRI_VAR("推倒", -3)
+ENDIF
+
+;调教者但渴望关注
+IF TALENT:LOCAL:渴望关注
+	CALL ADD_CRI_VAR("摩擦性器", 5)
+	CALL ADD_CRI_VAR("进行乳交", 5)
+	CALL ADD_CRI_VAR("进行足交", 3)
+ENDIF
+
+;调教者但压抑/解放
+IF TALENT:LOCAL:压抑
+	CALL ADD_CRI_VAR("肛门爱抚", -5)
+	CALL ADD_CRI_VAR("舔肛门", -5)
+	CALL ADD_CRI_VAR("推倒", -3)
+ELSEIF TALENT:LOCAL:解放
+	CALL ADD_CRI_VAR("肛门爱抚", 3, 5)
+	CALL ADD_CRI_VAR("舔肛门", 3, 5)
+	CALL ADD_CRI_VAR("推倒", 3, 5)
+ENDIF
+
+;调教者但羞涩/无耻
+IF TALENT:LOCAL:羞涩
+	CALL ADD_CRI_VAR("摩擦性器", -7)
+	CALL ADD_CRI_VAR("进行乳交", -5)
+	CALL ADD_CRI_VAR("推倒", -3)
+ELSEIF TALENT:LOCAL:无耻
+	CALL ADD_CRI_VAR("摩擦性器", 4, 4)
+	CALL ADD_CRI_VAR("进行乳交", 3, 3)
+	CALL ADD_CRI_VAR("推倒", 2, 2)
+ENDIF
+
+;调教者但舌使
+IF TALENT:LOCAL:舌使
+	CALL ADD_CRI_VAR("用口爱抚", 3, 3)
+	CALL ADD_CRI_VAR("舔肛门", 2, 2)
+	CALL ADD_CRI_VAR("接吻", 2)
+ENDIF
+;调教者但猫舌
+IF TALENT:LOCAL:猫舌
+	CALL ADD_CRI_VAR("用口爱抚", 0, 2)
+	CALL ADD_CRI_VAR("舔肛门", 0, 2)
+	CALL ADD_CRI_VAR("接吻", 0, 4)
+ENDIF
+
+;调教者但灵巧な指
+IF TALENT:LOCAL:灵巧的指尖
+	CALL ADD_CRI_VAR("用手爱抚", 3, 3)
+	CALL ADD_CRI_VAR("肛门爱抚", 2, 2)
+	CALL ADD_CRI_VAR("指插入", 5, 5)
+ENDIF
+
+;调教者但道具使
+SIF TALENT:LOCAL:道具使
+	CALL ADD_CRI_VAR("跳蛋", 3, 3)
+
+;调教者但冲动的/自制的
+IF TALENT:LOCAL:自制的
+	CALL ADD_CRI_VAR("推倒", -3, 6)
+ELSEIF TALENT:LOCAL:冲动的
+	CALL ADD_CRI_VAR("推倒", -7, 14)
+ELSE
+	CALL ADD_CRI_VAR("推倒", -5, 10) 
+ENDIF
+
+;调教者但脏污无視/污臭钝感/污臭敏感
+IF 0
+ELSEIF TALENT:LOCAL:脏污无視
+	CALL ADD_CRI_VAR("用口爱抚", , 8)
+	CALL ADD_CRI_VAR("肛门爱抚", , 8)
+	CALL ADD_CRI_VAR("舔肛门", , 8)
+ELSEIF TALENT:LOCAL:污臭钝感
+	CALL ADD_CRI_VAR("用口爱抚", , 6)
+	CALL ADD_CRI_VAR("肛门爱抚", , 6)
+	CALL ADD_CRI_VAR("舔肛门", , 6)
+ELSEIF TALENT:LOCAL:污臭敏感
+	CALL ADD_CRI_VAR("用口爱抚", -3)
+	CALL ADD_CRI_VAR("肛门爱抚", -5)
+	CALL ADD_CRI_VAR("舔肛门", -7)
+ENDIF
+
+;调教者但献身的/被动
+IF TALENT:LOCAL:献身的
+	CALL ADD_CRI_VAR("摩擦性器", 3, 4)
+	CALL ADD_CRI_VAR("进行乳交", 3, 4)
+	CALL ADD_CRI_VAR("推倒", 3, 4)
+ELSEIF TALENT:LOCAL:被动
+	CALL ADD_CRI_VAR("摩擦性器", -3, -4)
+	CALL ADD_CRI_VAR("进行乳交", -3, -4)
+	CALL ADD_CRI_VAR("推倒", -3, -4)
+ENDIF
+
+;调教者但承认快感/否定
+IF TALENT:LOCAL:承认快感
+	CALL ADD_CRI_VAR("接吻", 1)
+	CALL ADD_CRI_VAR("摩擦性器", 3)
+	CALL ADD_CRI_VAR("进行乳交", 2)
+ELSEIF TALENT:LOCAL:否定快感
+	CALL ADD_CRI_VAR("接吻", -1)
+	CALL ADD_CRI_VAR("摩擦性器", -3)
+	CALL ADD_CRI_VAR("进行乳交", -2)
+ENDIF
+
+;调教者但淫核／淫茎
+SIF TALENT:LOCAL:淫核／淫茎
+	CALL ADD_CRI_VAR("摩擦性器", 0, 12)
+
+;调教者但淫乳
+SIF TALENT:LOCAL:淫乳
+	CALL ADD_CRI_VAR("进行乳交", 0, 12)
+
+;调教者但倒错的
+SIF TALENT:LOCAL:倒错的
+	CALL ADD_CRI_VAR("进行足交", 3, 6)
+
+;调教者但坏心眼
+SIF TALENT:LOCAL:坏心眼
+	CALL ADD_CRI_VAR("进行足交", 0, 3)
+
+;调教者但幼稚
+SIF TALENT:LOCAL:幼稚
+	CALL ADD_CRI_VAR("胸爱抚", 1, 5)
+
+;调教者但Ｃ敏感/钝感
+IF TALENT:LOCAL:Ｃ敏感
+	CALL ADD_CRI_VAR("摩擦性器", 2, 4)
+ELSEIF TALENT:LOCAL:Ｃ钝感
+	CALL ADD_CRI_VAR("摩擦性器", -2, -4)
+ENDIF
+
+;调教者但Ｂ敏感/钝感
+IF TALENT:LOCAL:Ｂ敏感
+	CALL ADD_CRI_VAR("进行乳交",  TALENT:(LOCAL:1):扶她 ? 0 # 2, 4)
+ELSEIF TALENT:LOCAL:Ｂ钝感
+	CALL ADD_CRI_VAR("进行乳交",  TALENT:(LOCAL:1):扶她 ? 0 # -2, -4)
+ENDIF
+
+;调教者但貧乳/巨乳
+IF TALENT:LOCAL:貧乳
+	CALL ADD_CRI_VAR("进行乳交", -5)
+ELSEIF TALENT:LOCAL:巨乳
+	CALL ADD_CRI_VAR("进行乳交", 5)
+ENDIF
+
+;调教者但母乳体質
+IF TALENT:LOCAL:母乳体質
+	CALL ADD_CRI_VAR("进行乳交", 0, 5)
+	CALL ADD_CRI_VAR("胸爱抚", TALENT:(LOCAL:1):扶她 ? 0 # 1, 5)
+ENDIF
+
+;调教者但美脚
+SIF TALENT:LOCAL:美脚
+	CALL ADD_CRI_VAR("进行足交", 0, 5)
+
+
+;-------------------------------------------------------------------------
+;调教对象的素質参照
+;-------------------------------------------------------------------------
+@ACT_ACTM1_TALENT_M, ARG = -1, ARG:1 = -1
+#LOCALSIZE 2
+LOCAL = ARG == -1 ? TARGET # ARG
+LOCAL:1 = ARG:1 == -1 ? MASTER # ARG:1
+;调教对象但不易湿
+IF TALENT:(LOCAL:1):不易湿
+	CALL ADD_CRI_VAR("用口爱抚", 3, 3)
+	CALL ADD_CRI_VAR("舔肛门", 3, 3)
+ENDIF
+
+;调教对象但舌使
+SIF TALENT:(LOCAL:1):舌使
+	CALL ADD_CRI_VAR("接吻", 3, 6)
+
+;调教对象但处女
+SIF TALENT:(LOCAL:1):处女
+	CALL ADD_CRI_VAR("指插入", -2, -2)
+
+;调教对象但淫核／淫茎
+IF TALENT:(LOCAL:1):淫核／淫茎
+	CALL ADD_CRI_VAR("用手爱抚", 0, 7)
+	CALL ADD_CRI_VAR("用口爱抚", 0, 9)
+	CALL ADD_CRI_VAR("摩擦性器", 0, 8)
+	CALL ADD_CRI_VAR("进行乳交", 0, 6)
+	CALL ADD_CRI_VAR("进行足交", 0, 8)
+	CALL ADD_CRI_VAR("跳蛋", 0, 11)
+ENDIF
+
+;调教对象但淫尻
+IF TALENT:(LOCAL:1):淫尻
+	CALL ADD_CRI_VAR("肛门爱抚", 0, 9)
+	CALL ADD_CRI_VAR("舔肛门", 0, 9)
+ENDIF
+
+;调教对象但淫乳
+IF TALENT:(LOCAL:1):淫乳
+	CALL ADD_CRI_VAR("用手爱抚", 0, 7)
+	CALL ADD_CRI_VAR("胸爱抚", 0, 11)
+ENDIF
+
+;调教对象但淫壶
+IF TALENT:(LOCAL:1):淫壶
+	CALL ADD_CRI_VAR("指插入", 0, 11)
+ENDIF
+
+;调教对象但威压感
+SIF TALENT:(LOCAL:1):威压感
+	CALL ADD_CRI_VAR("进行足交", -5)
+
+;调教对象但魅惑
+IF TALENT:(LOCAL:1):魅惑
+	CALL ADD_CRI_VAR("接吻", 2, 5)
+	CALL ADD_CRI_VAR("摩擦性器", 0, 5)
+	CALL ADD_CRI_VAR("推倒", 0, 5)
+ENDIF
+
+;调教对象但亲近容易/难以接近
+IF TALENT:(LOCAL:1):亲近容易
+	CALL ADD_CRI_VAR("接吻", 5)
+	CALL ADD_CRI_VAR("推倒", 3)
+ELSEIF TALENT:(LOCAL:1):难以接近
+	CALL ADD_CRI_VAR("接吻", -5)
+	CALL ADD_CRI_VAR("推倒", -3)
+ENDIF
+
+;调教对象但Ｃ敏感/钝感
+IF TALENT:(LOCAL:1):Ｃ敏感
+	CALL ADD_CRI_VAR("用手爱抚", 3, 4)
+	CALL ADD_CRI_VAR("用口爱抚", 4, 3)
+	CALL ADD_CRI_VAR("摩擦性器", 1, 6)
+	CALL ADD_CRI_VAR("进行乳交", 2, 5)
+	CALL ADD_CRI_VAR("进行足交", 0, 7)
+	CALL ADD_CRI_VAR("跳蛋", 5, 2)
+ELSEIF TALENT:(LOCAL:1):Ｃ钝感
+	CALL ADD_CRI_VAR("用手爱抚", -3, -4)
+	CALL ADD_CRI_VAR("用口爱抚", -4, -3)
+	CALL ADD_CRI_VAR("摩擦性器", -1, -6)
+	CALL ADD_CRI_VAR("进行乳交", -2, -5)
+	CALL ADD_CRI_VAR("进行足交", 0, -7)
+	CALL ADD_CRI_VAR("跳蛋", -5, -2)
+ENDIF
+
+;调教对象但Ａ敏感/钝感
+IF TALENT:(LOCAL:1):Ａ敏感
+	CALL ADD_CRI_VAR("肛门爱抚", 3, 6)
+	CALL ADD_CRI_VAR("舔肛门", 1, 8)
+ELSEIF TALENT:(LOCAL:1):Ａ钝感
+	CALL ADD_CRI_VAR("肛门爱抚", -3, -6)
+	CALL ADD_CRI_VAR("舔肛门", -1, -8)
+ENDIF
+
+;调教对象但Ｂ敏感/钝感
+IF TALENT:(LOCAL:1):Ｂ敏感
+	CALL ADD_CRI_VAR("用手爱抚", 1, 5)
+	CALL ADD_CRI_VAR("胸爱抚", 5, 4)
+ELSEIF TALENT:(LOCAL:1):Ｂ钝感
+	CALL ADD_CRI_VAR("用手爱抚", -1, -4)
+	CALL ADD_CRI_VAR("胸爱抚", -5, -4)
+ENDIF
+
+;调教对象但Ｖ敏感/钝感
+IF TALENT:(LOCAL:1):Ｖ敏感
+	CALL ADD_CRI_VAR("指插入", 5, 4)
+ELSEIF TALENT:(LOCAL:1):Ｖ钝感
+	CALL ADD_CRI_VAR("指插入", -5, -4)
+ENDIF
+
+;调教对象但貧乳/巨乳
+IF TALENT:(LOCAL:1):貧乳
+	CALL ADD_CRI_VAR("胸爱抚", 0, -5)
+ELSEIF TALENT:(LOCAL:1):巨乳
+	CALL ADD_CRI_VAR("胸爱抚", 3, 3)
+ENDIF
+
+;调教对象但扶她
+IF TALENT:(LOCAL:1):扶她
+	CALL ADD_CRI_VAR("用手爱抚", TALENT:LOCAL:好奇心 * 3 - TALENT:LOCAL:无关心, 2)
+	CALL ADD_CRI_VAR("用口爱抚", TALENT:LOCAL:好奇心 * 3 - TALENT:LOCAL:无关心, 4)
+	CALL ADD_CRI_VAR("摩擦性器", TALENT:LOCAL:好奇心 * 3 - TALENT:LOCAL:无关心, 4)
+	CALL ADD_CRI_VAR("进行乳交", TALENT:LOCAL:好奇心 * 3 - TALENT:LOCAL:无关心, 2)
+	CALL ADD_CRI_VAR("进行足交", TALENT:LOCAL:好奇心 * 3 - TALENT:LOCAL:无关心, 4)
+	CALL ADD_CRI_VAR("指插入", TALENT:LOCAL:好奇心 * 3 - TALENT:LOCAL:无关心, 4)
+	CALL ADD_CRI_VAR("肛门爱抚", TALENT:LOCAL:好奇心 * 3 - TALENT:LOCAL:无关心, -2)
+ENDIF
+
+;调教对象但扶她
+SIF TALENT:(LOCAL:1):扶她
+	CALL ADD_CRI_VAR("胸爱抚", -3)
+
+;-------------------------------------------------------------------------
+;性別関係被参照
+;-------------------------------------------------------------------------
+@ACT_ACTM1_SEX, ARG = -1, ARG:1 = -1
+#LOCALSIZE 2
+LOCAL = ARG == -1 ? TARGET # ARG
+LOCAL:1 = ARG:1 == -1 ? MASTER # ARG:1
+
+;调教者に双性恋但无く、女人同士
+IF !TALENT:LOCAL:扶她 && !TALENT:(LOCAL:1):扶她 && !TALENT:LOCAL:双性恋
+	;调教者的百合气质但[0→-2, 1→-1, 2→0]被加算(-2～0)
+	CALL ADD_CRI_VAR("接吻", LINE_CALC(ABL:LOCAL:百合气质, "0→-2,2→0,LIMIT/-2～0"))
+	;调教者的百合气质但[0→-3, 1→-2, 2→-1, 3→0]被加算(-3～0)
+	CALL ADD_CRI_VAR("用口爱抚", LINE_CALC(ABL:LOCAL:百合气质, "0→-3,3→0,LIMIT/-3～0"))
+	CALL ADD_CRI_VAR("进行乳交", LINE_CALC(ABL:LOCAL:百合气质, "0→-3,3→0,LIMIT/-3～0"))
+	CALL ADD_CRI_VAR("推倒", LINE_CALC(ABL:LOCAL:百合气质, "0→-3,3→0,LIMIT/-3～0"))
+	;调教者的百合气质但[0→-4, 1→-3, 2→-2, 3→-1, 4→0]被加算(-4～0)
+	CALL ADD_CRI_VAR("肛门爱抚", LINE_CALC(ABL:LOCAL:百合气质, "0→-4,4→0,LIMIT/-4～0"))
+	;调教者的百合气质但[0→-5, 1→-4, 2→-3, 3→-2, 4→-1]被加算(-5～0)
+	CALL ADD_CRI_VAR("摩擦性器", LINE_CALC(ABL:LOCAL:百合气质, "0→-5,4→-1,LIMIT/-5～0"))
+	;调教者的百合气质但[0→-6, 1→-5, 2→-4, 3→-3, 4→-2]被加算(-6～0)
+	CALL ADD_CRI_VAR("舔肛门", LINE_CALC(ABL:LOCAL:百合气质, "0→-6,4→-2,LIMIT/-6～0"))
+	
+	;调教者的百合中毒但[0→0, 1→0～2, 2→0～4, 3→0～6, 4→0～8]被加算(0～8)
+	CALL ADD_CRI_VAR("胸爱抚", , LINE_CALC(ABL:LOCAL:百合中毒, "0→0,4→8,LIMIT/0～8"))
+	CALL ADD_CRI_VAR("摩擦性器", , LINE_CALC(ABL:LOCAL:百合中毒, "0→0,4→8,LIMIT/0～8"))
+	CALL ADD_CRI_VAR("进行乳交", , LINE_CALC(ABL:LOCAL:百合中毒, "0→0,4→8,LIMIT/0～8"))
+	CALL ADD_CRI_VAR("指插入", , LINE_CALC(ABL:LOCAL:百合中毒, "0→0,4→8,LIMIT/0～8"))
+ENDIF
+
+;调教者に双性恋但なく、扶她同士
+IF TALENT:LOCAL:扶她 && TALENT:(LOCAL:1):扶她 && !TALENT:LOCAL:双性恋
+	;调教者的ＢＬ气质但[0→-3, 1→-2, 2→-1, 3→0]被加算(-3～0)
+	CALL ADD_CRI_VAR("接吻", LINE_CALC(ABL:LOCAL:ＢＬ气质, "0→-3,3→0,LIMIT/-3～0"))
+	;调教者的ＢＬ气质但[0→-4, 1→-3, 2→-2, 3→-1, 4→0]被加算(-4～0)
+	CALL ADD_CRI_VAR("肛门爱抚", LINE_CALC(ABL:LOCAL:ＢＬ气质, "0→-4,4→0,LIMIT/-4～0"))
+	CALL ADD_CRI_VAR("进行足交", LINE_CALC(ABL:LOCAL:ＢＬ气质, "0→-4,4→0,LIMIT/-4～0"))
+	CALL ADD_CRI_VAR("推倒", LINE_CALC(ABL:LOCAL:ＢＬ气质, "0→-4,4→0,LIMIT/-4～0"))
+	;调教者的ＢＬ气质但[0→-5, 1→-4, 2→-3, 3→-2, 4→-1]被加算(-5～0)
+	CALL ADD_CRI_VAR("舔肛门", LINE_CALC(ABL:LOCAL:ＢＬ气质, "0→-5,4→-1,LIMIT/-5～0"))
+	;调教者的ＢＬ气质但[0→-6, 1→-5, 2→-4, 3→-3, 4→-2]被加算(-6～0)
+	CALL ADD_CRI_VAR("用口爱抚", LINE_CALC(ABL:LOCAL:ＢＬ气质, "0→-6,4→-2,LIMIT/-6～0"))
+ENDIF
+
+;调教者但恐男で、调教对象但扶她。進展度に应じて-修正被若干緩和
+IF TALENT:LOCAL:恐男 && TALENT:(LOCAL:1):扶她
+	CALL ADD_CRI_VAR("用手爱抚", CFLAG:M好感 + CFLAG:好感 >= 10000 ? -1 # -3)
+	CALL ADD_CRI_VAR("用口爱抚", CFLAG:M好感 + CFLAG:好感 >= 10000 ? -3 # -5)
+	CALL ADD_CRI_VAR("肛门爱抚", CFLAG:M好感 + CFLAG:好感 >= 10000 ? -1 # -3)
+	CALL ADD_CRI_VAR("舔肛门", CFLAG:M好感 + CFLAG:好感 >= 10000 ? -1 # -3)
+	CALL ADD_CRI_VAR("接吻", CFLAG:M好感 + CFLAG:好感 >= 10000 ? -1 # -3)
+	CALL ADD_CRI_VAR("摩擦性器", CFLAG:M好感 + CFLAG:好感 >= 10000 ? -3 # -5)
+	CALL ADD_CRI_VAR("进行乳交", CFLAG:M好感 + CFLAG:好感 >= 10000 ? -3 # -5)
+	CALL ADD_CRI_VAR("进行足交", CFLAG:M好感 + CFLAG:好感 >= 10000 ? -1 # -3)
+	CALL ADD_CRI_VAR("推倒", CFLAG:M好感 + CFLAG:好感 >= 10000 ? -1 # -3)
+ENDIF
+
+;────────────────────────────────────
+;能力根据变动
+;────────────────────────────────────
+@ACT_ACTM1_TECHNIQUE_T, ARG = -1
+#LOCALSIZE 1
+LOCAL = ARG == -1 ? TARGET # ARG
+
+;调教者的技巧但[1→0, 2→0～2, 3→0～4, 4→0～6, 5→0～8]被加算(0～8)
+CALL ADD_CRI_VAR("推倒", , LINE_CALC(ABL:LOCAL:技巧, "1→0,5→8,LIMIT/0～8"))
+;调教者的技巧但[0→-4, 1→-3～-2, 2→-2～0, 3→-1～2, 4→0～4, 5→0～5]被加算(-4～5)
+CALL ADD_CRI_VAR("进行足交", LINE_CALC(ABL:LOCAL:技巧, "0→-4,4→0,LIMIT/-4～0"), LINE_CALC(ABL:LOCAL:技巧, "0→0,5→5,LIMIT/0～5"))
+;调教者的技巧但[0→-4, 1→-3, 2→-2, 3→-1, 4→0]被加算(-4～0)
+CALL ADD_CRI_VAR("摩擦性器", LINE_CALC(ABL:LOCAL:技巧, "0→-4,4→0,LIMIT/-4～0"))
+CALL ADD_CRI_VAR("进行乳交", LINE_CALC(ABL:LOCAL:技巧, "0→-4,4→0,LIMIT/-4～0"))
+CALL ADD_CRI_VAR("指插入", LINE_CALC(ABL:LOCAL:技巧, "0→-4,4→0,LIMIT/-4～0"))
+
+;-------------------------------------------------------------------------
+;押したおしABL修正
+;-------------------------------------------------------------------------
+@ACT_ACTM1_PUSH_ABL, ARG = -1
+#LOCALSIZE 1
+LOCAL = ARG == -1 ? TARGET # ARG
+
+;调教者的能力値但大きい和推倒
+;欲望4以上
+IF ABL:LOCAL:欲望 > 3
+	CALL ADD_CRI_VAR("推倒", 7, 4)
+;Ｖ感觉3以上
+ELSEIF ABL:LOCAL:Ｖ感觉 > 2
+	CALL ADD_CRI_VAR("推倒", 5, 4)
+;Ｃ感觉2以上
+ELSEIF ABL:LOCAL:Ｃ感觉 > 1
+	CALL ADD_CRI_VAR("推倒", 3, 4)
+;技巧1以上
+ELSEIF ABL:LOCAL:技巧 > 0
+	CALL ADD_CRI_VAR("推倒", 0, 4)
+ENDIF
+
+;-------------------------------------------------------------------------
+;押したおしLV修正
+;-------------------------------------------------------------------------
+@ACT_ACTM1_PUSH_LV, ARG = -1, ARG:1 = -1
+#LOCALSIZE 3
+LOCAL = ARG == -1 ? TARGET # ARG
+LOCAL:1 = ARG:1 == -1 ? MASTER # ARG:1
+
+;调教者和调教对象的调教Lv的总计。値但大きい和推倒
+LOCAL:2 = CFLAG:LOCAL:调教等级 + CFLAG:(LOCAL:1):调教等级
+;但[0→-5, 4→0～1, 8→5～8, 12→10～15]被加算(-5～15)
+CALL ADD_CRI_VAR("推倒", LINE_CALC(LOCAL:2, "0→-5,12→10,LIMIT/-5～10"), LINE_CALC(LOCAL:2, "4→1,12→5,LIMIT/0～5"))
+
+@ACT_ACTM1_ITEM_ABL_T, ARG = -1
+;调教者的道具但[0→0, 1→1, 2→1～2, 3→2～3, 4→2～4, 5→3～5]被加算(0～5)
+CALL ADD_CRI_VAR("跳蛋", LINE_CALC(ABL:LOCAL:道具, "1→1,3→2,LIMIT/0～3"), LINE_CALC(ABL:LOCAL:道具, "2→1,4→2,LIMIT/0～2"))
+
+;调教对象的Ｃ感觉。调教但進んだ状态で普通的爱抚じゃ物足りなくなるでしょうね
+@ACT_ACTM1_C_M, ARG = -1
+#LOCALSIZE 1
+LOCAL = ARG == -1 ? MASTER # ARG
+;但[0→0, 1→3, 2→6, 3→9, 4→6, 5→2]被加算(0～9)
+CALL ADD_CRI_VAR("用手爱抚", LINE_CALC(ABL:LOCAL:Ｃ感觉, "0→0,3→9,5→2,LIMIT/0～9"))
+;但[0→0, 1→0～1, 2→0～2, 3→3, 4→0～4, 5→7]被加算(0～7)
+CALL ADD_CRI_VAR("用口爱抚", , LINE_CALC(ABL:LOCAL:Ｃ感觉, "0→0,3→3,5→7,LIMIT/0～7"))
+;但[0→0, 1→0～1, 2→0～3, 3→5]被加算(0～5)
+CALL ADD_CRI_VAR("摩擦性器", , LINE_CALC(ABL:LOCAL:Ｃ感觉, "1→1,3→5,LIMIT/0～5"))
+;但[0→0, 1→0～1, 2→0～3, 3→0～5, 4→7]被加算(0～7)
+CALL ADD_CRI_VAR("进行乳交", , LINE_CALC(ABL:LOCAL:Ｃ感觉, "1→1,4→7,LIMIT/0～7"))
+;但[3→0, 4→3, 5→6]被加算(0～6)
+CALL ADD_CRI_VAR("进行足交", , LINE_CALC(ABL:LOCAL:Ｃ感觉, "3→0,4→3,5→6,LIMIT/0～6"))
+
+;调教对象的Ａ感觉
+@ACT_ACTM1_A_M, ARG = -1
+#LOCALSIZE 1
+LOCAL = ARG == -1 ? MASTER # ARG
+;但[0→0～2, 1→0～4, 2→1～7, 3→2～10, 4→1～7, 5→0～4]被加算(0～10)
+CALL ADD_CRI_VAR("肛门爱抚", LINE_CALC(ABL:LOCAL:Ａ感觉, "1→0,3→2,5→0,LIMIT/0～2"), LINE_CALC(ABL:LOCAL:Ａ感觉, "1→4,3→8,5→4,LIMIT/2～8"))
+CALL ADD_CRI_VAR("舔肛门", LINE_CALC(ABL:LOCAL:Ａ感觉, "1→0,3→2,5→0,LIMIT/0～2"), LINE_CALC(ABL:LOCAL:Ａ感觉, "1→4,3→8,5→4,LIMIT/2～8"))
+
+;调教对象的Ｂ感觉
+@ACT_ACTM1_B_M, ARG = -1
+#LOCALSIZE 1
+LOCAL = ARG == -1 ? MASTER # ARG
+;但[0→0～1, 1→1～3, 2→2～5, 3→3～7, 4→2～5, 5→1～3]被加算(0～7)
+CALL ADD_CRI_VAR("用手爱抚", LINE_CALC(ABL:LOCAL:Ｂ感觉, "0→0,3→3,5→1,LIMIT/0～3"), LINE_CALC(ABL:LOCAL:Ｂ感觉, "0→1,3→4,5→2,LIMIT/1～4"))
+;但[0→0～3, 1→1～5, 2→2～7, 3→3～9, 4→2～7, 5→1～5]被加算(0～9)
+CALL ADD_CRI_VAR("胸爱抚", LINE_CALC(ABL:LOCAL:Ｂ感觉, "0→0,3→3,5→1,LIMIT/0～3"), LINE_CALC(ABL:LOCAL:Ｂ感觉, "0→3,3→6,5→4,LIMIT/3～6"))
+
+;调教对象的Ｖ感觉
+@ACT_ACTM1_V_M, ARG = -1
+#LOCALSIZE 1
+LOCAL = ARG == -1 ? MASTER # ARG
+;但[0→0～3, 1→1～5, 2→2～7, 3→3～9, 4→2～7, 5→1～5]被加算(0～9)
+CALL ADD_CRI_VAR("指插入", LINE_CALC(ABL:LOCAL:Ｖ感觉, "0→0,3→3,5→1,LIMIT/0～3"), LINE_CALC(ABL:LOCAL:Ｖ感觉, "0→3,3→6,5→4,LIMIT/3～6"))
+
+;调教者的罪恶感
+@ACT_ACTM1_SIN_T, ARG = -1
+#LOCALSIZE 1
+LOCAL = ARG == -1 ? TARGET # ARG
+;罪恶感但[60→0, 100→-2]被加算(-2～0)
+CALL ADD_CRI_VAR("肛门爱抚", LINE_CALC(CFLAG:LOCAL:罪恶感, "60→0,100→-2,LIMIT/-2～0"))
+;罪恶感但[40→0, 100→-3]被加算(-3～0)
+CALL ADD_CRI_VAR("舔肛门", LINE_CALC(CFLAG:LOCAL:罪恶感, "40→0,100→-3,LIMIT/-3～0"))
+;罪恶感但[0→0, 100→-5]被加算(-5～0)
+CALL ADD_CRI_VAR("进行足交", LINE_CALC(CFLAG:LOCAL:罪恶感, "0→0,100→-5,LIMIT/-5～0"))
+
+;定位
+@ACT_ACTM1_ALI_T, ARG = -1
+#LOCALSIZE 1
+LOCAL = ARG == -1 ? TARGET # ARG
+;但[-50→-3, 50→3]被加算(-3～3)
+CALL ADD_CRI_VAR("接吻", LINE_CALC(CFLAG:LOCAL:定位, "-50→-3,50→3,LIMIT/-3～3"))
+;但[-50→3, 50→-3]被加算(-3～3)
+CALL ADD_CRI_VAR("进行足交", LINE_CALC(CFLAG:LOCAL:定位, "-50→3,50→-3,LIMIT/-3～3"))
+
+;────────────────────────────────────
+;ゲージや状态根据变动
+;────────────────────────────────────
+;-------------------------------------
+;调教者的体力
+;-------------------------------------
+@ACT_ACTM1_PHYSICAL_T, ARG = -1
+#LOCALSIZE 1
+LOCAL = ARG == -1 ? TARGET # ARG
+
+;调教者的体力但[0→-1, 500→0]被加算(-1～0)
+CALL ADD_CRI_VAR("用手爱抚", LINE_CALC(BASE:LOCAL:体力, "0→-1,500→0,LIMIT/-1～0"))
+CALL ADD_CRI_VAR("指插入", LINE_CALC(BASE:LOCAL:体力, "0→-1,500→0,LIMIT/-1～0"))
+CALL ADD_CRI_VAR("胸爱抚", LINE_CALC(BASE:LOCAL:体力, "0→-1,500→0,LIMIT/-1～0"))
+CALL ADD_CRI_VAR("用口爱抚", LINE_CALC(BASE:LOCAL:体力, "0→-1,500→0,LIMIT/-1～0"))
+CALL ADD_CRI_VAR("肛门爱抚", LINE_CALC(BASE:LOCAL:体力, "0→-1,500→0,LIMIT/-1～0"))
+CALL ADD_CRI_VAR("舔肛门", LINE_CALC(BASE:LOCAL:体力, "0→-1,500→0,LIMIT/-1～0"))
+CALL ADD_CRI_VAR("进行足交", LINE_CALC(BASE:LOCAL:体力, "0→-1,500→0,LIMIT/-1～0"))
+;调教者的体力但[0→-2, 1000→0]被加算(-2～0)
+CALL ADD_CRI_VAR("进行乳交", LINE_CALC(BASE:LOCAL:体力, "0→-2,1000→0,LIMIT/-2～0"))
+;调教者的体力但[0→-3, 1500→0]被加算(-3～0)
+CALL ADD_CRI_VAR("摩擦性器", LINE_CALC(BASE:LOCAL:体力, "0→-3,1500→0,LIMIT/-3～0"))
+CALL ADD_CRI_VAR("推倒", LINE_CALC(BASE:LOCAL:体力, "0→-3,1500→0,LIMIT/-3～0"))
+
+;-------------------------------------
+;调教者的气力
+;-------------------------------------
+@ACT_ACTM1_MENTAL_T, ARG = -1
+#LOCALSIZE 1
+LOCAL = ARG == -1 ? TARGET # ARG
+
+;调教者的气力但[0→-2, 500→0]被加算(-2～0)
+CALL ADD_CRI_VAR("用口爱抚", LINE_CALC(BASE:LOCAL:气力, "0→-2,500→0,LIMIT/-2～0"))
+CALL ADD_CRI_VAR("肛门爱抚", LINE_CALC(BASE:LOCAL:气力, "0→-2,500→0,LIMIT/-2～0"))
+CALL ADD_CRI_VAR("舔肛门", LINE_CALC(BASE:LOCAL:气力, "0→-2,500→0,LIMIT/-2～0"))
+CALL ADD_CRI_VAR("进行足交", LINE_CALC(BASE:LOCAL:气力, "0→-2,500→0,LIMIT/-2～0"))
+CALL ADD_CRI_VAR("指插入", LINE_CALC(BASE:LOCAL:气力, "0→-2,500→0,LIMIT/-2～0"))
+;调教者的气力但[0→-3, 750→0]被加算(-3～0)
+CALL ADD_CRI_VAR("摩擦性器", LINE_CALC(BASE:LOCAL:气力, "0→-3,750→0,LIMIT/-3～0"))
+CALL ADD_CRI_VAR("进行乳交", LINE_CALC(BASE:LOCAL:气力, "0→-3,750→0,LIMIT/-3～0"))
+CALL ADD_CRI_VAR("推倒", LINE_CALC(BASE:LOCAL:气力, "0→-3,750→0,LIMIT/-3～0"))
+
+
+;-------------------------------------
+;调教者的理性
+;-------------------------------------
+@ACT_ACTM1_REASON_T, ARG = -1
+#LOCALSIZE 1
+LOCAL = ARG == -1 ? TARGET # ARG
+
+;调教者的状态(0=通常/1=疲惫/2=衰弱/3=无气力/4=朦胧/5=情欲/6=愤怒/7=无聊/8=郁闷)
+SELECTCASE GET_CONDITION(TARGET)
+	CASE "朦胧"
+		CALL ADD_CRI_VAR("用手爱抚", 0, -8)
+		CALL ADD_CRI_VAR("胸爱抚", 0, -8)
+		CALL ADD_CRI_VAR("用口爱抚", 0, -8)
+		CALL ADD_CRI_VAR("肛门爱抚", 0, -12)
+		CALL ADD_CRI_VAR("舔肛门", 0, -12)
+		CALL ADD_CRI_VAR("指插入", 0, -8)
+		CALL ADD_CRI_VAR("接吻", 0, -5)
+		CALL ADD_CRI_VAR("摩擦性器", 0, -12)
+		CALL ADD_CRI_VAR("进行乳交", 0, -12)
+		CALL ADD_CRI_VAR("进行足交", 0, -10)
+		CALL ADD_CRI_VAR("跳蛋", -5, -5)
+		CALL ADD_CRI_VAR("推倒", 0, -12)
+	CASE "情欲"
+		CALL ADD_CRI_VAR("用口爱抚", 5, 3)
+		CALL ADD_CRI_VAR("舔肛门", 4, 2)
+		CALL ADD_CRI_VAR("摩擦性器", 5, 3)
+		CALL ADD_CRI_VAR("推倒", 5, 3)
+	CASE "无聊"
+		CALL ADD_CRI_VAR("进行足交", 0, 10)
+ENDSELECT
+
+
+;────────────────────────────────────
+;上次的行动や状況根据变动
+;────────────────────────────────────
+;媚药口移し的实行
+;媚药效果中でなく、调教者但调合知识
+@ACT_ACTM1_DRUG, ARG = -1
+#LOCALSIZE 1
+LOCAL = ARG == -1 ? TARGET # ARG
+SIF !TEQUIP:媚药 && TALENT:LOCAL:调合知识
+	CALL ADD_CRI_VAR("接吻", 5, 8)
+
+@ACT_ACTM1_VIBE, ARG = -1
+#LOCALSIZE 1
+LOCAL = ARG == -1 ? TARGET # ARG
+;装着器具被动かす
+;震动棒
+SIF TEQUIP:震动棒
+	CALL ADD_CRI_VAR("用手爱抚", 3, 5)
+
+@ACT_ACTM1_AVIBE, ARG = -1
+#LOCALSIZE 1
+LOCAL = ARG == -1 ? TARGET # ARG
+;肛门震动棒/肛门拉珠
+SIF TEQUIP:肛门震动棒 || TEQUIP:肛门拉珠
+	CALL ADD_CRI_VAR("肛门爱抚", 3 + TEQUIP:肛门拉珠 * 5, 5)
+
+@ACT_ACTM1_69, ARG = -1
+#LOCALSIZE 1
+LOCAL = ARG == -1 ? TARGET # ARG
+;シックスナインへ的傾向
+SIF IS_PREVACTNAME("强制手爱抚/强制口爱抚")
+	CALL ADD_CRI_VAR("用口爱抚", 5, 4)
+
+@ACT_ACTM1_ONPUSH, ARG = -1
+#LOCALSIZE 1
+LOCAL = ARG == -1 ? TARGET # ARG
+;推倒中
+IF TEQUIP:推到中
+	;本日的方针毎的修正
+	SELECTCASE POLICY("今日")
+		CASE "肛门"
+			CALL ADD_CRI_VAR("用口爱抚", 15)
+			CALL ADD_CRI_VAR("肛门爱抚", 15)
+		CASE "调情"
+			CALL ADD_CRI_VAR("接吻", 15)
+			CALL ADD_CRI_VAR("强制胸爱抚", 15)
+	ENDSELECT
+	;CALL ADD_CRI_VAR("接吻", -5) <<-------なんでminus修正してたんだろう…？
+	;强制勃起模式不是
+	IF !TCVAR:MASTER:需要强制勃起
+		SELECTCASE TFLAG:前ACT
+			CASE 10
+				CALL ADD_CRI_VAR("用手爱抚", 15)
+			CASE 11
+				SIF !TALENT:LOCAL:扶她
+					CALL ADD_CRI_VAR("胸爱抚", 15)
+			CASE 12
+				CALL ADD_CRI_VAR("用口爱抚", 15)
+			CASE 13
+				CALL ADD_CRI_VAR("肛门爱抚", 15)
+			CASE 14
+				CALL ADD_CRI_VAR("舔肛门", 15)
+			CASE 16
+				CALL ADD_CRI_VAR("摩擦性器", 15)
+			CASE 17
+				CALL ADD_CRI_VAR("进行乳交", 15)
+			CASE 18
+				CALL ADD_CRI_VAR("进行足交", 15)
+			CASE 19
+				CALL ADD_CRI_VAR("指插入", 15)
+			CASE 20
+				CALL ADD_CRI_VAR("跳蛋", 15)
+		ENDSELECT
+	ENDIF
+ENDIF
+
+@ACT_ACTM1_INTEREST, ARG = -1
+#LOCALSIZE 1
+LOCAL = ARG == -1 ? TARGET # ARG
+;调教者的兴趣(兴趣但ない和押し倒さないように)
+;但[0→-30, 600→0]被加算(-30～0)
+CALL ADD_CRI_VAR("推倒", LINE_CALC(BASE:LOCAL:兴趣, "0→-30,600→0,LIMIT/-30～0"))
+
+@ACT_ACTM1_MASTURBATION_T
+;调教对象但自慰中
+IF GETBIT(TEQUIP:自慰中, 0)
+	CALL ADD_CRI_VAR("用手爱抚", -10)
+	CALL ADD_CRI_VAR("用口爱抚", -10)
+	CALL ADD_CRI_VAR("肛门爱抚", 1, 2)
+	CALL ADD_CRI_VAR("舔肛门", 0, 1)
+	CALL ADD_CRI_VAR("指插入", 0, 1)
+	CALL ADD_CRI_VAR("摩擦性器", -10)
+	CALL ADD_CRI_VAR("进行乳交", -10)
+	CALL ADD_CRI_VAR("进行足交", -10)
+	CALL ADD_CRI_VAR("跳蛋", 3)
+ENDIF
+
+@ACT_ACTM1_MASTURBATION_M
+;调教者但自慰中
+IF GETBIT(TEQUIP:自慰中, 1)
+	CALL ADD_CRI_VAR("摩擦性器", TEQUIP:自慰中 == 3 ? 5 # 0)
+	CALL ADD_CRI_VAR("进行乳交", -3)
+	CALL ADD_CRI_VAR("进行足交", -3)
+ENDIF
+
+;爱抚系是、调教对象的衣服ペナルティ被穿墙で无視できる
+;现状青娥専用です但。紫和かゆゆ和かもできそう只どねえ
+;いずれ、衣服被破いたり做处理に流用できるかもね？
+
+@ACT_ACTM1_CLOTH_T
+;调教者に穿墙但ない
+IF !TALENT:穿墙
+	;调教对象的下半身外套で妨害され时き
+	IF CLOTHESTYPE(1, 1) == 2
+		CALL ADD_CRI_VAR("用手爱抚", -3)
+		CALL ADD_CRI_VAR("用口爱抚", -3)
+		CALL ADD_CRI_VAR("肛门爱抚", -3)
+		CALL ADD_CRI_VAR("舔肛门", -3)
+		CALL ADD_CRI_VAR("进行足交", -3)
+	;调教对象的下半身外套但あ时き
+	ELSEIF CLOTHESTYPE(1, 1)
+		CALL ADD_CRI_VAR("用手爱抚", -2)
+		CALL ADD_CRI_VAR("用口爱抚", -2)
+		CALL ADD_CRI_VAR("肛门爱抚", -2)
+		CALL ADD_CRI_VAR("舔肛门", -2)
+		CALL ADD_CRI_VAR("进行足交", -2)
+	ENDIF
+
+	;调教对象的上半身外套但あ时き
+	SIF CLOTHESTYPE(1, 3)
+		CALL ADD_CRI_VAR("胸爱抚", -3)
+
+	;调教对象的下半身内衣但あ时き
+	IF CLOTHESTYPE(1, 0)
+		CALL ADD_CRI_VAR("用手爱抚", -1)
+		CALL ADD_CRI_VAR("用口爱抚", -2)
+		CALL ADD_CRI_VAR("肛门爱抚", -2)
+		CALL ADD_CRI_VAR("舔肛门", -2)
+		CALL ADD_CRI_VAR("进行足交", -1)
+		CALL ADD_CRI_VAR("跳蛋", -1)
+	ENDIF
+
+	;调教对象的上半身内衣但あ时き
+	SIF CLOTHESTYPE(1, 2)
+		CALL ADD_CRI_VAR("胸爱抚", -2)
+ENDIF
+
+@ACT_ACTM1_CLOTH_M
+;调教者但配饰但手套
+IF TEQUIP:配饰 == 1
+	CALL ADD_CRI_VAR("用手爱抚", 2 + TALENT:污臭敏感 * 2, 4)
+	CALL ADD_CRI_VAR("指插入", 2 + TALENT:污臭敏感 * 2, 4)
+ENDIF
+
+;调教者但袜子类被身につけている
+SIF TEQUIP:袜子
+	CALL ADD_CRI_VAR("进行足交", 2 + TEQUIP:袜子, 3)
+
+@ACT_ACTM1_STAIN_M
+;脏污など的处理(调教者に脏污无視但无い场合)
+IF !TALENT:脏污无視
+	;调教对象的口
+	;<Ｖ><Ｐ><精><Ａ><血><粘液>的いずれか的脏污但ある
+	SIF STAIN:MASTER:口 & 0b01101111
+		CALL ADD_CRI_VAR("接吻", -3)
+	;<精><Ａ><血>的いずれか的脏污但ある
+	SIF STAIN:MASTER:口 & 0b00101100
+		CALL ADD_CRI_VAR("接吻", -2)
+	;<粘液>脏污但ある
+	SIF STAIN:MASTER:口 & 0b01000000
+		CALL ADD_CRI_VAR("接吻", -3)
+	;调教对象的Ｐ
+	;<精><Ａ><血>的いずれか的脏污但ある
+	IF STAIN:MASTER:阴茎 & 0b00101100
+		CALL ADD_CRI_VAR("用手爱抚", -2)
+		CALL ADD_CRI_VAR("用口爱抚", -3)
+		CALL ADD_CRI_VAR("摩擦性器", -3)
+		CALL ADD_CRI_VAR("进行乳交", -2)
+		CALL ADD_CRI_VAR("进行足交", -1)
+	ENDIF
+	;<粘液>脏污但ある
+	IF STAIN:MASTER:阴茎 & 0b01000000
+		CALL ADD_CRI_VAR("用手爱抚", -3)
+		CALL ADD_CRI_VAR("用口爱抚", -6)
+		CALL ADD_CRI_VAR("摩擦性器", -4)
+		CALL ADD_CRI_VAR("进行乳交", -5)
+		CALL ADD_CRI_VAR("进行足交", -2)
+	ENDIF
+	;调教对象的Ｖ
+	;<精><Ａ><血>的いずれか的脏污但ある
+	IF STAIN:MASTER:小穴 & 0b00101100
+		CALL ADD_CRI_VAR("用手爱抚", -2)
+		CALL ADD_CRI_VAR("指插入", -2)
+		CALL ADD_CRI_VAR("用口爱抚", -3)
+		CALL ADD_CRI_VAR("摩擦性器", -3)
+		CALL ADD_CRI_VAR("进行乳交", -4)
+		CALL ADD_CRI_VAR("进行足交", -1)
+	ENDIF
+	;<粘液>脏污但ある
+	IF STAIN:MASTER:小穴 & 0b01000000
+		CALL ADD_CRI_VAR("用手爱抚", -3)
+		CALL ADD_CRI_VAR("指插入", -3)
+		CALL ADD_CRI_VAR("用口爱抚", -6)
+		CALL ADD_CRI_VAR("摩擦性器", -4)
+		CALL ADD_CRI_VAR("进行乳交", -5)
+		CALL ADD_CRI_VAR("进行足交", -2)
+	ENDIF
+	;调教对象的Ａ
+	;<精><血>的いずれか的脏污但ある
+	IF STAIN:MASTER:肛门 & 0b00100100
+		CALL ADD_CRI_VAR("肛门爱抚", -2)
+		CALL ADD_CRI_VAR("舔肛门", -3)
+	ENDIF
+	;<粘液>脏污但ある
+	IF STAIN:MASTER:肛门 & 0b01000000
+		CALL ADD_CRI_VAR("肛门爱抚", -4)
+		CALL ADD_CRI_VAR("舔肛门", -6)
+	ENDIF
+	;调教对象的Ｂ
+	;<Ｖ><Ｐ><精><Ａ><血><粘液>的いずれか的脏污但ある
+	SIF STAIN:MASTER:胸 & 0b01101111
+		CALL ADD_CRI_VAR("胸爱抚", -2)
+	;<Ｐ><血>的いずれか的脏污但ある
+	SIF STAIN:MASTER:胸 & 0b00100010
+		CALL ADD_CRI_VAR("胸爱抚", -1)
+	;<精><Ａ>的いずれか的脏污但ある
+	SIF STAIN:MASTER:胸 & 0b00001100
+		CALL ADD_CRI_VAR("胸爱抚", -2)
+	;<粘液>脏污但ある
+	SIF STAIN:MASTER:胸 & 0b01000000
+		CALL ADD_CRI_VAR("胸爱抚", -3)
+ENDIF
+
+@ACT_ACTM1_ERECTION
+;强制勃起模式(调教对象に阴茎但ある场合的み)
+IF TCVAR:MASTER:需要强制勃起 && TALENT:MASTER:扶她
+	;勃起度但[200→5, 1000→0]被加算(0～5)
+	CALL ADD_CRI_VAR("肛门爱抚", LINE_CALC(BASE:LOCAL:气力, "200→5,1000→0,LIMIT/0～5"))
+ELSEIF TCVAR:MASTER:需要强制勃起 && TALENT:MASTER:扶她
+	;勃起度但[200→5, 1000→0]被加算(0～5)
+	CALL ADD_CRI_VAR("指插入", LINE_CALC(BASE:LOCAL:气力, "200→5,1000→0,LIMIT/0～5"))
+ENDIF
+
+;────────────────────────────────────
+;同じ行动连续实行的确率被ダウンし增加
+;────────────────────────────────────
+@ACT_ACTM1_PREV
+#LOCALSIZE 200
+;推倒中不是场合的み
+;※試験的に推到中でも连续实行制限被かけるようにしてみた@これみ
+;IF !TEQUIP:推到中
+	SELECTCASE TFLAG:前ACT
+		CASE 10 TO 18, 20
+			CALL ADD_CRI_VAR(GET_ACTNAME(TFLAG:前ACT), -3 * TFLAG:同一行动奖励, -4 * TFLAG:同一行动奖励)
+	ENDSELECT
+;ENDIF
+
+;-----------------------------------------------------------
+;ACT修正値处理
+;-----------------------------------------------------------
+@ACT_ACTM1_CORRECTION(ARG)
+#DIM LCOUNT
+
+;ARG但0以外那么修正値被計算做
+IF ARG
+	FOR LCOUNT, 10, 20
+		CALL ACT_M_RES_CALC(LCOUNT, GET_CRI_VAR(GET_ACTNAME(LCOUNT) + "累计"))
+	NEXT
+	CALL ACT_M_RES_CALC(27, GET_CRI_VAR("推倒累计"))
+;ARG但0那么修正値被判定値に加算做
+ELSE
+	;修正値被判定値に加算做
+	CALL ACT_ACTM_CORRECTION(1)
+ENDIF
+
+;────────────────────────────────────
+;其他变动や实行不可能的判定
+;────────────────────────────────────
+@ACT_ACTM1_CUSTOM
+
+;自定义道具
+SIF ITEM:9
+	CALL ADD_CRI_VAR("跳蛋", 5)
+
+;不可能判定
+@ACT_ACTM1_ABLE
+#DIM LCOUNT
+
+;不可能判定
+CALL ACT_ACTM_ABLE(1)
+

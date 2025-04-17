@@ -1,0 +1,164 @@
+﻿;────────────────────────────────────
+;一般追加行动 (Ｃ爱抚1/Ｖ爱抚2/Ａ爱抚3/Ｂ爱抚4)
+;────────────────────────────────────
+@ACT_EXTRA_M0
+LOCAL:1 = (10 + ABL:MASTER:Ｃ感觉) * RAND:100
+LOCAL:2 = (10 + ABL:MASTER:Ｖ感觉) * RAND:100
+LOCAL:3 = (10 + ABL:MASTER:Ａ感觉) * RAND:100
+LOCAL:4 = (10 + ABL:MASTER:Ｂ感觉) * RAND:100
+
+FOR LOCAL:0, 1, 5
+	CALLFORM ACT_EXTRA_ABLE{LOCAL:0}
+	LOCAL:(LOCAL:0) = RESULT && LOCAL:(LOCAL:0) > -99 ? LOCAL:(LOCAL:0) # -99
+NEXT
+
+;TARGET的气力但低和追加行动但实行出来なくなる处理
+;こ的タイミングで处理做理由
+;1.RAND要素但あるため、实行判定に是組み込めない
+;2.TFLAG:229決定后に行う和、MASTER的部位使用标志被破壊してしまう
+SIF GET_ABL(TARGET, "技巧") * BASE:TARGET:气力 < RAND:200 * MAXBASE:TARGET:气力
+	LOCAL:1 = -99, -99, -99, -99
+
+SELECTCASE MAX(LOCAL:1, LOCAL:2, LOCAL:3, LOCAL:4)
+	CASE -99
+		TFLAG:追加行动 = 0
+	CASE LOCAL:1
+		TFLAG:追加行动 = 1
+		TFLAG:Ｐ使用中 += 1
+	CASE LOCAL:2
+		TFLAG:追加行动 = 2
+		TFLAG:Ｖ使用中 += 1
+	CASE LOCAL:3
+		TFLAG:追加行动 = 3
+		TFLAG:Ａ使用中 += 1
+	CASE LOCAL:4
+		TFLAG:追加行动 = 4
+		TFLAG:胸使用中 += 1
+ENDSELECT
+RETURN TFLAG:追加行动
+
+
+@ACT_EXTRA_MESSAGE_M0
+SELECTCASE TFLAG:追加行动
+	CASE 1
+		PRINTFORML %CALLNAME:TARGET%进一步开始对%CALLNAME:MASTER%的\@ PENIS(MASTER) ? 肉棒进行爱抚 # 身体进行爱抚 \@…
+		SOURCE:MASTER:快Ｃ += 75 + ACT_FROM(TARGET, 1) * (2 + TALENT:灵巧的指尖) / 8
+		TCVAR:MASTER:这回合的勃起 += (100 + GET_ABL(TARGET, "技巧") + GET_ABL(TARGET, "爱抚") + TALENT:灵巧的指尖 * 50) / 2
+	CASE 2
+		PRINTFORML %CALLNAME:TARGET%进一步将手指插入%CALLNAME:MASTER%的秘唇，在里面来回搅拌…
+		SOURCE:MASTER:快Ｖ +=  100 + ACT_FROM(TARGET, 2) * (2 + TALENT:灵巧的指尖) / 4
+		;扶她是Ｖで前列腺刺激
+		SIF TALENT:MASTER:扶她
+			TCVAR:MASTER:前列腺刺激 += 1
+		TCVAR:MASTER:这回合的勃起 += (GET_ABL(TARGET, "技巧") + GET_ABL(TARGET, "爱抚") + TALENT:灵巧的指尖 * 50) / 4
+	CASE 3
+		PRINTFORML %CALLNAME:TARGET%进一步开始爱抚起%CALLNAME:MASTER%的肛门…
+		SOURCE:MASTER:快Ａ += 60 + ACT_FROM(TARGET, 3) * (2 + TALENT:灵巧的指尖) / 4
+		;男人是Ａで前列腺刺激
+		SIF TALENT:MASTER:男人
+			TCVAR:MASTER:前列腺刺激 += 1
+		TCVAR:MASTER:这回合的勃起 += (100 + GET_ABL(MASTER, "Ａ感觉") + GET_ABL(MASTER, "受虐气质") * GET_ABL(TARGET, "技巧") / 50) / 2
+	CASE 4
+		PRINTFORML %CALLNAME:TARGET%进一步开始爱抚起%CALLNAME:MASTER%的乳头…
+		SOURCE:MASTER:快Ｂ += 75 + ACT_FROM(TARGET, 4) * (2 + TALENT:灵巧的指尖) / 6
+		TCVAR:MASTER:这回合的勃起 += 40 + (GET_ABL(TARGET, "技巧") + GET_ABL(TARGET, "爱抚") + TALENT:灵巧的指尖 * 50) / 6
+ENDSELECT
+
+
+;-----------------------------------------------------------
+;一般追加行动 的实行判定
+;-----------------------------------------------------------
+@ACTM_EXTRA_ABLE0
+;调教菜单但爱抚/道具以外
+SIF MENUMATCH(TFLAG:ACT, "爱抚") !| MENUMATCH(TFLAG:ACT, "道具")
+	RETURN 0
+;调教行动但进行足交/推倒的场合是无理
+SIF IS_NOWACTNAME("进行足交/推倒")
+	RETURN 0
+FOR LOCAL:0, 1, 5
+	CALLFORM ACT_EXTRA_ABLE{LOCAL:0}
+	SIF RESULT
+		RETURN 1
+NEXT
+RETURN 0
+
+;-----------------------------------------------------------
+;Ｃ爱抚 的实行判定
+;-----------------------------------------------------------
+@ACT_EXTRA_ABLE1
+;Ｐ但塞但っている(Ｐ插入中/Ｐ使用中/性交奉仕中/飞机杯/MASTER但插入助手中)
+SIF TFLAG:Ｐ插入中 || TFLAG:Ｐ使用中 || TEQUIP:性交奉仕中 || TEQUIP:飞机杯 || TFLAG:插入助手中
+	RETURN 0
+RETURN 1
+
+;-----------------------------------------------------------
+;Ｖ爱抚 的实行判定
+;-----------------------------------------------------------
+@ACT_EXTRA_ABLE2
+;Ｖ但塞但っている(Ｖ使用中/震动棒/Ｖ性交)
+SIF TFLAG:Ｖ使用中 || TEQUIP:震动棒 || V_SEX() || TEQUIP:假阴茎
+	RETURN 0
+;调教者に穿墙但ない
+IF !TALENT:穿墙
+	;调教对象的下半身外套で妨害される
+	SIF CLOTHESTYPE(1, 1) == 2
+		RETURN 0
+ENDIF
+;MASTER但处女
+SIF TALENT:MASTER:处女
+	RETURN 0
+;MASTER但男人
+SIF TALENT:MASTER:男人
+	RETURN 0
+RETURN 1
+
+;-----------------------------------------------------------
+;Ａ爱抚 的实行判定
+;-----------------------------------------------------------
+@ACT_EXTRA_ABLE3
+;Ａ但塞但っている(Ａ使用中/肛门震动棒/肛门拉珠/灌肠器＋肛塞/Ａ性交)
+SIF TFLAG:Ａ使用中 || TEQUIP:肛门震动棒 || TEQUIP:肛门拉珠 || TEQUIP:灌肠器＋肛塞 || TEQUIP:性交中 == 6 || TEQUIP:假阴茎
+	RETURN 0
+;调教者に穿墙但ない
+IF !TALENT:穿墙
+	;调教对象的下半身外套で妨害される
+	SIF CLOTHESTYPE(1, 1) == 2
+		RETURN 0
+	;调教对象的下半身内衣で强く妨害される
+	SIF CLOTHESTYPE(1, 0)
+		RETURN 0
+ENDIF
+;性交奉仕中で、体势的に无理な体位(后背位/骑乘位/对面座位/背面座位)
+SIF GROUPMATCH(TEQUIP:性交奉仕中, 2, 3, 4, 5) > 0
+	RETURN 0
+;ACT但乳交
+SIF IS_NOWACTNAME("进行乳交")
+	RETURN 0
+RETURN 1
+
+;-----------------------------------------------------------
+;Ｂ爱抚 的实行判定
+;-----------------------------------------------------------
+@ACT_EXTRA_ABLE4
+;Ｂ但塞但っている(Ｂ使用中/乳头夹)
+SIF TFLAG:胸使用中 || TEQUIP:乳头夹
+	RETURN 0
+;口交中など是无理
+SIF IS_NOWACTNAME("用口爱抚") || TEQUIP:调教对象Ｃ使用 == 2
+	RETURN 0
+;顔面骑乘中
+SIF TEQUIP:顔面骑乘 || TEQUIP:顔面骑乘肛门
+	RETURN 0
+;调教者に穿墙但なく、调教对象但男人
+IF !TALENT:穿墙 && TALENT:MASTER:男人
+	;调教对象的上半身外套で妨害される
+	SIF CLOTHESTYPE(1, 3) == 2
+		RETURN 0
+	;调教对象的上半身内衣で妨害される
+	SIF CLOTHESTYPE(1, 2) == 2
+		RETURN 0
+ENDIF
+;性交奉仕中で、体势的に无理な体位(后背位/背面座位)
+SIF GROUPMATCH(TEQUIP:性交奉仕中, 2, 5) > 0
+	RETURN 0
+RETURN 1

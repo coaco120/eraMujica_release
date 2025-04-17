@@ -1,0 +1,393 @@
+﻿;────────────────────────────────────
+;调教开始的处理
+;────────────────────────────────────
+@EVENTTRAIN
+#DIM LCOUNT
+#DIM 可能满足奖励数
+
+;(调教者別)调教回数加算
+CFLAG:调教回数++
+
+;调教开始直前に魔力消费处理被是さむ(サンドボックス的み、指定时)
+SIF FLAG:模式 == 1 && FLAG:AI自由度
+	CALL MANAGE_MP
+
+FLAG:调教中 = 1
+;衣服被Initialize
+TEQUIP:MASTER:配饰 = CFLAG:MASTER:衣服 < 2 ? EQUIP:MASTER:配饰 # 0
+TEQUIP:MASTER:袜子       = CFLAG:MASTER:衣服 < 2 ? EQUIP:MASTER:袜子 # 0
+TEQUIP:MASTER:下半身内衣 = CFLAG:MASTER:衣服 < 2 ? EQUIP:MASTER:下半身内衣 # 0
+TEQUIP:MASTER:上半身内衣 = CFLAG:MASTER:衣服 < 2 ? EQUIP:MASTER:上半身内衣 # 0
+TEQUIP:MASTER:下半身外套 = CFLAG:MASTER:衣服 < 1 ? EQUIP:MASTER:下半身外套 # 0
+TEQUIP:MASTER:上半身外套 = CFLAG:MASTER:衣服 < 1 ? EQUIP:MASTER:上半身外套 # 0
+TEQUIP:MASTER:全身外套   = CFLAG:MASTER:衣服 < 1 ? EQUIP:MASTER:全身外套 # 0
+TEQUIP:MASTER:COSPLAY   = CFLAG:MASTER:衣服 == 3 ? EQUIP:MASTER:COSPLAY # 0
+
+TEQUIP:MASTER:奴隶项圈 = EQUIP:MASTER:奴隶项圈
+
+TEQUIP:配饰 = CFLAG:TARGET:衣服 < 2 ? EQUIP:TARGET:配饰 # 0
+TEQUIP:袜子       = CFLAG:TARGET:衣服 < 2 ? EQUIP:TARGET:袜子 # 0
+TEQUIP:下半身内衣 = CFLAG:TARGET:衣服 < 2 ? EQUIP:TARGET:下半身内衣 # 0
+TEQUIP:上半身内衣 = CFLAG:TARGET:衣服 < 2 ? EQUIP:TARGET:上半身内衣 # 0
+TEQUIP:下半身外套 = CFLAG:TARGET:衣服 < 1 ? EQUIP:TARGET:下半身外套 # 0
+TEQUIP:上半身外套 = CFLAG:TARGET:衣服 < 1 ? EQUIP:TARGET:上半身外套 # 0
+TEQUIP:全身外套   = CFLAG:TARGET:衣服 < 1 ? EQUIP:TARGET:全身外套 # 0
+TEQUIP:COSPLAY   = CFLAG:TARGET:衣服 == 3 ? EQUIP:TARGET:COSPLAY # 0
+
+;-1に初期化做TFLAG被设置
+TFLAG:前ACT = -1
+TFLAG:前REACT分类 = -1
+TFLAG:ACT预定分类 = -1
+CVARSET TCVAR, GETNUM(TCVAR, "预定行动"), -1
+TCVAR:今日的满足奖励 = -1
+
+;调教中に用いるCFLAG被设置
+FOR LOCAL, 30, 34
+	CVARSET CFLAG, LOCAL, 50
+NEXT
+FOR LOCAL, 250, 260
+	CVARSET CFLAG, LOCAL
+NEXT
+TFLAG:可能的COM数 = 0
+;绝顶相关的设置
+FOR LCOUNT, 0, CHARANUM
+	VARSET EX:LCOUNT:0
+	VARSET NOWEX:LCOUNT:0
+	VARSET TCVAR:LCOUNT:0, 0, 70, 100
+NEXT
+
+;姿势相关
+CVARSET TCVAR, GETNUM(TCVAR,           "姿势")
+CVARSET TCVAR, GETNUM(TCVAR,     "上回合的姿势")
+CVARSET TCVAR, GETNUM(TCVAR,       "位置前后")
+CVARSET TCVAR, GETNUM(TCVAR, "上次的位置前后")
+CVARSET TCVAR, GETNUM(TCVAR,       "位置上下")
+CVARSET TCVAR, GETNUM(TCVAR, "上次的位置上下")
+
+;现在的定位=平时定位
+CFLAG:平时 = LIMIT(CFLAG:平时, -999, 999)
+CFLAG:定位 = CFLAG:平时 / 10
+;奴隶项圈装备中
+SIF TEQUIP:MASTER:奴隶项圈 == 1
+	CFLAG:定位 = -99
+
+;开始时的调教者的射精ゲージ但0になっていた的で、ここで修正
+BASE:射精 = MAXBASE:射精
+;尿意ゲージ的设定
+BASE:MASTER:尿意 = 0
+MAXBASE:MASTER:尿意 = 10000 - TALENT:MASTER:早泄 * 5000 + TALENT:MASTER:迟漏 * 5000
+;まだ解消してない疲惫被调教フェースに反应
+TFLAG:调教者疲惫度 = CFLAG:疲惫
+TFLAG:疲惫度 = CFLAG:MASTER:疲惫
+
+TCVAR:MASTER:勃起度 = 1000 * (BASE:MASTER:射精 + 5000) * (MAXBASE:MASTER:理性 - BASE:MASTER:理性) / ((MAXBASE:MASTER:射精 + 5000) * MAXBASE:MASTER:理性)
+
+;长期修正値用初期化处理
+CALL ACT_M_RESEARCH_L(0)
+
+CALLF _UNEXTRACTION(MASTER, 1, 0)	;不拔出状态迟延判定标志初期化@revkoishi(14/07/15)
+
+;────────────────────────────────────
+;本次的方针
+;────────────────────────────────────
+;选择可能的大满足奖励但いくつあるか
+可能满足奖励数 = 0
+FOR LCOUNT, 0, 12
+	SIF SATISBONUS_ABLE(LCOUNT)
+		可能满足奖励数++
+NEXT
+
+
+;ご褒美但あった和き是方针变更被飛ばすように
+IF (!CFLAG:满足奖励 && CFLAG:疲惫 <= 5 && CFLAG:MASTER:疲惫 <= 5 && CFLAG:调教等级 > 4) || !可能满足奖励数
+	;お尻被欺负てみようかな处理？
+	;なんだこれ意味わからん…Ａ感觉上但るほど出にくくなる的？
+	;暫定残し
+	SELECTCASE ABL:MASTER:Ａ感觉
+		CASE 0
+			TFLAG:今日的方针 = !RAND:3
+		CASE 1
+			TFLAG:今日的方针 = !RAND:4
+		CASE 2
+			TFLAG:今日的方针 = !RAND:6
+		CASE 3
+			TFLAG:今日的方针 = !RAND:8
+		CASE 4
+			TFLAG:今日的方针 = !RAND:12
+	ENDSELECT
+	;确率で平时どおり不是方针被和るように
+	IF !RAND:5
+		LOCAL = RAND:4
+		IF BASE:MASTER:体力 < 2 * MAXBASE:MASTER:体力 / 3 && LOCAL == 0
+			TFLAG:今日的方针 = 4
+		ELSEIF	BASE:MASTER:射精 < 9 * MAXBASE:MASTER:体力 / 10 && LOCAL == 1
+			TFLAG:今日的方针 = 3
+		ELSEIF ITEM:项圈  && LOCAL == 2
+			TFLAG:今日的方针 = 6
+		;ELSEIF GETBIT(FLAG:60,0)  && LOCAL == 3
+		;	TFLAG:今日的方针 = 9
+		;惩罚是反抗依存にし想要但仕大人但さだまっていない的で后回し
+		;ELSEIF RAND:((2 + MARK:反抗刻印) * (TALENT:虐待狂 + 1)) > RAND:30
+		;	TFLAG:今日的方针 = 2
+		ENDIF
+	ENDIF
+ENDIF
+
+;调教开始口上
+DRAWLINE
+RESULT = 0
+IF CFLAG:疲惫 > 5
+	CALL KOJO_EVENT(11, 1)
+ELSEIF CFLAG:MASTER:疲惫 > 5
+	CALL KOJO_EVENT(11, 2)
+ELSE
+	CALL KOJO_EVENT(11)
+ENDIF
+
+LOCAL = 0
+IF 可能满足奖励数 && CFLAG:满足奖励 && CFLAG:好感 > 1000 && !TFLAG:今日的方针 && CFLAG:疲惫 <= 5 && CFLAG:MASTER:疲惫 <= 5
+	SKIPDISP 0
+	PRINTL
+	CALL PRINT_RAINBOW2W(@"★★%CALLNAME:TARGET%大人大满足奖励★★", 30)
+	PRINTL
+	;自动模式的際的处理
+	IF FLAG:自动模式 > 0
+		LOCAL = FLAG:优先大满足奖励 % 100
+		SIF LOCAL == 12
+			LOCAL = RAND:12
+		SIF !LOCAL:1 && LOCAL == 6
+			LOCAL = FLAG:优先大满足奖励 / 100
+		SIF !LOCAL:2 && LOCAL == 7
+			LOCAL = FLAG:优先大满足奖励 / 100
+		;選んだも的但实行できない场合
+		IF !SATISBONUS_ABLE(LOCAL)
+			FOR LCOUNT, 0, 20
+				SIF SATISBONUS_ABLE(LCOUNT)
+					LOCAL = LCOUNT
+			NEXT
+		ENDIF
+		PRINTFORMW %AUTO_SPLIT("平时原样/欺负肛门/惩罚/激烈/撒娇/直到坏掉/想要外出/想要怀孕/要求休息/被抱住/想要侍奉/宠爱/随机", "/", LOCAL)%被选择了
+		RESULT = LOCAL
+		LOCAL = 0
+	;通常的处理
+	ELSE
+		CALL KOJO_EVENT(16)
+		PRINTFORMW %CALLNAME:TARGET%大人似乎心情很好，询问了今天想做些什么
+		PRINTL
+		SIF SATISBONUS_ABLE(0)
+			CALL HTMLPRINTL(@"%HTMLBUTTON("[ 0] - 平时原样", "0", "通常")%")
+		SIF SATISBONUS_ABLE(1)
+			{
+			CALL HTMLPRINTL(@"%HTMLBUTTON("[ 1] - 欺负肛门", "1", @"\@ 
+			CFLAG:M好感 + CFLAG:好感 >= 10000 && (TALENT:TARGET:扶她 || ITEM:假阴茎) 
+			? 性交++ # 爱抚++ 道具++ 施虐+ \@")%")
+			}
+		SIF SATISBONUS_ABLE(2)
+			CALL HTMLPRINTL(@"%HTMLBUTTON("[ 2] - 惩罚", "2", "惩罚标志但立つ")%")
+		SIF SATISBONUS_ABLE(3)
+			CALL HTMLPRINTL(@"%HTMLBUTTON("[ 3] - 激烈", "3", "道具+ 奉仕+ 施虐++")%")
+		SIF SATISBONUS_ABLE(4)
+			{
+			CALL HTMLPRINTL(@"%HTMLBUTTON("[ 4] - 撒娇", "4", @"\@ 
+			CFLAG:M好感 + CFLAG:好感 >= 10000 && ITEM:假阴茎 && !PENIS(MASTER) 
+			? 性奉++ # 爱抚+ 奉仕++ \@")%")
+			}
+		SIF SATISBONUS_ABLE(5)
+			CALL HTMLPRINTL(@"%HTMLBUTTON("[ 5] - 直到坏掉", "5", "施虐++ 异常++")%")
+		SIF SATISBONUS_ABLE(6)
+			CALL HTMLPRINTL(@"%HTMLBUTTON("[ 6] - 想要外出", "6", "野外PLAY")%")
+		;好感+好感度10000以上、调教者但妊娠できる
+		SIF SATISBONUS_ABLE(7)
+			CALL HTMLPRINTL(@"%HTMLBUTTON(@"[ 7] - %CALLNAME%大人被想要怀孕", "7", "性奉++")%")
+		SIF SATISBONUS_ABLE(8)
+			CALL HTMLPRINTL(@"%HTMLBUTTON("[ 8] - 要求休息", "8", "休息根据调教的跳过")%")
+		;好感+好感度10000以上
+		SIF SATISBONUS_ABLE(9)
+			CALL HTMLPRINTL(@"%HTMLBUTTON(@"[ 9] - %CALLNAME%大人に被抱住", "9", "性交++")%")
+		;反抗刻印无かつM好感1000以上
+		SIF SATISBONUS_ABLE(10)
+			CALL HTMLPRINTL(@"%HTMLBUTTON(@"[10] - %CALLNAME%大人に想要侍奉", "10", "奉仕++")%")
+		;好感2000, M好感1000但必要
+		SIF SATISBONUS_ABLE(11)
+			{
+			CALL HTMLPRINTL(@"%HTMLBUTTON(@"[11] - 宠爱", "11", @"会话+ 爱抚++\@ 
+			!TALENT:MASTER:男人 ?  性交+ # \@")%")
+			}
+		REDRAW 0
+		$INPUT_LOOP
+		INPUT
+		IF !SATISBONUS_ABLE(RESULT)
+			CLEARLINE 1
+			GOTO INPUT_LOOP
+		ENDIF
+		REDRAW 1
+	ENDIF
+	SELECTCASE RESULT
+		;通常
+		CASE 0
+		;肛门
+		CASE 1
+		;惩罚
+		CASE 2
+			TFLAG:惩罚标志 = 1
+		;强硬
+		CASE 3
+		;调情
+		CASE 4
+		;异常
+		CASE 5
+		;野外
+		CASE 6
+			TEQUIP:野外PLAY = 1
+		;做小孩
+		CASE 7
+		;休息
+		CASE 8
+		;抱住
+		CASE 9
+		;ご奉仕
+		CASE 10
+		;宠爱
+		CASE 11
+	ENDSELECT
+	TFLAG:今日的方针 = RESULT
+	TCVAR:今日的满足奖励 = RESULT
+	;ここで设置され时今日的方针部位で的参照に使えない的で注释アウト
+	;CFLAG:满足奖励 = 0
+	PRINTL
+	CALL KOJO_EVENT(16, 1)
+	CALL VOIDLINE_IF(RESULT)
+	SIF TFLAG:今日的方针 != 8
+		PRINTFORMW %CALLNAME:TARGET%在听了%CALLNAME:MASTER%的回答后开始准备调教
+	LOCAL = 1
+	IF FLAG:自动模式 > 0 && FLAG:自动模式显示设定 == 1
+		SKIPDISP 1
+	ENDIF
+ENDIF
+
+IF !LOCAL && TFLAG:今日的方针
+	CALL KOJO_EVENT(17)
+	CALL VOIDLINE_IF(RESULT)
+ENDIF
+
+;方针決定后的旁白
+SELECTCASE POLICY("今日")
+	CASE "通常"
+	CASE "肛门"
+		{
+		PRINTFORMW 本次%CALLNAME:TARGET%是%CALLNAME:MASTER%的\@ CFLAG:满足奖励 
+		? リクエストに应え、 # \@肛门被开发做こ和に決めた…
+		}
+	CASE "惩罚"
+		{
+		PRINTFORMW %CALLNAME:TARGET%是%CALLNAME:MASTER%\@ CFLAG:满足奖励 
+		? 的リクエストに应え、 # に \@惩罚被做こ和にした…
+		}
+	CASE "强硬"
+		{
+		PRINTFORMW %CALLNAME:TARGET%是\@ CFLAG:满足奖励 
+		? %CALLNAME:MASTER%的リクエストに应え、 # \@平时より过激调教做こ和にした…
+		}
+	CASE "调情"
+		PRINTFORMW %CALLNAME:TARGET%向%CALLNAME:MASTER%招手，将对方温柔地抱了过来… 
+	CASE "异常"     ;嗜虐和情欲和言っても要做に异常系和いう只なんで微妙な気是做
+		PRINTFORMW %CALLNAME:TARGET%用被嗜虐和情欲所填满的疯狂的眼神注视着%CALLNAME:MASTER%…
+	CASE "野外"
+		PRINTFORMW %CALLNAME:TARGET%给%CALLNAME:MASTER%戴上项圈，开始准备外出…
+	;以下、ご褒美でしか出ない
+	CASE "做小孩"
+		PRINTFORMW %CALLNAME:TARGET%因为期待着能生孩子而蹭上了%CALLNAME:MASTER%…
+	CASE "休息"
+		;休息。INFO.ERBに处理被移动
+	CASE "抱住"
+		{
+		PRINTFORMW 之后被%CALLNAME:TARGET%拥抱的期待让%CALLNAME:MASTER%浑身发热\@ 
+		!TALENT:虐待狂 ? 温柔的 # \@抱き寄せた…
+		}
+	CASE "ご奉仕"
+		PRINTFORMW %CALLNAME:TARGET%对这个特别的提议露出了满意的笑容，招来%CALLNAME:MASTER%温柔地抚摸着对方的脑袋…
+	CASE "宠爱"
+		PRINTFORMW %CALLNAME:TARGET%微笑着接近%CALLNAME:MASTER%，轻轻地吻了一下额头…
+ENDSELECT
+
+;今日的方针旁白被抜けてから设置
+CFLAG:满足奖励 = 0
+
+IF FLAG:自动模式 > 0 && FLAG:自动模式显示设定 == 1
+	CALL SHOW_AUTOMODE_UPCHECK, 1
+	SKIPDISP 0
+	DRAWLINE
+	PRINTFORML {FLAG:年数+1}年{FLAG:日数+1}日目(%GET_TIME()%) %GET_SEASON()% %GET_DAY()%的行 　主人：%CALLNAME:1%
+	DRAWLINE
+	SKIPDISP 1
+ENDIF
+
+;大满足奖励的可否
+@SATISBONUS_ABLE(ARG)
+#FUNCTION
+;大满足奖励自体但封印されていれば0被返す
+SIF CFLAG:大满足奖励封印
+	RETURNF 0
+SELECTCASE ARG
+	;平时原样
+	CASE 0
+	;欺负肛门
+	CASE 1
+	;惩罚
+	CASE 2
+	;激烈
+	CASE 3
+	;撒娇
+	CASE 4
+	;直到坏掉
+	CASE 5
+	;想要外出
+	CASE 6
+		SIF !ITEM:项圈
+			RETURNF 0
+	;想要怀孕
+	CASE 7
+		SIF !(CFLAG:M好感 + CFLAG:好感 >= 10000 && !TALENT:妊娠 && FLAG:妊娠 && !TALENT:男人 && PENIS(MASTER))
+			RETURNF 0
+	;要求休息
+	CASE 8
+	;抱住希望
+	CASE 9
+		SIF !(CFLAG:M好感 + CFLAG:好感 >= 10000 && !TALENT:MASTER:男人 && (TALENT:扶她 || ITEM:假阴茎))
+			RETURNF 0
+	;想要侍奉
+	CASE 10
+		SIF !(!MARK:反抗刻印 && CFLAG:M好感 >= 1000)
+			RETURNF 0
+	;宠爱
+	CASE 11
+		SIF !(CFLAG:好感 >= 2000 && CFLAG:M好感 >= 1000)
+			RETURNF 0
+	[SKIPSTART]
+	实装做场合是假阳具和排他にすべきか？
+	和いうか今更別枠でやる意味是薄い。やる那么方针[9]和統合して内部で分ける方但いいかな
+	;怀孕命令
+	CASE 12
+		SIF !(CFLAG:M好感 + CFLAG:好感 >= 10000 && !TALENT:MASTER:妊娠 && FLAG:调教对象妊娠 && !TALENT:MASTER:男人 && TALENT:扶她)
+			RETURN 0
+	[SKIPEND]
+	;未定義
+	CASEELSE
+		RETURNF 0
+ENDSELECT
+;单独に封印されていなければ
+RETURNF !CFLAG:(1200+ARG)
+
+
+;────────────────────────────────────
+;脏污的设置
+;────────────────────────────────────
+@STAIN_RESET
+RESET_STAIN MASTER
+RESET_STAIN TARGET
+SIF ASSI:1 >= 0
+	RESET_STAIN ASSI:1
+SIF ASSI:2 >= 0
+	RESET_STAIN ASSI:2
+SIF ASSI:3 >= 0
+	RESET_STAIN ASSI:3

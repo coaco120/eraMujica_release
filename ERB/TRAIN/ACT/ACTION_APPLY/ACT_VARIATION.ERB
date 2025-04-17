@@ -1,0 +1,623 @@
+﻿;口上的ために调教者行动的派生被決定し增加
+
+;で。なんで派生条件注释になってないんですか？これぶちきれていいよね？
+;っつうか手淫的派生和同じ标志被高潮和か连续实行和かに与えてる的是困ってしまい增加
+;それ口上超書きにくい的で、断固清除さ命令我开动了。
+
+;性交系的派生关于是別に恶くないんです但、ついでだし今的うちに清除で
+
+@TRAIN_VARIATION
+
+;TFLAG:90ご和に関数分けしてしまい增加
+;后々、派生数据被各ACT的文件で管理さ命令もいいからね
+;RRじみたダダ长いIFネスト嫌いな的もあり。どんどん刻むよ！
+
+;引数もあってもいいけど、うーん？
+TRYCCALLFORM TRAIN_VARIATION_ACT{TFLAG:90}
+CATCH
+	;COMBI派生系是なければ派生前被见に行く
+	TRYCALLFORM TRAIN_VARIATION_ACT{GET_COMBIACTNUM(TFLAG:ACT)}
+ENDCATCH
+
+
+;服被脱げ和命じる（服被着ろ和命じる）
+@TRAIN_VARIATION_ACT5
+;性交中で是ない
+IF !GETINSERT()
+	;着ているも的但2枚以下的时候、服被着ろになりうる
+	VARSET LOCAL
+	FOR LOCAL, 0, 10
+		SIF TEQUIP:MASTER:LOCAL
+			LOCAL:1 ++
+	NEXT
+	SIF LOCAL:1 <= MAX(0,RAND:5-2)
+		TFLAG:ACT派生 = 1
+;性交中、脱げる部位被つけていれば脱げに。つけていない那么着ろに。
+;COSPLAY是ACTABLEで弹いている的で考慮外
+ELSEIF !(TEQUIP:MASTER:上半身内衣 || TEQUIP:MASTER:上半身外套 || TEQUIP:MASTER:全身外套 || TEQUIP:MASTER:配饰 || TEQUIP:MASTER:袜子)
+	TFLAG:ACT派生 = 1
+ENDIF
+
+;爱抚（指で爱抚）
+@TRAIN_VARIATION_ACT10
+;调教对象に阴茎但あ时、必ず手淫になる
+SIF PENIS(MASTER)
+	TFLAG:ACT派生 = 1
+	;備考：阴茎但あ时通常的爱抚是起こらない
+;调教对象但穿上假阴茎中是、假阴茎手淫になる
+SIF TEQUIP:假阴茎
+	TFLAG:ACT派生 = 2
+
+
+
+;胸爱抚
+@TRAIN_VARIATION_ACT11
+;调教对象但男人 //条件次第で吸乳头。其他的场合是乳首責め。揉み合いに是派生不做
+IF TALENT:MASTER:男人
+	;今日的方针但"宠爱"的场合、服で妨害されなければ吸乳头
+	IF IS_POLICY("今日", "宠爱") && !BRACHECK(1, 1) && !GROUPMATCH(TEQUIP:性交奉仕中, 3, 4)
+		TFLAG:ACT派生 = 1
+	;调教者的好感但一定以上若しく是调教者但舌使持ちかつ服で妨害されない场合是2/3的确率で吸乳头
+	ELSEIF !IS_POLICY("今日", "宠爱") && (CFLAG:好感 >= 2000 || TALENT:舌使) && !BRACHECK(1, 1) && !GROUPMATCH(TEQUIP:性交奉仕中, 3, 4) && !RAND:3
+		TFLAG:ACT派生 = 1
+	;それ以外是乳首責め
+	ELSE
+		TFLAG:ACT派生 = 3
+	ENDIF
+	;////////////////////////////////////////////////////////////////////////////////////////////////////////
+	;男人的场合乳首責めしか发生不做的もアレな的で、それなりに進展した状況的场合是吸乳头に派生做ように
+	;////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	;必ず乳首責めになる
+	;備考：男人に是これしか发生不做的で、妨害性的上半身服被着てい时胸爱抚自体行わない
+	;（ただし普通的外套是裾被まくって爱抚できる。连衣裙・教师服・胸罩是男人是装備不做的で関係ないかも）
+	;乳首責め自体是女人にも发生做ようにしておき增加
+
+;调教对象但女人
+ELSE
+	;今日的方针但"宠爱"的场合、服で妨害されなければ吸乳头
+	IF IS_POLICY("今日", "宠爱") && !BRACHECK(1, 1) && !GROUPMATCH(TEQUIP:性交奉仕中, 3, 4)
+		TFLAG:ACT派生 = 1
+	;上次但胸爱抚那么乳首系
+	;（ただし穿墙但ない和上半身服に妨害される）
+	ELSEIF !IS_POLICY("今日", "宠爱") && IS_PREVACTNAME("胸爱抚") && (TALENT:穿墙|| !BRACHECK(1, 1)) && !GROUPMATCH(TEQUIP:性交奉仕中, 3, 4)
+		;调教者に幼稚か舌使但あ时3/4、なければ1/4で吸乳头
+		IF TALENT:幼稚 || TALENT:舌使 ? RAND:4 # !RAND:4
+			TFLAG:ACT派生 = 1
+		;それ以外是乳首責め
+		ELSE
+			TFLAG:ACT派生 = 3
+		ENDIF
+	;单独实行那么揉み系
+	ELSE
+		;调教者的欲望+Ｂ感觉３以上那么、1/2で胸的揉み合い
+		SIF ABL:欲望 + ABL:Ｂ感觉 > 2 && RAND:2
+			TFLAG:ACT派生 = 2
+		;揉み合いに那么なければ胸爱抚的まま
+	ENDIF
+ENDIF
+;逆强奸、对面座位侍奉是ACT_ABLE被抜けてくる的でACT派生1(吸乳头)的部位で規制做
+;体制的にちょっ和无理但ある的で
+
+
+;舔阴（舌で爱抚）
+@TRAIN_VARIATION_ACT12
+;调教对象に阴茎但あ时、必ず口交になる
+SIF PENIS(MASTER)
+	TFLAG:ACT派生 = 1
+	;備考：阴茎但あ时通常的舔阴是起こらない
+
+;阴茎但なければ舔阴的まま
+
+
+
+;肛门爱抚
+@TRAIN_VARIATION_ACT13
+;调教对象但男人
+IF TALENT:MASTER:男人
+	;肛门震动棒装备中是、肛门震动棒出し入れ
+	IF TEQUIP:肛门震动棒
+		TFLAG:ACT派生 = 2
+	;下半身外套に妨害されず、下半身内衣但ない
+	ELSEIF LOWERJACKET(1) < 2 && !LOWERUNDER(1)
+		;连续实行的场合、前列腺刺激
+		SIF IS_PREVACTNAME("肛门爱抚")
+			TFLAG:ACT派生 = 1
+		;高潮or快Ｃ但5000以上的场合、调教者的爱抚技能に应じて前列腺刺激
+		SIF (TCVAR:MASTER:高潮 || PALAM:MASTER:快Ｃ >= 5000) && PERCENT(ABL:爱抚*10)
+			TFLAG:ACT派生 = 1
+		;勃起度但低场合、调教者的爱抚技能に应じて前列腺刺激
+		SIF TCVAR:MASTER:勃起度 < 1000 && PERCENT(ABL:爱抚*10)
+			TFLAG:ACT派生 = 1
+		;需要强制勃起的场合、前列腺刺激
+		SIF TCVAR:MASTER:需要强制勃起
+			TFLAG:ACT派生 = 1
+	ENDIF
+	;備考：扶她的前列腺是尿道、つまり小穴的上にあ时し、Ｇスポット刺激的项移动
+	;精力0で阴茎但萎えている必要但あった但省く。实行されないっつ的そんなもん！
+ENDIF
+
+
+
+;舔肛门
+@TRAIN_VARIATION_ACT14
+;前列腺刺激へ的分岐但あった但、清除做
+;そんな和ころ直到舌但届くわけないじゃないかｗｗｗ
+
+
+
+;貝合わせ（性器被擦りあう）
+@TRAIN_VARIATION_ACT16
+;调教对象に阴茎但あ时、必ず素股做になる
+SIF PENIS(MASTER)
+	TFLAG:ACT派生 = 1
+	;備考：阴茎但あ时通常的貝合わせ是起こらない
+;调教对象但穿上假阴茎中是、假阴茎素股になる
+SIF TEQUIP:假阴茎
+	TFLAG:ACT派生 = 2
+
+;阴茎但なければ貝合わせ的まま
+;また、调教者に阴茎但あ时实行できない（代わりに素股强制になる）
+
+;指插入
+@TRAIN_VARIATION_ACT19
+;调教对象但处女で是ダメ
+IF !TALENT:MASTER:处女
+	;震动棒装备中是、震动棒出し入れ
+	IF TEQUIP:震动棒
+		TFLAG:ACT派生 = 2
+	ELSE
+		;连续实行的场合、Ｇスポット刺激
+		SIF IS_PREVACTNAME("指插入")
+			TFLAG:ACT派生 = 1
+		;高潮or快Ｃ但5000以上的场合、调教者的爱抚技能に应じてＧスポット刺激
+		SIF (TCVAR:MASTER:高潮 || PALAM:MASTER:快Ｃ >= 5000) && PERCENT(ABL:爱抚*10)
+			TFLAG:ACT派生 = 1
+		;扶她限定
+		IF TALENT:MASTER:扶她
+			;勃起度但低场合、调教者的爱抚技能に应じてＧスポット刺激
+			SIF TCVAR:MASTER:勃起度 < 1000 && PERCENT(ABL:爱抚*10)
+				TFLAG:ACT派生 = 1
+			;需要强制勃起的场合、Ｇスポット刺激
+			SIF TCVAR:MASTER:需要强制勃起
+				TFLAG:ACT派生 = 1
+		ENDIF
+	ENDIF
+ENDIF
+
+
+;爱抚强制（指で爱抚被强制）
+@TRAIN_VARIATION_ACT50
+;调教者に阴茎但あ时、必ず手淫强制になる
+SIF PENIS(TARGET)
+	TFLAG:ACT派生 = 1
+	;備考：阴茎但あ时通常的爱抚强制是起こらない
+;调教者但穿上假阴茎中是、假阴茎手淫强制になる
+SIF TEQUIP:调教者假阴茎
+	TFLAG:ACT派生 = 2
+
+;阴茎但なければ爱抚强制的まま
+
+
+
+;舔阴强制（强制口爱抚）
+@TRAIN_VARIATION_ACT51
+;调教者但男人だ和、必ず口交强制になる
+IF TALENT:男人
+	TFLAG:ACT派生 = 1
+
+;调教者但扶她だ和、调教对象但仰面那么1/2で顔面骑乘、そうでなければ口交强制になる
+ELSEIF TALENT:扶她
+	IF RAND:2 && TFLAG:仰面
+		TFLAG:ACT派生 = 2
+	ELSE
+		TFLAG:ACT派生 = 1
+	ENDIF
+	;備考：阴茎但あ时通常的爱抚强制是起こらない（扶她でも口交か顔面骑乘になる）
+
+;调教者に阴茎但なく、调教对象但仰面那么顔面骑乘になる
+ELSEIF TFLAG:仰面
+	TFLAG:ACT派生 = 2
+;それ以外那么通常的舔阴
+ENDIF
+
+;顔面骑乘但選ばれていた和き、顔面骑乘肛门に变化做こ和但ある
+SIF TFLAG:ACT派生 == 2 && RAND:(GET_ABL(TARGET, "Ａ感觉") + 100) > RAND:200
+	TFLAG:ACT派生 = 3
+
+;素股强制
+@TRAIN_VARIATION_ACT53
+;调教者但穿上假阴茎中是、假阴茎素股になる
+SIF TEQUIP:调教者假阴茎
+	TFLAG:ACT派生 = 1
+
+;强制胸爱抚
+@TRAIN_VARIATION_ACT57
+;口球但なければ、1/2的确率で用口爱抚になる
+;主人但爱抚継续中も姿势に无理但ある的で弹く但、女人に对做用手爱抚只是許可
+SIF (RAND:2 == 0 && !TEQUIP:口球 && (!TEQUIP:调教对象Ｃ使用 || (TEQUIP:调教对象Ｃ使用 == 1 && !PENIS(MASTER)))) || TEQUIP:绳
+	TFLAG:ACT派生 = 2
+
+;備考：绳で縛られていれば必ず用口爱抚になる。口球和両方着けてい时实行されない
+;TFLAG:93 == 1是本来「ぱふぱふ」だった但、调教者的行动和して謎すぎる的で清除さ受到
+
+
+
+
+;震动棒
+@TRAIN_VARIATION_ACT21
+;既に装備している场合、震动棒解除になる
+SIF TEQUIP:震动棒
+	TFLAG:ACT派生 = 1
+
+
+
+;肛门震动棒
+@TRAIN_VARIATION_ACT22
+;既に装備している场合、肛门震动棒解除になる
+SIF TEQUIP:肛门震动棒
+	TFLAG:ACT派生 = 1
+
+
+;肛门拉珠
+@TRAIN_VARIATION_ACT23
+;玉但5つ入っている场合、肛门拉珠解除になる
+IF TEQUIP:肛门拉珠 > 4
+	TFLAG:ACT派生 = 1
+;既に装備している场合、肛门拉珠追加になる
+ELSEIF TEQUIP:肛门拉珠
+	TFLAG:ACT派生 = 2
+ENDIF
+
+
+
+;阴蒂夹（Ｃ道具爱抚）
+@TRAIN_VARIATION_ACT24
+;调教对象に阴茎但ある
+IF PENIS(MASTER)
+	;既に装備している场合、飞机杯解除になる
+	IF TEQUIP:飞机杯
+		TFLAG:ACT派生 = 3
+	;そう不是场合、飞机杯になる
+	ELSE
+		TFLAG:ACT派生 = 2
+	ENDIF
+;调教对象に阴茎但ない
+ELSE
+	;既に装備している场合、阴蒂夹解除になる
+	SIF TEQUIP:阴蒂夹
+		TFLAG:ACT派生 = 1
+ENDIF
+
+
+
+;乳头夹
+@TRAIN_VARIATION_ACT25
+;既に装備している场合、乳头夹解除になる
+SIF TEQUIP:乳头夹
+	TFLAG:ACT派生 = 1
+
+;假阴茎
+@TRAIN_VARIATION_ACT26
+;既に装備している场合、假阴茎解除になる
+SIF TEQUIP:假阴茎
+	TFLAG:ACT派生 = 1
+
+
+
+;推到
+@TRAIN_VARIATION_ACT27
+;既に推到ている场合、解放になる
+SIF TEQUIP:推到中
+	TFLAG:ACT派生 = 1
+
+
+
+;正常位
+@TRAIN_VARIATION_ACT30
+;他的体位で性交している场合、体位变更になる
+IF TEQUIP:性交中 != 1 && TEQUIP:性交中 < 6 && TEQUIP:性交中
+	TFLAG:ACT派生 = 2
+;肛交中的场合、体位变更（肛门から）になる
+ELSEIF TEQUIP:性交中 == 6
+	TFLAG:ACT派生 = 3
+;逆插入中だった场合、逆転になる
+ELSEIF TEQUIP:性交奉仕中 != 6 && TEQUIP:性交奉仕中 != 0 && TEQUIP:性交奉仕中
+	TFLAG:ACT派生 = 4
+;肛门逆性交中だった场合、逆転（肛门から）になる
+ELSEIF TEQUIP:性交奉仕中 == 6
+	TFLAG:ACT派生 = 5
+;连续实行的场合、腰被使うになる
+ELSEIF TEQUIP:性交中 == 1
+	TFLAG:ACT派生 = 1
+ENDIF
+
+
+
+;后背位
+@TRAIN_VARIATION_ACT31
+;他的体位で性交している场合、体位变更になる
+IF TEQUIP:性交中 != 2 && TEQUIP:性交中 < 6 && TEQUIP:性交中
+	TFLAG:ACT派生 = 2
+;肛交中的场合、体位变更（肛门から）になる
+ELSEIF TEQUIP:性交中 == 6
+	TFLAG:ACT派生 = 3
+;逆性交中だった场合、逆転になる
+ELSEIF TEQUIP:性交奉仕中 != 6 && TEQUIP:性交奉仕中 != 0 && TEQUIP:性交奉仕中
+	TFLAG:ACT派生 = 4
+;肛门逆性交中だった场合、逆転（肛门から）になる
+ELSEIF TEQUIP:性交奉仕中 == 6
+	TFLAG:ACT派生 = 5
+;连续实行的场合、腰被使うになる
+ELSEIF TEQUIP:性交中 == 2
+	TFLAG:ACT派生 = 1
+ENDIF
+
+
+
+;骑乘位
+@TRAIN_VARIATION_ACT32
+;他的体位で性交している场合、体位变更になる
+IF TEQUIP:性交中 != 3 && TEQUIP:性交中 < 6 && TEQUIP:性交中
+	TFLAG:ACT派生 = 2
+;肛交中的场合、体位变更（肛门から）になる
+ELSEIF TEQUIP:性交中 == 6
+	TFLAG:ACT派生 = 3
+;逆性交中だった场合、逆転になる
+ELSEIF TEQUIP:性交奉仕中 != 6 && TEQUIP:性交奉仕中 != 0 && TEQUIP:性交奉仕中
+	TFLAG:ACT派生 = 4
+;肛门逆性交中だった场合、逆転（肛门から）になる
+ELSEIF TEQUIP:性交奉仕中 == 6
+	TFLAG:ACT派生 = 5
+;连续实行的场合、腰被使うになる
+ELSEIF TEQUIP:性交中 == 3
+	TFLAG:ACT派生 = 1
+ENDIF
+
+
+
+;对面座位
+@TRAIN_VARIATION_ACT33
+;他的体位で性交している场合、体位变更になる
+IF TEQUIP:性交中 != 4 && TEQUIP:性交中 < 6 && TEQUIP:性交中
+	TFLAG:ACT派生 = 2
+;肛交中的场合、体位变更（肛门から）になる
+ELSEIF TEQUIP:性交中 == 6
+	TFLAG:ACT派生 = 3
+;逆性交中だった场合、逆転になる
+ELSEIF TEQUIP:性交奉仕中 != 6 && TEQUIP:性交奉仕中 != 0 && TEQUIP:性交奉仕中
+	TFLAG:ACT派生 = 4
+;肛门逆性交中だった场合、逆転（肛门から）になる
+ELSEIF TEQUIP:性交奉仕中 == 6
+	TFLAG:ACT派生 = 5
+;连续实行的场合、腰被使うになる
+ELSEIF TEQUIP:性交中 == 4
+	TFLAG:ACT派生 = 1
+ENDIF
+
+
+
+;背面座位
+@TRAIN_VARIATION_ACT34
+;他的体位で性交している场合、体位变更になる
+IF TEQUIP:性交中 != 5 && TEQUIP:性交中 < 6 && TEQUIP:性交中
+	TFLAG:ACT派生 = 2
+;肛交中的场合、体位变更（肛门から）になる
+ELSEIF TEQUIP:性交中 == 6
+	TFLAG:ACT派生 = 3
+;逆性交中だった场合、逆転になる
+ELSEIF TEQUIP:性交奉仕中 != 6 && TEQUIP:性交奉仕中 != 0 && TEQUIP:性交奉仕中
+	TFLAG:ACT派生 = 4
+;肛门逆性交中だった场合、逆転（肛门から）になる
+ELSEIF TEQUIP:性交奉仕中 == 6
+	TFLAG:ACT派生 = 5
+;连续实行的场合、腰被使うになる
+ELSEIF TEQUIP:性交中 == 5
+	TFLAG:ACT派生 = 1
+ENDIF
+
+
+
+
+;肛交
+@TRAIN_VARIATION_ACT35
+;他的体位で性交している场合、体位变更（肛门へ）になる
+IF TEQUIP:性交中 < 6 && TEQUIP:性交中
+	TFLAG:ACT派生 = 3
+;逆性交中だった场合、逆転（肛门へ）になる
+ELSEIF TEQUIP:性交奉仕中 != 6 && TEQUIP:性交奉仕中 != 0 && TEQUIP:性交奉仕中
+	TFLAG:ACT派生 = 4
+;肛门逆性交中だった场合、逆転（肛门から）になる
+ELSEIF TEQUIP:性交奉仕中 == 6
+	TFLAG:ACT派生 = 5
+;连续实行的场合、腰被使うになる
+ELSEIF TEQUIP:性交中 == 6
+	TFLAG:ACT派生 = 1
+ENDIF
+
+
+
+;逆强奸
+@TRAIN_VARIATION_ACT103
+;他的体位で逆性交している场合、体位变更になる
+IF TEQUIP:性交奉仕中 && TEQUIP:性交奉仕中 != 3 && TEQUIP:性交奉仕中 < 6
+	TFLAG:ACT派生 = 2
+;肛交中的场合、逆転（肛门から）になる
+ELSEIF TEQUIP:性交中 == 6
+	TFLAG:ACT派生 = 3
+;性交中だった场合、逆転になる
+ELSEIF TEQUIP:性交中 < 6 && TEQUIP:性交中
+	TFLAG:ACT派生 = 4
+;肛门逆性交中だった场合、体位变更（肛门から）になる
+ELSEIF TEQUIP:性交奉仕中 == 6
+	TFLAG:ACT派生 = 5
+;连续实行的场合、腰被使うになる
+ELSEIF TEQUIP:性交奉仕中 == 3
+	TFLAG:ACT派生 = 1
+ENDIF
+
+
+
+;羞耻PLAY
+@TRAIN_VARIATION_ACT43
+;既に羞耻PLAY中那么、羞耻PLAY终了になる
+SIF TEQUIP:大镜
+	TFLAG:ACT派生 = 1
+
+
+
+;野外PLAY
+@TRAIN_VARIATION_ACT44
+;既に野外PLAY中那么、野外PLAY终了になる
+SIF TEQUIP:野外PLAY
+	TFLAG:ACT派生 = 1
+
+
+;绳
+@TRAIN_VARIATION_ACT63
+;既に绳で捆绑中那么、绳解除になる
+SIF TEQUIP:绳
+	TFLAG:ACT派生 = 1
+
+
+
+;眼罩
+@TRAIN_VARIATION_ACT64
+;既に装備していたら、眼罩解除になる
+SIF TEQUIP:眼罩
+	TFLAG:ACT派生 = 1
+
+
+
+;口球
+@TRAIN_VARIATION_ACT65
+;既に装備していたら、口球解除になる
+SIF TEQUIP:口球
+	TFLAG:ACT派生 = 1
+
+
+
+;三角木马
+@TRAIN_VARIATION_ACT67
+;既に装備していたら、三角木马解除になる
+SIF TEQUIP:三角木马
+	TFLAG:ACT派生 = 1
+
+
+
+;灌肠套装
+@TRAIN_VARIATION_ACT68
+;灌肠液但5本入っている场合、灌肠肛塞解除になる
+IF TEQUIP:灌肠器＋肛塞 > 4
+	TFLAG:ACT派生 = 1
+;既に装備している场合、灌肠液追加になる
+ELSEIF TEQUIP:灌肠器＋肛塞
+	TFLAG:ACT派生 = 2
+ENDIF
+
+;穿上假阴茎
+@TRAIN_VARIATION_ACT75
+;既に装備している场合、解除
+SIF TEQUIP:调教者假阴茎
+	TFLAG:ACT派生 = 1
+
+
+;正常位侍奉
+@TRAIN_VARIATION_ACT95
+;他的体位で逆性交している场合、体位变更になる
+IF TEQUIP:性交奉仕中 && TEQUIP:性交奉仕中 != 1 && TEQUIP:性交奉仕中 < 6
+	TFLAG:ACT派生 = 2
+;肛交中的场合、逆転（肛门から）になる
+ELSEIF TEQUIP:性交中 == 6
+	TFLAG:ACT派生 = 3
+;性交中だった场合、逆転になる
+ELSEIF TEQUIP:性交中 < 6 && TEQUIP:性交中
+	TFLAG:ACT派生 = 4
+;肛门逆性交中だった场合、体位变更（肛门から）になる
+ELSEIF TEQUIP:性交奉仕中 == 6
+	TFLAG:ACT派生 = 5
+;连续实行的场合、腰被使うになる
+ELSEIF TEQUIP:性交奉仕中 == 1
+	TFLAG:ACT派生 = 1
+ENDIF
+
+
+
+;后背位侍奉
+@TRAIN_VARIATION_ACT96
+;他的体位で逆性交している场合、体位变更になる
+IF TEQUIP:性交奉仕中 && TEQUIP:性交奉仕中 != 2 && TEQUIP:性交奉仕中 < 6
+	TFLAG:ACT派生 = 2
+;肛交中的场合、逆転（肛门から）になる
+ELSEIF TEQUIP:性交中 == 6
+	TFLAG:ACT派生 = 3
+;性交中だった场合、逆転になる
+ELSEIF TEQUIP:性交中 < 6 && TEQUIP:性交中
+	TFLAG:ACT派生 = 4
+;肛门逆性交中だった场合、体位变更（肛门から）になる
+ELSEIF TEQUIP:性交奉仕中 == 6
+	TFLAG:ACT派生 = 5
+;连续实行的场合、腰被使うになる
+ELSEIF TEQUIP:性交奉仕中 == 2
+	TFLAG:ACT派生 = 1
+ENDIF
+
+
+
+;对面座位侍奉
+@TRAIN_VARIATION_ACT97
+;他的体位で逆性交している场合、体位变更になる
+IF TEQUIP:性交奉仕中 && TEQUIP:性交奉仕中 != 4 && TEQUIP:性交奉仕中 < 6
+	TFLAG:ACT派生 = 2
+;肛交中的场合、逆転（肛门から）になる
+ELSEIF TEQUIP:性交中 == 6
+	TFLAG:ACT派生 = 3
+;性交中だった场合、逆転になる
+ELSEIF TEQUIP:性交中 < 6 && TEQUIP:性交中
+	TFLAG:ACT派生 = 4
+;肛门逆性交中だった场合、体位变更（肛门から）になる
+ELSEIF TEQUIP:性交奉仕中 == 6
+	TFLAG:ACT派生 = 5
+;连续实行的场合、腰被使うになる
+ELSEIF TEQUIP:性交奉仕中 == 4
+	TFLAG:ACT派生 = 1
+ENDIF
+
+
+
+;背面座位侍奉
+@TRAIN_VARIATION_ACT98
+;他的体位で逆性交している场合、体位变更になる
+IF TEQUIP:性交奉仕中 && TEQUIP:性交奉仕中 != 5 && TEQUIP:性交奉仕中 < 6
+	TFLAG:ACT派生 = 2
+;肛交中的场合、逆転（肛门から）になる
+ELSEIF TEQUIP:性交中 == 6
+	TFLAG:ACT派生 = 3
+;性交中だった场合、逆転になる
+ELSEIF TEQUIP:性交中 < 6 && TEQUIP:性交中
+	TFLAG:ACT派生 = 4
+;肛门逆性交中だった场合、体位变更（肛门から）になる
+ELSEIF TEQUIP:性交奉仕中 == 6
+	TFLAG:ACT派生 = 5
+;连续实行的场合、腰被使うになる
+ELSEIF TEQUIP:性交奉仕中 == 5
+	TFLAG:ACT派生 = 1
+ENDIF
+
+
+
+;肛交侍奉
+@TRAIN_VARIATION_ACT99
+;他的体位で逆性交している场合、体位变更（肛门へ）になる
+IF V_SEX(MASTER)
+	TFLAG:ACT派生 = 3
+;肛交中的场合、逆転（肛门から）になる
+ELSEIF TEQUIP:性交中 == 6
+	TFLAG:ACT派生 = 2
+;性交中だった场合、逆転（肛门へ）になる
+ELSEIF TEQUIP:性交中 < 6 && TEQUIP:性交中
+	TFLAG:ACT派生 = 4
+;连续实行的场合、腰被使うになる
+ELSEIF TEQUIP:性交奉仕中 == 6
+	TFLAG:ACT派生 = 1
+ENDIF

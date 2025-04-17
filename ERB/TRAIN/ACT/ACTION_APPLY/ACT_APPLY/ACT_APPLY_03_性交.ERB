@@ -1,0 +1,601 @@
+﻿;────────────────────────────────────
+;030,正常位
+;────────────────────────────────────
+;反应前（Ｓ/Ｎ）（快Ｖ、接触、情爱、性行动、疼痛、中毒充足、心理创伤、快ｃ）
+@ACTION_APPLY_30
+;着衣PLAY喜欢素質かつ调教对象下半身外套但裙子もしく连衣裙/和服/教师服である场合
+IF TALENT:着衣PLAY喜欢 && TEQUIP:MASTER:下半身外套 < 2
+	;内衣只强制、自主脱衣
+	TFLAG:强制脱衣 = 9
+	TFLAG:自主脱衣 = 9
+;解放素質、また是确率(调教等级、调教者欲望、调教对象魅惑で増大、压抑、羞涩素質で減少)で
+ELSEIF TALENT:解放 || (GET_TRAINLV(TARGET) + GET_ABL(TARGET, "欲望") / 10 + TALENT:MASTER:魅惑 * 3 > TALENT:压抑 * 5 + TALENT:羞涩 * 3 + RAND:3)
+	;半々的确率で配饰－直到、全裸直到强制、自主脱衣(別个に判定)
+	TFLAG:强制脱衣 = 7 + RAND:2
+	TFLAG:自主脱衣 = 7 + RAND:2
+ELSE
+	;最低でも下半身全部强制、自主脱衣
+	TFLAG:强制脱衣 = 5
+	TFLAG:自主脱衣 = 5
+ENDIF
+;爱抚修正値、腰使素質に应じて快ＶSOURCE増加
+SOURCE:MASTER:快Ｖ = 300 + ACT_FROM(TARGET, 5) * (TALENT:腰使 * 2 + 3) / 2
+;爱抚修正値に应じて快ｃSOURCE増加
+SOURCE:快Ｃ = 200 + ACT_TO(TARGET, 5) * (TALENT:MASTER:腰使*2 + 3) / 2
+;穿墙但ある场合3/4で强制脱衣被キャンセル做
+SIF PENIS(TARGET) && TALENT:穿墙 && RAND:4
+	TFLAG:强制脱衣 = 0
+;润滑不足时、快Ｖ、快ｃSOURCEに減少修正、疼痛SOURCE増加
+CALL SHORTAGE_LUBRICATION("500/M快Ｖ,T,60/T快Ｃ,T,80/M疼痛,A,500")
+;Ｖ経験不足时、快ＶSOURCEに減少修正、疼痛、逃脱SOURCE増加
+IF EXP:MASTER:Ｖ経験 < 1
+	TIMES SOURCE:MASTER:快Ｖ , 0.30
+	SOURCE:MASTER:疼痛 += 1000
+	SOURCE:MASTER:逃脱 += 1000
+	;合意无、かつ调教对象に十分な性知识但ある状态で
+	;处女被奪おう和做和心理创伤SOURCE増加
+	SIF !CFLAG:合意 && EXP:MASTER:性知识 > 4
+		SOURCE:MASTER:心理创伤 += 2500
+ELSEIF EXP:MASTER:Ｖ経験 < 6 && EXP:MASTER:性交経験 < 5
+	TIMES SOURCE:MASTER:快Ｖ , 0.80
+	SOURCE:MASTER:疼痛 += 150
+	SOURCE:MASTER:逃脱 += 250
+ELSEIF EXP:MASTER:Ｖ経験 < 11 && EXP:MASTER:性交経験 < 9
+	TIMES SOURCE:MASTER:快Ｖ , 0.95
+	SOURCE:MASTER:疼痛 += 50
+	SOURCE:MASTER:逃脱 += 50
+ENDIF
+;调教等级に应じて接触SOURCE増加
+SOURCE:MASTER:接触 = 250 + GET_TRAINLV(TARGET) * 10
+;接触SOURCEに应じて性行动SOURCE増加
+SOURCE:MASTER:性行动 = 50 + SOURCE:MASTER:接触 / 5
+;心理创伤(刻印)的元但こ的调教だった场合
+IF CFLAG:MASTER:心理创伤 == 30
+	;接触SOURCE被心理创伤SOURCEに加算し、1.5倍に做
+	SOURCE:MASTER:心理创伤 += SOURCE:MASTER:接触
+	TIMES SOURCE:MASTER:心理创伤 , 1.50
+ENDIF
+;快ＶSOURCEに应じて情爱SOURCE増加、心理创伤、疼痛SOURCEに应じて減少
+SOURCE:MASTER:情爱 += SOURCE:MASTER:快Ｖ / 5 - SOURCE:MASTER:心理创伤 - SOURCE:MASTER:疼痛
+;情爱SOURCE但正那么调教对象Ｖ感觉、情爱SOURCEに应じて中毒充足SOURCE増加
+SOURCE:MASTER:中毒充足 = SOURCE:MASTER:情爱 > 0 ? GET_ABL(MASTER, "Ｖ感觉") * (GET_ABL(MASTER, "Ｖ感觉") - 20) * SOURCE:MASTER:情爱 / 100 # SOURCE:MASTER:中毒充足
+;中毒充足SOURCE但正的値那么快ＶSOURCEに应じて増加
+SOURCE:MASTER:中毒充足 = SOURCE:MASTER:中毒充足 > 0 ? SOURCE:MASTER:中毒充足 + SOURCE:MASTER:快Ｖ / 5 # 0
+;中毒充足SOURCE但负的値被和らないよう调整
+SOURCE:MASTER:中毒充足 = SOURCE:MASTER:中毒充足 < 0 ? 0 # SOURCE:MASTER:中毒充足
+;中毒充足SOURCEに应じて情爱SOURCE加算(フィードバック)
+SOURCE:MASTER:情爱 += SOURCE:MASTER:中毒充足 / 5
+;脏污但相互に移る
+STAIN:MASTER:小穴 |= STAIN:阴茎
+STAIN:阴茎 |= STAIN:MASTER:小穴
+;顔面骑乘系解除
+CALL FACESITTING_SET(0)
+;调教者、调教对象自慰被中断
+TEQUIP:自慰中 = 0
+TCVAR:MASTER:前列腺刺激 += 1
+;勃起度上升
+TCVAR:MASTER:这回合的勃起 += 100
+
+TFLAG:经过时间 += 3
+;震动棒解除
+TEQUIP:震动棒 = 0
+
+;反应后（Ｓ/Ｎ）（快Ｖ、接触、情爱、性行动、疼痛、中毒充足、心理创伤、快ｃ）
+@ACTION_APPLY2_30
+;MASTER但处女那么、处女丧失但起こる
+TCVAR:MASTER:处女丧失 = TALENT:MASTER:处女
+;TARGET但童贞那么、童贞丧失但起こる
+TCVAR:童贞丧失 = TALENT:童贞
+
+;────────────────────────────────────
+;031,后背位
+;────────────────────────────────────
+;反应前（Ｎ/Ｈ）[罰]（快Ｖ、接触、情爱、性行动、疼痛、中毒充足、心理创伤、快ｃ）
+@ACTION_APPLY_31
+;着衣PLAY喜欢素質かつ调教对象下半身外套但裙子もしく连衣裙/和服/教师服である场合
+IF TALENT:着衣PLAY喜欢 && TEQUIP:MASTER:下半身外套 < 2
+	;内衣只强制、自主脱衣
+	TFLAG:强制脱衣 = 9
+	TFLAG:自主脱衣 = 9
+;解放素質、また是确率(调教等级、调教者欲望、调教对象魅惑で増大、压抑、羞涩素質で減少)で
+ELSEIF TALENT:解放 || (GET_TRAINLV(TARGET) + GET_ABL(TARGET, "欲望") / 10 + TALENT:MASTER:魅惑 * 3 > TALENT:压抑 * 5 + TALENT:羞涩 * 3 + RAND:3)
+	;半々的确率で配饰－直到、全裸直到强制、自主脱衣(別个に判定)
+	TFLAG:强制脱衣 = 7 + RAND:2
+	TFLAG:自主脱衣 = 7 + RAND:2
+ELSE
+	;最低でも下半身全部强制、自主脱衣
+	TFLAG:强制脱衣 = 5
+	TFLAG:自主脱衣 = 5
+ENDIF
+;爱抚修正値、腰使素質に应じて快ＶSOURCE増加
+SOURCE:MASTER:快Ｖ = 300 + ACT_FROM(TARGET, 5) * (TALENT:腰使 * 2 + 3) / 2
+;爱抚修正値に应じて快ｃSOURCE増加
+SOURCE:快Ｃ = 300 + ACT_TO(TARGET, 5) * (TALENT:MASTER:腰使 + 1)
+;穿墙但ある场合3/4で强制脱衣被キャンセル做
+SIF PENIS(TARGET) && TALENT:穿墙 && RAND:4
+	TFLAG:强制脱衣 = 0
+;润滑不足时、快Ｖ、快ｃSOURCEに減少修正、疼痛SOURCE増加
+CALL SHORTAGE_LUBRICATION("500/M快Ｖ,T,50/T快Ｃ,T,60/M疼痛,A,750")
+;Ｖ経験不足时、快ＶSOURCEに減少修正、疼痛、逃脱SOURCE増加
+IF EXP:MASTER:Ｖ経験 < 1
+	TIMES SOURCE:MASTER:快Ｖ , 0.30
+	SOURCE:MASTER:疼痛 += 1200
+	SOURCE:MASTER:逃脱 += 1500
+	;合意无、かつ调教对象に十分な性知识但ある状态で
+	;处女被奪おう和做和心理创伤SOURCE増加
+	SIF !CFLAG:合意 && EXP:MASTER:性知识 > 4
+		SOURCE:MASTER:心理创伤 += 3500
+ELSEIF EXP:MASTER:Ｖ経験 < 6 && EXP:MASTER:性交経験 < 5
+	TIMES SOURCE:MASTER:快Ｖ , 0.70
+	SOURCE:MASTER:疼痛 += 350
+	SOURCE:MASTER:逃脱 += 750
+ELSEIF EXP:MASTER:Ｖ経験 < 11 && EXP:MASTER:性交経験 < 9
+	TIMES SOURCE:MASTER:快Ｖ , 0.90
+	SOURCE:MASTER:疼痛 += 90
+	SOURCE:MASTER:逃脱 += 250
+ENDIF
+;调教等级に应じて接触SOURCE増加
+SOURCE:MASTER:接触 = 200 + GET_TRAINLV(TARGET) * 10
+;接触SOURCEに应じて性行动SOURCE増加
+SOURCE:MASTER:性行动 = 50 + SOURCE:MASTER:接触 / 5
+;心理创伤(刻印)的元但こ的调教だった场合
+IF CFLAG:MASTER:心理创伤 == 31
+	;接触SOURCE被心理创伤SOURCEに加算し、1.5倍に做
+	SOURCE:MASTER:心理创伤 += SOURCE:MASTER:接触
+	TIMES SOURCE:MASTER:心理创伤 , 1.50
+ENDIF
+;快ＶSOURCEに应じて情爱SOURCE増加、心理创伤SOURCEに应じて減少
+SOURCE:MASTER:情爱 += SOURCE:MASTER:快Ｖ / 7 - SOURCE:MASTER:心理创伤
+;情爱SOURCE但正那么调教对象Ｖ感觉、情爱SOURCEに应じて中毒充足SOURCE増加
+SOURCE:MASTER:中毒充足 = SOURCE:MASTER:情爱 > 0 ? GET_ABL(MASTER, "Ｖ感觉") * (GET_ABL(MASTER, "Ｖ感觉") - 20) * SOURCE:MASTER:情爱 / 100 # SOURCE:MASTER:中毒充足
+;中毒充足SOURCE但正的値那么快ＶSOURCEに应じて増加
+SOURCE:MASTER:中毒充足 = SOURCE:MASTER:中毒充足 > 0 ? SOURCE:MASTER:中毒充足 + SOURCE:MASTER:快Ｖ / 5 # 0
+;中毒充足SOURCE但负的値被和らないよう调整
+SOURCE:MASTER:中毒充足 = SOURCE:MASTER:中毒充足 < 0 ? 0 # SOURCE:MASTER:中毒充足
+;中毒充足SOURCEに应じて情爱SOURCE加算(フィードバック)
+SOURCE:MASTER:情爱 += SOURCE:MASTER:中毒充足 / 7
+;脏污但相互に移る
+STAIN:MASTER:小穴 |= STAIN:阴茎
+STAIN:阴茎 |= STAIN:MASTER:小穴
+;顔面骑乘系解除
+CALL FACESITTING_SET(0)
+;调教者、调教对象自慰被中断
+TEQUIP:自慰中 = 0
+TCVAR:MASTER:前列腺刺激 += 1
+;勃起度上升
+TCVAR:MASTER:这回合的勃起 += 100
+TFLAG:经过时间 += 3
+;震动棒解除
+TEQUIP:震动棒 = 0
+
+;反应后（Ｎ/Ｈ）[罰]（快Ｖ、接触、情爱、性行动、疼痛、中毒充足、心理创伤、快ｃ）
+@ACTION_APPLY2_31
+;MASTER但处女那么、处女丧失但起こる
+TCVAR:MASTER:处女丧失 = TALENT:MASTER:处女
+;TARGET但童贞那么、童贞丧失但起こる
+TCVAR:童贞丧失 = TALENT:童贞
+
+;────────────────────────────────────
+;032,骑乘位
+;────────────────────────────────────
+;反应前（Ｓ/Ｎ）（快Ｖ、接触、情爱、性行动、疼痛、中毒充足、心理创伤、快ｃ）
+@ACTION_APPLY_32
+;着衣PLAY喜欢素質かつ调教对象下半身外套但裙子もしく连衣裙/和服/教师服である场合
+IF TALENT:着衣PLAY喜欢 && TEQUIP:MASTER:下半身外套 < 2
+	;内衣只强制、自主脱衣
+	TFLAG:强制脱衣 = 9
+	TFLAG:自主脱衣 = 9
+;解放素質、また是确率(调教等级、调教者欲望、调教对象魅惑で増大、压抑、羞涩素質で減少)で
+ELSEIF TALENT:解放 || (GET_TRAINLV(TARGET) + GET_ABL(TARGET, "欲望") / 10 + TALENT:MASTER:魅惑 * 3 > TALENT:压抑 * 5 + TALENT:羞涩 * 3 + RAND:3)
+	;半々的确率で配饰－直到、全裸直到强制、自主脱衣(別个に判定)
+	TFLAG:强制脱衣 = 7 + RAND:2
+	TFLAG:自主脱衣 = 7 + RAND:2
+ELSE
+	;最低でも下半身全部强制、自主脱衣
+	TFLAG:强制脱衣 = 5
+	TFLAG:自主脱衣 = 5
+ENDIF
+;爱抚修正値、腰使素質に应じて快ＶSOURCE増加
+SOURCE:MASTER:快Ｖ = 100 + ACT_FROM(TARGET, 5) * (TALENT:腰使 * 4 + 2)
+;爱抚修正値に应じて快ｃSOURCE増加
+SOURCE:快Ｃ = 100 + ACT_TO(TARGET, 5) * (TALENT:MASTER:腰使*2 + 3)
+;穿墙但ある场合3/4で强制脱衣被キャンセル做
+SIF PENIS(TARGET) && TALENT:穿墙 && RAND:4
+	TFLAG:强制脱衣 = 0
+;润滑不足时、快Ｖ、快ｃSOURCEに減少修正、疼痛SOURCE増加
+CALL SHORTAGE_LUBRICATION("500/M快Ｖ,T,60/T快Ｃ,T,65/M疼痛,A,500")
+;Ｖ経験不足时、快ＶSOURCEに減少修正、疼痛、逃脱SOURCE増加
+IF EXP:MASTER:Ｖ経験 < 1
+	TIMES SOURCE:MASTER:快Ｖ , 0.35
+	SOURCE:MASTER:疼痛 += 700
+	SOURCE:MASTER:逃脱 += 1200
+	;合意无、かつ调教对象に十分な性知识但ある状态で
+	;处女被奪おう和做和心理创伤SOURCE増加
+	SIF !CFLAG:合意 && EXP:MASTER:性知识 > 4
+		SOURCE:MASTER:心理创伤 += 3200
+ELSEIF EXP:MASTER:Ｖ経験 < 6 && EXP:MASTER:性交経験 < 5
+	TIMES SOURCE:MASTER:快Ｖ , 0.75
+	SOURCE:MASTER:疼痛 += 200
+	SOURCE:MASTER:逃脱 += 700
+ELSEIF EXP:MASTER:Ｖ経験 < 11 && EXP:MASTER:性交経験 < 9
+	TIMES SOURCE:MASTER:快Ｖ , 0.95
+	SOURCE:MASTER:疼痛 += 30
+	SOURCE:MASTER:逃脱 += 150
+ENDIF
+;调教等级に应じて接触SOURCE増加
+SOURCE:MASTER:接触 = 200 + CFLAG:MASTER:调教等级 * 10
+;接触SOURCEに应じて性行动SOURCE増加
+SOURCE:MASTER:性行动 = 50 + SOURCE:MASTER:接触 / 5
+;心理创伤(刻印)的元但こ的调教だった场合
+IF CFLAG:MASTER:心理创伤 == 32
+	;接触SOURCE被心理创伤SOURCEに加算し、1.5倍に做
+	SOURCE:MASTER:心理创伤 += SOURCE:MASTER:接触
+	TIMES SOURCE:MASTER:心理创伤 , 1.50
+ENDIF
+;快ＶSOURCEに应じて情爱SOURCE増加、心理创伤、疼痛SOURCEに应じて減少
+SOURCE:MASTER:情爱 = SOURCE:MASTER:快Ｖ / 5 - SOURCE:MASTER:心理创伤 - SOURCE:MASTER:疼痛
+;情爱SOURCE但正那么调教对象Ｖ感觉、情爱SOURCEに应じて中毒充足SOURCE増加
+SOURCE:MASTER:中毒充足 = SOURCE:MASTER:情爱 > 0 ? GET_ABL(MASTER, "Ｖ感觉") * (GET_ABL(MASTER, "Ｖ感觉") - 20) * SOURCE:MASTER:情爱 / 100 # SOURCE:MASTER:中毒充足
+;中毒充足SOURCE但正的値那么快ＶSOURCEに应じて増加
+SOURCE:MASTER:中毒充足 = SOURCE:MASTER:中毒充足 > 0 ? SOURCE:MASTER:中毒充足 + SOURCE:MASTER:快Ｖ / 5 # 0
+;中毒充足SOURCE但负的値被和らないよう调整
+SOURCE:MASTER:中毒充足 = SOURCE:MASTER:中毒充足 < 0 ? 0 # SOURCE:MASTER:中毒充足
+;中毒充足、性行动SOURCEに应じて情爱SOURCE加算(フィードバック)
+SOURCE:MASTER:情爱 += SOURCE:MASTER:中毒充足 / 7 + SOURCE:MASTER:性行动 / 5
+;脏污但相互に移る
+STAIN:MASTER:小穴 |= STAIN:阴茎
+STAIN:阴茎 |= STAIN:MASTER:小穴
+;顔面骑乘系解除
+CALL FACESITTING_SET(0)
+;调教者、调教对象自慰被中断
+TEQUIP:自慰中 = 0
+TCVAR:MASTER:前列腺刺激 += 1
+;勃起度上升
+TCVAR:MASTER:这回合的勃起 += 100
+
+TFLAG:经过时间 += 3
+;震动棒解除
+TEQUIP:震动棒 = 0
+
+;反应后（Ｓ/Ｎ）（快Ｖ、接触、情爱、性行动、疼痛、中毒充足、心理创伤、快ｃ）
+@ACTION_APPLY2_32
+;REACT分类但发狂/要求に应じない的场合(拒绝)
+IF IS_COMGRONAME("发狂/拒绝")
+	;快Ｖ、快ｃ、接触、情爱、性行动、疼痛、逃脱、心理创伤SOURCE減少
+	;中毒充足SOURCE消失
+	SOURCE:MASTER:快Ｖ /= 3
+	SOURCE:快Ｃ /= 5
+	SOURCE:MASTER:接触 /= 3
+	SOURCE:MASTER:情爱 -= 500
+	SOURCE:MASTER:性行动 /= 3
+	SOURCE:MASTER:疼痛 /= 3
+	SOURCE:MASTER:逃脱 /= 3
+	SOURCE:MASTER:中毒充足 = 0
+	SOURCE:MASTER:心理创伤 /= 3
+	TCVAR:MASTER:前列腺刺激 -= 1
+	;REACT分类但发狂的场合
+	IF IS_COMGRONAME("发狂")
+		;肛交以外的性交中
+		IF V_SEX()
+			;消失处理回避
+		;其他
+		ELSE
+			;快Ｖ、快ｃSOURCE消失
+			SOURCE:MASTER:快Ｖ = 0
+			SOURCE:快Ｃ = 0
+		ENDIF
+		;性交中解除
+		TEQUIP:性交中 = 0
+	;REACT分类但要求に应じない的场合
+	ELSE
+		;肛交以外的性交中
+		IF V_SEX()
+			;消失处理回避
+		;其他
+		ELSE
+			;快Ｖ、快ｃSOURCE消失
+			SOURCE:MASTER:快Ｖ = 0
+			SOURCE:快Ｃ = 0
+			;性交中解除
+			TEQUIP:性交中 = 0
+		ENDIF
+	ENDIF
+;其他的场合(容纳)
+ELSE
+	;爱抚修正、调教对象顺从、淫壶素質に应じて修正値上升
+	LOCAL = 100 + ACT_TO(TARGET, 5) * GET_ABL(MASTER, "顺从") * (2 + TALENT:MASTER:淫壶) / 600
+	;快ｃSOURCE増加
+	TIMES SOURCE:快Ｃ, 1.25
+	;调教对象调教等级に应じて接触SOURCE増加
+	SOURCE:MASTER:接触 += CFLAG:MASTER:调教等级 * 10
+	;修正値に应じて情爱、快ｃSOURCE増加
+	SOURCE:MASTER:情爱 += LOCAL / 5
+	SOURCE:快Ｃ += LOCAL * 2
+	;不洁SOURCE増加
+	TIMES SOURCE:MASTER:不洁 , 1.20
+	;MASTER但处女那么、处女丧失但起こる
+	TCVAR:MASTER:处女丧失 = TALENT:MASTER:处女
+	;TARGET但童贞那么、童贞丧失但起こる
+	TCVAR:童贞丧失 = TALENT:童贞
+ENDIF
+
+;────────────────────────────────────
+;033,对面座位
+;────────────────────────────────────
+;反应前（Ｓ/Ｎ/Ｈ）（快Ｖ、接触、情爱、性行动、疼痛、中毒充足、心理创伤、快ｃ）
+@ACTION_APPLY_33
+;着衣PLAY喜欢素質かつ调教对象下半身外套但裙子もしく连衣裙/和服/教师服である场合
+IF TALENT:着衣PLAY喜欢 && TEQUIP:MASTER:下半身外套 < 2
+	;内衣只强制、自主脱衣
+	TFLAG:强制脱衣 = 9
+	TFLAG:自主脱衣 = 9
+;解放素質、また是确率(调教等级、调教者欲望、调教对象魅惑で増大、压抑、羞涩素質で減少)で
+ELSEIF TALENT:解放 || (GET_TRAINLV(TARGET) + GET_ABL(TARGET, "欲望") / 10 + TALENT:MASTER:魅惑 * 3 > TALENT:压抑 * 5 + TALENT:羞涩 * 3 + RAND:3)
+	;半々的确率で配饰－直到、全裸直到强制、自主脱衣(別个に判定)
+	TFLAG:强制脱衣 = 7 + RAND:2
+	TFLAG:自主脱衣 = 7 + RAND:2
+ELSE
+	;最低でも下半身全部强制、自主脱衣
+	TFLAG:强制脱衣 = 5
+	TFLAG:自主脱衣 = 5
+ENDIF
+;爱抚修正値、腰使素質に应じて快Ｖ、快ＣSOURCE増加
+SOURCE:MASTER:快Ｖ = 100 + ACT_FROM(TARGET, 5) * (TALENT:腰使 + 1)
+SOURCE:MASTER:快Ｃ = ACT_FROM(TARGET, 1) * (TALENT:腰使 + 1) / 2
+;爱抚修正値に应じて快ｃSOURCE増加
+SOURCE:快Ｃ = 100 + ACT_TO(TARGET, 5) * (TALENT:MASTER:腰使*2 + 3) / 3
+;穿墙但ある场合3/4で强制脱衣被キャンセル做
+SIF PENIS(TARGET) && TALENT:穿墙 && RAND:4
+	TFLAG:强制脱衣 = 0
+;润滑不足时、快Ｖ、快ｃSOURCEに減少修正、疼痛SOURCE増加
+CALL SHORTAGE_LUBRICATION("500/M快Ｖ,T,60/T快Ｃ,T,60/M疼痛,A,500")
+;Ｖ経験不足时、快ＶSOURCEに減少修正、疼痛、逃脱SOURCE増加
+IF EXP:MASTER:Ｖ経験 < 1
+	TIMES SOURCE:MASTER:快Ｖ , 0.30
+	SOURCE:MASTER:疼痛 += 1200
+	SOURCE:MASTER:逃脱 += 1200
+	;合意无、かつ调教对象に十分な性知识但ある状态で
+	;处女被奪おう和做和心理创伤SOURCE増加
+	SIF !CFLAG:合意 && EXP:MASTER:性知识 > 4
+		SOURCE:MASTER:心理创伤 += 2750
+ELSEIF EXP:MASTER:Ｖ経験 < 6 && EXP:MASTER:性交経験 < 5
+	TIMES SOURCE:MASTER:快Ｖ , 0.80
+	SOURCE:MASTER:疼痛 += 250
+	SOURCE:MASTER:逃脱 += 350
+ELSEIF EXP:MASTER:Ｖ経験 < 11 && EXP:MASTER:性交経験 < 9
+	TIMES SOURCE:MASTER:快Ｖ , 0.95
+	SOURCE:MASTER:疼痛 += 50
+	SOURCE:MASTER:逃脱 += 100
+ENDIF
+;调教等级に应じて接触SOURCE増加
+SOURCE:MASTER:接触 = 400 + GET_TRAINLV(TARGET) * 8 + CFLAG:MASTER:调教等级 * 8
+;接触SOURCEに应じて性行动SOURCE増加
+SOURCE:MASTER:性行动 = 50 + SOURCE:MASTER:接触 / 5
+;心理创伤(刻印)的元但こ的调教だった场合
+IF CFLAG:MASTER:心理创伤 == 33
+	;接触SOURCE被心理创伤SOURCEに加算し、1.5倍に做
+	SOURCE:MASTER:心理创伤 += SOURCE:MASTER:接触
+	TIMES SOURCE:MASTER:心理创伤 , 1.50
+ENDIF
+;快ＶSOURCEに应じて情爱SOURCE増加、心理创伤、疼痛SOURCEに应じて減少
+SOURCE:MASTER:情爱 = SOURCE:MASTER:快Ｖ / 4 - SOURCE:MASTER:心理创伤 - SOURCE:MASTER:疼痛 * 2
+;情爱SOURCE但正那么调教对象Ｖ感觉、情爱SOURCEに应じて中毒充足SOURCE増加
+SOURCE:MASTER:中毒充足 = SOURCE:MASTER:情爱 > 0 ? GET_ABL(MASTER, "Ｖ感觉") * (GET_ABL(MASTER, "Ｖ感觉") - 20) * SOURCE:MASTER:情爱 / 100 # SOURCE:MASTER:中毒充足
+;中毒充足SOURCE但正的値那么快ＶSOURCEに应じて増加
+SOURCE:MASTER:中毒充足 = SOURCE:MASTER:中毒充足 > 0 ? SOURCE:MASTER:中毒充足 + SOURCE:MASTER:快Ｖ / 5 # 0
+;中毒充足SOURCE但负的値被和らないよう调整
+SOURCE:MASTER:中毒充足 = SOURCE:MASTER:中毒充足 < 0 ? 0 # SOURCE:MASTER:中毒充足
+;中毒充足SOURCEに应じて情爱SOURCE加算(フィードバック)
+SOURCE:MASTER:情爱 += SOURCE:MASTER:中毒充足 / 5
+;脏污但相互に移る
+STAIN:MASTER:小穴 |= STAIN:阴茎
+STAIN:阴茎 |= STAIN:MASTER:小穴
+;顔面骑乘系解除
+CALL FACESITTING_SET(0)
+;调教者、调教对象自慰被中断
+TEQUIP:自慰中 = 0
+TCVAR:MASTER:前列腺刺激 += 1
+;勃起度上升
+TCVAR:MASTER:这回合的勃起 += 100
+
+TFLAG:经过时间 += 3
+;震动棒解除
+TEQUIP:震动棒 = 0
+
+;反应后（Ｓ/Ｎ/Ｈ）（快Ｖ、接触、情爱、性行动、疼痛、中毒充足、心理创伤、快ｃ）
+@ACTION_APPLY2_33
+;MASTER但处女那么、处女丧失但起こる
+TCVAR:MASTER:处女丧失 = TALENT:MASTER:处女
+;TARGET但童贞那么、童贞丧失但起こる
+TCVAR:童贞丧失 = TALENT:童贞
+;ここ直到来ていれば、接吻的处理
+CALL SET_KISS
+
+;────────────────────────────────────
+;034,背面座位
+;────────────────────────────────────
+;反应前（Ｎ/Ｈ）（快Ｖ、接触、情爱、性行动、疼痛、露出、中毒充足、心理创伤、快ｃ）
+@ACTION_APPLY_34
+;着衣PLAY喜欢素質かつ调教对象下半身外套但裙子もしく连衣裙/和服/教师服である场合
+IF TALENT:着衣PLAY喜欢 && TEQUIP:MASTER:下半身外套 < 2
+	;内衣只强制、自主脱衣
+	TFLAG:强制脱衣 = 9
+	TFLAG:自主脱衣 = 9
+;解放素質、また是确率(调教等级、调教者欲望、调教对象魅惑で増大、压抑、羞涩素質で減少)で
+ELSEIF TALENT:解放 || (GET_TRAINLV(TARGET) + GET_ABL(TARGET, "欲望") / 10 + TALENT:MASTER:魅惑 * 3 > TALENT:压抑 * 5 + TALENT:羞涩 * 3 + RAND:3)
+	;半々的确率で配饰－直到、全裸直到强制、自主脱衣(別个に判定)
+	TFLAG:强制脱衣 = 7 + RAND:2
+	TFLAG:自主脱衣 = 7 + RAND:2
+ELSE
+	;最低でも下半身全部强制、自主脱衣
+	TFLAG:强制脱衣 = 5
+	TFLAG:自主脱衣 = 5
+ENDIF
+;爱抚修正値に应じて快Ｖ、快Ｃ、快ＢSOURCE増加
+SOURCE:MASTER:快Ｖ = 50 + ACT_FROM(TARGET, 5) * (TALENT:腰使 + 1)
+SOURCE:MASTER:快Ｃ = ACT_FROM(TARGET, 1) * (TALENT:灵巧的指尖 + 1) / 2
+SOURCE:MASTER:快Ｂ = ACT_FROM(TARGET, 4) * (TALENT:灵巧的指尖 + 1) / 2
+;爱抚修正値に应じて快ｃSOURCE増加
+SOURCE:快Ｃ = 150 + ACT_TO(TARGET, 5) * (TALENT:MASTER:腰使 + 1) / 2
+;穿墙但ある场合3/4で强制脱衣被キャンセル做
+SIF PENIS(TARGET) && TALENT:穿墙 && RAND:4
+	TFLAG:强制脱衣 = 0
+;润滑不足时、快Ｖ、快ｃSOURCEに減少修正、疼痛SOURCE増加
+CALL SHORTAGE_LUBRICATION("500/M快Ｖ,T,50/T快Ｃ,T,55/M疼痛,A,750")
+;Ｖ経験不足时、快ＶSOURCEに減少修正、疼痛、逃脱SOURCE増加
+IF EXP:MASTER:Ｖ経験 < 1
+	TIMES SOURCE:MASTER:快Ｖ , 0.30
+	SOURCE:MASTER:疼痛 += 1250
+	SOURCE:MASTER:逃脱 += 1600
+	;合意无、かつ调教对象に十分な性知识但ある状态で
+	;处女被奪おう和做和心理创伤SOURCE増加
+	SIF !CFLAG:合意 && EXP:MASTER:性知识 > 4
+		SOURCE:MASTER:心理创伤 += 3500
+ELSEIF EXP:MASTER:Ｖ経験 < 6 && EXP:MASTER:性交経験 < 5
+	TIMES SOURCE:MASTER:快Ｖ , 0.70
+	SOURCE:MASTER:疼痛 += 380
+	SOURCE:MASTER:逃脱 += 800
+ELSEIF EXP:MASTER:Ｖ経験 < 11 && EXP:MASTER:性交経験 < 9
+	TIMES SOURCE:MASTER:快Ｖ , 0.90
+	SOURCE:MASTER:疼痛 += 100
+	SOURCE:MASTER:逃脱 += 350
+ENDIF
+;调教等级に应じて接触SOURCE増加
+SOURCE:MASTER:接触 = 500 + GET_TRAINLV(TARGET) * 10
+;接触SOURCEに应じて性行动SOURCE増加
+SOURCE:MASTER:性行动 = 50 + SOURCE:MASTER:接触 / 5
+;乱れ牡丹的处理(大镜使用时)
+;快ＶSOURCEに应じて露出SOURCE増加
+SIF TEQUIP:大镜
+	SOURCE:MASTER:露出 = 200 + SOURCE:MASTER:快Ｖ / 5
+;心理创伤(刻印)的元但こ的调教だった场合
+IF CFLAG:MASTER:心理创伤 == 34
+	;接触SOURCE被心理创伤SOURCEに加算し、1.5倍に做
+	SOURCE:MASTER:心理创伤 += SOURCE:MASTER:接触
+	TIMES SOURCE:MASTER:心理创伤 , 1.50
+ENDIF
+;快ＶSOURCEに应じて情爱SOURCE増加、心理创伤SOURCEに应じて減少
+SOURCE:MASTER:情爱 = SOURCE:MASTER:快Ｖ / 7 - SOURCE:MASTER:心理创伤
+;情爱SOURCE但正那么调教对象Ｖ感觉、情爱SOURCEに应じて中毒充足SOURCE増加
+SOURCE:MASTER:中毒充足 = SOURCE:MASTER:情爱 > 0 ? GET_ABL(MASTER, "Ｖ感觉") * (GET_ABL(MASTER, "Ｖ感觉") - 20) * SOURCE:MASTER:情爱 / 100 # SOURCE:MASTER:中毒充足
+;中毒充足SOURCE但正的値那么快ＶSOURCEに应じて増加
+SOURCE:MASTER:中毒充足 = SOURCE:MASTER:中毒充足 > 0 ? SOURCE:MASTER:中毒充足 + SOURCE:MASTER:快Ｖ / 5 # 0
+;中毒充足SOURCE但负的値被和らないよう调整
+SOURCE:MASTER:中毒充足 = SOURCE:MASTER:中毒充足 < 0 ? 0 # SOURCE:MASTER:中毒充足
+;中毒充足SOURCEに应じて情爱SOURCE加算(フィードバック)
+SOURCE:MASTER:情爱 += SOURCE:MASTER:中毒充足 / 7
+;脏污但相互に移る
+STAIN:MASTER:小穴 |= STAIN:阴茎
+STAIN:阴茎 |= STAIN:MASTER:小穴
+;顔面骑乘系解除
+CALL FACESITTING_SET(0)
+;调教者、调教对象自慰被中断
+TEQUIP:自慰中 = 0
+TCVAR:MASTER:前列腺刺激 += 1
+
+;勃起度上升
+TCVAR:MASTER:这回合的勃起 += 100
+
+TFLAG:经过时间 += 4
+;震动棒解除
+TEQUIP:震动棒 = 0
+
+;反应后（Ｎ/Ｈ）（快Ｖ、接触、情爱、性行动、疼痛、露出、中毒充足、心理创伤、快ｃ）
+@ACTION_APPLY2_34
+;MASTER但处女那么、处女丧失但起こる
+TCVAR:MASTER:处女丧失 = TALENT:MASTER:处女
+;TARGET但童贞那么、童贞丧失但起こる
+TCVAR:童贞丧失 = TALENT:童贞
+
+;────────────────────────────────────
+;035,肛交
+;────────────────────────────────────
+;反应前（Ｎ/Ｈ/Ａ）[罰]（快Ａ、接触、情爱、性行动、疼痛、逃脱、中毒充足、心理创伤、快ｃ）
+@ACTION_APPLY_35
+;着衣PLAY喜欢素質かつ调教对象下半身外套但裙子もしく连衣裙/和服/教师服である场合
+IF TALENT:着衣PLAY喜欢 && TEQUIP:MASTER:下半身外套 < 2
+	;内衣只强制、自主脱衣
+	TFLAG:强制脱衣 = 9
+	TFLAG:自主脱衣 = 9
+;解放素質、また是确率(调教等级、调教者欲望、调教对象魅惑で増大、压抑、羞涩素質で減少)で
+ELSEIF TALENT:解放 || (GET_TRAINLV(TARGET) + GET_ABL(TARGET, "欲望") / 10 + TALENT:MASTER:魅惑 * 3 > TALENT:压抑 * 5 + TALENT:羞涩 * 3 + RAND:3)
+	;半々的确率で配饰－直到、全裸直到强制、自主脱衣(別个に判定)
+	TFLAG:强制脱衣 = 7 + RAND:2
+	TFLAG:自主脱衣 = 7 + RAND:2
+ELSE
+	;最低でも下半身全部强制、自主脱衣
+	TFLAG:强制脱衣 = 5
+	TFLAG:自主脱衣 = 5
+ENDIF
+;爱抚修正値に应じて快ＡSOURCE増加
+SOURCE:MASTER:快Ａ = 300 + ACT_FROM(TARGET, 6) * (2 * TALENT:腰使 + 2)
+;爱抚修正値に应じて快ｃSOURCE増加
+SOURCE:快Ｃ = 500 + ACT_TO(TARGET, 6) * (TALENT:MASTER:腰使*2 + 2)
+;穿墙但ある场合3/4で强制脱衣被キャンセル做
+SIF TALENT:穿墙 && RAND:4
+	TFLAG:强制脱衣 = 0
+;润滑不足时、快Ａ、快ｃSOURCEに減少修正、疼痛SOURCE増加
+CALL SHORTAGE_LUBRICATION("500/M快Ａ,T,40/T快Ｃ,T,70/M疼痛,A,1500")
+;Ａ経験不足时、快ＡSOURCEに減少修正、疼痛、逃脱、心理创伤SOURCE増加
+IF EXP:MASTER:Ａ経験 < 1
+	TIMES SOURCE:MASTER:快Ａ , 0.40
+	SOURCE:MASTER:疼痛 += 1500
+	SOURCE:MASTER:逃脱 += 2500
+	SOURCE:MASTER:心理创伤 += 1000
+ELSEIF EXP:MASTER:Ａ経験 < 6 && EXP:MASTER:性交経験 < 11
+	TIMES SOURCE:MASTER:快Ａ , 0.55
+	SOURCE:MASTER:疼痛 += 1000
+	SOURCE:MASTER:逃脱 += 1500
+	SOURCE:MASTER:心理创伤 += 500
+ELSEIF EXP:MASTER:Ａ経験 < 13 && EXP:MASTER:性交経験 < 21
+	TIMES SOURCE:MASTER:快Ａ , 0.70
+	SOURCE:MASTER:疼痛 += 600
+	SOURCE:MASTER:逃脱 += 500
+	SOURCE:MASTER:心理创伤 += 100
+ELSEIF EXP:MASTER:Ａ経験 < 26 && EXP:MASTER:性交経験 < 31
+	TIMES SOURCE:MASTER:快Ａ , 0.85
+	SOURCE:MASTER:疼痛 += 200
+	SOURCE:MASTER:逃脱 += 150
+ENDIF
+;调教等级に应じて接触SOURCE増加
+SOURCE:MASTER:接触 = 200 + GET_TRAINLV(TARGET) * 10
+;接触SOURCEに应じて性行动SOURCE増加
+SOURCE:MASTER:性行动 = SOURCE:MASTER:接触 / 5
+;心理创伤(刻印)的元但こ的调教だった场合
+IF CFLAG:MASTER:心理创伤 == 35
+	;接触、逃脱SOURCE被心理创伤SOURCEに加算し、1.5倍に做
+	SOURCE:MASTER:心理创伤 += SOURCE:MASTER:接触 + SOURCE:MASTER:逃脱
+	TIMES SOURCE:MASTER:心理创伤 , 1.50
+ENDIF
+;快ＡSOURCEに应じて情爱SOURCE増加、疼痛、心理创伤SOURCEに应じて減少
+SOURCE:MASTER:情爱 = SOURCE:MASTER:快Ａ / 5 - SOURCE:MASTER:疼痛 / 5 - SOURCE:MASTER:心理创伤 / 5
+;情爱SOURCE但正那么调教对象Ａ感觉、情爱SOURCEに应じて中毒充足SOURCE増加
+SOURCE:MASTER:中毒充足 = SOURCE:MASTER:情爱 > 0 ? (GET_ABL(MASTER, "Ａ感觉") + 10) * (GET_ABL(MASTER, "Ａ感觉") - 30) * SOURCE:MASTER:情爱 / 100 # SOURCE:MASTER:中毒充足
+;中毒充足SOURCE但正的値那么快ＡSOURCEに应じて増加
+SOURCE:MASTER:中毒充足 = SOURCE:MASTER:中毒充足 > 0 ? SOURCE:MASTER:中毒充足 + SOURCE:MASTER:快Ａ / 5 # 0
+;中毒充足SOURCE但负的値被和らないよう调整
+SOURCE:MASTER:中毒充足 = SOURCE:MASTER:中毒充足 < 0 ? 0 # SOURCE:MASTER:中毒充足
+;中毒充足SOURCEに应じて情爱SOURCE加算(フィードバック)
+SOURCE:MASTER:情爱 += SOURCE:MASTER:中毒充足 / 5
+;脏污但相互に移る
+STAIN:MASTER:肛门 |= STAIN:阴茎
+STAIN:阴茎 |= STAIN:MASTER:肛门
+;顔面骑乘系解除
+CALL FACESITTING_SET(0)
+;调教者、调教对象自慰被中断
+TEQUIP:自慰中 = 0
+
+;扶她是Ａで前列腺刺激
+SIF TALENT:MASTER:扶她
+	TCVAR:MASTER:前列腺刺激 += 1
+;Ａ感觉、受虐气质に应じて勃起度上升
+TCVAR:MASTER:这回合的勃起 += 100 + (GET_ABL(MASTER, "Ａ感觉") + GET_ABL(MASTER, "受虐气质"))
+
+TFLAG:经过时间 += 4
+;肛门震动棒、肛门拉珠解除
+TEQUIP:肛门震动棒 = 0
+TEQUIP:肛门拉珠 = 0
+
+;反应后（Ｎ/Ｈ/Ａ）[罰]（快Ａ、接触、情爱、性行动、疼痛、逃脱、中毒充足、心理创伤、快ｃ）
+@ACTION_APPLY2_35
+;肛交で童贞被捨てた扱いに是不做

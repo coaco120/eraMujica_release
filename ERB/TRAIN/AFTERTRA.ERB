@@ -1,0 +1,164 @@
+﻿;────────────────────────────────────
+;调教终了的处理
+;────────────────────────────────────
+@EVENTEND
+
+;ムラムラ设置
+SIF TARGET > 0
+	CFLAG:起兴 = 0
+SIF ASSI:1 > 0
+	CFLAG:(ASSI:1):起兴 = 0
+SIF ASSI:2 > 0
+	CFLAG:(ASSI:2):起兴 = 0
+
+;MASTER侧的CFLAGに誰にどれ只搾ら受到か被记录
+;一回で最大5000水平？
+CFLAG:MASTER:(2200 + NO:TARGET) += TFLAG:取得魔力 * (5 + CFLAG:次序) / 5
+;ASSI是TARGET的1/5
+FOR LOCAL, 0, 9
+	IF ASSI:(LOCAL + 1) > 0
+		CFLAG:MASTER:(2200 + NO:(ASSI:(LOCAL + 1))) += TFLAG:取得魔力 * (5 + CFLAG:(ASSI:(LOCAL + 1)):次序) / 25
+	ENDIF
+NEXT
+
+;累积魔力
+SIF TARGET > 0
+	CFLAG:累积魔力 += TFLAG:取得魔力
+
+;调教终了
+FLAG:调教中 = 0
+PRINTW 调教结束了。
+
+EXP:MASTER:性知识 += TFLAG:经过时间 / 10
+EXP:性知识 += TFLAG:经过时间 / 10
+
+;调教时间被チェックして记录(最长・最短)
+SIF TFLAG:经过时间 > FLAG:最长调教时间记录
+	FLAG:最长调教时间记录 = TFLAG:经过时间
+SIF TFLAG:经过时间 > 0 && (TFLAG:经过时间 < FLAG:最短调教时间记录 || FLAG:最短调教时间记录 == 0)
+	FLAG:最短调教时间记录 = TFLAG:经过时间
+
+;ACT长期修正値的一括算入
+CALL ACT_M_RESEARCH_L(1)
+
+;数据ベース记入
+CALL DATABASE_INPUT_T
+
+;────────────────────────────────────
+;母乳的価値的計算
+;────────────────────────────────────
+SIF TALENT:MASTER:母乳体質 && TFLAG:调教时间 > 0
+	CALL SELL_MILK
+
+;────────────────────────────────────
+;等级上升。たく先生経験値ためても一回的调教是一度只等级上升できる仕大人です
+;────────────────────────────────────
+IF TFLAG:休息一次 == 0
+	IF CFLAG:MASTER:调教経験 > CFLAG:MASTER:必要経験値
+		CFLAG:MASTER:调教等级 += 1
+		CFLAG:MASTER:调教経験 -= CFLAG:MASTER:必要経験値
+		CFLAG:MASTER:必要経験値 += 100 + CFLAG:MASTER:调教等级 * CFLAG:MASTER:调教等级 * 10
+		;等级１０以降必要経験値是急に上但り增加但、异常経験で軽減でき增加
+		LOCAL = 250 + (CFLAG:MASTER:调教等级 - 5) * CFLAG:MASTER:必要経験値 / 3 - EXP:MASTER:异常経験 * 20
+		SIF LOCAL > 0 && CFLAG:MASTER:调教等级 > 10
+			CFLAG:MASTER:必要経験値 += LOCAL
+		PRINTFORMW %CALLNAME:MASTER%的调教等级是[{CFLAG:MASTER:调教等级}]变成了
+		MAXBASE:MASTER:体力 += 100 + 10 * RAND:6
+		MAXBASE:MASTER:气力 += 50 + 10 * RAND:6
+	ENDIF
+	
+	IF CFLAG:调教経験 > CFLAG:必要経験値
+		CFLAG:调教等级 += 1
+		CFLAG:调教経験 -= CFLAG:必要経験値
+		CFLAG:必要経験値 += 100 + CFLAG:调教等级 * CFLAG:调教等级 * 10
+		LOCAL = 250 + (CFLAG:调教等级 - 5) * CFLAG:必要経験値 / 3 - EXP:MASTER:异常経験 * 20
+		SIF LOCAL > 0 && CFLAG:调教等级 > 10
+			CFLAG:必要経験値 += LOCAL
+		PRINTFORMW %CALLNAME:TARGET%的调教等级是[{CFLAG:调教等级}]变成了
+		MAXBASE:体力 += 100 + 10 * RAND:6
+		MAXBASE:气力 += 50 + 10 * RAND:6
+	ENDIF
+	
+	TFLAG:取得魔力 = MAX(TFLAG:取得魔力, 10)
+	PRINTFORMW %CALLNAME:TARGET%将从%CALLNAME:MASTER%吸取的精力转换为了{TFLAG:取得魔力}的魔力
+	CFLAG:魔力 += TFLAG:取得魔力
+	
+	IF CFLAG:好感 >= 500 && CFLAG:M恋慕 == 0
+		CFLAG:M恋慕 = 1
+		PRINTFORML %CALLNAME:TARGET%看向的%CALLNAME:MASTER%的眼神有些奇怪…
+		PRINTFORMW %CALLNAME:TARGET%似乎开始对%CALLNAME:MASTER%产生好感了
+		IF CFLAG:好感 / 250 >= CFLAG:调教等级 - CFLAG:MASTER:调教等级
+			CFLAG:M恋慕 = 2
+			PRINTFORMW 不仅如此，%CALLNAME:TARGET%似乎萌生了对%CALLNAME:MASTER%的爱意
+		ENDIF
+	ENDIF
+	IF CFLAG:好感 / 250 >= CFLAG:调教等级 - CFLAG:MASTER:调教等级 && CFLAG:M恋慕 == 1
+		CFLAG:M恋慕 = 2
+		PRINTFORML %CALLNAME:TARGET%看向的%CALLNAME:MASTER%的眼神有些奇怪…
+		PRINTFORMW %CALLNAME:TARGET%似乎对%CALLNAME:MASTER%萌生出了爱意
+	ENDIF
+ENDIF
+
+;────────────────────────────────────
+;平时定位的变动
+;────────────────────────────────────
+LOCAL = 10 * CFLAG:定位 - CFLAG:平时
+LOCAL:1 = (CFLAG:SM性格 + CFLAG:傲娇 + 200) / 2
+;性格で倍率但決まる。
+;最小値50(Mデレ)、最大値150(Sツン)、素質变动不做/させない角色で是B = 100
+CFLAG:平时 += LOCAL * (LOCAL >= 0 ? 200 - LOCAL:1 # LOCAL:1) / 500
+IF CFLAG:平时 > 100 && MARK:5 == 0
+	MARK:5 = 1
+	CFLAG:反抗除去 = 1
+ELSEIF CFLAG:平时 > 200 && MARK:5 == 1
+	MARK:5 = 2
+	CFLAG:反抗除去 = 1
+ELSEIF CFLAG:平时 > 300 && MARK:5 == 2
+	MARK:5 = 3
+	CFLAG:反抗除去 = 1
+ELSEIF CFLAG:平时 > 400 && MARK:5 == 3
+	MARK:5 = 4
+	CFLAG:反抗除去 = 1
+ELSEIF CFLAG:平时 > 500 && MARK:5 == 4
+	MARK:5 = 5
+	CFLAG:反抗除去 = 1
+ELSEIF CFLAG:平时 > 600 && MARK:5 == 5
+	MARK:5 = 6
+	CFLAG:反抗除去 = 1
+ELSEIF CFLAG:平时 > 700 && MARK:5 == 6
+	MARK:5 = 7
+	CFLAG:反抗除去 = 1
+ELSEIF CFLAG:平时 > 800 && MARK:5 == 7
+	MARK:5 = 8
+	CFLAG:反抗除去 = 1
+ELSEIF CFLAG:平时 > 900 && MARK:5 == 8
+	MARK:5 = 9
+	CFLAG:反抗除去 = 1
+ELSEIF CFLAG:平时 > 950 && MARK:5 == 9
+	MARK:5 = 10
+	CFLAG:反抗除去 = 1
+ENDIF
+;────────────────────────────────────
+;空射精奖励
+;────────────────────────────────────
+IF TCVAR:MASTER:空射精数 > 0 
+	IF MAXBASE:MASTER:射精 < 7500 + CFLAG:MASTER:精力界限 * 500
+		MAXBASE:MASTER:射精 = MIN(MAXBASE:MASTER:射精 + TCVAR:MASTER:空射精数 * 100, 7500 + CFLAG:MASTER:精力界限 * 500)
+		PRINTFORML 因为被榨取的超过了极限，%CALLNAME:MASTER%的性能力反而得到了加强
+	ELSE
+		PRINTFORML 性能力的强化达到了极限
+	ENDIF
+	TCVAR:MASTER:空射精数 = 0
+ENDIF
+
+;────────────────────────────────────
+;设置
+;────────────────────────────────────
+;尿意ゲージ被消す
+MAXBASE:MASTER:尿意 = TALENT:MASTER:漏尿癖 ? MAXBASE:MASTER:尿意 # 0
+;调教で蓄积した疲惫被日常に加算
+CFLAG:MASTER:疲惫 = MIN(CFLAG:MASTER:疲惫 + MAX(TFLAG:63, 0), 20)
+SIF TARGET >= 0
+	CFLAG:TARGET:疲惫 += MAX(TFLAG:62, 0)
+
+BEGIN TURNEND

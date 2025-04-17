@@ -1,0 +1,385 @@
+﻿;────────────────────────────────────
+;000,询问今天的心情
+;────────────────────────────────────
+;反应前（Ｓ/Ｎ/Ｈ）[罰]（ソース无、调教对象的反应只被见る）
+@ACTION_APPLY_0
+TFLAG:经过时间 += 1
+
+;反应后
+@ACTION_APPLY2_0
+;デフォルト(以下的どれにも該当不做反应)
+TFLAG:ACT派生 = -1
+;反应但强势的回应的场合
+IF IS_NOWCOMNAME("强势的回应")
+	;ACT派生に勇気被出して强く当たった被设置
+	TFLAG:ACT派生 = 1
+	;REACT分类に要求に应じない被设置
+	CALL SET_COMGRO("拒绝")
+;反应但讽刺挖苦的场合
+ELSEIF IS_NOWCOMNAME("讽刺挖苦")
+	;ACT派生に皮肉「今的心情是、和聞かれても」被设置
+	TFLAG:ACT派生 = 2
+	;REACT分类に要求に应じない被设置
+	CALL SET_COMGRO("拒绝")
+;REACT分类但消极的服从的场合
+ELSEIF IS_COMGRONAME("消极的服从")
+	;ACT派生に歯切れ恶く質問に答えた被设置
+	TFLAG:ACT派生 = 0
+;REACT分类但淡然的服从的场合
+ELSEIF IS_COMGRONAME("淡然的服从")
+	;ACT派生にまあまあ恶く是ない和言った被设置
+	TFLAG:ACT派生 = 4
+;REACT分类但积极的服从的场合
+ELSEIF IS_COMGRONAME("积极的服从")
+	;ACT派生に是っきり和今的感受被告げた被设置
+	TFLAG:ACT派生 = 3
+	;屈服刻印に应じて恐怖SOURCE増加
+	SOURCE:MASTER:恐怖 += 150 + MARK:屈服刻印 * 20
+;REACT分类但接受的场合
+ELSEIF IS_COMGRONAME("接受")
+	;ACT派生に心情舒畅こ和し想要和言った被设置
+	TFLAG:ACT派生 = 5
+	;快乐刻印に应じて乐趣SOURCE増加
+	SOURCE:MASTER:乐趣 += 50 + MARK:快乐刻印 * 20
+ENDIF
+
+;────────────────────────────────────
+;001,主动的事被どう思うか被询问
+;────────────────────────────────────
+;反应前（Ｓ/Ｎ/Ｈ）（情爱）
+@ACTION_APPLY_1
+;调教对象顺从*2、调教者会话技能に应じて情爱SOURCE増加
+SOURCE:MASTER:情爱 = 50 + ABL:MASTER:顺从 * 2 + ABL:会话
+TFLAG:经过时间 += 1
+;话題『好感』被既出和做
+TFLAG:已经出现的话题 |= 1
+
+;反应后
+@ACTION_APPLY2_1
+;デフォルト(以下的どれにも該当不做反应)
+TFLAG:ACT派生 = -1
+;反应但强势的回应的场合
+IF IS_NOWCOMNAME("强势的回应")
+	;ACT派生にそんなこ和あるわけない！被设置
+	TFLAG:ACT派生 = 1
+	;REACT分类に要求に应じない被设置
+	CALL SET_COMGRO("拒绝")
+;反应但讽刺挖苦的场合
+ELSEIF IS_NOWCOMNAME("讽刺挖苦")
+	;ACT派生に皮肉「困るねぇ…喜欢じゃない和いったら怒る？」被设置
+	TFLAG:ACT派生 = 2
+	;反抗刻印に应じて恐怖SOURCE減少
+	SOURCE:MASTER:恐怖 -= 150 + MARK:反抗刻印 * 20
+	;REACT分类に要求に应じない被设置
+	CALL SET_COMGRO("拒绝")
+;REACT分类但消极的服从的场合
+ELSEIF IS_COMGRONAME("消极的服从")
+	;ACT派生に嫌いじゃない…かも知れない…被设置
+	TFLAG:ACT派生 = 0
+	;调教者会话に应じて情爱SOURCE増加
+	SOURCE:MASTER:情爱 += 100 + GET_ABL(TARGET, "会话") * 2
+;REACT分类但积极的服从で、调教对象好感但少ないか、REACT分类但淡然的服从
+ELSEIF (IS_COMGRONAME("积极的服从") && CFLAG:M好感 < 1000) || IS_COMGRONAME("淡然的服从")
+	;ACT派生にもう酷いこ和しなければ、もっ和喜欢になれるかもしれない被设置
+	TFLAG:ACT派生 = 3
+	;调教者会话に应じて情爱SOURCE増加
+	SOURCE:MASTER:情爱 += 150 + GET_ABL(TARGET, "会话") * 25 / 10
+;REACT分类但积极的服从で、调教对象好感但多い
+ELSEIF IS_COMGRONAME("积极的服从") && CFLAG:M好感 >= 1000
+	;ACT派生に是っきり和喜欢和告げた被设置
+	TFLAG:ACT派生 = 4
+	;调教者会话に应じて情爱SOURCE増加
+	SOURCE:MASTER:情爱 += 200 + GET_ABL(TARGET, "会话") * 5
+	;调教对象好感に应じて恐怖SOURCE増加
+	SOURCE:MASTER:恐怖 += 150 + CFLAG:M好感 / 10
+;REACT分类但接受
+ELSEIF IS_COMGRONAME("接受")
+	;ACT派生にもっ和すごいこ和してくれば、もっ和喜欢になれるかも被设置
+	TFLAG:ACT派生 = 5
+	;调教者会话に应じて情爱SOURCE増加
+	SOURCE:MASTER:情爱 += 100 + GET_ABL(TARGET, "会话")
+	;调教对象受虐气质に应じて情爱SOURCE増加
+	SOURCE:MASTER:中毒充足 += 150 + GET_ABL(MASTER, "受虐气质") * 2
+ENDIF
+
+;────────────────────────────────────
+;002,谈论性的话题（Ｓ/Ｎ/Ｈ）（调教对象的性知识）
+;────────────────────────────────────
+@ACTION_APPLY_2
+;勃起度上升
+TCVAR:MASTER:这回合的勃起 += 50
+TFLAG:经过时间 += 1
+;话題『知识』被既出和做
+TFLAG:已经出现的话题 |= 2
+
+;────────────────────────────────────
+;003,温柔的安慰（Ｓ/Ｎ）（心理创伤逆）
+;────────────────────────────────────
+@ACTION_APPLY_3
+;调教者会话技能に应じて心理创伤SOURCE減少
+SOURCE:MASTER:心理创伤 = -50 - ABL:会话 * 5
+;调教者自慰被中断
+TEQUIP:自慰中 &= ~2
+TFLAG:经过时间 += 1
+;话題『安慰』被既出和做
+TFLAG:已经出现的话题 |= 4
+
+;────────────────────────────────────
+;004,严厉的威胁（Ｎ/Ｈ）(心理创伤）
+;────────────────────────────────────
+@ACTION_APPLY_4
+;调教者施虐技能に应じて心理创伤SOURCE増加
+SOURCE:MASTER:心理创伤 = 80 + ABL:施虐 * 5
+;心理创伤(刻印)的元但こ的调教だった场合心理创伤SOURCE1.5倍
+SIF CFLAG:MASTER:心理创伤 == 4
+	TIMES SOURCE:MASTER:心理创伤 , 1.50
+;调教者自慰被中断
+TEQUIP:自慰中 &= ~2
+TFLAG:经过时间 += 1
+;话題『威胁』被既出和做
+TFLAG:已经出现的话题 |= 8
+
+;────────────────────────────────────
+;005,服被脱いで/服被着て和命じる
+;────────────────────────────────────
+;反应前（Ｓ/Ｎ/Ｈ/Ａ）[罰]（露出）
+@ACTION_APPLY_5
+;自主脱衣的处理
+;压抑/羞涩/着衣PLAY喜欢素質但ない场合
+IF !TALENT:压抑 && !TALENT:羞涩 && !TALENT:着衣PLAY喜欢
+	;解放素質、调教者欲望、调教等级に应じて成功率上升
+	IF TALENT:解放 * 4 + GET_ABL(TARGET, "欲望") / 10 + GET_TRAINLV(TARGET) / 5 > 3 + RAND:3
+		;配饰－直到自主脱衣
+		TFLAG:自主脱衣 = 7
+	;1/3的确率で
+	ELSEIF !RAND:3
+		;上＋下外套自主脱衣
+		TFLAG:自主脱衣 = 3
+	ENDIF
+ENDIF
+;顔面骑乘系解除
+CALL FACESITTING_SET(0)
+;脱衣时露出SOURCE増加
+SIF TFLAG:ACT派生 == 0
+	SOURCE:MASTER:露出 = 50
+;着衣时露出SOURCE減少
+SIF TFLAG:ACT派生 == 1
+	SOURCE:MASTER:露出 = -50
+;调教对象自慰被中断
+TEQUIP:自慰中 &= ~1
+TFLAG:经过时间 += 1
+
+;反应后（露出）
+@ACTION_APPLY2_5
+;脱衣前に服装被保存做
+CALLF CLOTHE_SAVE(TARGET)
+CALLF CLOTHE_SAVE(MASTER)
+;服被脱いで的场合
+IF TFLAG:ACT派生 == 0
+	;性交中、连衣裙や着物是脱げる但裙子是无理的原理
+	;消极的执行那么一枚脱ぐ
+	IF IS_COMGRONAME("消极的服从/接受")
+		IF TEQUIP:MASTER:上半身外套 || TEQUIP:MASTER:全身外套
+			TEQUIP:MASTER:上半身外套 = 0
+			TEQUIP:MASTER:全身外套 = 0
+			SOURCE:MASTER:露出 += 300
+		ELSEIF TEQUIP:MASTER:下半身外套 && !GETINSERT()
+			TEQUIP:MASTER:下半身外套 = 0
+			SOURCE:MASTER:露出 += 200
+		ELSEIF TEQUIP:MASTER:上半身内衣
+			TEQUIP:MASTER:上半身内衣 = 0
+			SOURCE:MASTER:露出 += 400
+		ELSEIF TEQUIP:MASTER:下半身内衣 && !GETINSERT()
+			TEQUIP:MASTER:下半身内衣 = 0
+			SOURCE:MASTER:露出 += 500
+		ELSEIF TEQUIP:MASTER:袜子 || TEQUIP:MASTER:配饰
+			TEQUIP:MASTER:配饰 = 0
+			TEQUIP:MASTER:袜子 = 0
+			SOURCE:MASTER:露出 += 100
+		ENDIF
+	;积极的执行那么二枚脱ぐ
+	ELSEIF IS_COMGRONAME("积极的服从/淡然的服从")
+		IF TEQUIP:MASTER:上半身外套 || TEQUIP:MASTER:全身外套
+			IF GETINSERT()
+				TEQUIP:MASTER:上半身内衣 = 0
+			ELSE
+				TEQUIP:MASTER:下半身外套 = 0
+			ENDIF
+			TEQUIP:MASTER:上半身外套 = 0
+			TEQUIP:MASTER:全身外套 = 0
+			SOURCE:MASTER:露出 += 400
+		ELSEIF TEQUIP:MASTER:下半身外套 && !GETINSERT()
+			TEQUIP:MASTER:上半身内衣 = 0
+			TEQUIP:MASTER:下半身外套 = 0
+			SOURCE:MASTER:露出 += 300
+		ELSEIF TEQUIP:MASTER:上半身内衣
+			SIF !GETINSERT()
+				TEQUIP:MASTER:下半身内衣 = 0
+			TEQUIP:MASTER:上半身内衣 = 0
+			SOURCE:MASTER:露出 += 500
+		ELSEIF TEQUIP:MASTER:下半身内衣 && !GETINSERT()
+			TEQUIP:MASTER:配饰 = 0
+			TEQUIP:MASTER:袜子 = 0
+			TEQUIP:MASTER:下半身内衣 = 0
+			SOURCE:MASTER:露出 += 600
+		ELSEIF TEQUIP:MASTER:袜子 || TEQUIP:MASTER:配饰
+			TEQUIP:MASTER:配饰 = 0
+			TEQUIP:MASTER:袜子 = 0
+			SOURCE:MASTER:露出 += 100
+		ENDIF
+	;其他反应那么脱但ない
+	ELSE
+		;REACT分类に要求に应じない被设置
+		CALL SET_COMGRO("拒绝")
+	ENDIF
+;服被着て的场合
+ELSE
+	;消极的执行那么一枚着る
+	IF IS_COMGRONAME("消极的服从/接受")
+		;性交中是配饰よりブラ优先
+		IF TEQUIP:MASTER:上半身内衣 != EQUIP:MASTER:上半身内衣 && GETINSERT()
+			TEQUIP:MASTER:上半身内衣 = EQUIP:MASTER:上半身内衣
+		ELSEIF TEQUIP:MASTER:配饰 != EQUIP:MASTER:配饰 || TEQUIP:MASTER:袜子 != EQUIP:MASTER:袜子
+			TEQUIP:MASTER:配饰 = EQUIP:MASTER:配饰
+			TEQUIP:MASTER:袜子 = EQUIP:MASTER:袜子
+		ELSEIF TEQUIP:MASTER:下半身内衣 != EQUIP:MASTER:下半身内衣 && !GETINSERT()
+			TEQUIP:MASTER:下半身内衣 = EQUIP:MASTER:下半身内衣
+		ELSEIF TEQUIP:MASTER:上半身内衣 != EQUIP:MASTER:上半身内衣 && !GETINSERT()
+			TEQUIP:MASTER:上半身内衣 = EQUIP:MASTER:上半身内衣
+		ELSEIF TEQUIP:MASTER:下半身外套 != EQUIP:MASTER:下半身外套 && !GETINSERT()
+			TEQUIP:MASTER:下半身外套 = EQUIP:MASTER:下半身外套
+		ELSEIF TEQUIP:MASTER:上半身外套 != EQUIP:MASTER:上半身外套 || TEQUIP:MASTER:全身外套 != EQUIP:MASTER:全身外套
+			TEQUIP:MASTER:上半身外套 = EQUIP:MASTER:上半身外套
+			TEQUIP:MASTER:全身外套 = EQUIP:MASTER:全身外套
+		ENDIF
+	;积极的执行那么二枚着る
+	ELSEIF IS_COMGRONAME("积极的服从/淡然的服从")
+		;性交中是配饰よりブラ优先
+		IF TEQUIP:MASTER:上半身内衣 != EQUIP:MASTER:上半身内衣 && GETINSERT()
+			TEQUIP:MASTER:上半身内衣 = EQUIP:MASTER:上半身内衣
+		ELSEIF TEQUIP:MASTER:配饰 != EQUIP:MASTER:配饰 || TEQUIP:MASTER:袜子 != EQUIP:MASTER:袜子
+			TEQUIP:MASTER:配饰 = EQUIP:MASTER:配饰
+			TEQUIP:MASTER:袜子 = EQUIP:MASTER:袜子
+			SIF !GETINSERT()
+				TEQUIP:MASTER:下半身内衣 = EQUIP:MASTER:下半身内衣
+		ELSEIF TEQUIP:MASTER:下半身内衣 != EQUIP:MASTER:下半身内衣 && !GETINSERT()
+			TEQUIP:MASTER:下半身内衣 = EQUIP:MASTER:下半身内衣
+			TEQUIP:MASTER:上半身内衣 = EQUIP:MASTER:上半身内衣
+		ELSEIF TEQUIP:MASTER:上半身内衣 != EQUIP:MASTER:上半身内衣
+			TEQUIP:MASTER:上半身内衣 = EQUIP:MASTER:上半身内衣
+			IF GETINSERT()
+				TEQUIP:MASTER:上半身外套 = EQUIP:MASTER:上半身外套
+				TEQUIP:MASTER:全身外套 = EQUIP:MASTER:全身外套
+			ELSE
+				TEQUIP:MASTER:下半身外套 = EQUIP:MASTER:下半身外套
+			ENDIF
+		ELSEIF TEQUIP:MASTER:下半身外套 != EQUIP:MASTER:下半身外套 && !GETINSERT()
+			TEQUIP:MASTER:下半身外套 = EQUIP:MASTER:下半身外套
+			TEQUIP:MASTER:上半身外套 = EQUIP:MASTER:上半身外套
+			TEQUIP:MASTER:全身外套 = EQUIP:MASTER:全身外套
+		ELSEIF TEQUIP:MASTER:上半身外套 != EQUIP:MASTER:上半身外套 || TEQUIP:MASTER:全身外套 != EQUIP:MASTER:全身外套
+			TEQUIP:MASTER:上半身外套 = EQUIP:MASTER:上半身外套
+			TEQUIP:MASTER:全身外套 = EQUIP:MASTER:全身外套
+		ENDIF
+	;其他反应那么着ない
+	ELSE
+		;REACT分类に要求に应じない被设置
+		CALL SET_COMGRO("拒绝")
+	ENDIF
+ENDIF
+;何枚脱ぎ着したか被确认
+LOCAL:1 = 0
+FOR LOCAL, 0, 10
+	SIF CLOTHE_SAVE(MASTER, LOCAL)
+		LOCAL:1++
+NEXT
+;保持関数にて保持
+CALLF ACTION_APPLY2_5V(LOCAL:1)
+
+;变数保持関数
+@ACTION_APPLY2_5V(ARG)
+#FUNCTION
+;ARG被保持し、ARG但-1であればそ的値被返す
+SIF ARG != -1
+	LOCAL = ARG
+RETURNF LOCAL
+
+;────────────────────────────────────
+;006,征求同意
+;────────────────────────────────────
+;反应前（Ｓ/Ｎ/Ｈ）（情爱）
+@ACTION_APPLY_6
+;情爱SOURCE増加
+SOURCE:MASTER:情爱 = 200
+TFLAG:经过时间 += 1
+;话題『合意』被既出和做
+TFLAG:已经出现的话题 |= 16
+
+;反应后
+@ACTION_APPLY2_6
+;REACT分类但消极的服从・淡然的服从的场合
+IF IS_COMGRONAME("消极的服从/淡然的服从")
+	;调教者会话に应じて恐怖SOURCE増加
+	SOURCE:MASTER:恐怖 += 100 + GET_ABL(TARGET, "会话") * 2
+	;合意形成
+	CFLAG:合意 = 1
+;REACT分类但积极的服从・接受的场合
+ELSEIF IS_COMGRONAME("积极的服从/接受")
+	;调教者会话に应じて情爱SOURCE増加
+	SOURCE:MASTER:情爱 += 400 + GET_ABL(TARGET, "会话") * 5
+	;调教对象好感に应じて恐怖SOURCE増加
+	SOURCE:MASTER:恐怖 += 200 + CFLAG:M好感 / 10
+	;合意形成
+	CFLAG:合意 = 1
+;REACT分类但其他的场合
+ELSE
+	;REACT分类に要求に应じない被设置
+	CALL SET_COMGRO("拒绝")
+ENDIF
+
+;────────────────────────────────────
+;007,宣称要进行惩罚（Ｎ/Ｈ）[罰]（心理创伤）
+;────────────────────────────────────
+@ACTION_APPLY_7
+;心理创伤(刻印)に应じて心理创伤SOURCE増加
+SOURCE:MASTER:心理创伤 = 100 + MARK:MASTER:心理创伤 * 50
+;心理创伤(刻印)的元但こ的调教だった场合心理创伤SOURCE1.5倍
+SIF CFLAG:MASTER:心理创伤 == 7
+	TIMES SOURCE:MASTER:心理创伤 , 1.50
+;调教者自慰被中断
+TEQUIP:自慰中 &= ~2
+TFLAG:经过时间 += 1
+
+;────────────────────────────────────
+;008,大喊大叫（Ｈ/Ａ）（情爱逆、心理创伤）
+;────────────────────────────────────
+@ACTION_APPLY_8
+;情爱SOURCE減少、心理创伤SOURCE増加
+SOURCE:MASTER:情爱 = -150
+SOURCE:MASTER:心理创伤 = 150
+;心理创伤(刻印)的元但こ的调教だった场合心理创伤SOURCE1.5倍
+SIF CFLAG:MASTER:心理创伤 == 8
+	TIMES SOURCE:MASTER:心理创伤 , 1.50
+;调教者自慰被中断
+TEQUIP:自慰中 &= ~2
+TFLAG:经过时间 += 1
+
+;────────────────────────────────────
+;009,令人毛骨悚然的笑（Ａ）[罰]（逃脱、心理创伤）
+;────────────────────────────────────
+@ACTION_APPLY_9
+;1/2的确率で配件强制脱衣
+SIF RAND:2
+	TFLAG:强制脱衣 = 6
+;1/2的确率で配件自主脱衣
+SIF RAND:2
+	TFLAG:自主脱衣 = 6
+;逃脱、心理创伤SOURCE乱数増加
+SOURCE:MASTER:逃脱 = RAND:7 * 100
+SOURCE:MASTER:心理创伤 = 250 + RAND:5 * 100
+;心理创伤(刻印)的元但こ的调教だった场合心理创伤SOURCE1.5倍
+SIF CFLAG:MASTER:心理创伤 == 9
+	TIMES SOURCE:MASTER:心理创伤 , 1.50
+TFLAG:经过时间 += 1
+;话題『嗤笑』被既出和做
+TFLAG:已经出现的话题 |= 32

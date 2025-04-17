@@ -1,0 +1,836 @@
+﻿;────────────────────────────────────
+;调教对象快感（ＣＶＡＢ）的ソース和爱液、绝顶的处理（露出ソース、逃脱ソース、达成ソース、快Ｃ、快Ｖ、快Ａ、快Ｂ、润滑、欲望、屈服、恭顺、抑郁、体力、气力、射精、母乳、尿意、理性、兴趣、好感度、経験値）
+;────────────────────────────────────
+@CALC_SOURCE00
+
+LOCALS = CALC_SOURCE00
+
+;最初的变动
+CALLFORM %LOCALS%_TALENT
+
+;快感（ＣＶＡＢ）的上升
+CALLFORM %LOCALS%_PLEASURE
+
+;欲望、屈服、恭顺的上升
+CALLFORM %LOCALS%_DESIRE
+
+;抑郁的上升
+CALLFORM %LOCALS%_DEPRESSION
+
+;爱液处理
+CALLFORM %LOCALS%_MOIST
+
+;绝顶、体力、气力、射精、母乳、尿意など的处理
+CALLFORM %LOCALS%_EX
+
+;────────────────────────────────────
+;最初的变动
+;────────────────────────────────────
+@CALC_SOURCE00_TALENT
+#DIM LCOUNT
+;ＣＶＡＢ部位关于
+FOR LCOUNT, 0, 4
+	;敏感和钝感被处理
+	;Ｘ敏感
+	SIF TALENT:MASTER:(100 + LCOUNT * 2)
+		TIMES SOURCE:MASTER:LCOUNT, 1.50
+	;Ｘ钝感
+	SIF TALENT:MASTER:(101 + LCOUNT * 2)
+		TIMES SOURCE:MASTER:LCOUNT, 0.70
+	;调教对象的状态
+	IF 0
+	ELSEIF M_COND("疲惫")
+		TIMES SOURCE:MASTER:LCOUNT, 0.80
+	ELSEIF M_COND("衰弱")
+		TIMES SOURCE:MASTER:LCOUNT, 0.65
+	ELSEIF M_COND("无气力")
+		TIMES SOURCE:MASTER:LCOUNT, 0.70
+	ELSEIF M_COND("情欲")
+		TIMES SOURCE:MASTER:LCOUNT, 1.20
+	ENDIF
+NEXT
+
+;────────────────────────────────────
+;快感（ＣＶＡＢ）的上升
+;────────────────────────────────────
+@CALC_SOURCE00_PLEASURE
+#DIM LCOUNT
+
+;欲望PALAM但[0→4, 1000→7, 2000→9, 3000→10, 4000→11, 5000→12]被LOCALへ(4～12)
+LOCAL = LIMIT(GET_REVISION_SQRT(PALAM:MASTER:欲望, 5000, 8) + 4, 4, 12)
+FOR LCOUNT, 0, 4
+	;连续奖励(连续回数倍に増加做奖励)
+	CUP:MASTER:LCOUNT += SOURCE:MASTER:LCOUNT * LOCAL * TFLAG:同一行动奖励 / 10
+	;调教中に集中的に責られ时弱くなる気但做(快Ｘ修正处理)
+	CUP:MASTER:LCOUNT = CUP:MASTER:LCOUNT * CFLAG:MASTER:(30 + LCOUNT) / 50
+NEXT
+;快Ｘ总計的1/100被魔力和して取得
+;TFLAG:取得魔力 += SUMARRAY(CUP:MASTER, 0, 4) / 100
+TFLAG:取得魔力 += (CUP:MASTER:快Ｃ + CUP:MASTER:快Ｖ + CUP:MASTER:快Ａ + CUP:MASTER:快Ｂ) / 100
+
+;────────────────────────────────────
+;欲望、屈服、恭顺的上升
+;────────────────────────────────────
+@CALC_SOURCE00_DESIRE
+#DIM LCOUNT
+
+;ABL:欲望被みる
+FOR LCOUNT, 0, 4
+	;ABL:MASTER:欲望但[0→5%, 5→30%]被快ＸSOURCEに乗算
+	LOCAL = SOURCE:MASTER:LCOUNT * LINE_CALC(ABL:MASTER:欲望, "0→5,5→30,LIMIT/5～30") / 100
+	;欲望PALAMに加算
+	CUP:MASTER:欲望 += LOCAL
+	;快Ａ的み屈服PALAMに加算
+	SIF LCOUNT == 2
+		CUP:MASTER:屈服 += LOCAL
+	;快Ｖ的み恭顺PALAMに加算
+	SIF LCOUNT == 1
+		CUP:MASTER:恭顺 += LOCAL / 2
+NEXT
+
+;────────────────────────────────────
+;抑郁的上升
+;────────────────────────────────────
+@CALC_SOURCE00_DEPRESSION
+
+;调教对象に否定快感、羞涩、压抑素質但存在すれば
+IF TALENT:MASTER:压抑 || TALENT:MASTER:羞涩 || TALENT:MASTER:否定快感
+	;快ＸSOURCE总計的1/10被用意
+	;LOCAL = SUMARRAY(SOURCE, 0, 4) / 10
+	LOCAL = SOURCE:MASTER:快Ｃ + SOURCE:MASTER:快Ｖ + SOURCE:MASTER:快Ａ + SOURCE:MASTER:快Ｂ
+	;ABL:MASTER:欲望但[0→100%, 5→10%]被さらに乗算
+	LOCAL = LOCAL * LINE_CALC(ABL:MASTER:欲望, "0→100,5→10,LIMIT/100～10") / 100
+;存在しなければ0
+ELSE
+	LOCAL = 0
+ENDIF
+;情欲的状态那么无に做
+SIF M_COND("情欲")
+	LOCAL = 0
+;抑郁PALAMに加算
+CUP:MASTER:抑郁 += LOCAL
+
+;────────────────────────────────────
+;爱液处理
+;────────────────────────────────────
+@CALC_SOURCE00_MOIST
+
+;快Ｘ总計但合わ命令10超過那么そ的20%的液体的ソース但加わる（男人是ダメ）
+;LOCAL = SUMARRAY(CUP:MASTER, 0, 4)
+LOCAL = CUP:MASTER:快Ｃ + CUP:MASTER:快Ｖ + CUP:MASTER:快Ａ + CUP:MASTER:快Ｂ
+IF LOCAL > 10 && TALENT:MASTER:男人 == 0
+	;易湿和不易湿是ここで处理
+	SIF TALENT:MASTER:易湿
+		TIMES LOCAL , 2.00
+	SIF TALENT:MASTER:不易湿
+		TIMES LOCAL , 0.50
+	;润滑PALAMに加算
+	CUP:MASTER:润滑 += LOCAL / 5
+ENDIF
+
+;────────────────────────────────────
+;绝顶、体力、气力、射精、母乳、尿意など的处理
+;────────────────────────────────────
+@CALC_SOURCE00_EX
+#DIM LCOUNT
+#DIM DYNAMIC 绝顶强度, 4
+#DIM DYNAMIC 忍耐强度
+#DIM DYNAMIC 焦虑强度, 4
+#DIM DYNAMIC 快感负担
+#DIM DYNAMIC 射精负担
+#DIM DYNAMIC 喷乳负担
+#DIM DYNAMIC 潮吹负担
+#DIM DYNAMIC 绝顶负担
+#DIM DYNAMIC 絞り强度
+
+;勃起判定(阴茎存在时的み)
+IF PENIS(MASTER)
+	;快Ｃ的1/10、他的快Ｘ的1/20被加算
+	TCVAR:MASTER:这回合的勃起 += CUP:MASTER:快Ｃ / 10 + (CUP:MASTER:快Ｖ + CUP:MASTER:快Ａ + CUP:MASTER:快Ｂ) / 20
+	;欲望的1/10被加算
+	TCVAR:MASTER:这回合的勃起 += CUP:MASTER:欲望 / 10
+	;痛苦时減算、ただし受虐气质ABLにより増加へ向かう
+	TCVAR:MASTER:这回合的勃起 += CUP:MASTER:痛苦 * (GET_ABL(MASTER, "受虐气质") - 20) / 300
+	;害羞时加算、露出癖ABLによりさらに増大
+	TCVAR:MASTER:这回合的勃起 += CUP:MASTER:害羞 * GET_ABL(MASTER, "露出癖") / 30
+ENDIF
+
+;变数的设置
+VARSET 绝顶强度
+VARSET 忍耐强度
+VARSET 焦虑强度
+VARSET 快感负担
+VARSET 射精负担
+VARSET 喷乳负担
+VARSET 潮吹负担
+VARSET 绝顶负担
+VARSET 絞り强度
+
+;ディープスロート被设置
+DEEP_THROAT = 0
+
+;绝顶Ｃ
+;快Ｃ、快ＣPALAM总计から刺激强度被用意
+LOCAL = CUP:MASTER:快Ｃ + PALAM:MASTER:快Ｃ
+
+;阴茎但ある那么勃起度但高、阴茎但ない那么润滑但高く快Ｃ1000以上的时候
+;それぞれ媚药・润滑液で简单に高潮られる的もまた良しか
+;高潮で快Ｃ存在时
+IF ((TCVAR:MASTER:勃起度 >= 1000 && PENIS(MASTER)) || (PALAM:MASTER:润滑 >= 250 && !PENIS(MASTER) && PALAM:MASTER:快Ｃ >= 1000)) && TCVAR:MASTER:高潮 && CUP:MASTER:快Ｃ > 0
+	;忍耐中、高潮に耐えられる只的ABL但存在し、高潮！COMで是なく、焦虑状态で是ない
+	IF (TCVAR:MASTER:忍耐 && TCVAR:MASTER:高潮 < ABL:MASTER:Ｃ感觉 * 3) && SELECTCOM != 70 && TCVAR:MASTER:焦虑度 == 0
+		;刺激但强ければ高潮状态但界限接近
+		TCVAR:MASTER:高潮 += LOCAL / 2000
+		;忍耐强度値に本次的刺激的强さ被代入
+		忍耐强度 = MAX(LOCAL / 10000, 1)
+	;焦虑中
+	ELSEIF TCVAR:MASTER:焦虑度 > 1
+		;焦虑度被1ずつ减少
+		TCVAR:MASTER:焦虑度 -= 1
+		;1未满に是那么ない
+		TCVAR:MASTER:焦虑度 = MAX(TCVAR:MASTER:焦虑度, 1)
+		;焦虑强度値に本次的刺激的强さ被代入
+		焦虑强度:0 = MAX(LOCAL / 10000, 1)
+	;绝顶强度处理
+	ELSE
+		绝顶强度:0 = CALC_SOURCE00_EX_P(0, LOCAL)
+	ENDIF
+ENDIF
+
+;绝顶Ｖ
+;绝顶强度处理
+绝顶强度:1 = CALC_SOURCE00_EX_P(1, CUP:MASTER:快Ｖ + PALAM:MASTER:快Ｖ)
+
+;绝顶Ａ
+;绝顶强度处理
+绝顶强度:2 = CALC_SOURCE00_EX_P(2, CUP:MASTER:快Ａ + PALAM:MASTER:快Ａ)
+
+;绝顶Ｂ
+;绝顶强度处理
+绝顶强度:3 = CALC_SOURCE00_EX_P(3, CUP:MASTER:快Ｂ + PALAM:MASTER:快Ｂ)
+
+;绝顶做和同一行动奖励被半減做
+SIF MAXARRAY(绝顶强度) > 0
+	TFLAG:同一行动奖励 = MAX(TFLAG:同一行动奖励 / 2, 1)
+
+;绝顶强度总计から绝顶负担被計算
+绝顶负担 = 500 * SUMARRAY(绝顶强度)
+
+;快感根据体力气力理性疲惫
+;快ＸSOURCE总计但[0→0, 2000→44, 4000→63, 6000→77, 8000→89, 10000→100]被快感负担へ
+快感负担 = GET_REVISION_SQRT(SUMARRAY(SOURCE, 0, 4), 10000, 100)
+;调教的度合い根据軽減
+;调教对象调教等级+欲望ABL但[0→100%, 2→91%, 4→83%, 6→75%, 8→67%, 10→59%, 12→51%]被快感负担に乗算(50～100%)
+LOCAL = GET_REVISION_SQRT_PROP(CFLAG:MASTER:调教等级 + ABL:MASTER:欲望, 1, 5, 12, 50)
+快感负担 -= 快感负担 * LIMIT(LOCAL, 50, 100) / 100
+;快感に对做反应
+;消极的な容纳もしく是忍耐标志あり的场合
+SIF IS_COMGRONAME("消极的服从/请求宽恕") || TCVAR:MASTER:忍耐
+	TIMES 快感负担, 2.00
+;容纳的场合		骂笨手笨脚但派生：こきおろすで『淡然的服从』扱いになる场合是弹く
+SIF IS_COMGRONAME("积极的服从/淡然的服从/接受") && !TCVAR:MASTER:忍耐 && !IS_NOWCOMNAME("骂笨手笨脚")
+	TIMES 快感负担, 0.50
+
+;阴茎存在时
+IF PENIS(MASTER)
+	;绝顶決定で勃起度但高く高潮
+	IF 绝顶强度:0 > 0 && TCVAR:MASTER:勃起度 >= 1000 && TCVAR:MASTER:高潮
+		;射精ゲージ但ない
+		IF BASE:MASTER:射精 == 0
+			STR:1034 = 空射精
+			DOWNBASE:MASTER:体力      += 200
+			DOWNBASE:MASTER:气力      += 80
+			NOWEX:MASTER:射精          = 1
+			TCVAR:MASTER:射精          = 1
+			TCVAR:MASTER:空射精        = 1
+			TCVAR:MASTER:空射精数     += 1
+		;强绝顶
+		ELSEIF 绝顶强度:0 == 2
+			STR:1034 = 大量射精
+			射精负担 = 500
+			NOWEX:MASTER:射精 = 3
+			TCVAR:MASTER:射精 = 3
+		;通常的绝顶
+		ELSE
+			STR:1034 = 射精
+			射精负担 = 300
+			NOWEX:MASTER:射精 = 2
+			TCVAR:MASTER:射精 = 2
+		ENDIF
+	;特殊な射精判定
+	;早泄(高快Ｃ时、射精可能でＣ感觉ABL但低时确率で)
+	ELSEIF (CUP:MASTER:快Ｃ + PALAM:MASTER:快Ｃ) >= 10000 && BASE:MASTER:射精 > 0 && ABL:MASTER:Ｃ感觉 < RAND:(ABL:MASTER:Ｃ感觉 + 3)
+		LOCAL = 0
+		;ＶＡ绝顶强度但十分高か
+		LOCAL += 绝顶强度:1 + 绝顶强度:2 > 2 + RAND:2 - TALENT:MASTER:早泄 + TALENT:MASTER:迟漏
+		;ＶＡＢ绝顶强度但十分高か
+		LOCAL += 绝顶强度:1 * 3 + 绝顶强度:2 * 3 + 绝顶强度:3 * 2 > 6 + RAND:3 - TALENT:MASTER:早泄 + TALENT:MASTER:迟漏
+		;快Ｃ但十分高かった和き
+		LOCAL += CUP:MASTER:快Ｃ > 1000 && RAND:4 > 1 - TALENT:MASTER:早泄 + TALENT:MASTER:迟漏
+		;それぞれ确率で早泄
+		IF LOCAL
+			STR:1034 = 射精（早泄）
+			射精负担 = 300
+			NOWEX:MASTER:射精 = 4
+			TCVAR:MASTER:射精 = 4
+			CDOWN:MASTER:快Ｃ = (PALAM:MASTER:快Ｃ + CUP:MASTER:快Ｃ) / 2
+		ENDIF
+	;前列腺責め射精
+	ELSEIF TCVAR:MASTER:前列腺刺激
+		;高潮or快Ｃ8000以上时、对应部位绝顶做か前列腺刺激但强和、强制射精
+		IF (TCVAR:MASTER:高潮 ||PALAM:MASTER:快Ｃ >= 8000) && ((TALENT:MASTER:男人 && 绝顶强度:2 > 0) || (TALENT:MASTER:扶她 && 绝顶强度:1 > 0) || TCVAR:MASTER:前列腺刺激 > 1)
+			;射精ゲージ但ない
+			IF BASE:MASTER:射精 == 0
+				STR:1034 = 空射精（前列腺）
+				DOWNBASE:MASTER:体力  += 200
+				DOWNBASE:MASTER:气力  += 80
+				NOWEX:MASTER:射精      = 1
+				TCVAR:MASTER:射精      = 1
+				TCVAR:MASTER:空射精    = 2
+				TCVAR:MASTER:空射精数 += 1
+			ELSE
+				STR:1034 = 射精（前列腺）
+				射精负担 = 300
+				NOWEX:MASTER:射精 = 5
+				TCVAR:MASTER:射精 = 5
+			ENDIF
+		ENDIF
+	ENDIF
+	;空不是射精时精液脏污被追加
+	IF NOWEX:MASTER:射精 > 1
+		;调教对象的阴茎
+		CALL SET_STAIN("阴茎", "精液", MASTER)
+		;调教者的(コンビネーション那么助手も含める)
+		IF 0
+		;小穴(性交奉仕时)
+		ELSEIF MC_PLAYER(1) == 4
+			CALL SET_STAIN("小穴", "精液", TARGET)           ;调教者的小穴
+			;SOURCE_MESSAGE的にも性交奉仕时的小穴内射精是TARGETになっている的で、助手相关是和りあえず(面倒な的で)见送り
+			;コンビネーション时的(ASSI:1)も处理做那么条件被吟味做必要もありそう
+		;肛门(性交奉仕时)
+		ELSEIF MC_PLAYER(1) == 5
+			CALL SET_STAIN("肛门", "精液", TARGET)             ;调教者的肛门
+		;手(用手爱抚)
+		ELSEIF GET_ACTNAME(GET_NORMALACTNUM(TFLAG:ACT)) == "用手爱抚" && MC_PLAYER(1) == 2
+			CALL SET_STAIN("手", "精液", TARGET)                 ;调教者的手
+			;コンビネーション派生时
+			SIF ASSI:1 > 0 && TCVAR:(ASSI:1):助手方针 == GET_ASSIMENUNUM("コンビネーション")
+				CALL SET_STAIN("手", "精液", (ASSI:1))           ;助手１的手
+		;口(用口爱抚)/顔射自慰绝顶
+		ELSEIF (GET_ACTNAME(GET_NORMALACTNUM(TFLAG:ACT)) == "用口爱抚" && MC_PLAYER(1) == 1) || ME_PLAYER(1) == 9
+			CALL SET_STAIN("口", "精液", TARGET)                 ;调教者的口
+			;コンビネーション派生时
+			SIF ASSI:1 > 0 && TCVAR:(ASSI:1):助手方针 == GET_ASSIMENUNUM("コンビネーション")
+				CALL SET_STAIN("口", "精液", (ASSI:1))           ;助手１的口
+		;小穴(摩擦性器)
+		ELSEIF GET_ACTNAME(GET_NORMALACTNUM(TFLAG:ACT)) == "摩擦性器" && MC_PLAYER(1) == 8
+			CALL SET_STAIN("小穴", "精液", TARGET)           ;调教者的小穴
+			;コンビネーション派生时
+			SIF ASSI:1 > 0 && TCVAR:(ASSI:1):助手方针 == GET_ASSIMENUNUM("コンビネーション")
+				CALL SET_STAIN("小穴", "精液", (ASSI:1))     ;助手１的小穴
+		;胸(进行乳交)
+		ELSEIF GET_ACTNAME(GET_NORMALACTNUM(TFLAG:ACT)) == "进行乳交" && MC_PLAYER(1) == 6
+			CALL SET_STAIN("胸", "精液", TARGET)                 ;调教者的胸
+			;コンビネーション派生时
+			SIF ASSI:1 > 0 && TCVAR:(ASSI:1):助手方针 == GET_ASSIMENUNUM("コンビネーション")
+				CALL SET_STAIN("胸", "精液", (ASSI:1))           ;助手１的胸
+		;足(进行足交)
+		ELSEIF GET_ACTNAME(GET_NORMALACTNUM(TFLAG:ACT)) == "进行足交" && MC_PLAYER(1) == 7
+			CALL SET_STAIN("足", "精液", TARGET)                 ;调教者的足
+			;コンビネーション派生时
+			SIF ASSI:1 > 0 && TCVAR:(ASSI:1):助手方针 == GET_ASSIMENUNUM("コンビネーション")
+				CALL SET_STAIN("足", "精液", (ASSI:1))           ;助手１的足
+		;其他
+		ELSE
+			;何も不做
+		ENDIF
+		;扶她で是じめて的射精是逃脱但付く
+		SIF TALENT:MASTER:扶她 && EXP:MASTER:射精経験 == 0 && CFLAG:MASTER:调教等级 < 10
+			SOURCE:MASTER:逃脱 += 500 * (25 - ABL:MASTER:顺从 - CFLAG:MASTER:调教等级) / 25
+	ENDIF
+ENDIF
+
+;Ｂ绝顶时、母乳体質であれば
+IF 绝顶强度:3 && TALENT:MASTER:母乳体質
+	;母乳不足
+	IF BASE:MASTER:母乳 < 50 + RAND:5 * 10
+		STR:1035 = 空喷乳
+		喷乳负担 = 50 + 绝顶强度:3 * 10
+		DOWNBASE:MASTER:体力 += 100
+		DOWNBASE:MASTER:气力 += 40
+		NOWEX:MASTER:喷乳     = 1
+		TCVAR:MASTER:喷乳     = 1
+		;NOWEX:喷乳で是『空喷乳』和通常的喷乳に1被割り当ててしまっている的で、TCVAR:喷乳和番号但ずれる
+		;现状NOWEX的番号被ずらしたくない的で、TCVAR:喷乳只手当しておくこ和に做@(2014/11/08)/L
+	;强绝顶
+	ELSEIF 绝顶强度:3 == 2
+		STR:1035 = 大量喷乳
+		喷乳负担 = 500
+		NOWEX:MASTER:喷乳 = 2
+		TCVAR:MASTER:喷乳 = 3
+	;通常的绝顶
+	ELSE
+		STR:1035 = 喷乳
+		喷乳负担 = 300
+		NOWEX:MASTER:喷乳 = 1
+		TCVAR:MASTER:喷乳 = 2
+	ENDIF
+	;调教对象胸に母乳脏污
+	CALL SET_STAIN("胸", "母乳", MASTER)
+	;调教者的(助手？ なんですかそれ？)
+	;手
+	SIF MB_PLAYER(1) == 2
+		CALL SET_STAIN("手", "母乳", TARGET)
+	;口
+	SIF MB_PLAYER(1) == 1
+		CALL SET_STAIN("口", "母乳", TARGET)
+	;阴茎
+	SIF MB_PLAYER(1) == 3
+		CALL SET_STAIN("阴茎", "母乳", TARGET)
+	;是じめて的喷乳是逃脱但付く
+	SIF EXP:喷乳経験 == 0 && CFLAG:MASTER:调教等级 < 20
+		SOURCE:MASTER:逃脱 += 400 * (15 - GET_ABL(MASTER, "顺从")/ 20 - CFLAG:MASTER:调教等级 / 2) / 15
+ENDIF
+
+;Ｖ绝顶时、前列腺刺激强但あり、扶她不是那么
+IF 绝顶强度:1 && !TALENT:MASTER:扶她 && TCVAR:MASTER:前列腺刺激 > 1
+	;强绝顶
+	IF 绝顶强度:1 == 2
+		STR:1038 = 大量潮吹
+		潮吹负担 = 500
+		NOWEX:MASTER:潮吹 = 2
+		TCVAR:MASTER:潮吹 = 2
+	;通常的绝顶
+	ELSE
+		STR:1038 = 潮吹
+		潮吹负担 = 300
+		NOWEX:MASTER:潮吹 = 1
+		TCVAR:MASTER:潮吹 = 1
+	ENDIF
+ELSE
+	STR:1038 = 
+ENDIF
+
+;STR:1036(绝顶显示用字符串)初期化
+STR:1036 = 
+;绝顶种被顺に记入
+SIF 绝顶强度:0
+	STR:1036 += "＆Ｃ"
+SIF 绝顶强度:1
+	STR:1036 += "＆Ｖ"
+SIF 绝顶强度:2
+	STR:1036 += "＆Ａ"
+SIF 绝顶强度:3
+	STR:1036 += "＆Ｂ"
+;多重绝顶时
+IF STRLENSU(STR:1036) > 2
+	;書式被整える
+	STR:1036 = %SUBSTRINGU(STR:1036, 1)%绝顶
+	;字符数で绝顶种被判定
+	;四重绝顶
+	IF STRLENSU(STR:1036) > 8
+		;四重绝顶时に是特別な字符串被记入
+		STR:1036 = 四 重 绝 顶
+		TIMES 绝顶负担, 2.00
+		TIMES 射精负担, 1.40
+		TIMES 喷乳负担, 1.40
+		TIMES 潮吹负担, 1.40
+		TIMES 快感负担, 1.50
+	;三重绝顶
+	ELSEIF STRLENSU(STR:1036) > 6
+		TIMES 绝顶负担, 1.65
+		TIMES 射精负担, 1.20
+		TIMES 喷乳负担, 1.20
+		TIMES 潮吹负担, 1.20
+		TIMES 快感负担, 1.30
+	;二重绝顶
+	ELSE
+		TIMES 绝顶负担, 1.30
+		TIMES 射精负担, 1.10
+		TIMES 喷乳负担, 1.10
+		TIMES 潮吹负担, 1.10
+		TIMES 快感负担, 1.30
+	ENDIF
+;单绝顶、无绝顶时
+ELSE
+	;字符串初期化
+	STR:1036 = 
+ENDIF
+
+;绝顶是达成的主なソース的一つ
+SOURCE:MASTER:达成 += 射精负担 + 喷乳负担 + 绝顶负担
+
+;露出
+SOURCE:MASTER:露出 += 30 * (SUMARRAY(绝顶强度) + 2) + 射精负担 / 2 + 喷乳负担 / 2 + 潮吹负担 / 2
+
+;空不是射精时(射精ゲージ的減り被修正)
+IF NOWEX:MASTER:射精 > 1
+	;调教者欲望、技巧、精液中毒ABLにより基準値生成
+	絞り强度 = GET_ABL(TARGET, "欲望") + GET_ABL(TARGET, "技巧") + GET_ABL(TARGET, "精液中毒")
+	;摩擦性器
+	IF IS_NOWACTNAME("摩擦性器")
+		;爱抚ABL被加算
+		絞り强度 += GET_ABL(TARGET, "爱抚") * 2
+	;调教者Ｖ被使用した性交中
+	ELSEIF IS_NOWACTNAME("逆强奸/正常位侍奉/后背位侍奉/对面座位侍奉/背面座位侍奉")
+		;Ｖ感觉、性交ABL被加算
+		絞り强度 += GET_ABL(TARGET, "Ｖ感觉") + GET_ABL(TARGET, "性交")
+		;淫壶素質により修正
+		絞り强度 = 絞り强度 * (2 + TALENT:淫壶) / 2
+	;调教者Ａ被使用した性交中
+	ELSEIF IS_NOWACTNAME("肛交侍奉")
+		;Ａ感觉、性交ABL被加算
+		絞り强度 += GET_ABL(TARGET, "Ａ感觉") + GET_ABL(TARGET, "性交")
+		;淫尻素質により修正
+		絞り强度 = 絞り强度 * (2 + TALENT:淫尻) / 2
+	;用手爱抚
+	ELSEIF IS_NOWACTNAME("用手爱抚")
+		;爱抚ABL被加算
+		絞り强度 += GET_ABL(TARGET, "爱抚") * 2
+		;灵巧的指尖素質により修正
+		絞り强度 = 絞り强度 * (2 + TALENT:灵巧的指尖) / 2
+	;用口爱抚
+	ELSEIF IS_NOWACTNAME("用口爱抚")
+		;爱抚ABL被加算
+		絞り强度 += GET_ABL(TARGET, "爱抚") * 2
+		;舌使、猫舌素質により修正
+		絞り强度 = 絞り强度 * (3 + TALENT:舌使 + TALENT:猫舌) / 3
+	;进行乳交
+	ELSEIF IS_NOWACTNAME("进行乳交")
+		;爱抚ABL被加算
+		絞り强度 += GET_ABL(TARGET, "爱抚") * 2
+		;巨乳、貧乳、淫乳素質により修正
+		絞り强度 = 絞り强度 * (3 + TALENT:巨乳 - TALENT:貧乳 + TALENT:淫乳) / 3
+	;进行足交
+	ELSEIF IS_NOWACTNAME("进行足交")
+		;爱抚ABL被加算
+		絞り强度 += GET_ABL(TARGET, "爱抚") * 2
+		;虐待狂、美脚素質により修正
+		絞り强度 = 絞り强度 * (4 + TALENT:虐待狂 + TALENT:美脚) / 4
+	ENDIF
+	;W系で１．５倍
+	SIF ASSI:1 > 0 && TCVAR:(ASSI:1):助手方针 == GET_ASSIMENUNUM("コンビネーション")
+		TIMES 絞り强度, 1.50
+	;焦虑PLAYで修正
+	絞り强度 = 絞り强度 * (TCVAR:MASTER:高潮 + 10) / 10
+	;现在的精力/最大精力で修正
+	絞り强度 = 絞り强度 * (BASE:MASTER:射精 + 1000) / (MAXBASE:MASTER:射精 + 1000)
+	;最大精力根据修正
+	絞り强度 = 絞り强度 * (MAXBASE:MASTER:射精 + 5000) / 10000
+ENDIF
+
+;体力和气力和精力的疲惫
+DOWNBASE:MASTER:体力 += 20 * 绝顶强度:0 + 40 * 绝顶强度:1 + 60 * 绝顶强度:2 + 20 * 绝顶强度:3 + 射精负担 / 10 + 喷乳负担 / 10 + 潮吹负担 / 10 + 快感负担 * (TFLAG:同一行动奖励 + 1) / 2
+DOWNBASE:MASTER:气力 += 5 * 绝顶强度:0 + 10 * 绝顶强度:1 + 15 * 绝顶强度:2 + 5 * 绝顶强度:3 + 射精负担 / 30 + 喷乳负担 / 30 + 潮吹负担 / 30 + 快感负担 * (TFLAG:同一行动奖励 + 1) * 2 / 10
+DOWNBASE:MASTER:射精 += 射精负担 * (100 + 絞り强度) / 100
+;本次的疲惫精力BASE分魔力取得
+TFLAG:取得魔力 += MIN(BASE:MASTER:射精, DOWNBASE:MASTER:射精) / 10
+;界限被超えて絞ら受到场合体力但削られる
+SIF DOWNBASE:MASTER:射精 > BASE:MASTER:射精
+	DOWNBASE:MASTER:体力 += 200 * (2 - TALENT:MASTER:精力绝伦 + TALENT:MASTER:精力薄弱) / 2
+;母乳的疲惫
+DOWNBASE:MASTER:母乳 += 喷乳负担
+;界限被超えて絞ら受到场合体力但削られる
+SIF DOWNBASE:MASTER:母乳 > BASE:MASTER:母乳
+	DOWNBASE:MASTER:体力 += 200 * (2 - TALENT:MASTER:精力绝伦 + TALENT:MASTER:精力薄弱) / 2
+
+;失禁
+BASE:MASTER:尿意 += 绝顶强度:0 * 1000 + 射精负担 + CUP:MASTER:快Ｃ / 5
+;尿意但界限被突破し、漏尿癖但ある场合
+IF BASE:MASTER:尿意 > MAXBASE:MASTER:尿意 && TALENT:MASTER:漏尿癖
+	STR:1037 = 失禁
+	NOWEX:MASTER:放尿   = 1
+	TCVAR:MASTER:放尿   = 1
+	TFLAG:失禁          = 1
+	SOURCE:MASTER:露出 += 200
+	SOURCE:MASTER:逃脱 += 100
+	SOURCE:MASTER:屈从 += 200
+	BASE:MASTER:尿意    = 0
+ENDIF
+
+;理性疲惫
+DOWNBASE:MASTER:理性 += 快感负担 / 2 + (SUMARRAY(绝顶强度) + DOWNBASE:MASTER:射精 / 300 + NOWEX:MASTER:喷乳 + NOWEX:MASTER:放尿 + 5) * 10
+;快乐导致的理性低下
+SIF TFLAG:快乐导致的理性低下 == 0 && 快感负担 > 20
+	TFLAG:快乐导致的理性低下 = 3 + 快感负担 / 30 + RAND:3
+SIF TFLAG:快乐导致的理性低下 > 0 && 快感负担 > 10
+	TFLAG:快乐导致的理性低下 += 1 + RAND:2
+
+;调教者的兴趣被引く现象
+;绝顶
+SIF SUMARRAY(绝顶强度) > 0
+	BASE:兴趣 += 30 + 25 * (SUMARRAY(绝顶强度) + 8) / 8
+;射精
+SIF 射精负担
+	BASE:兴趣 += 10 + 10 * (射精负担 + 500) / 500
+;喷乳
+SIF 喷乳负担
+	BASE:兴趣 += 10 + 10 * (喷乳负担 + 500) / 500
+
+;调教部位的累积値(修正値計算)
+FOR LCOUNT, 0, 4
+	SIF 绝顶强度:LCOUNT
+		CFLAG:MASTER:(30 + LCOUNT) = 50 + (CFLAG:MASTER:(30 + LCOUNT) - 50) / 2
+NEXT
+
+;好感度和経験値变化被カウント
+LOCAL = (SUMARRAY(绝顶强度) + DOWNBASE:MASTER:射精 / 300 + NOWEX:MASTER:喷乳) * (SUMARRAY(绝顶强度) + 8) / 8
+TFLAG:好感度上升 += LOCAL
+TFLAG:経験値上升 += LOCAL
+
+;NOWEXに数据被入れる（绝顶时口上に使う）
+FOR LCOUNT, 0, 4
+	NOWEX:MASTER:LCOUNT = 绝顶强度:LCOUNT
+NEXT
+
+;NOWEX被TCVAR绝顶系に保存
+TCVAR:MASTER:Ｃ绝顶 = NOWEX:MASTER:Ｃ绝顶
+TCVAR:MASTER:Ｖ绝顶 = NOWEX:MASTER:Ｖ绝顶
+TCVAR:MASTER:Ａ绝顶 = NOWEX:MASTER:Ａ绝顶
+TCVAR:MASTER:Ｂ绝顶 = NOWEX:MASTER:Ｂ绝顶
+
+;射精时、相关标志被设定
+IF NOWEX:MASTER:射精
+	;调教对象射精后经过回合参照系标志被设置
+	VARSET TCVAR:MASTER:0, 0, 90, 100
+	;性交奉仕时
+	IF V_SEX(MASTER) || A_SEX(MASTER)
+		;Ｖ性交的场合
+		IF V_SEX(MASTER)
+			;TFLAG:小穴内射精后经过回合是403xx seriesあたりで抹消予定@/L
+			TFLAG:小穴内射精后经过回合            = 1
+			TCVAR:MASTER:小穴内射精后经过回合参照 = 1
+		;Ａ性交的场合
+		ELSE
+			TCVAR:MASTER:肠道内射精后经过回合参照 = 1
+		ENDIF
+	;口根据爱抚で射精的场合
+	ELSEIF GET_ACTNAME(GET_NORMALACTNUM(TFLAG:ACT)) == "用口爱抚" || TEQUIP:调教对象Ｃ使用 == 2
+		;调教者但情欲かつ口淫経験但一定以上那么ディープスロート发生
+		SIF IS_CONDITION(TARGET, "情欲") && EXP:TARGET:口淫経験 >= 50
+			DEEP_THROAT = 1
+	ENDIF
+	;TFLAG:射精后经过回合是403xx seriesあたりで抹消予定@/L
+	TFLAG:射精后经过回合                  = 1
+	TCVAR:MASTER:射精后经过回合参照       = 1
+	CFLAG:MASTER:(250 + NOWEX:MASTER:射精) += 1
+	CFLAG:MASTER:射精回数                  += 1
+	TCVAR:MASTER:用于控制高潮行为         = 0
+ENDIF
+;绝顶回数标志被设定
+FOR LCOUNT, 0, 4
+	SIF 绝顶强度:LCOUNT
+		CFLAG:MASTER:(256 + LCOUNT)++
+NEXT
+
+;绝顶回数被增加
+FOR LCOUNT, 0, 4
+	EX:MASTER:LCOUNT += NOWEX:MASTER:LCOUNT
+NEXT
+SIF PENIS(MASTER)
+	EX:MASTER:射精 += NOWEX:MASTER:射精
+EX:MASTER:喷乳 += NOWEX:MASTER:喷乳
+EX:MASTER:放尿 += NOWEX:MASTER:放尿
+SIF !PENIS(MASTER)	;潮吹追加@revkoishi(14/05/26)
+	EX:MASTER:潮吹 += NOWEX:MASTER:潮吹
+
+;【屈服:43】【屈服:55】的处理是SOURCE_MARK.ERB的@MARK_CHECK_SOURCE_SURRENDERに移设@/L
+
+SIF !TEQUIP:性交奉仕中 || IS_NOWACTNAME("Ｗ逆强奸/谷间强渡")	;既に抜けていたらクリア。引っ张りすぎ？@revkoishi(14/07/15)
+	CALLF _UNEXTRACTION(MASTER, 1, 0)
+
+;调教者に射精处理和不拔出判定。微调整@revkoishi(14/06/07)
+IF NOWEX:MASTER:射精	;调教者に射精
+	IF MC_PLAYER(1) == 4			;小穴内射精
+		CALLF CALC_SOURCE00_EX_R(0)	;调教者に射精处理(Ｖ)
+	ELSEIF MC_PLAYER(1) == 5		;肛门へ射精
+		CALLF CALC_SOURCE00_EX_R(1)	;调教者に射精处理(Ａ)
+	ENDIF
+ELSEIF TEQUIP:TARGET:假阴茎 && (NOWEX:MASTER:Ｃ绝顶 || NOWEX:MASTER:Ｖ绝顶)	;假阴茎性交奉仕で绝顶
+	IF TEQUIP:TARGET:性交奉仕中 && TEQUIP:TARGET:性交奉仕中 != 6	;小穴内绝顶
+		CALLF CALC_SOURCE00_EX_R(0, 1)
+	ELSEIF TEQUIP:TARGET:性交奉仕中 == 6							;肛门で绝顶
+		CALLF CALC_SOURCE00_EX_R(1, 1)
+	ENDIF
+ENDIF
+
+;いきそう（暫定）
+;高潮でなく、阴茎但あれば勃起度但十分高か、阴茎但なければ润滑但十分高和き、快Ｃ但存在すれば
+IF TCVAR:MASTER:高潮 == 0 && ((TCVAR:MASTER:勃起度 >= 1000 && PENIS(MASTER)) || (PALAM:MASTER:润滑 >= 250 && !PENIS(MASTER) && PALAM:MASTER:快Ｃ >= 1000)) && CUP:MASTER:快Ｃ > 0
+	;C感觉但低和より低値でいきそうに、また理性低下でC値にかかわらずいきそうになる。
+	VARSET LOCAL
+	;C刺激 > C感觉 判定
+	LOCAL += (CUP:MASTER:快Ｃ + PALAM:MASTER:快Ｃ) >= MAX(GET_ABL(MASTER, "Ｃ感觉") * 100, 1000)
+	;技能 > 理性 判定
+	LOCAL += GET_ABL(TARGET, "技巧") - GET_ABL(MASTER, "技巧") > RAND:(MAX(BASE:MASTER:理性 / 10, 1))
+	;理性但全くなければ无条件で高潮に
+	LOCAL += BASE:MASTER:理性 == 0
+	;どれか的判定に引っかかれば
+	IF LOCAL
+		TCVAR:MASTER:高潮 += 5
+		PRINTFORMW %CALLNAME:MASTER%好像高潮了…
+	ENDIF
+ENDIF
+
+;快感被忍耐时、忍耐に成功
+IF 忍耐强度 && TCVAR:MASTER:忍耐
+	IF PENIS(MASTER)
+		PRINTFORMW %CALLNAME:MASTER%拼命地忍耐着射精…
+	ELSE
+		PRINTFORMW %CALLNAME:MASTER%拼命地忍耐着绝顶…
+	ENDIF
+ENDIF
+
+;自慰的场合是焦らさない
+IF IS_NOWACTNAME("自慰") && (GETBIT(TEQUIP:自慰中, 0) || (GETBITAND(TEQUIP:自慰中, 0, 1)))
+	TCVAR:MASTER:焦虑度 = 0
+ENDIF
+
+;焦虑中、焦虑に成功
+IF TCVAR:MASTER:焦虑度 > 1 || SUMARRAY(焦虑强度) > 0
+	PRINTFORMW %CALLNAME:MASTER%因为在快要绝顶的状态不上不下而感到焦躁…
+ENDIF
+
+;焦虑
+;高潮で焦虑中でなく射精もなく惩罚中でもない
+IF TCVAR:MASTER:高潮 && !TCVAR:MASTER:焦虑度 && !NOWEX:MASTER:射精 && !TFLAG:惩罚标志
+	VARSET LOCAL
+	;修正値被素質、ABLによって増減
+	LOCAL += 5 + TALENT:虐待狂 + TALENT:坏心眼 - TALENT:好心眼 + (ABL:施虐 >= ABL:爱抚 ? 1 # -1)
+	;修正値但十分高ければ
+	IF RAND:LOCAL >= RAND:5
+		;技巧ABLによって焦虑度设定
+		TCVAR:MASTER:焦虑度 += MIN(ABL:技巧 / 5 + 2, 4)
+	ENDIF
+	;焦虑但开始されれば旁白显示
+	SIF TCVAR:MASTER:焦虑度 > 1
+		{
+		PRINTFORMW %CALLNAME:TARGET%是\@ TALENT:坏心眼 || TALENT:虐待狂 || !ALI(0, TARGET) 
+                   ? 坏心眼な # 恶戯っぽい \@当%CALLNAME:TARGET%浮现笑容时，%CALLNAME:MASTER%开始焦虑…
+		}
+ENDIF
+
+;绝顶强度处理
+;ARG:0 = 快Ｘ种(ＣＶＡＢ)
+;ARG:1 = 本次的到达强度
+;RESULT = 绝顶强度
+@CALC_SOURCE00_EX_P(ARG, ARG:1)
+#FUNCTION
+#DIM LCOUNT
+#DIM 绝顶境界, 3
+;绝顶境界设置
+绝顶境界 = 90
+绝顶境界:1 = 10000
+绝顶境界:2 = 20000
+;LOCAL初期化
+VARSET LOCAL
+;绝顶境界分只ループ做
+FOR LCOUNT, 1, 3
+	;绝顶境界被越え时、绝顶强度但1ずつ上但る
+	SIF ARG:1 < 绝顶境界:LCOUNT
+		BREAK
+	LOCAL++
+NEXT
+;高潮时、Ｃ绝顶但必ず起こる
+SIF (ARG == 0) && TCVAR:MASTER:高潮
+	LOCAL = MAX(LOCAL, 1)
+;绝顶时
+IF LOCAL >= 1
+	;绝顶境界:N、绝顶境界:0的数値に应じてPALAM減少
+	;(下限被突破不做よう调整)
+	CDOWN:MASTER:ARG = MIN(绝顶境界:LOCAL * 绝顶境界 / 100, ARG:1)
+	;绝顶显示用字符串初期化
+	STR:(1030 + ARG) = 
+	;强度但2那么"强"被追加
+	SIF LOCAL == 2
+		STR:(1030 + ARG) += "强"
+	;绝顶种被记入
+	STR:(1030 + ARG) += EXNAME:ARG
+	;强度に应じて魔力取得
+	TFLAG:取得魔力 += 50 * LOCAL
+	;CDOWN:MASTER:快Ｘで下げても绝顶以上那么
+	;そ的値-1になるように调整（10000で绝顶那么9999）
+	;※これ但こ的位置にあるこ和で焦虑、忍耐的価値但
+	;  上升做的で是ないか和思って試験的移动。
+	;  不当に価値但上升してしまった和き是IF文から出すこ和
+	SIF ARG:1 - CDOWN:MASTER:ARG >= 绝顶境界:1
+		CDOWN:MASTER:ARG = ARG:1 - 绝顶境界:1 + 1
+ENDIF
+;绝顶强度被返す
+RETURNF LOCAL
+
+
+;-------------------------------------------------
+;関数名:CALC_SOURCE00_EX_R
+;概　要:调教者に射精处理(＋不拔出判定)
+;引　数:ARG:0…插入部位(0.Ｖ/1.Ａ)
+;　　　 ARG:1…假阴茎的使用有无(0.未使用/1.使用)
+;戻り値:不拔出判定結果被表す真伪値(0か1)。0是抜く、1是不拔出(継续)
+;備　考:式中関数
+;諸变数加算/设置处理和不拔出的判定被行う
+;ちょっ和只改造@revkoishi(14/06/07)
+;-------------------------------------------------
+@CALC_SOURCE00_EX_R(ARG:0, ARG:1)
+#FUNCTION
+CALLF _UNEXTRACTION(MASTER, 1, TFLAG:不拔出 ? TFLAG:不拔出 # 0)	;不拔出迟延判定用保持。既に抜けていたらクリア@revkoishi(14/07/14)
+
+;諸变数加算
+IF !ARG:1	;假阴茎未使用时
+	SELECTCASE ARG:0
+		CASE 0	;Ｖ插入时
+			IF NOWEX:MASTER:射精 != 1	;空不是射精时
+				CFLAG:TARGET:小穴精 += MIN(BASE:MASTER:射精, DOWNBASE:MASTER:射精)
+				STAIN:TARGET:小穴 |= 4
+				TFLAG:上次中出 = 2
+			ELSE						;空射精时
+				TFLAG:上次中出 = 4
+			ENDIF
+		CASE 1	;Ａ插入时
+			IF NOWEX:MASTER:射精 != 1	;空不是射精时
+				STAIN:TARGET:肛门 |= 4
+				TFLAG:上次中出 = 6
+			ELSE						;空射精时
+				TFLAG:上次中出 = 8
+			ENDIF
+	ENDSELECT
+ENDIF
+
+;不拔出欲求修正値生成
+LOCAL:0 = 0
+LOCAL:0 += GET_ABL(TARGET, "欲望") * 3							;调教者欲望
+LOCAL:0 += GET_ABL(TARGET, "技巧")								;调教者技巧
+LOCAL:0 += GET_ABL(TARGET, \@ ARG:0 ? Ａ感觉 # Ｖ感觉 \@) * 2	;调教者Ｖ感觉/Ａ感觉
+LOCAL:0 += GET_ABL(TARGET, "性交") * 2							;调教者性交ABL
+IF NOWEX:MASTER:射精 == 1	;空射精时
+	LOCAL:0 -= 150											;修正値減少
+ELSE						;非空射精时
+	LOCAL:0 += !TFLAG:上次合性交奉仕           ? 150 # 0	;插入受到ばかり那么さらに加算
+	LOCAL:0 += (TFLAG:今日的方针 == 7 && !ARG:0) ? 300 # 0	;今日的方针但做小孩で、Ｖ插入中那么さらに加算
+ENDIF
+LOCAL:0 = (LOCAL:0 * 2) / (TFLAG:不拔出 + 2)	;不拔出回数(0=1, 1=2/3, 2=1/2, 3=2/5, 4=1/3,……)
+LOCAL:0 /= 10	;不拔出修正値によって不拔出挑戦判定
+
+;不拔出挑戦判定
+LOCAL:1 = 0	;挑戦結果
+IF PERCENT(GET_ASYMPTOTE(LOCAL:0, 100, 500))	;挑戦判定但成立した场合
+	;挑戦做场合さらに不拔出技术判定に進む
+	;残り精力但100%那么50%的成功奖励但貰える。0%那么0%
+	;假阴茎使用中那么除算不做。和りあえず0被返しておくけど望ましい和思う形に整えてもらっても構わない@/L
+	LOCAL:0 = !ARG:1 ? BASE:MASTER:射精 * 50 / MAXBASE:MASTER:射精 # 0
+	;奖励的残り分是技巧ABLで補う。
+	;残り精力但100%那么50%分被技巧ABLで補う。0%那么100%
+	LOCAL:0 = GET_ABL(TARGET, "技巧") * (100 - LOCAL:0) / 100 + LOCAL:0
+	;ここでTEQUIP被判定しても過程的情报但わからない＝途中でＶ⇔Ａ插し换え的パ回合但拾えない的で、ここで是扱えません
+	;然后コンビネーションACTで的射精是結局的和ころ调教者に中出しな的で不拔出判定しても差し支えありません
+	;必要な的是抜けた时＝ACT时に即座に标志被折るこ和であり、それ是こ的関数でやる内容で是ない和思われる的で
+	;こ的関数是判定只し增加。それ被良し和不做那么ば、还有是わからない的で但んばって＞＜@revkoishi
+	LOCAL:1 = PERCENT(LOCAL:0)	;判定
+ENDIF
+
+;成功すれば不拔出开始・継续、失敗すれば抜く
+TFLAG:不拔出          = LOCAL:1 ? TFLAG:不拔出 + 1      # 0
+TCVAR:MASTER:焦虑度 = LOCAL:1 ? TCVAR:MASTER:焦虑度 # 0
+RETURNF LOCAL:1	;判定結果被返す。使うかどうか是和もかく
+;TFLAG:不拔出但立たない场合是こ的部位で确实に设置做。立った场合是确实に抜け侍奉@/L
+
+;IS_UNEXTRACTION和_UNEXTRACTION是COMMON_GETTER_TRAIN.ERBに移设

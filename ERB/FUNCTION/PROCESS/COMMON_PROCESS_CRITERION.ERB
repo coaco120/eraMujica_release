@@ -1,0 +1,1280 @@
+﻿;==================================================
+;
+;	基準値関数
+;		基準値的显示や管理、改变にあたる一连的関数
+;
+;		別バリアントでも动く和良かったんだ但@これみ
+;
+;==================================================
+
+;複数的选择肢但存在做和き、
+;变数情报などから基準値的大小被決定して选择被行う场合、
+;これら的関数但使用でき增加。
+
+;[重要] 基本的に是入出力関数的み被呼び出して使ってください
+;       显示関数及び管理関数被直接呼び出す的是推荐しません
+
+;※これ是元あったDEBUG用显示系统被改造して作ったも的です
+
+;-------------------------------------------------------------------------------
+;	定義関数
+;-------------------------------------------------------------------------------
+
+;-------------------------------------------
+;一段組最大字符数(全角)[0-]
+;一行的字符数但ここに指定さ受到字符数被
+;突破做和二段組へ移行
+;※きわめて大きな数被设定しておけば强制一段組、
+;  逆に0被设定すれば强制二段組和做こ和但でき增加
+;-------------------------------------------
+@DEF_CRI_WID
+#FUNCTION
+RETURNF 58
+
+;-------------------------------------------
+;修正项目名显示領域幅(全角)[8-]
+;修正项目名但;ここに指定さ受到字符数被突破做和切り捨て
+;-------------------------------------------
+@DEF_CRI_WID_ITEM
+#FUNCTION
+RETURNF 10
+
+;-------------------------------------------
+;优先度計算
+;判定要素毎的优先度被決定做
+;-------------------------------------------
+@DEF_CRI_ELE_PRI(ARGS)
+SELECTCASE ARGS
+	CASE "基準値"
+		CALL PRI_CRI_VAR(, 1)
+	CASE "ACT修正値"
+		CALL PRI_CRI_VAR( 10)
+	CASEELSE
+		CALL PRI_CRI_VAR(, 2)
+ENDSELECT
+
+;-------------------------------------------------------------------------------
+;	入出力関数群
+;-------------------------------------------------------------------------------
+
+;外部から是以下的入出力関数被呼び出して使用してください
+
+;-------------------------------------------
+;数値定義
+;ARGS但方针名
+;ARG但固定値
+;数値加算に变换して扱う
+;-------------------------------------------
+@DIM_CRI_VAR, ARGS, ARG
+ARG = ARG - VARIABLE_OF_CRI("GET", ARGS + "累计")
+CALLF VARIABLE_OF_CRI("ADD", ARGS, ARG)
+
+;-------------------------------------------
+;数値加算
+;ARGS但方针名
+;ARG但固定値
+;ARG:1但变动値(0～ARG:1)
+;-------------------------------------------
+@ADD_CRI_VAR, ARGS, ARG, ARG:1
+CALLF VARIABLE_OF_CRI("ADD", ARGS, ARG, ARG:1)
+
+;-------------------------------------------
+;数値減算
+;混乱被招く的で用意不做
+;加算関数に负的値被代入做こ和
+;-------------------------------------------
+
+;-------------------------------------------
+;数値乗算(×引数%)
+;ARGS但方针名
+;ARG但固定値
+;ARG:1但变动値(0～ARG:1)
+;-------------------------------------------
+@MUL_CRI_VAR, ARGS, ARG = 100, ARG:1 = 100
+CALLF VARIABLE_OF_CRI("MUL", ARGS, ARG, ARG:1)
+
+;-------------------------------------------
+;数値除算
+;混乱被招く的で用意不做
+;乗算関数に100未满的値被代入做こ和
+;-------------------------------------------
+
+;-------------------------------------------
+;优先度变更
+;ARG被1/100にした量被指定
+;ARG:1=0 ARG被採用
+;      1 优先度基準値被使用(ARG被无視し、100に变更)
+;      2 优先度处理被不做(ARG被无視し、100に变更)
+;-------------------------------------------
+@PRI_CRI_VAR, ARG = 100, ARG:1 = 0
+CALLF VARIABLE_OF_CRI("PRI", , ARG, ARG:1)
+
+;-------------------------------------------
+;数値演算
+;ARGS但方针名
+;ARGS:1但演算指定
+;
+;まだよ
+;-------------------------------------------
+;@ARI_CRI_VAR, ARGS, ARGS:1
+
+;--------------------------------------------
+;関数初期化/基準値种,略称指定
+;ARGSに基準値种,略称被/区切りで指定做
+;例：种  『帝酱/うどんげ/えーりん/ひめ大人』
+;    略称『帝      /どん    /えり    /ぐや    』
+;※种和略称是頭から顺番に相关付けられ增加。
+;  完全な空白被种や略称に指定做こ和是できません。BUGり增加
+;  基準値种名に重複是許されません。BUGり增加
+;  略称是別になくても动き增加。量に多少但あっても动き增加。
+;ARG  =伪 関数初期化  (基準値处理开始、ARGS,ARG:1指定可)
+;     =真 基準値种追加(既にある基準値种,略称にARGS被追加)
+;ARG:1=伪 ARGS是基準値种
+;     =真 ARGS是基準値略称
+;※基準値种的追加但终了做直到
+;  他的入出力関数被呼び出さないでください
+;--------------------------------------------
+@SET_CRI_VAR, ARGS, ARG = 0, ARG:1 = 0
+;ARG=0で显示関数も初期化
+SIF ARG == 0
+	CALL SHOW_CRI_VAR, "@初期化"
+;管理関数に渡す
+CALLF VARIABLE_OF_CRI("SET", ARGS, ARG, ARG:1)
+
+;--------------------------------------------
+;数値初期化
+;ARG=伪 小計的み设置
+;    真 累计も含めて设置
+;--------------------------------------------
+@RES_CRI_VAR, ARG
+;管理関数に渡す
+CALLF VARIABLE_OF_CRI("RES", , ARG)
+
+;--------------------------------------------
+;项目变更/优先度計算
+;ARGSに新たな项目被指定做
+;ARG(BIT0)=小計等被设置しません
+;   (BIT1)=优先度計算被行いません
+;--------------------------------------------
+@CHA_CRI_VAR, ARGS, ARG = 0
+;项目但指定されていれば项目变更
+IF ARGS != ""
+	;管理関数に渡す
+	CALLF VARIABLE_OF_CRI("CHA", ARGS)
+	;上次项目被受け取る
+	LOCALS = %RESULTS%
+	;上次项目但なければ开始处理
+	SIF LOCALS == ""
+		LOCALS = @开始
+	;显示関数呼び出し
+	CALL SHOW_CRI_VAR, LOCALS
+ENDIF
+;小計等设置
+SIF (ARG & 1) == 0
+	CALLF VARIABLE_OF_CRI("RES")
+;优先度計算
+SIF (ARG & 2) == 0
+	CALL DEF_CRI_ELE_PRI(ARGS)
+
+;--------------------------------------------
+;选择确定
+;ARGS=确定方法
+;--------------------------------------------
+@DEF_CRI_VAR, ARGS
+;上次项目被受け取る
+CALLF VARIABLE_OF_CRI("GET", "项目")
+;显示関数呼び出し
+CALL SHOW_CRI_VAR, RESULTS
+;选择确定
+CALLF VARIABLE_OF_CRI("DEF", ARGS)
+;显示関数呼び出し(终了处理)
+CALL SHOW_CRI_VAR, "@终了"
+
+;--------------------------------------------
+;基準値修正量解析
+;--------------------------------------------
+@ANA_CRI_VAR
+;管理関数に渡す
+CALL SHOW_CRI_VAR, "@解析"
+
+;--------------------------------------------
+;数値取得
+;ARGSに取得し想要变数名被入れて使う
+;--------------------------------------------
+@GET_CRI_VAR, ARGS
+#FUNCTION
+;管理関数に渡す
+RETURNF VARIABLE_OF_CRI("GET", ARGS)
+
+;-------------------------------------------------------------------------------
+;	显示関数群
+;-------------------------------------------------------------------------------
+
+;-------------------------------------
+;显示関数
+;小関数被抜けた后、そ的関数的内容但どうだったか被显示做
+;ARGS是显示做和き的标题名
+;-------------------------------------
+@SHOW_CRI_VAR, ARGS
+#LOCALSIZE 4
+#LOCALSSIZE 6
+;暂时字符串变数
+#DIMS LTEMPS, 6
+;カウント变数
+#DIM LCOUNT, 1
+;表番号变数
+#DIM LTABLE, 1
+;基準値种番号变数
+#DIM LCRI, 1
+;基準値种段組振り分け指定
+#DIM LLINE, 2
+;修正项目名显示領域
+#DIM LWITEM, 1
+;進行状況監視
+#DIM LCHECK, 1
+;小計・总計暂时保存
+#DIM LSTOT, 30
+#DIM LTOT, 30
+;DEBUG时かつ显示指定时的み显示
+SIF !FLAG:DEBUG || FLAG:DEBUG显示关
+	RETURN RESULT
+;初期化处理
+IF ARGS == "@初期化"
+	VARSET LLINE
+	VARSET LWITEM
+	VARSET LCHECK
+;显示开始处理
+ELSEIF ARGS == "@开始"
+	;显示开始されていれば强制终了
+	SIF LCHECK & 1
+		RETURN RESULT
+	;显示开始被确认
+	LCHECK |= 1
+	;基准值种类数取得
+	LOCAL = VARIABLE_OF_CRI("GET", "基准值种类数")
+	;一段組最大字符数被元に段組振り分け被決定
+	IF (DEF_CRI_WID() * 2) >= (24 + (LOCAL * 10))
+		LLINE = LOCAL
+	ELSE
+		LLINE:1 = LOCAL / 2
+		LLINE = LOCAL - LLINE:1
+	ENDIF
+	;修正项目名显示領域被确认
+	LWITEM = DEF_CRI_WID_ITEM() * 2
+	;補助関数群に必要な引数被渡す
+	CALL SHOW_CRI_VAR_SEP(-1, LWITEM, LLINE, LLINE:1)
+	CALL SHOW_CRI_VAR_TIT(, LWITEM)
+;显示终了处理
+ELSEIF ARGS == "@终了"
+	;ヘッダ显示但されていなければ强制终了
+	SIF !(LCHECK & 2)
+		RETURN RESULT
+	;フッタ显示被确认
+	LCHECK |= 4
+	;ヘッダ、解析显示被可能に
+	LCHECK &= ~10
+	;-------------------------------------
+	;フッタ生成
+	;-------------------------------------
+	;累计取得
+	CALLF VARIABLE_OF_CRI("GET", "累计")
+	FOR LCRI, 0, LLINE + LLINE:1
+		LTOT:LCRI = RESULT:LCRI
+	NEXT
+	;开始色保存
+	LOCAL = GETCOLOR()
+	;决定类别0被确认
+	LOCAL:1 = GET_CRI_VAR("決定")
+	;确认决定类别数カウント
+	LOCAL:2 = 0
+	;表的数只ループ
+	FOR LTABLE, 0, 1 + (LLINE:1 > 0)
+		;字符串保管関数的指定位置变更
+		CALL STRBANK_CRI(, LTABLE)
+		;区切り生成
+		CALL SHOW_CRI_VAR_SEP, 1, LTABLE
+		;项目名显示
+		CALL SHOW_CRI_VAR_TIT, "总计値"
+		;基準値种別处理
+		FOR LCRI, SUMARRAY(LLINE, 0, LTABLE), SUMARRAY(LLINE, 0, LTABLE + 1)
+			;区切り生成
+			CALL STRBANK_CRI("│")
+			;决定类别であれば
+			IF LCRI == LOCAL:1
+				;色被变更し、次的决定类别被确认
+				CALL STRBANK_CRI(@"{LTOT:LCRI, 8}", , 0, 2, 0x66FFFF)
+				LOCAL:2++
+				LOCAL:1 = GET_CRI_VAR("決定" + @"{LOCAL:2}")
+			ELSE
+				;そうでなければ色是开始色
+				CALL STRBANK_CRI(@"{LTOT:LCRI, 8}")
+			ENDIF
+		NEXT
+		;表被閉じる
+		CALL STRBANK_CRI("│", , 1)
+		CALL SHOW_CRI_VAR_SEP, 2, LTABLE
+		;显示し、文本保管関数被空に做
+		CALL STRBANK_CRI(, , 3)
+	NEXT
+;解析处理
+ELSEIF ARGS == "@解析"
+	;フッタ显示但されていないか、解析显示但されていれば强制终了
+	SIF !(LCHECK & 4) || LCHECK & 8
+		RETURN RESULT
+	;解析显示被确认
+	LCHECK |= 8
+	;-------------------------------------
+	;解析表生成
+	;-------------------------------------
+	;开始色保存
+	LOCAL = GETCOLOR()
+	;略称取得
+	CALLF VARIABLE_OF_CRI("GET", "基準値种略称")
+	;表的数只ループ
+	FOR LTABLE, 0, 1 + (LLINE:1 > 0)
+		;字符串保管関数的指定位置变更
+		CALL STRBANK_CRI(, LTABLE)
+		;表被开く
+		CALL SHOW_CRI_VAR_SEP, 0, LTABLE
+		;项目名显示
+		CALL SHOW_CRI_VAR_TIT, "名称"
+		;基準値种名显示
+		LOCALS = 
+		FOR LCRI, SUMARRAY(LLINE, 0, LTABLE), SUMARRAY(LLINE, 0, LTABLE + 1)
+			LOCALS += @"│%SUBSTRING(RESULTS:LCRI, 0, 7), 8, LEFT%"
+		NEXT
+		CALL STRBANK_CRI(@"%LOCALS%│", , 1)
+		;区切り生成
+		CALL SHOW_CRI_VAR_SEP, 1, LTABLE
+	NEXT
+	;取得引数字符串
+	SPLIT "固定累计/变动累计/变动负累计/固定乗算累计/变动乗算累计/变动负乗算累计", "/", LOCALS
+	;项目名
+	SPLIT "总计固定値(加算)/总计变动値(加算・正)/总计变动値(加算・负)/总计固定値(乗算)/总计变动値(乗算・正)/总计变动値(乗算・负)", "/", LTEMPS
+	FOR LCOUNT, 0, 6
+		;加算値处理前是0に初期化
+		IF LCOUNT == 0
+			VARSET RESULT
+		;乗算値处理前是100(%)に初期化
+		ELSEIF LCOUNT == 3
+			VARSET RESULT, 100
+		ENDIF
+		;固定累计(加算)取得
+		CALLF VARIABLE_OF_CRI("GET", LOCALS:LCOUNT)
+		;全部0(加算系)、全部100(乗算系)でなければ
+		LOCAL:2 = LCOUNT < 3 ? 0 # 100
+		IF MAXARRAY(RESULT) > LOCAL:2 || MINARRAY(RESULT) < LOCAL:2
+			;暂时变数に内容被确保
+			FOR LCRI, 0, LLINE + LLINE:1
+				LSTOT:LCRI = RESULT:LCRI
+				;固定累计(加算)的场合总計に是100倍被加算
+				IF LCOUNT < 1
+					LTOT:LCRI = RESULT:LCRI * 100
+				;※これ以降、绝对値99被越えたら上限突破和见なす
+				;变动累计(加算)的场合总計に是50倍被加算
+				ELSEIF LCOUNT < 3
+					SIF ABS(LTOT:LCRI) < 9900
+						LTOT:LCRI += RESULT:LCRI * 50
+				;※上限突破时も*0只是无視不做
+				;固定累计(乗算)的场合总計に是そ的まま乗算处理
+				ELSEIF LCOUNT < 4
+					SIF (ABS(LTOT:LCRI) < 9900) || (RESULT:LCRI == 0)
+						LTOT:LCRI = LTOT:LCRI * RESULT:LCRI / 100
+				;变动累计(乗算)的场合总計に是1/2被乗算处理
+				ELSE
+					SIF (ABS(LTOT:LCRI) < 9900) || (RESULT:LCRI == 0)
+						LTOT:LCRI = LTOT:LCRI * RESULT:LCRI / 200
+				ENDIF
+			NEXT
+			;表的数只ループ
+			FOR LTABLE, 0, 1 + (LLINE:1 > 0)
+				;字符串保管関数的指定位置变更
+				CALL STRBANK_CRI(, LTABLE)
+				;项目名显示
+				CALL SHOW_CRI_VAR_TIT, LTEMPS:LCOUNT
+				;基準値种別处理
+				FOR LCRI, SUMARRAY(LLINE, 0, LTABLE), SUMARRAY(LLINE, 0, LTABLE + 1)
+					;区切り生成
+					CALL STRBANK_CRI("│")
+					;加算系显示
+					IF LCOUNT < 3
+						;突破极限时に色被变える(正：青、负：赤)
+						IF LSTOT:LCRI == -9900
+							LOCAL:1 = 0xC07070
+						ELSEIF LSTOT:LCRI == 9900
+							LOCAL:1 = 0x66FFFF
+						ELSE
+							LOCAL:1 = LOCAL
+						ENDIF
+						;数値显示
+						CALL STRBANK_CRI(@"{LSTOT:LCRI, 5}   ", , 0, 2, LOCAL:1)
+					;乗算系显示
+					ELSE
+						;数値显示
+						CALL STRBANK_CRI(@"{LSTOT:LCRI, 5}\%  ", , 0, 2, LOCAL:1)
+					ENDIF
+				NEXT
+				;区切り生成
+				CALL STRBANK_CRI("│", , 1)
+			NEXT
+		ENDIF
+	NEXT
+	;RESULT初期化
+	VARSET RESULT
+	;表的数只ループ
+	FOR LTABLE, 0, 1 + (LLINE:1 > 0)
+		;字符串保管関数的指定位置变更
+		CALL STRBANK_CRI(, LTABLE)
+		;项目名显示
+		CALL SHOW_CRI_VAR_TIT, "总计期待値"
+		;基準値种別处理
+		FOR LCRI, SUMARRAY(LLINE, 0, LTABLE), SUMARRAY(LLINE, 0, LTABLE + 1)
+			;区切り生成
+			CALL STRBANK_CRI("│")
+			;绝对値99以上被+-99.99(上限突破)和して扱う
+			SIF ABS(LTOT:LCRI) >= 9900
+				LTOT:LCRI = SIGN(LTOT:LCRI) * 9999
+			;値被取得
+			LOCALS = {LTOT:LCRI}
+			;长さ被計る
+			STRLENS LOCALS
+			;长さに合わ命令整形
+			LOCALS = %"0" * LIMIT(3 - RESULT, 0, 3)%%LOCALS%
+			;长さ被計り直す
+			STRLENS LOCALS
+			;上限突破时色被变える
+			IF LTOT:LCRI == -9999
+				LOCAL:1 = 0xC07070
+			ELSEIF LTOT:LCRI == 9999
+				LOCAL:1 = 0x66FFFF
+			ELSE
+				LOCAL:1 = LOCAL
+			ENDIF
+			;数値显示
+			CALL STRBANK_CRI(@"%SUBSTRING(LOCALS, 0, RESULT-2),5%.%SUBSTRING(LOCALS, RESULT-2)%", , 0, 2, LOCAL:1)
+		NEXT
+		;表被閉じる
+		CALL STRBANK_CRI("│", , 1)
+		CALL SHOW_CRI_VAR_SEP, 2, LTABLE
+		;显示し、文本保管関数被空に做
+		CALL STRBANK_CRI(, , 3)
+	NEXT
+;项目显示处理
+ELSE
+	;显示开始但されていなければ强制终了
+	SIF !(LCHECK & 1)
+		RETURN RESULT
+	;全部的小計但0的项目是显示不做
+	SIF !VARIABLE_OF_CRI("GET", "小变动有无")
+		RETURN RESULT
+	;初回是ヘッダ生成
+	IF !(LCHECK & 2)
+		;略称取得
+		CALLF VARIABLE_OF_CRI("GET", "基準値种略称")
+		;表的数只ループ
+		FOR LTABLE, 0, 1 + (LLINE:1 > 0)
+			;字符串保管関数的指定位置变更
+			CALL STRBANK_CRI(, LTABLE)
+			;表被开く
+			CALL SHOW_CRI_VAR_SEP, 0, LTABLE
+			;项目名显示
+			CALL SHOW_CRI_VAR_TIT, "名称"
+			;基準値种名显示
+			LOCALS = 
+			FOR LCRI, SUMARRAY(LLINE, 0, LTABLE), SUMARRAY(LLINE, 0, LTABLE + 1)
+				LOCALS += @"│%SUBSTRING(RESULTS:LCRI, 0, 7), 8, LEFT%"
+			NEXT
+			CALL STRBANK_CRI(@"%LOCALS%│", , 1)
+			;区切り生成
+			CALL SHOW_CRI_VAR_SEP, 1, LTABLE
+		NEXT
+		;ヘッダ显示被确认
+		LCHECK |= 2
+		;フッタ显示被可能に
+		LCHECK &= ~4
+	ENDIF
+	;项目显示开始
+	LOCAL = GETCOLOR()
+	;小計及び累计被取得
+	CALLF VARIABLE_OF_CRI("GET", "小計")
+	FOR LCRI, 0, LLINE + LLINE:1
+		LSTOT:LCRI = RESULT:LCRI
+	NEXT
+	CALLF VARIABLE_OF_CRI("GET", "累计")
+	FOR LCRI, 0, LLINE + LLINE:1
+		LTOT:LCRI = RESULT:LCRI
+	NEXT
+	;加算的有无被确认
+	LOCAL:3 = VARIABLE_OF_CRI("GET", "加算有无")
+	;表的数只ループ
+	FOR LTABLE, 0, 1 + (LLINE:1 > 0)
+		;字符串保管関数的指定位置变更
+		CALL STRBANK_CRI(, LTABLE)
+		;区切り生成
+		CALL STRBANK_CRI("│")
+		;优先度状況により色分け
+		SELECTCASE VARIABLE_OF_CRI("GET", "优先度採用")
+			CASE 0
+				LOCAL:1 = LOCAL
+			CASE 1
+				LOCAL:1 = 0x7070C0
+			CASE 2
+				LOCAL:1 = 0x70C070
+		ENDSELECT
+		;项目名显示
+		CALL STRBANK_CRI(@"%SUBSTRING(ARGS, 0, LWITEM), LWITEM, LEFT%", , 0, 2, LOCAL:1)
+		;基準値种別显示
+		FOR LCRI, SUMARRAY(LLINE, 0, LTABLE), SUMARRAY(LLINE, 0, LTABLE + 1)
+			;区切り生成
+			CALL STRBANK_CRI("│")
+			;加算但ある场合、加算式で显示
+			IF LOCAL:3
+				;正负により色分け
+				IF LSTOT:LCRI < 0
+					LOCAL:1 = 0xC07070
+				ELSEIF LSTOT:LCRI > 0
+					LOCAL:1 = 0x66FFFF
+				ELSE
+					LOCAL:1 = LOCAL
+				ENDIF
+				;数値显示
+				CALL STRBANK_CRI(@"\@ LSTOT:LCRI >= 0 ? + # - \@{ABS(LSTOT:LCRI), 2}({LTOT:LCRI, 3})", , 0, 2, LOCAL:1)
+			;加算但ない场合、乗算式で显示
+			ELSE
+				;増加、減少により色分け
+				IF LSTOT:LCRI < 0
+					LOCAL:1 = 0xC07070
+				ELSEIF LSTOT:LCRI > 0
+					LOCAL:1 = 0x66FFFF
+				ELSE
+					LOCAL:1 = LOCAL
+				ENDIF
+				IF LTOT:LCRI == 0
+					CALL STRBANK_CRI(@"* 0({LTOT:LCRI, 3})", , 0, 2, LOCAL)
+					CONTINUE
+				ELSEIF (LTOT:LCRI - LSTOT:LCRI) == 0
+					CALL STRBANK_CRI(@"   ERROR", , 0, 2, LOCAL)
+					CONTINUE
+				ENDIF
+				;数値生成
+				IF ABS(LTOT:LCRI) < ABS(LTOT:LCRI - LSTOT:LCRI) && ABS(LTOT:LCRI) != 0
+					LOCAL:2 = (LTOT:LCRI - LSTOT:LCRI) * 100 / LTOT:LCRI
+					LTEMPS = /
+				ELSE
+					LOCAL:2 = LTOT:LCRI * 100 / (LTOT:LCRI - LSTOT:LCRI)
+					LTEMPS = *
+				ENDIF
+				IF LOCAL:2 < 0
+					LOCAL:2 = MIN(ABS(LOCAL:2), 900)
+					LTEMPS = %LTEMPS%-{LOCAL:2 / 100}
+				ELSE
+					LOCAL:2 = MIN(LOCAL:2, 9900)
+					IF LOCAL:2 < 1000
+						LTEMPS = %LTEMPS% {LOCAL:2 / 100}
+					ELSE
+						LTEMPS = %LTEMPS%{LOCAL:2 / 100}
+					ENDIF
+				ENDIF
+				;数値显示
+				CALL STRBANK_CRI(@"%LTEMPS%({LTOT:LCRI, 3})", , 0, 2, LOCAL:1)
+			ENDIF
+		NEXT
+		;区切り生成
+		CALL STRBANK_CRI(@"│", , 1)
+	NEXT
+ENDIF
+RETURN RESULT
+
+;-------------------------------------------------
+;显示補助関数群
+;-------------------------------------------------
+;区切り生成
+;ARG   -1 = 関数初期化, 0 = 开始, 1 = 中间, 2 = 终端
+;ARG:1 LTABLE
+;初期化时的み ARG:1 = LWITEM, ARG:2 = LLINE, ARG:3 = LLINE:1
+@SHOW_CRI_VAR_SEP(ARG, ARG:1, ARG:2, ARG:3)
+;区切り
+IF ARG > -1
+	;开始区切り
+	IF ARG == 0
+		LOCALS:0 = ┌
+		LOCALS:1 = ┬
+		LOCALS:2 = ┐
+	;中间区切り
+	ELSEIF ARG == 1
+		LOCALS:0 = ├
+		LOCALS:1 = ┼
+		LOCALS:2 = ┤
+	;终端区切り
+	ELSEIF ARG == 2
+		LOCALS:0 = └
+		LOCALS:1 = ┴
+		LOCALS:2 = ┘
+	ENDIF
+	CALL STRBANK_CRI(@"%LOCALS%%"─"*(LOCAL/2)%%(LOCALS:1+"─"*4)*LOCAL:(1+ARG:1)%%LOCALS:2%", , 1)
+;関数初期化
+ELSE
+	LOCAL:0 = ARG:1
+	LOCAL:1 = ARG:2
+	LOCAL:2 = ARG:3
+ENDIF
+
+;项目名生成
+;ARGS 项目名
+;初期化时的み ARG = LWITEM ※ARG被指定做和初期化和见なされ增加
+@SHOW_CRI_VAR_TIT(ARGS, ARG = -1)
+IF ARG != -1
+	LOCAL = ARG
+	RETURN RESULT
+ENDIF
+CALL STRBANK_CRI(@"│%ARGS, LOCAL, LEFT%")
+
+;-------------------------------------------------
+;显示文本保管関数_基準値関数用改变版@STRBANK_CRI
+;※ぱにめーしょん的被改变
+;	字符串引数：保存做文面（空字符串可）
+;	引数0：保管位置情报。0か1被选择。空か-1被渡した场合是上次的物被継续
+;	引数1：改行情报。0で改行无、1で改行、2でクリック待ち、3で文本放出して廃棄、4で放出、5で廃棄（3以上的时候字符串引数是无视）
+;	引数2：字符色情报。0で指定无、1で暂时デフォカラー、2で暂时カラー指定、3でカラー指定し一面、そ的カラー被維持做（显示但终わっても戻らない）
+;	引数3：字符色指定。引数2但2か3だった场合に参照される。式中関数@RGBCOLORに对应
+;
+;繰り返し呼ぶこ和で字符串被LOCALSに蓄えていき、引数で指定した和きにすべて显示し增加。
+;显示方法是代入做和きに指定可能。
+;保存做范围被二つ用意している的で
+;
+;@これみ
+;一行内で的カラー变更に对应。それに伴い『1000行』から『1000回的呼び出し』直到引き受けに劣化
+;フォント指定是今的和ころ不要かな
+;あく直到基準値関数用な的でSTRBANKLなど的相关関数是无視
+;其他微妙に变更。变更前的ほう但速いかもしれん但困ってから考える
+;-------------------------------------------------
+@STRBANK_CRI(ARGS = "", ARG = -1, ARG:1 = 0, ARG:2 = 0, ARG:3 = 0)
+#LOCALSIZE 2000
+#LOCALSSIZE 2000
+#DIM COLORDATA, 2000
+#DIM COLORNUM, 2000
+#DIM SET_LOCALS, 1
+#DIM PLACE, 1
+#DIM SCOPE, 1
+#DIM LCOUNT, 2
+;初期设定
+IF !SET_LOCALS
+	;变数初期化
+	VARSET LOCALS, "VOID"
+	VARSET LOCAL, 0
+	;保管位置被初期化
+	PLACE = 0
+	;保管范围被初期化
+	SCOPE = 1000
+	;初期化完了被确认
+	SET_LOCALS = 1
+ENDIF
+;ARG但0以上那么保管位置被变更
+IF ARG > -1
+	PLACE = SCOPE * ARG
+ENDIF
+;預金
+IF ARG:1 < 3
+	;まだ空的变数被探す
+	LCOUNT = FINDELEMENT(LOCALS, "VOID", PLACE, PLACE + SCOPE - 1, 1)
+	;字符串や指定被代入
+	LOCALS:LCOUNT = %ARGS%
+	LOCAL:LCOUNT = ARG:1
+	COLORDATA:LCOUNT = ARG:2
+	COLORNUM:LCOUNT = ARG:3
+;引き出し
+ELSE
+	;廃棄被指定されている场合显示被行わない
+	IF ARG:1 < 5
+		;显示完了直到再描画不做
+		REDRAW 0
+		;顺に显示处理被行う
+		FOR LCOUNT, PLACE, PLACE + SCOPE
+			;空的变数に当たったら终了
+			SIF LOCALS:LCOUNT == "VOID"
+				BREAK
+			;色指定に从って显示
+			SELECTCASE COLORDATA:LCOUNT
+				;指定无
+				CASE 0
+					PRINTS LOCALS:LCOUNT
+				;暂时デフォカラー
+				CASE 1
+					PRINTSD LOCALS:LCOUNT
+				;暂时カラー指定(色被暂时的に变更し、元に戻す)
+				CASE 2
+					LCOUNT:1 = GETCOLOR()
+					SETCOLOR COLORNUM:LCOUNT
+					PRINTS LOCALS:LCOUNT
+					SETCOLOR LCOUNT:1
+				;カラー指定し一面、そ的カラー被維持做
+				CASE 3
+					SETCOLOR COLORNUM:LCOUNT
+					PRINTS LOCALS:LCOUNT
+			ENDSELECT
+			;改行指定に从って改行
+			SELECTCASE LOCAL:LCOUNT
+				;改行
+				CASE 1
+					PRINTL 
+				;クリック待ち
+				CASE 2
+					PRINTW 
+			ENDSELECT
+		NEXT
+		;再描画、描画设定被戻す
+		REDRAW 3
+	ENDIF
+	;放出的み指定でなければ廃棄
+	IF ARG:1 != 4
+		VARSET LOCALS, "VOID", PLACE, PLACE + SCOPE
+		VARSET LOCAL, 0, PLACE, PLACE + SCOPE
+	ENDIF
+ENDIF
+RETURN RESULT
+
+;-------------------------------------------------------------------------------
+;	管理関数本体
+;-------------------------------------------------------------------------------
+
+;-------------------------------------------
+;管理関数本体
+;直接呼び出す的是基本的に无
+;入出力・显示関数群から的み呼び出す
+;-------------------------------------------
+@VARIABLE_OF_CRI, ARGS, ARGS:1, ARG, ARG:1
+#FUNCTION
+;LOCAL,LOCALS是最低限被确保
+#LOCALSIZE 2
+#LOCALSSIZE 30
+;カウント变数
+#DIM LCOUNT, 1
+;基準値名称
+#DIMS LNAME, 30
+;基準値略称
+#DIMS LDNAME, 30
+;项目名
+#DIMS LTIT, 1
+;基準値数
+#DIM LNUM, 2
+;选择済スイッチ
+#DIM LMARK, 30
+;优先度
+#DIM LPRI, 2
+;数値管理变数群
+;STOT =小計
+;TOT  =总計
+;FLAG =项目別处理済スイッチ
+;FLAGG=项目横断处理済スイッチ
+;+A   =加算
+;+M   =乗算
+;+C   =变动値
+;+N   =负
+#DIM LSTOT, 30
+#DIM LTOT, 30
+#DIM LASTOT, 30
+#DIM LATOT, 30
+#DIM LACSTOT, 30
+#DIM LACTOT, 30
+#DIM LACNSTOT, 30
+#DIM LACNTOT, 30
+#DIM LMSTOT, 30
+#DIM LMTOT, 30
+#DIM LMCSTOT, 30
+#DIM LMCTOT, 30
+#DIM LMCNSTOT, 30
+#DIM LMCNTOT, 30
+;LOCAL,LOCALS是常に初期化
+VARSET LOCAL
+VARSET LOCALS
+;ARGSによって处理被分类
+SELECTCASE ARGS
+	;数値加算
+	CASE "ADD"
+		;指定基準値种被探す
+		LOCAL = FINDELEMENT(LNAME, ARGS:1, , , 1)
+		;基準値种但存在しなければ处理被中断
+		SIF LOCAL == -1
+			RETURNF -1
+		;优先度に从って数値修正
+		ARG = ARG * LPRI / 100
+		ARG:1 = ARG:1 * LPRI / 100
+		;固定値但あれば
+		IF ARG
+			;固定値被加算
+			LTOT  :LOCAL += ARG
+			LSTOT :LOCAL += ARG
+			LATOT :LOCAL += ARG
+			LASTOT:LOCAL += ARG
+		ENDIF
+		;变动値但あれば
+		IF ARG:1
+			;本次的加算量被計算
+			LOCAL:1 = ARG:1 > 0 ? RAND:(ARG:1 + 1) # -RAND:(-ARG:1 + 1)
+			;变动値被加算
+			LTOT :LOCAL += LOCAL:1
+			LSTOT:LOCAL += LOCAL:1
+			;正负によって振り分け、变动値最大量被解析用に保存
+			IF ARG:1 > 0
+				LACTOT  :LOCAL += ABS(ARG:1)
+				LACSTOT :LOCAL += ABS(ARG:1)
+			ELSE
+				LACNTOT :LOCAL -= ABS(ARG:1)
+				LACNSTOT:LOCAL -= ABS(ARG:1)
+			ENDIF
+		ENDIF
+	;数値乗算
+	CASE "MUL"
+		;指定基準値种被探す
+		LOCAL = FINDELEMENT(LNAME, ARGS:1, , , 1)
+		;基準値种但存在しなければ处理被中断
+		SIF LOCAL == -1
+			RETURNF -1
+		;优先度に从って数値修正
+		IF ABS(ARG) > 100
+			;绝对値但1倍超過那么高优先度で倍率上升
+			ARG = ARG * LPRI / 100
+			ARG:1 = ARG:1 * LPRI / 100
+		ELSEIF ABS(ARG) < 100
+			;绝对値但1倍未满那么高优先度で倍率下降
+			ARG = ARG * 100 / LPRI
+			ARG:1 = ARG:1 * 100 / LPRI
+		ENDIF
+		;固定値但あれば
+		IF ARG != 100
+			;固定値被乗算
+			LSTOT :LOCAL -= LTOT  :LOCAL
+			LTOT  :LOCAL  = LTOT  :LOCAL * ARG / 100
+			LSTOT :LOCAL += LTOT  :LOCAL
+			LMTOT :LOCAL  = LMTOT :LOCAL * ARG / 100
+			LMSTOT:LOCAL  = LMSTOT:LOCAL * ARG / 100
+		ENDIF
+		;变动値但あれば
+		IF ARG:1 != 100
+			;本次的乗算量被計算
+			LOCAL:1 = ARG:1 > 0 ? RAND:(ARG:1 + 1) # -RAND:(-ARG:1 + 1)
+			;变动値被乗算
+			LSTOT :LOCAL -= LTOT:LOCAL
+			LTOT  :LOCAL  = LTOT:LOCAL * LOCAL:1 / 100
+			LSTOT :LOCAL += LTOT:LOCAL
+			;正负によって振り分け、变动値最大量被解析用に保存
+			IF ARG:1 > 0
+				LMCTOT  :LOCAL = LMCTOT :LOCAL * ARG:1 / 100
+				LMCSTOT :LOCAL = LMCSTOT:LOCAL * ARG:1 / 100
+			ELSE
+				LMCNTOT :LOCAL = LMCTOT :LOCAL * ARG:1 / 100
+				LMCNSTOT:LOCAL = LMCSTOT:LOCAL * ARG:1 / 100
+			ENDIF
+		ENDIF
+	;优先度变更
+	CASE "PRI"
+		LPRI:1 = 0
+		IF ARG:1 == 0
+			LPRI = ARG
+		ELSE
+			LPRI = 100
+		ENDIF
+		LPRI:1 = ARG:1
+	CASE "GET"
+		SELECTCASE ARGS:1
+			CASE "基准值种类数"
+				RETURNF LNUM
+			CASE "基準値种名"
+				FOR LCOUNT, 0, LNUM
+					RESULTS:LCOUNT = LNAME:LCOUNT
+				NEXT
+				RETURNF LNUM
+			CASE "基準値种略称"
+				FOR LCOUNT, 0, LNUM
+					IF LDNAME:LCOUNT != ""
+						RESULTS:LCOUNT = %LDNAME:LCOUNT%
+					ELSE
+						RESULTS:LCOUNT = %LNAME:LCOUNT%
+					ENDIF
+				NEXT
+				RETURNF LNUM
+			CASE "项目"
+				RESULTS = %LTIT%
+			CASE "小变动有无"
+				FOR LCOUNT, 0, LNUM
+					IF LSTOT:LCOUNT != 0
+						LOCAL = 1
+						BREAK
+					ENDIF
+				NEXT
+				RETURNF LOCAL
+			CASE "加算有无"
+				FOR LCOUNT, 0, LNUM
+					IF LASTOT:LCOUNT != 0 || LACSTOT:LCOUNT != 0 || LACNSTOT:LCOUNT != 0
+						LOCAL = 1
+						BREAK
+					ENDIF
+				NEXT
+				RETURNF LOCAL
+			CASE "乗算有无"
+				FOR LCOUNT, 0, LNUM
+					IF LMSTOT:LCOUNT != 100 || LMCSTOT:LCOUNT != 100 || LMCNSTOT:LCOUNT != 100
+						LOCAL = 1
+						BREAK
+					ENDIF
+				NEXT
+				RETURNF LOCAL
+			CASE "小計"
+				FOR LCOUNT, 0, LNUM
+					RESULT:LCOUNT = LIMIT(LSTOT:LCOUNT, -99, 99)
+				NEXT
+				RETURNF LNUM
+			CASE "累计"
+				FOR LCOUNT, 0, LNUM
+					RESULT:LCOUNT = LIMIT(LTOT:LCOUNT, -99, 99)
+				NEXT
+				RETURNF LNUM
+			CASE "固定小計"
+				FOR LCOUNT, 0, LNUM
+					RESULT:LCOUNT = LIMIT(LASTOT:LCOUNT, -99, 99)
+				NEXT
+				RETURNF LNUM
+			CASE "固定累计"
+				FOR LCOUNT, 0, LNUM
+					RESULT:LCOUNT = LIMIT(LATOT:LCOUNT, -99, 99)
+				NEXT
+				RETURNF LNUM
+			CASE "固定乗算小計"
+				FOR LCOUNT, 0, LNUM
+					RESULT:LCOUNT = LIMIT(LMSTOT:LCOUNT, -9900, 9900)
+				NEXT
+				RETURNF LNUM
+			CASE "固定乗算累计"
+				FOR LCOUNT, 0, LNUM
+					RESULT:LCOUNT = LIMIT(LMTOT:LCOUNT, -9900, 9900)
+				NEXT
+				RETURNF LNUM
+			CASE "变动累计"
+				FOR LCOUNT, 0, LNUM
+					RESULT:LCOUNT = LIMIT(LACTOT:LCOUNT, -99, 99)
+				NEXT
+				RETURNF LNUM
+			CASE "变动负累计"
+				FOR LCOUNT, 0, LNUM
+					RESULT:LCOUNT = LIMIT(LACNTOT:LCOUNT, -99, 99)
+				NEXT
+				RETURNF LNUM
+			CASE "变动乗算累计"
+				FOR LCOUNT, 0, LNUM
+					RESULT:LCOUNT = LIMIT(LMCTOT:LCOUNT, -9900, 9900)
+				NEXT
+				RETURNF LNUM
+			CASE "变动负乗算累计"
+				FOR LCOUNT, 0, LNUM
+					RESULT:LCOUNT = LIMIT(LMCNTOT:LCOUNT, -9900, 9900)
+				NEXT
+				RETURNF LNUM
+			CASE "优先度"
+				RETURNF LPRI
+			CASE "优先度採用"
+				RETURNF LPRI:1
+			;基準値相关变数呼び出し
+			;書式：『基準値种名』(固定(乗算|)|变动((负|)乗算|)|)(小計|累计)
+			;-99但下限になっている
+			CASEELSE
+				;例外
+				;名称但『決定』から始まる场合决定类别被返す
+				;また、同时にRESULTSに决定类别名被返す
+				IF STRFINDU(ARGS:1, "決定") != -1
+					ARGS:1 = SUBSTRINGU(ARGS:1, 2)
+					LOCAL = TOINT(ARGS:1)
+					LOCAL:1 = -1
+					FOR LCOUNT, 0, LNUM
+						IF LMARK:LCOUNT
+							LOCAL--
+							IF LOCAL == -1
+								LOCAL:1 = LCOUNT
+								BREAK
+							ENDIF
+						ENDIF
+					NEXT
+					SIF LOCAL:1 != -1
+						RESULTS = %LNAME:(LOCAL:1)%
+					RETURNF LOCAL:1
+				ENDIF
+				;名称ポインタ被末尾へ移动
+				LOCAL:1 = STRLENSU(ARGS:1)
+				;LOCALSに识別子被代入
+				SPLIT "固定/变动/负/乗算/小計/累计", "/", LOCALS
+				;识別子的数ぶん处理
+				FOR LCOUNT, 0, FINDELEMENT(LOCALS, "", , , 1)
+					;识別子被検索し、存在すればBIT被操作して位置被保存
+					STRFINDU ARGS:1, LOCALS:LCOUNT
+					IF RESULT != -1
+						LOCAL |= 1 << LCOUNT
+						LOCAL:1 = MIN(LOCAL:1, RESULT)
+					ENDIF
+				NEXT
+				;识別子被切り取る
+				ARGS:1 = %SUBSTRINGU(ARGS:1, 0, LOCAL:1)%
+				;指定基準値种被検索
+				LOCAL:1 = FINDELEMENT(LNAME, ARGS:1, , , 1)
+				;基準値种但存在しなければ处理被中断
+				SIF LOCAL:1 == -1
+					RETURNF -1
+				;固定
+				IF LOCAL & 1
+					;乗算
+					IF LOCAL & 8
+						;小計
+						IF LOCAL & 16
+							RETURNF LIMIT(LMSTOT:(LOCAL:1), -9900, 9900)
+						;累计
+						ELSE
+							RETURNF LIMIT(LMTOT:(LOCAL:1), -9900, 9900)
+						ENDIF
+					;其他(加算)
+					ELSE
+						;小計
+						IF LOCAL & 16
+							RETURNF LIMIT(LASTOT:(LOCAL:1), -99, 99)
+						;累计
+						ELSE
+							RETURNF LIMIT(LATOT:(LOCAL:1), -99, 99)
+						ENDIF
+					ENDIF
+				;变动
+				ELSEIF LOCAL & 2
+					;负
+					IF LOCAL & 4
+						;乗算
+						IF LOCAL & 8
+							;小計
+							IF LOCAL & 16
+								RETURNF LIMIT(LMCNSTOT:(LOCAL:1), -99, 99)
+							;累计
+							ELSE
+								RETURNF LIMIT(LMCNTOT:(LOCAL:1), -99, 99)
+							ENDIF
+						;其他(加算)
+						ELSE
+							;小計
+							IF LOCAL & 16
+								RETURNF LIMIT(LACNSTOT:(LOCAL:1), -99, 99)
+							;累计
+							ELSE
+								RETURNF LIMIT(LACNTOT:(LOCAL:1), -99, 99)
+							ENDIF
+						ENDIF
+					;正
+					ELSE
+						;乗算
+						IF LOCAL & 8
+							;小計
+							IF LOCAL & 16
+								RETURNF LIMIT(LMCSTOT:(LOCAL:1), -9900, 9900)
+							;累计
+							ELSE
+								RETURNF LIMIT(LMCTOT:(LOCAL:1), -9900, 9900)
+							ENDIF
+						;其他(加算)
+						ELSE
+							;小計
+							IF LOCAL & 16
+								RETURNF LIMIT(LACSTOT:(LOCAL:1), -99, 99)
+							;累计
+							ELSE
+								RETURNF LIMIT(LACTOT:(LOCAL:1), -99, 99)
+							ENDIF
+						ENDIF
+					ENDIF
+				;其他(基準値)
+				ELSE
+					;小計
+					IF LOCAL & 16
+						RETURNF LIMIT(LSTOT:(LOCAL:1), -99, 99)
+					;累计
+					ELSE
+						RETURNF LIMIT(LTOT:(LOCAL:1), -99, 99)
+					ENDIF
+				ENDIF
+		ENDSELECT
+	;数値初期化
+	CASE "RES"
+		IF ARG
+			VARSET LTOT
+			VARSET LATOT
+			VARSET LACTOT
+			VARSET LACNTOT
+			VARSET LMTOT, 100
+			VARSET LMCTOT, 100
+			VARSET LMCNTOT, 100
+		ENDIF
+		VARSET LSTOT
+		VARSET LASTOT
+		VARSET LACSTOT
+		VARSET LACNSTOT
+		VARSET LMSTOT, 100
+		VARSET LMCSTOT, 100
+		VARSET LMCNSTOT, 100
+	;项目变更
+	CASE "CHA"
+		IF ARGS:1 != ""
+			RESULTS = %LTIT%
+			LTIT = %ARGS:1%
+		ENDIF
+	;选择确定
+	CASE "DEF"
+		;确定初期化
+		VARSET LMARK
+		;	以下主基準
+		;決定处理被行わない
+		;※数値被直接取得して顺位被決定做场合など
+		IF ARGS:1 == ""
+			RETURNF 0
+		;外部決定
+		;書式：外部_『确定基準値种1』/『2』,……
+		ELSEIF STRFINDU(ARGS:1, "外部") != -1
+			ARGS:1 = SUBSTRINGU(ARGS:1, 3)
+			SPLIT ARGS, "/", LOCALS
+			FOR LCOUNT, 0, RESULT
+				LOCAL = TOINT(LOCALS:LCOUNT)
+				LMARK:LOCAL++
+			NEXT
+			IF RESULT
+				RETURNF RESULT
+			ELSE
+				RETURNF 0
+			ENDIF
+		;最大値採用
+		;書式：最大(『補助基準』)
+		ELSEIF STRFINDU(ARGS:1, "最大") != -1
+			LOCAL = MAXARRAY(LTOT, 0, LNUM)
+			IF LOCAL > -100
+				FOR LCOUNT, 0, LNUM
+					SIF LTOT:LCOUNT == LOCAL
+						LMARK:LCOUNT++
+				NEXT
+			ENDIF
+		;最小値採用
+		;書式：最小(『補助基準』)
+		ELSEIF STRFINDU(ARGS:1, "最小") != -1
+			LOCAL = MINARRAY(LTOT, 0, LNUM)
+			IF LOCAL > -100
+				FOR LCOUNT, 0, LNUM
+					SIF LTOT:LCOUNT == LOCAL
+						LMARK:LCOUNT++
+				NEXT
+			ENDIF
+		ENDIF
+		;	以下補助基準
+		;前者优先
+		;書式：(『主基準』)前者
+		IF STRFINDU(ARGS:1, "前者") != -1
+			LOCAL = -1
+			FOR LCOUNT, 0, LNUM
+				IF LMARK:LCOUNT
+					LOCAL = LCOUNT
+					BREAK
+				ENDIF
+			NEXT
+			IF LOCAL != -1
+				VARSET LMARK
+				LMARK:LOCAL = 1
+			ENDIF
+		;后者优先
+		;書式：(『主基準』)后者
+		ELSEIF STRFINDU(ARGS:1, "后者") != -1
+			LOCAL = -1
+			FOR LCOUNT, LNUM - 1, -1, -1
+				IF LMARK:LCOUNT
+					LOCAL = LCOUNT
+					BREAK
+				ENDIF
+			NEXT
+			IF LOCAL != -1
+				VARSET LMARK
+				LMARK:LOCAL = 1
+			ENDIF
+		;优先指定
+		;書式：(『主基準』)优先指定-(基準値种/基準値种/……)
+		ELSEIF STRFINDU(ARGS:1, "优先指定") != -1
+			;优先指定内容に集中
+			LOCAL = STRFINDU(ARGS:1, "优先指定")
+			;内容被切り出し
+			ARGS:1 = %SUBSTRINGU(ARGS:1, LOCAL + 5)%
+			SPLIT ARGS:1, "/", LOCALS
+			;指定被初期化
+			LOCAL = -1
+			;全指定被検索
+			FOR LCOUNT, 0, RESULT
+				;指定对象被検索做
+				LOCAL:1 = FINDELEMENT(LNAME, LOCALS:LCOUNT, , , 1)
+				;指定对象但存在しなければ
+				IF LOCAL:1 == -1
+					;数値指定和判断
+					LOCAL:1 = TOINT(LOCALS)
+					;数値指定でもなければ飛ばす
+					SIF LOCALS != @"{LOCAL:1}"
+						CONTINUE
+				ENDIF
+				;指定基準値种但選ばれていれば検索终了
+				IF LMARK:(LOCAL:1)
+					LOCAL = LOCAL:1
+					BREAK
+				ENDIF
+			NEXT
+			;指定但あれば确定种切り替え
+			IF LOCAL != -1
+				VARSET LMARK
+				LMARK:LOCAL = 1
+			ENDIF
+		ENDIF
+		;确定値数被返す
+		LOCAL = 0
+		FOR LCOUNT, 0, LNUM
+			SIF LMARK:LCOUNT
+				LOCAL++
+		NEXT
+		RETURNF LOCAL
+	;関数初期化/基準値种指定
+	CASE "SET"
+		IF ARG == 0
+			VARSET LNAME
+			VARSET LDNAME
+			VARSET LTIT
+			VARSET LNUM
+			VARSET LMARK
+			VARSET LPRI, 100
+			VARSET LSTOT
+			VARSET LTOT
+			VARSET LASTOT
+			VARSET LATOT
+			VARSET LACSTOT
+			VARSET LACTOT
+			VARSET LACNSTOT
+			VARSET LACNTOT
+			VARSET LMSTOT, 100
+			VARSET LMTOT, 100
+			VARSET LMCSTOT, 100
+			VARSET LMCTOT, 100
+			VARSET LMCNSTOT, 100
+			VARSET LMCNTOT, 100
+		ENDIF
+		SPLIT ARGS:1, "/", LOCALS
+		IF ARG:1 == 0
+			LOCAL = LNUM
+		ELSE
+			LOCAL = LNUM:1
+		ENDIF
+		FOR LCOUNT, 0, 30
+			SIF LOCALS:LCOUNT == ""
+				BREAK
+			IF ARG:1 == 0
+				LNAME:LOCAL = %LOCALS:LCOUNT%
+			ELSE
+				LDNAME:LOCAL = %LOCALS:LCOUNT%
+			ENDIF
+			LOCAL++
+		NEXT
+		IF ARG:1 == 0
+			LNUM = LOCAL
+		ELSE
+			LNUM:1 = LOCAL
+		ENDIF
+ENDSELECT

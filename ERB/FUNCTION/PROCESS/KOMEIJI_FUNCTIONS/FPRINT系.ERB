@@ -1,0 +1,68 @@
+﻿;-------------------------------------------------
+;FPRINT系関数
+;-------------------------------------------------
+;・基本的なモノ但无い和体系的にどうか和思った的で后付けで
+;・F是関数(FUNCTION)的F。普通的Fじゃないよ…たぶん
+;・SETFONT命令相当的引数被设ける気是无いらしい。私但まず使わない的で
+;・慣れ时HTMLPRINT的方但便利。使い方是大体一緒。タグも使えるし
+;・和りあえずHTMLPRINTより是处理但軽い和思われる的で使い分けも可
+;-------------------------------------------------
+
+;-------------------------------------------------
+;関数名:FPRINT(|D)(|L|W)
+;概　要:普通的PRINT関数
+;引　数:ARGS:0…显示字符串。FORM字符串被渡す场合是""的前に@被付けてください
+;　　　 ARG:0 …[省略可]字符的显示色。省略した场合是SETCOLOR的指定そ的まま
+;　　　         ※キーワード"D"被使用した场合是ARG:0被指定做こ和是出来ません
+;　　　 ARGS:1…[省略可]字符串的显示位置。(LEFT/左/CENTER/中央/RIGHT/右)的いずれか被指定可
+;　　　         省略した场合是、ALIGNMENT的指定そ的まま。大字符小字符的区別是しません
+;　　　         ※キーワード"L""W"被使用不做场合是ARGS:1被指定做こ和是出来ません
+;戻り値:无(多分RESULT保護)
+;CALLで呼び出して使うPRINT命令的ようなも的
+;そ的中でも基本的な部类。色指定机能和显示位置指定机能只存在做
+;ただし、キーワードにより一部机能但使えない関数もある的で注意
+;口上被書く際、基本是通常原样PRINTFORM(|D)(|L|W)被使って、
+;こ的関数是口上中に3人目的角色(助手等)被登场侍奉场合などに用い时よい
+;(和りあえず是色被变える的に使う。右寄せ直到做かどうか是任意)
+;-------------------------------------------------
+;例1)次的2行的显示結果是等しい(但し、前者的方但处理是早い…和いっても口上内で急ぐこ和もないけど)
+;PRINTFORMW 「お是ようござい增加、%CALLNAME:MASTER%」
+;CALL FPRINTW(@"「お是ようござい增加、%CALLNAME:MASTER%」")
+;-------------------------------------------------
+;例2)助手的台詞被捏造做ケース
+;CALL FPRINTW("「お是ようございま…せん」", 0xCCFFCC, "RIGHT")
+;-------------------------------------------------
+@FPRINT(ARGS:0, ARG:0 = -1)
+#LOCALSIZE 1
+LOCAL:0 = GETCOLOR()
+SETCOLOR ARG:0 < 0 ? LOCAL:0 # (ARG:0 & 0xFFFFFF)
+PRINTS ARGS:0
+SETCOLOR LOCAL:0
+RETURN RESULT
+
+@FPRINTL(ARGS:0, ARG:0 = -1, ARGS:1)
+#LOCALSSIZE 1
+LOCALS:0 = %CURRENTALIGN()%
+CALL ALIGNMENTS(ARGS:1)
+CALL FPRINT(ARGS:0, ARG:0)
+PRINTL 
+CALL ALIGNMENTS(LOCALS:0)
+RETURN RESULT
+
+@FPRINTW(ARGS:0, ARG:0 = -1, ARGS:1)
+CALL FPRINTL(ARGS:0, ARG:0, ARGS:1)
+WAIT
+RETURN RESULT
+
+@FPRINTD(ARGS:0)
+CALL FPRINT(ARGS:0, GETDEFCOLOR())
+RETURN RESULT
+
+@FPRINTDL(ARGS:0, ARGS:1)
+CALL FPRINTL(ARGS:0, GETDEFCOLOR(), ARGS:1)
+RETURN RESULT
+
+@FPRINTDW(ARGS:0, ARGS:1)
+CALL FPRINTL(ARGS:0, GETDEFCOLOR(), ARGS:1)
+WAIT
+RETURN RESULT

@@ -1,0 +1,64 @@
+﻿@TITLE_INFO  
+#LOCALSIZE 2  
+REDRAW 0  
+
+; 清空過去的內容  
+CLEARLINE LINECOUNT   
+
+; 輸出您的資訊文字  
+PRINTFORML 1.1.0 更新内容：
+PRINTL
+PRINTFORML 新增了白祥：豐川 祥子//月之森 CRYCHIC的鍵盤手少女
+PRINTL
+PRINTFORML ［恋慕］素质显示，预设越有爱情越易怀孕。如果不想怀孕，请在「设置」关掉妊娠机能。
+PRINTFORML ［恋慕］是双方都可以有，调教者的［恋慕］出现时会有文字提示未必会出现在素质上。
+PRINTL
+PRINTFORML 怀孕（[妊娠]）会因有［恋慕］而更易发生，同样被调教者也可以让调教者怀孕。
+PRINTFORML 只要你能让调教者爱上你，并愿意怀你的孩子就可以了。
+PRINTFORML 这需要达到怎样的条件而数值需要玩家自行摸索，已测试过都是可行的。（只会生女儿哦～抱歉）
+PRINTL
+PRINTFORML 再提一句需要注意经常存档，商店的东西买完再入去会有可能当机，买东西前最好存档一下。
+PRINTL
+PRINTFORML 最后角色部分素质和数值有修正，以下给一个攻略难度参考：
+PRINTL
+PRINTFORML [Mujica] 豐川祥子  無畏遺忘 ～ Oblivionis
+PRINTFORML 被调教者：★★★★★  调教者难度：★★
+PRINTL
+PRINTFORML [白祥] 	豐川祥子   月之森 CRYCHIC的鍵盤手少女
+PRINTFORML 被调教者：★★        调教者难度：★★★
+PRINTL
+PRINTFORML [草莓祥] 豐川祥子   亂入樂園的摘草莓少女
+PRINTFORML 被调教者：★          调教者难度：★★★★
+PRINTL
+PRINTFORML [扶]     三角初華   無畏悲傷 ～ Doloris
+PRINTFORML 被调教者：★★★      调教者难度：★★★
+PRINTL
+PRINTFORML [非扶] 	三角初音   豐川家的私生子
+PRINTFORML 被调教者：★          调教者难度：★★★★★
+PRINTL
+PRINTFORML [扶]     Aver      夢ノ結唱 ~ Ave Mujica
+PRINTFORML 被调教者：★★★★     调教者难度：★
+PRINTL
+PRINTFORML ——————————————————————————————————————————————————————— 
+PRINTL
+PRINTFORML 地文（调教反馈信息）由于是对本文批量机翻，就算做了修改也会有少量未翻完整或是语句不够通顺，请见谅 
+PRINTL
+PRINTFORML 有想要加的角色，或是其他问题：X → @pudding_well 微博 → @布丁井嗑 @井鬼
+PRINTL
+PRINTFORML 感谢所有中日语社区对era开发的成果，我不过是做些小更动而已
+PRINTL
+PRINTFORML 非常感谢老朋友MY（微博 → @弥玄）帮助做的debug和1.0.1测试游玩后给意见的人初祥党:D
+PRINTL
+PRINTFORML 如果有什麽问题想反映或是交流，可以加这个QQ群：627051630
+
+; 畫一條分隔線  
+DRAWLINE  
+
+; 添加結束按鈕  
+PRINTBUTTON "[9] 结束 INFO 显示", "9"  
+
+ONEINPUTS  
+IF RESULTS == "9"  
+    REDRAW 1  
+    RETURN 0  
+ENDIF

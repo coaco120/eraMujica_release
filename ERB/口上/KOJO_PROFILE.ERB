@@ -1,0 +1,101 @@
+﻿;≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡
+;口上プロ文件显示
+;≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡
+@KOJO_PROFILE(ARG)
+#DIMS DEFONT, 1
+#DIM LCOUNT, 1
+;フォント保存
+DEFONT = %GETFONT()%
+DRAWLINE
+PRINTL 
+;てぬき
+LOCAL =STRLENS(@"　%" "*(STRLENS(CSVCSTR(ARG, 10, 0))/2)%%" "*(STRLENS(CSVCSTR(ARG, 11, 0))/2)%%CSVCSTR(ARG, 12, 0)%")/2
+PRINTFORML 　%"―"*(LOCAL/2-1)%调教者名%"―"*(LOCAL/2-1)%
+PRINTL 
+;肩書き是HG教科書体
+SIF CHKFONT("HG教科書体")
+SETFONT "HG教科書体"
+PRINTFORML %" "*MAX(4, (((STRLENS(@"　%"―"*(LOCAL+2)%　")/2+2)-STRLENS(CSVCSTR(ARG, 10, 0)))/2))%%CSVCSTR(ARG, 10, 0)%
+;名前是元フォント
+SETFONT DEFONT
+PRINTFORML %" "*((STRLENS(@"　%"―"*(LOCAL+2)%　")-STRLENS(CSVCSTR(ARG, 11, 0)))/2)%%CSVCSTR(ARG, 11, 0)%
+;单词读み是ＭＳ 明朝（TimesNewRoman是等幅じゃなかった…）
+SIF CHKFONT("ＭＳ 明朝")
+	SETFONT "ＭＳ 明朝"
+PRINTFORML 　　%" "*(STRLENS(CSVCSTR(ARG, 10, 0))/2)%%" "*(STRLENS(CSVCSTR(ARG, 11, 0))/2)%%CSVCSTR(ARG, 12, 0)%
+SETFONT DEFONT
+PRINTL 
+PRINTFORML 　%"―"*(LOCAL+2)%
+PRINTL 
+PRINTL 　―――――调教者口上数据―――――
+PRINTL 
+VARSET RESULT
+VARSET RESULTS
+TRYCALLFORM KOJO_K{ARG}
+PRINTFORML 　　一般口上　　：\@ RESULT ? あり # 无 \@
+PRINTFORM 　　立场指定口上：
+;主人判定
+SIF STRFIND(RESULTS, @"/MS/") >= 0
+	PRINT [主人] 
+;非主人判定
+SIF STRFIND(RESULTS, @"/AS/") >= 0
+	PRINT [非主人]
+;なんも无
+SIF STRFIND(RESULTS, @"/MS/") < 0 && STRFIND(RESULTS, @"/AS/") < 0
+	PRINT 无
+PRINTL 
+
+PRINTFORM 　　对象指定口上：
+;男您判定
+SIF STRFIND(RESULTS, @"/MALEYOU/") >= 0
+	PRINT [您(男人)] 
+;女您判定
+SIF STRFIND(RESULTS, @"/FEMALEYOU/") >= 0
+	PRINT [您(女性)] 
+;扶她您判定
+SIF STRFIND(RESULTS, @"/TWINYOU/") >= 0
+	PRINT [您(扶她)] 
+;大棒棒付き您判定
+SIF STRFIND(RESULTS, @"/PENISYOU/") >= 0
+	PRINT [您(阴茎あり)] 
+;角色一致判定
+IF STRFIND(RESULTS, @"/K") >= 0
+	FOR LCOUNT, 0, FLAG:Cha总数
+		SIF STRFIND(RESULTS, @"/K{LCOUNT}/") >= 0
+			PRINTFORM [%CSVCALLNAME(LCOUNT, 0)%]
+	NEXT
+ENDIF
+;男判定
+SIF STRFIND(RESULTS, @"/MALE/") >= 0
+	PRINT [男人] 
+;女判定
+SIF  STRFIND(RESULTS, @"/FEMALE/") >= 0
+	PRINT [女性] 
+;扶她判定
+SIF STRFIND(RESULTS, @"/TWIN/") >= 0
+	PRINT [扶她] 
+;大棒棒付き判定
+SIF STRFIND(RESULTS, @"/PENIS/") >= 0
+	PRINT [阴茎あり] 
+;なんも无
+SIF REPLACE(REPLACE(REPLACE(RESULTS, "MS", ""), "AS", ""), "/", "") == ""
+	PRINT 无
+PRINTL 
+PRINTFORML 　　口上作者名　：\@ RESULTS:1 == "" ? 无 # %RESULTS:1% \@
+PRINTL 
+PRINTL 　――――――――――――――――――
+PRINTL 
+PRINTW 　あらすじ――
+PRINTL 
+CALL KOJO_DIGEST(ARG)
+SIF !RESULT
+	PRINTW 　　　　　　　　　　　――未定義です。本編被ご覧ください。
+PRINTL 
+PRINTL 　――――――――――――――――――
+PRINTL 
+PRINTW 　注意事项――
+PRINTL 
+CALL KOJO_ATTENTION(ARG)
+SIF !RESULT
+	PRINTW 　　　　　　　　　　　――特にありません。
+PRINTL 

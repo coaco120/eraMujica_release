@@ -1,0 +1,520 @@
+﻿;==================================================
+;
+;	通用関数置き场＠参照編
+;		参照に用い、特定的数値や名称など被返すも的
+;		あるい是、状況に应じた接頭語など被返すも的
+;
+;		口上向け的も的もあったりなかったり。
+;
+;==================================================
+
+;==================================================
+;
+;	TEQUIP・ITEM相关的参照
+;
+;==================================================
+
+;-------------------------------------------------
+;関数名:EQUIP_CARESS
+;概　要:持续爱抚装備品取得関数
+;引　数:ARGS…爱抚种別被入れ时一致被みる。/区切りで複数指定可能。省略做か空字符串だ和TEQUIP根据爱抚被全部显示。
+;			　阴蒂夹・飞机杯等持续爱抚被もたらさない的で含まない。
+;       ARG…对象的角色（省略做和调教对象。现在调教对象的みサポート）
+;戻り値:一致被见る场合、一致しなければ空字符串。一致したか省略した场合、爱抚に関わるTEQUIPすべて被/区切りで並べたも的
+;備　考:式中関数
+;-------------------------------------------------
+@EQUIP_CARESS(ARGS, ARG = -2)
+#FUNCTIONS
+#LOCALSSIZE 1
+ARG = ARG != -2 ? ARG # MASTER
+VARSET LOCALS
+SIF TEQUIP:震动棒
+	LOCALS += "震动棒/"
+SIF TEQUIP:肛门震动棒
+	LOCALS += "肛门震动棒/"
+SIF TEQUIP:肛门拉珠
+	LOCALS += "肛门拉珠/"
+SIF TEQUIP:灌肠器＋肛塞
+	LOCALS += "灌肠器＋肛塞/"
+SIF TEQUIP:乳头夹
+	LOCALS += "乳头夹/"
+SIF TEQUIP:三角木马
+	LOCALS += "三角木马/"
+SIF GETBIT(TEQUIP:自慰中, 0)
+	LOCALS += "自慰中/"
+IF TEQUIP:调教者假阴茎
+	SIF RANGE(TEQUIP:性交中, 1, 5) && TEQUIP:性交中 != 3
+		LOCALS += "假阳具Ｖ性交中/"
+	SIF TEQUIP:性交中 == 3
+		LOCALS += "假阳具骑乘位中/"
+	SIF TEQUIP:性交中 == 6
+		LOCALS += "假阳具Ａ性交中/"
+ELSE
+	SIF RANGE(TEQUIP:性交中, 1, 5) && TEQUIP:性交中 != 3
+		LOCALS += "Ｖ性交中/"
+	SIF TEQUIP:性交中 == 3
+		LOCALS += "骑乘位中/"
+	SIF TEQUIP:性交中 == 6
+		LOCALS += "Ａ性交中/"
+ENDIF
+IF TEQUIP:假阴茎
+	SIF RANGE(TEQUIP:性交奉仕中, 1, 5) && TEQUIP:性交奉仕中 != 3
+		LOCALS += "假阳具Ｖ性交奉仕中/"
+	SIF TEQUIP:性交奉仕中 == 3
+		LOCALS += "假阳具逆强奸中/"
+	SIF TEQUIP:性交奉仕中 == 6
+		LOCALS += "假阳具Ａ性交奉仕中/"
+ELSE
+	SIF RANGE(TEQUIP:性交奉仕中, 1, 5) && TEQUIP:性交奉仕中 != 3
+		LOCALS += "Ｖ性交奉仕中/"
+	SIF TEQUIP:性交奉仕中 == 3
+		LOCALS += "逆强奸中/"
+	SIF TEQUIP:性交奉仕中 == 6
+		LOCALS += "Ａ性交奉仕中/"
+ENDIF
+IF PENIS(MASTER)
+	SIF TEQUIP:调教对象Ｃ使用 == 1
+		LOCALS += "手淫中/"
+	SIF TEQUIP:调教对象Ｃ使用 == 2
+		LOCALS += "口交中/"
+ELSE
+	SIF TEQUIP:调教对象Ｃ使用 == 1
+		LOCALS += "爱抚中/"
+	SIF TEQUIP:调教对象Ｃ使用 == 2
+		LOCALS += "舔阴中/"
+ENDIF
+
+SIF LOCALS == ""
+	RETURNF ""
+
+LOCALS = SUBSTRINGU(LOCALS, 0, STRLENSU(LOCALS)-1)
+RETURNF \@ ARGS == "" || STRFIND(@"/%LOCALS%/", @"/%ARGS%/") == -1 ? LOCALS # \@
+
+
+;-------------------------------------------------
+;関数名:EFFECT
+;概　要:药剤など的效果被表す関数
+;引　数:ARG:0…药剤的效果量(TEQUIP)
+;       ARG:1…0那么弱中强、1那么少中多被返す
+;戻り値:效果的大きさ被表す字符
+;       10以上是强、5以上是中、5未满是弱
+;備　考:式中関数
+;-------------------------------------------------
+@EFFECT(ARG:0, ARG:1)
+#FUNCTIONS
+SELECTCASE ARG:0
+	CASE IS > 9
+		RETURNF @"\@ ARG:1 ? 多 # 强 \@"
+	CASE IS > 4
+		RETURNF "中"
+	CASEELSE
+		RETURNF @"\@ ARG:1 ? 少 # 弱 \@"
+ENDSELECT
+
+
+;-------------------------------------------------
+;関数名:GETINSERT
+;概　要:性交状态被表す関数
+;引　数:无
+;戻り値:性交中=1、性交奉仕中=2、助手性交中=3、助手性交奉仕中=4
+;備　考:式中関数
+;-------------------------------------------------
+@GETINSERT(ARG:0, ARG:1)
+#FUNCTION
+SIF TEQUIP:性交中
+	RETURNF 1
+SIF TEQUIP:性交奉仕中
+	RETURNF 2
+SIF TEQUIP:助手性交中
+	RETURNF 3
+SIF TEQUIP:助手性交奉仕中
+	RETURNF 4
+RETURNF 0
+
+;-------------------------------------------------
+;関数名:EQUIPACTION_DESCRIPTION
+;概　要:TEQUIP関係的调教者的行动描写
+;引　数:无
+;戻り値:TEQUIP的状态被表す字符串
+;備　考:式中関数
+;使用例:%EQUIPACTION_DESCRIPTION()%
+;-------------------------------------------------
+@EQUIPACTION_DESCRIPTION
+#FUNCTIONS
+IF TEQUIP:顔面骑乘 || TEQUIP:顔面骑乘肛门
+	RETURNF @"跨坐在%CALLNAME:MASTER%的脸上的同时"
+ELSEIF TEQUIP:自慰中
+	SELECTCASE TEQUIP:自慰中
+		CASE 1
+			RETURNF @"同时看向%CALLNAME:MASTER%展示自慰"
+		CASE 2
+			RETURNF @"同时看向%CALLNAME:MASTER%展示自慰"
+		CASE 3
+			RETURNF @"同时看向%CALLNAME:MASTER%展示自慰"
+	ENDSELECT
+ELSEIF TEQUIP:性交中
+	RETURNF @"摆动腰部顶弄%CALLNAME:MASTER%的同时"
+ELSEIF TEQUIP:性交奉仕中
+	IF TEQUIP:假阴茎
+		RETURNF @"玩具的阴茎被\@ TEQUIP:性交奉仕中 == 6 ? 肛门 # 小穴内 \@品嚐的同时"
+	ELSEIF TEQUIP:性交奉仕中 == 6
+		RETURNF @"紧缩着插入肛门的阴茎的同时"
+	ELSE
+		RETURNF @"贪婪享受小穴内的阴茎的同时"
+	ENDIF
+ENDIF
+
+
+;-------------------------------------------------
+;関数名:ITEM_TYPE
+;概　要:调教道具分类関数
+;引　数:ARG…ITEM番号
+;戻り値:道具分类番号
+;       (0.非显示/1.性爱道具/2.責め具/3.其他)
+;備　考:式中関数
+;调教道具分类テーブル。调教道具的分类番号被返す。
+;调教道具整頓显示に用いる
+;
+;名前但若干DITEMTYPE和ややこしいかもしれない
+;R#仕大人に变更@revkoishi(14/05/19)
+;-------------------------------------------------
+@ITEM_TYPE(ARG)
+#FUNCTION
+SELECTCASE ARG
+	;0.非显示
+	CASE 9, IS >= 50
+		RETURNF 0
+	;1.性爱道具
+	CASE 0 TO 3, 11 TO 14
+		RETURNF 1
+	;2.責め具
+	CASE 20 TO 22, 30 TO 33, 40, 42
+		RETURNF 2
+ENDSELECT
+;3.其他(现在未使用)
+RETURNF 3
+
+
+;-------------------------------------------------
+;関数名:ITEM_TYPENAME
+;概　要:调教道具分类名取得関数
+;引　数:ARG…调教道具分类番号
+;戻り値:调教道具分类被表す字符串
+;       (0.非显示/1.性爱道具/2.責め具/3.其他)
+;備　考:式中関数
+;调教道具的分类名被返す。调教道具整頓显示に用いる
+;
+;R#仕大人に变更@revkoishi(14/05/19)
+;-------------------------------------------------
+@ITEM_TYPENAME(ARG:0)
+#FUNCTIONS
+#LOCALSSIZE 10
+SIF !STRLENS(LOCALS:0)
+	SPLIT "非显示/性爱道具/責め具/其他", "/", LOCALS:0, LOCAL:0
+RETURNF LOCALS:(ARG:0)
+
+
+;-------------------------------------------------
+;関数名:GET_ITEMNAME
+;概　要:调教道具名取得関数
+;引　数:ARG:0…ITEM番号
+;戻り値:调教道具名
+;備　考:式中関数
+;调教道具的名前被返す。カスタマイズ后的名前的处理など被行う
+;
+;新規作成@revkoishi(14/05/22)
+;-------------------------------------------------
+@GET_ITEMNAME(ARG:0)
+#FUNCTIONS
+SELECTCASE ARG:0
+	CASE 1, 11 TO 14	;震动棒/肛门震动棒/阴蒂夹/乳头夹/飞机杯
+		RETURNF \@ ITEM:自定义道具 ? 特注 # \@ + ITEMNAME:(ARG:0)
+ENDSELECT
+RETURNF ITEMNAME:(ARG:0)
+
+
+;==================================================
+;
+;	方针・状态变化相关的参照
+;
+;==================================================
+
+;-------------------------------------------------
+;関数名:CONDITION
+;概　要:状态値から字符串被取得做関数
+;引　数:ARG…状态标志(TCVAR:状态变化)
+;戻り値:状态被表す字符串
+;備　考:式中関数
+;-------------------------------------------------
+@CONDITION(ARG)
+#FUNCTIONS
+#LOCALSSIZE 10
+SIF !STRLENS(LOCALS)
+	SPLIT "通常/疲惫/衰弱/无气力/朦胧/情欲/愤怒/无聊/郁闷", "/", LOCALS, LOCAL
+RETURNF LOCALS:ARG
+
+;-------------------------------------------------
+;関数名:IS_CONDITION
+;概　要:ARG但ARGS的状态那么真被返す
+;引　数:ARG…角色登录番号。省略做和TARGET
+;戻り値:そ的状态那么1、違えば0
+;備　考:式中関数
+;-------------------------------------------------
+@IS_CONDITION(ARG = -2, ARGS)
+#FUNCTION
+ARG = ARG != -2 ? ARG # TARGET
+RETURNF ARGS == CONDITION(TCVAR:ARG:状态变化)
+
+;-------------------------------------------------
+;関数名:GET_CONDITION
+;概　要:ARG的状态变化名被取得
+;引　数:ARG…角色登录番号。省略做和TARGET
+;戻り値:状态被表す字符串
+;備　考:式中関数
+;-------------------------------------------------
+@GET_CONDITION(ARG = -2)
+#FUNCTIONS
+ARG = ARG != -2 ? ARG # TARGET
+RETURNF CONDITION(TCVAR:ARG:状态变化)
+
+;-------------------------------------------------
+;関数名:T_COND
+;概　要:TARGET但指定した状态那么真被返す
+;引　数:ARGS…状态名
+;戻り値:そ的状态那么1、違えば0
+;備　考:式中関数
+;-------------------------------------------------
+@T_COND(ARGS)
+#FUNCTION
+RETURNF ARGS == CONDITION(TCVAR:状态变化)
+
+;-------------------------------------------------
+;関数名:M_COND
+;概　要:MASTER但指定した状态那么真被返す
+;引　数:ARGS…状态名
+;戻り値:そ的状态那么1、違えば0
+;備　考:式中関数
+;-------------------------------------------------
+@M_COND(ARGS)
+#FUNCTION
+RETURNF ARGS == CONDITION(TCVAR:MASTER:状态变化)
+
+;-------------------------------------------------
+;関数名:POLICY
+;概　要:调教方针被逆引き做関数
+;引　数:ARGS…ど的方针か（TODAY/今日、NOW/今、LAST/前）
+;		ARG …ARGSに今日的方针・本次的方针被入受到场合数値から和れる
+;戻り値:方针名
+;備　考:式中関数
+;-------------------------------------------------
+@POLICY(ARGS, ARG)
+#FUNCTIONS
+#LOCALSSIZE 20
+;前半６つ是短期方针、后半是「今日的方针」
+SPLIT "通常/休息/温和/普通/强硬/异常/通常/肛门/惩罚/强硬/调情/异常/野外/做小孩/休息/抱住/ご奉仕/宠爱", "/", LOCALS, LOCAL
+IF ARGS == "今日的方针"
+	RETURNF LOCALS:(ARG+6)
+ELSEIF ARGS == "本次的方针"
+	RETURNF LOCALS:ARG
+ENDIF
+SELECTCASE ARGS
+	CASE "今日", "TODAY"
+		RETURNF LOCALS:(TFLAG:今日的方针+6)
+	CASE "今", "NOW"
+		RETURNF LOCALS:(TFLAG:回合方针)
+	CASE "前", "LAST"
+		RETURNF LOCALS:(TFLAG:上次合方针)
+	CASEELSE
+		CALLF PRINT_ERRORMESSAGE(@"@POLICY に无效な方针指定(%ARGS%)但渡されました")
+		;种別无指定被返す
+		RETURNF "种別无指定"
+ENDSELECT
+
+;-------------------------------------------------
+;関数名:IS_POLICY
+;概　要:调教方针名称和合致すれば真被返す
+;引　数:ARGS:0…ど的方针か（TODAY/今日、NOW/今、LAST/前）
+;		ARGS:1…方针名称(/区切りで複数代入但可能です)
+;戻り値:真伪値(1/0)
+;備　考:式中関数
+;-------------------------------------------------
+@IS_POLICY(ARGS:0, ARGS:1)
+#FUNCTION
+#LOCALSSIZE 10
+#DIMS LTEMPS
+LTEMPS = %POLICY(ARGS)%
+SPLIT ARGS:1, "/", LOCALS, LOCAL
+IF LTEMPS == "种別无指定"
+	CALLF PRINT_ERRORMESSAGE(@"@IS_POLICY に无效な方针指定(%ARGS%)但渡されました")
+ELSEIF FINDELEMENT(LOCALS, LTEMPS, 0, LOCAL, 1) != -1
+	RETURNF 1
+ENDIF
+RETURNF 0
+
+;-------------------------------------------------
+;関数名:SATIS_BONUS
+;概　要:今日的满足奖励から字符串被取得做関数
+;引　数:ARG…标志(TCVAR:今日的满足奖励)
+;戻り値:满足奖励被表す字符串
+;備　考:式中関数
+;-------------------------------------------------
+@SATIS_BONUS(ARG)
+#FUNCTIONS
+#LOCALSSIZE 20
+SIF !STRLENS(LOCALS)
+	SPLIT "通常/肛门/惩罚/强硬/调情/异常/野外/做小孩/休息/抱住/ご奉仕/宠爱", "/", LOCALS, LOCAL
+RETURNF LOCALS:ARG
+
+;-------------------------------------------------
+;関数名:IS_SATIS_BONUS
+;概　要:ARGS的满足奖励那么真被返す
+;引　数:ARGS…满足奖励名
+;戻り値:そ的状态那么1、違えば0
+;備　考:式中関数
+;-------------------------------------------------
+@IS_SATIS_BONUS(ARGS)
+#FUNCTION
+RETURNF ARGS == SATIS_BONUS(TCVAR:今日的满足奖励)
+
+;-------------------------------------------------
+;関数名:GET_SATIS_BONUS
+;概　要:今日的满足奖励名被取得
+;引　数:无
+;戻り値:满足奖励被表す字符串
+;備　考:式中関数
+;-------------------------------------------------
+@GET_SATIS_BONUS
+#FUNCTIONS
+RETURNF SATIS_BONUS(TCVAR:今日的满足奖励)
+
+;-------------------------------------------------
+;関数名:TENSION
+;概　要:BASE値被大雑把に表す関数
+;引　数:ARG:0…角色登录番号
+;       ARG:1…BASE番号
+;戻り値:BASE値被大雑把に表す字符串
+;       50%以上是高、25%以上是一般、25%未满是低
+;備　考:式中関数
+;调教者的理性や满足など被字符で表现做场合に使用
+;-------------------------------------------------
+@TENSION(ARG:0, ARG:1)
+#FUNCTIONS
+#LOCALSIZE 1
+LOCAL = MAX(BASE:(ARG:0):(ARG:1), 0)
+SIF LOCAL < MAXBASE:(ARG:0):(ARG:1) / 4
+	RETURNF "低"
+RETURNF @"\@ LOCAL < MAXBASE:(ARG:0):(ARG:1) / 2 ? 一般 # 高 \@"
+
+
+;-------------------------------------------------
+;COMRANK(REACT负荷)
+;-------------------------------------------------
+
+;REACT负荷目录被返す
+@COMRANKLIST()
+#FUNCTIONS
+RETURNF "自然な行动/无理的ない行动/无理被した行动"
+
+;现在的REACT负荷名称和ARGS但合致すれば真被返す
+@IS_NOWCOMRANKNAME(ARGS)
+#FUNCTION
+RETURNF IS_LIST(ARGS, COMRANKLIST(), TFLAG:REACT负荷)
+
+;ARGS的REACT负荷那么真被返す
+@IS_COMRANK(ARGS)
+#FUNCTION
+RETURNF ARGS == COM_RANK(TFLAG:REACT负荷)
+
+
+;-------------------------------------------------
+;関数名:COM_RANK
+;概　要:REACT负荷から字符串被取得做関数
+;引　数:ARG…(TFLAG:REACT负荷)
+;戻り値:REACT负荷被表す字符串
+;-------------------------------------------------
+@COM_RANK(ARG)
+#FUNCTIONS
+#LOCALSSIZE 10
+SIF !STRLENS(LOCALS)
+	SPLIT "自然な行动/无理的ない行动/无理被した行动", "/", LOCALS, LOCAL
+RETURNF LOCALS:ARG
+
+
+;-------------------------------------------------
+;関数名:GET_COM_RANK
+;概　要:REACT负荷名称和合致すれば真被返す
+;引　数:无
+;戻り値:REACT负荷被表す字符串
+;備　考:式中関数
+;-------------------------------------------------
+@GET_COM_RANK()
+#FUNCTIONS
+RETURNF COM_RANK(TFLAG:REACT负荷)
+
+
+;==================================================
+;
+;	系统数据相关的参照
+;
+;==================================================
+
+;-------------------------------------------------
+;记入チェック関数
+;	引数0：显示确率。省略做和100％。模板で是开始时0但入っている
+;-------------------------------------------------
+@口上记入チェック(ARG = 100)
+#FUNCTION
+RETURNF PERCENT(ARG) ? ARG # 0
+
+;-------------------------------------------------
+;関数名:CAPACITY
+;概　要:いる角色的数被返す
+;引　数:无
+;戻り値:いる角色的数(MASTER被包括)
+;備　考:式中関数
+;现状、暂时退避中但无い的で、CHARANUM和何も变わらない
+;-------------------------------------------------
+@CAPACITY
+#FUNCTION
+RETURNF CMATCH(CFLAG:92, 0)
+
+;-------------------------------------------------
+;関数名:GET_DAY
+;概　要:曜日被表す字符串被取得做関数
+;引　数:无
+;戻り値:曜日被表す字符串(日/月/火/水/木/金/土)
+;備　考:式中関数
+;-------------------------------------------------
+@GET_DAY
+#FUNCTIONS
+#LOCALSSIZE 10
+SIF !STRLENS(LOCALS)
+	SPLIT "日/月/火/水/木/金/土", "/", LOCALS, LOCAL
+RETURNF LOCALS:(DAY % 7)
+
+;-------------------------------------------------
+;関数名:GET_SEASON
+;概　要:季节被表す字符串被取得做関数
+;引　数:无
+;戻り値:季节被表す字符串(春/夏/秋/冬)
+;備　考:式中関数
+;-------------------------------------------------
+@GET_SEASON
+#FUNCTIONS
+SWAP LOCAL:1, RESULT
+SIF !STRLENS(LOCALS)
+	SPLIT "春/夏/秋/冬", "/", LOCALS, LOCAL
+RETURNF LOCALS:(FLAG:季节)
+
+;-------------------------------------------------
+;関数名:GET_TIME
+;概　要:时间被表す字符串被取得做関数
+;引　数:无
+;戻り値:时间被表す字符串(昼/夜)
+;備　考:式中関数
+;-------------------------------------------------
+@GET_TIME
+#FUNCTIONS
+RETURNF @"\@ TIME ? 夜 # 昼 \@"
+
+

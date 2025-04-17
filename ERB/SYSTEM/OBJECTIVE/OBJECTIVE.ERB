@@ -1,0 +1,246 @@
+﻿;==================================================
+;
+;调教目的处理
+;
+;==================================================
+;────────────────────────────────────
+;调教目的处理(管理)
+;ARGS 实行内容
+;────────────────────────────────────
+@OBJECTIVE(ARG, ARGS, ARGS:1 = "")
+;────────────────────────────────────
+;调教目的处理(调教对象/单独)
+;────────────────────────────────────
+[SKIPSTART]
+;脱走
+@OBJECTIVE_M_(ARGS)
+SELECTCASE ARGS
+	;目的解说文更新
+	CASE "CONF"
+		;调教目的
+		STR:调教目的 = 脱走
+		;目的解说文
+		STR:目的解说 = こ的状況から脱出做的但目的です
+		;目的詳細解说
+		STR:目的詳細 = 
+	;目的达成确认
+	CASE "ACHI"
+		;脱走成功
+		
+	;小目的指向处理
+	CASE "POIN"
+		;调教对象に是无
+ENDSELECT
+;────────────────────────────────────
+;调教目的处理(调教者/单独)
+;────────────────────────────────────
+;调教者共通
+@OBJECTIVE_T_(ARGS)
+SELECTCASE ARGS
+	;目的解说文更新(ありません)
+	CASE "CONF"
+		;调教目的
+		STR:调教目的 = 
+		;目的解说文
+		STR:目的解说 = 
+		;目的詳細解说
+		STR:目的詳細 = 
+	;目的达成确认
+	CASE "ACHI"
+		;达成しません
+	;小目的指向处理
+	CASE "POIN"
+		;现状确认
+ENDSELECT
+
+;魔力収集
+@OBJECTIVE_T_MAG(ARGS)
+SELECTCASE ARGS
+	;目的解说文更新
+	CASE "CONF"
+		;调教目的
+		STR:调教目的 = 魔力収集
+		;目的解说文
+		STR:目的解说 = 魔力被效率良く集める的但目的です
+		;目的詳細解说
+		STR:目的詳細 = 
+	;目的达成确认
+	CASE "ACHI"
+		;达成しません
+	;小目的指向处理
+	CASE "POIN"
+		
+ENDSELECT
+;────────────────────────────────────
+;调教目的处理(助手/单独)
+;────────────────────────────────────
+@OBJ_A
+[SKIPEND]
+
+;==================================================
+;
+;调教中目的处理
+;
+;==================================================
+[SKIPSTART]
+;体力・气力管理
+@OBJM_T_VIT(ARGS)
+#LOCALSIZE 1
+#DIMS 同一调教判定
+#DIM L体力
+#DIM L气力
+#DIM 体力消费速度
+#DIM 气力消费速度
+#DIM 信頼度
+#DIM 回合
+#DIM 予測体力消费速度
+#DIM 予測气力消费速度
+#DIM 予測信頼度
+#DIM 休息
+;同一调教判定
+LOCALS = %SAME_TURN("调教")%
+;同一调教でなければ
+IF 同一调教判定 != LOCALS
+	;变数初期化
+	同一调教判定 = %LOCALS%
+	体力消费速度 = 0
+	气力消费速度 = 0
+	信頼度 = 0
+;休息被挟んでいなければ
+ELSEIF (DATABASE_I_AM("休息") - 休息) == 0
+	;体力・气力消费量记录
+	IF L体力 != 0 && BASE:MASTER:体力 != 0
+		LOCAL = (L体力 - BASE:MASTER:体力) / (TFLAG:调教时间 - 回合)
+		体力消费速度 = 信頼度 == 0 ? LOCAL # (体力消费速度 + LOCAL) / 2
+	ENDIF
+	IF L气力 != 0 && BASE:MASTER:气力 != 0
+		LOCAL = (L气力 - BASE:MASTER:气力) / (TFLAG:调教时间 - 回合)
+		气力消费速度 = 信頼度 == 0 ? LOCAL # (气力消费速度 + LOCAL) / 2
+	ENDIF
+	信頼度 += TFLAG:调教时间 - 回合
+ENDIF
+L体力 = BASE:MASTER:体力
+L气力 = BASE:MASTER:气力
+回合 = TFLAG:调教时间
+休息 = DATABASE_I_AM("休息")
+
+NOSKIP
+PRINTVL 体力消费速度
+PRINTVL 气力消费速度
+PRINTVL L体力
+PRINTVL L气力
+ENDNOSKIP
+[SKIPEND]
+
+;==================================================
+;
+;调教小目的处理
+;
+;==================================================
+;调教者共通
+@OBJS_T(ARGS)
+;现状确认
+
+;魔力回収
+@OBJS_T_MAG(ARGS)
+
+;==================================================
+;
+;基幹判断处理
+;
+;==================================================
+@ESTIMATE_T(ARGS)
+
+[SKIPSTART]
+
+;初期化
+CALLF EST_TO_ACTM("初期化")
+CALLF EST_TO_ACT("初期化")
+
+;气力・体力回復判断
+CALL EST_T_REC_VIT()
+[SKIPEND]
+
+;────────────────────────────────────
+;调教継续判断
+;────────────────────────────────────
+@EST_T_TRA_END()
+
+;基幹处理呼び出し
+CALL ESTIMATE_T("TRA_END")
+
+LOCAL = 0
+
+;SANDBOX限定处理
+;体力但減少做和调教中断した但る
+SIF FLAG:模式 == 1
+	LOCAL += LINE_CALC(BASE:MASTER:体力 * 100 / MAXBASE:MASTER:体力, "100→0,0→25,LIMIT/0～25")
+
+RETURN LOCAL
+
+
+;==================================================
+;
+;直接判断处理
+;
+;==================================================
+;气力・体力回復
+@EST_T_REC_VIT()
+;体力但1/5以下变成了ら
+IF BASE:MASTER:体力 < MAXBASE:MASTER:体力 / 5
+	;回復に向けて行动做
+	CALLF EST_TO_ACTM("加算", "休息", 10)
+ENDIF
+
+;==================================================
+;
+;判断反映处理
+;
+;==================================================
+@EST_TO_ACTM(ARGS, ARGS:1, ARG)
+#FUNCTION
+#LOCALSIZE 20
+#DIM LTEMP
+[SKIPSTART]
+IF ARGS == "初期化"
+	VARSET LOCAL
+	RETURNF 0
+ENDIF
+LTEMP = GET_ACTNUM(ARGS:1)
+SIF LTEMP < 0
+	RETURNF 0
+IF ARGS == "加算"
+	LOCAL:GET_ACTNUM(ARGS:1) = ARG
+ELSEIF ARGS == "取得"
+	RETURNF LOCAL:GET_ACTNUM(ARGS:1)
+ENDIF
+[SKIPEND]
+
+@EST_TO_ACT(ARGS, ARGS:1, ARG)
+#FUNCTION
+#LOCALSIZE 200
+#DIM LTEMP
+[SKIPSTART]
+IF ARGS == "初期化"
+	VARSET LOCAL
+	RETURNF 0
+ENDIF
+LTEMP = MENUNUM(ARGS:1)
+SIF LTEMP < 0
+	RETURNF 0
+IF ARGS == "加算"
+	LOCAL:MENUNUM(ARGS:1) = ARG
+ELSEIF ARGS == "取得"
+	RETURNF LOCAL:MENUNUM(ARGS:1)
+ENDIF
+[SKIPEND]
+
+
+
+
+;────────────────────────────────────
+;调教目的字符串变数处理
+;────────────────────────────────────
+@OBJECTIVE_V(ARG, ARGS)
+
+

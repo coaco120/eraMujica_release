@@ -1,0 +1,391 @@
+﻿;────────────────────────────────────
+;性交(奉仕) (正常95/后背96/骑乘103/对面97/背面98/ＡＳ99)
+;────────────────────────────────────
+@ACT_M10(ARG = 0)
+;1以上那么判定被行わない
+#DIM LCOUNT, 1
+
+;関数初期化
+CALL ACT_M_INIT(10)
+
+;处理开始
+
+LOCALS = ACT_ACTM10
+
+CALL CHA_CRI_VAR, "基準値"
+CALLFORM %LOCALS%_REFERENCE
+
+CALL CHA_CRI_VAR, @"本次的方针(%POLICY("今")%)"
+CALLFORM %LOCALS%_COURCE
+
+CALL CHA_CRI_VAR, "调教者的素質"
+CALLFORM %LOCALS%_TALENT_T
+
+CALL CHA_CRI_VAR, "调教对象的素質"
+CALLFORM %LOCALS%_TALENT_M
+
+CALL CHA_CRI_VAR, "调教者的能力"
+CALLFORM %LOCALS%_ABL_T
+
+CALL CHA_CRI_VAR, "绳"
+CALLFORM %LOCALS%_ROPE
+
+CALL CHA_CRI_VAR, "眼罩"
+CALLFORM %LOCALS%_EYEMASK
+
+CALL CHA_CRI_VAR, "大镜"
+CALLFORM %LOCALS%_T_MILLER
+
+CALL CHA_CRI_VAR, "体位"
+CALLFORM %LOCALS%_S_POSITION
+
+CALL CHA_CRI_VAR, "连续行动修正"
+CALLFORM %LOCALS%_PREV
+
+CALL CHA_CRI_VAR, "口上修正値"
+CALL ACT_ACTM_KOJO_CORRECTION_T, 10
+
+CALL CHA_CRI_VAR, "ACT修正値"
+CALLFORM %LOCALS%_CORRECTION(ARG)
+
+;ARG但1以上那么处理中断
+SIF ARG
+	RETURN RESULT
+
+CALL CHA_CRI_VAR, "实行判定"
+CALLFORM %LOCALS%_ABLE
+
+;────────────────────────────────────
+;最终判定
+;────────────────────────────────────
+CALL DEF_CRI_VAR("最大前者")
+LOCAL = GET_CRI_VAR("決定")
+
+;插入做棒但无い场合、可能的らば假阴茎に变化。假阴茎但无い那么ここへ是来ない
+IF !PENIS(MASTER) && !TEQUIP:假阴茎
+	CALL ACT_ABLE26
+	IF RESULT
+		TFLAG:ACT分类 = 2
+		TFLAG:ACT     = 26
+	ELSE
+		TFLAG:ACT分类 = 0
+		TFLAG:ACT     = 0
+	ENDIF
+ELSEIF LOCAL == -1
+	SIF FLAG:DEBUG
+		PRINTL (性交奉仕类ACT中不存在可执行的ACT)
+	TFLAG:ACT = -1
+	CALL ACT_MENU_RESULT(2, "性奉")
+;插入做棒但无い场合、
+ELSE
+	LOCAL = GET_ACTNUM(RESULTS)
+	TFLAG:ACT = LOCAL
+	;性交奉仕连续数加算处理
+	SPLIT "351/352/354/355/356////353", "/", LOCALS
+	LOCAL = TOINT(LOCALS:(LOCAL - 95))
+	TFLAG:LOCAL++
+ENDIF
+CALL ANA_CRI_VAR()
+
+;-------------------------------------------------------------------------
+;基準値
+;-------------------------------------------------------------------------
+@ACT_ACTM10_REFERENCE
+
+;要らないかも和思った的で試しに无效化@これみ
+[SKIPSTART]
+CALL ADD_CRI_VAR("正常位侍奉", 10)
+CALL ADD_CRI_VAR("后背位侍奉", 8, 2)
+CALL ADD_CRI_VAR("逆强奸", 8, 2)
+CALL ADD_CRI_VAR("对面座位侍奉", 8, 2)
+CALL ADD_CRI_VAR("背面座位侍奉", 7, 3)
+CALL ADD_CRI_VAR("肛交侍奉", 5)
+[SKIPEND]
+
+;------------------------------------------
+;本次的调教方针
+;------------------------------------------
+@ACT_ACTM10_COURCE
+;调教方针(1=休息/2=温和/3=普通/4=强硬/5=异常)
+SELECTCASE POLICY("今")
+	CASE "温和"
+		CALL ADD_CRI_VAR("正常位侍奉"  , 1, 2)
+		CALL ADD_CRI_VAR("对面座位侍奉", 3)
+	CASE "强硬"
+		CALL ADD_CRI_VAR("后背位侍奉"        , 4)
+		CALL ADD_CRI_VAR("背面座位侍奉"      , 3)
+		CALL ADD_CRI_VAR("肛交侍奉", 2)
+	CASE "异常"
+		CALL ADD_CRI_VAR("肛交侍奉", 3)
+		CALL ADD_CRI_VAR("逆强奸", 1, 4)
+ENDSELECT
+
+
+;-------------------------------------------------------------------------
+;调教者的素質参照
+;-------------------------------------------------------------------------
+@ACT_ACTM10_TALENT_T
+
+;调教者但胆怯/刚毅
+IF TALENT:胆怯
+	CALL ADD_CRI_VAR("正常位侍奉", , 2)
+	CALL ADD_CRI_VAR("后背位侍奉" , -2)
+	CALL ADD_CRI_VAR("对面座位侍奉", , 3)
+	CALL ADD_CRI_VAR("背面座位侍奉", -2)
+	CALL ADD_CRI_VAR("逆强奸", -5)
+ELSEIF TALENT:刚毅
+	CALL ADD_CRI_VAR("后背位侍奉"  , 3)
+	CALL ADD_CRI_VAR("背面座位侍奉", 2)
+	CALL ADD_CRI_VAR("肛交侍奉", 1)
+ENDIF
+
+;调教者但反抗的/坦率
+IF TALENT:反抗的
+	CALL ADD_CRI_VAR("逆强奸", , 9)
+ELSEIF TALENT:坦率
+	CALL ADD_CRI_VAR("正常位侍奉", 2)
+	CALL ADD_CRI_VAR("逆强奸"   , -3)
+ENDIF
+
+;调教者但不越过底线
+IF TALENT:不越过底线
+	CALL ADD_CRI_VAR("后背位侍奉"  , -3)
+	CALL ADD_CRI_VAR("逆强奸"      , -4)
+	CALL ADD_CRI_VAR("对面座位侍奉", -1)
+	CALL ADD_CRI_VAR("背面座位侍奉", -3)
+	CALL ADD_CRI_VAR("肛交侍奉", -5)
+ENDIF
+
+;调教者但清楚
+IF TALENT:清楚
+	CALL ADD_CRI_VAR("正常位侍奉"  ,  3)
+	CALL ADD_CRI_VAR("后背位侍奉"  , -3)
+	CALL ADD_CRI_VAR("对面座位侍奉",  2)
+	CALL ADD_CRI_VAR("背面座位侍奉", -3)
+	CALL ADD_CRI_VAR("肛交侍奉", -3)
+	CALL ADD_CRI_VAR("逆强奸", -4)
+ENDIF
+
+;调教者但渴望关注
+SIF TALENT:渴望关注
+	CALL ADD_CRI_VAR("逆强奸", , 5)
+
+;调教者的处女、贞操观念など的处理
+IF TALENT:处女 && CFLAG:M好感 < 1000
+	CALL ADD_CRI_VAR("正常位侍奉"  , -5 - TALENT:贞操观念 * 5 + TALENT:不在意贞操 * 3 - CFLAG:M好感 / 500)
+	CALL ADD_CRI_VAR("后背位侍奉"  , -5 - TALENT:贞操观念 * 5 + TALENT:不在意贞操 * 3 - CFLAG:M好感 / 500)
+	CALL ADD_CRI_VAR("逆强奸"      , -5 - TALENT:贞操观念 * 5 + TALENT:不在意贞操 * 3 - CFLAG:M好感 / 500)
+	CALL ADD_CRI_VAR("对面座位侍奉", -5 - TALENT:贞操观念 * 5 + TALENT:不在意贞操 * 3 - CFLAG:M好感 / 500)
+	CALL ADD_CRI_VAR("背面座位侍奉", -5 - TALENT:贞操观念 * 5 + TALENT:不在意贞操 * 3 - CFLAG:M好感 / 500)
+ENDIF
+
+;调教者但被动
+IF TALENT:被动
+	CALL ADD_CRI_VAR("正常位侍奉", 3)
+	CALL ADD_CRI_VAR("后背位侍奉", 3)
+ENDIF
+
+;调教者但献身的
+IF TALENT:献身的
+	CALL ADD_CRI_VAR("对面座位侍奉", 2)
+	CALL ADD_CRI_VAR("背面座位侍奉", 2)
+	CALL ADD_CRI_VAR("逆强奸"      , 3)
+ENDIF
+
+;调教者但淫壶
+IF TALENT:淫壶
+	CALL ADD_CRI_VAR("正常位侍奉"  , 4, 2)
+	CALL ADD_CRI_VAR("后背位侍奉"  , 4, 2)
+	CALL ADD_CRI_VAR("逆强奸"      , 4, 2)
+	CALL ADD_CRI_VAR("对面座位侍奉", 4, 2)
+	CALL ADD_CRI_VAR("背面座位侍奉", 4, 2)
+ENDIF
+
+;调教者但虐待狂
+IF TALENT:虐待狂
+	CALL ADD_CRI_VAR("正常位侍奉"  ,  2)
+	CALL ADD_CRI_VAR("后背位侍奉"  , -2)
+	CALL ADD_CRI_VAR("逆强奸"      ,  5)
+	CALL ADD_CRI_VAR("对面座位侍奉",  3)
+	CALL ADD_CRI_VAR("背面座位侍奉", -2)
+ENDIF
+
+;调教者但心优しい
+IF TALENT:好心眼
+	CALL ADD_CRI_VAR("正常位侍奉"  , 2)
+	CALL ADD_CRI_VAR("对面座位侍奉", 2)
+ENDIF
+
+;调教舎但腰使
+IF TALENT:MASTER:腰使
+	CALL ADD_CRI_VAR("正常位侍奉", 2)
+	CALL ADD_CRI_VAR("逆强奸"    , 5)
+ENDIF
+
+;调教者但倒错的
+IF TALENT:倒错的
+	CALL ADD_CRI_VAR("肛交侍奉", , 2)
+	CALL ADD_CRI_VAR("逆强奸", , 2)
+ENDIF
+
+;调教者但Ｃ敏感/钝感
+IF TALENT:Ｃ敏感
+	CALL ADD_CRI_VAR("正常位侍奉"  , , 2)
+	CALL ADD_CRI_VAR("对面座位侍奉", , 2)
+	CALL ADD_CRI_VAR("背面座位侍奉", , 2)
+ELSEIF TALENT:Ｃ钝感
+	CALL ADD_CRI_VAR("对面座位侍奉", , -2)
+	CALL ADD_CRI_VAR("背面座位侍奉", , -2)
+ENDIF
+
+;调教者但Ｖ敏感/钝感
+IF TALENT:Ｖ敏感
+	CALL ADD_CRI_VAR("正常位侍奉", , 4)
+	CALL ADD_CRI_VAR("后背位侍奉", , 4)
+	CALL ADD_CRI_VAR("逆强奸"    , , 4)
+	CALL ADD_CRI_VAR("对面座位侍奉", , 4)
+	CALL ADD_CRI_VAR("背面座位侍奉", , 4)
+ELSEIF TALENT:Ｖ钝感
+	CALL ADD_CRI_VAR("肛交侍奉", , 2)
+ENDIF
+
+;调教者但Ａ敏感/钝感
+IF TALENT:Ａ敏感
+	CALL ADD_CRI_VAR("肛交侍奉", , 3)
+ELSEIF TALENT:Ａ钝感
+	CALL ADD_CRI_VAR("肛交侍奉", -2)
+ENDIF
+
+;-------------------------------------------------------------------------
+;调教对象的素質参照
+;-------------------------------------------------------------------------
+@ACT_ACTM10_TALENT_M
+
+;调教对象但童贞
+IF TALENT:MASTER:童贞
+	CALL ADD_CRI_VAR("正常位侍奉"  , -7 + CFLAG:合意 * 5 + CFLAG:M好感 / 500 + GET_TRAINLV(TARGET) / 3)
+	CALL ADD_CRI_VAR("后背位侍奉"  , -7 + CFLAG:合意 * 5 + CFLAG:M好感 / 500 + GET_TRAINLV(TARGET) / 3)
+	CALL ADD_CRI_VAR("逆强奸"      , -7 + CFLAG:合意 * 5 + CFLAG:M好感 / 500 + GET_TRAINLV(TARGET) / 3)
+	CALL ADD_CRI_VAR("对面座位侍奉", -7 + CFLAG:合意 * 5 + CFLAG:M好感 / 500 + GET_TRAINLV(TARGET) / 3)
+	CALL ADD_CRI_VAR("背面座位侍奉", -7 + CFLAG:合意 * 5 + CFLAG:M好感 / 500 + GET_TRAINLV(TARGET) / 3)
+ENDIF
+
+;调教对象但倒错的
+SIF TALENT:MASTER:倒错的
+	CALL ADD_CRI_VAR("肛交侍奉", 2, 1)
+
+;────────────────────────────────────
+;能力、参数根据变动
+;────────────────────────────────────
+;-------------------------------------------------------------------------
+;调教者的能力被参照
+;-------------------------------------------------------------------------
+@ACT_ACTM10_ABL_T
+
+;调教者的Ｃ感觉
+IF ABL:Ｃ感觉
+	CALL ADD_CRI_VAR("正常位侍奉"  , ABL:Ｃ感觉, 1)
+	CALL ADD_CRI_VAR("对面座位侍奉", ABL:Ｃ感觉, 1)
+	CALL ADD_CRI_VAR("背面座位侍奉", ABL:Ｃ感觉, 1)
+ENDIF
+
+;调教者的Ｖ感觉
+IF ABL:Ｖ感觉
+	CALL ADD_CRI_VAR("正常位侍奉"  , ABL:Ｖ感觉, 2)
+	CALL ADD_CRI_VAR("后背位侍奉"  , ABL:Ｖ感觉, 1)
+	CALL ADD_CRI_VAR("逆强奸"      , ABL:Ｖ感觉, 2)
+	CALL ADD_CRI_VAR("对面座位侍奉", ABL:Ｖ感觉, 1)
+	CALL ADD_CRI_VAR("背面座位侍奉", ABL:Ｖ感觉, 1)
+ENDIF
+
+;调教者的Ａ感觉
+SIF ABL:Ａ感觉
+	CALL ADD_CRI_VAR("肛交侍奉", ABL:Ａ感觉, 1)
+
+;调教者的Ａ経験但[0→-15, 20→0]被加算(-15～0)
+CALL ADD_CRI_VAR("肛交侍奉", LINE_CALC(EXP:Ａ経験, "0→-15,20→0,LIMIT/-15～0"))
+
+;────────────────────────────────────
+;上次的行动や状況根据变动
+;────────────────────────────────────
+;-------------------------------------
+;绳
+;-------------------------------------
+@ACT_ACTM10_ROPE
+
+IF TEQUIP:绳
+	CALL ADD_CRI_VAR("后背位侍奉", -5)
+	CALL ADD_CRI_VAR("肛交侍奉", -5)
+ENDIF
+
+;-------------------------------------
+;眼罩
+;-------------------------------------
+@ACT_ACTM10_EYEMASK
+
+IF TEQUIP:眼罩
+	CALL ADD_CRI_VAR("后背位侍奉", -5)
+	CALL ADD_CRI_VAR("肛交侍奉", -5)
+ENDIF
+
+;-------------------------------------
+;大镜
+;-------------------------------------
+@ACT_ACTM10_T_MILLER
+
+SIF TEQUIP:大镜
+	CALL ADD_CRI_VAR("背面座位侍奉", 3)
+
+;────────────────────────────────────
+;体位相关
+;────────────────────────────────────
+@ACT_ACTM10_S_POSITION
+#DIM LCOUNT
+
+;TEQUIP:性交奉仕中 的引数和对应侍奉
+SPLIT "正常位侍奉/后背位侍奉/逆强奸/对面座位侍奉/背面座位侍奉/肛交侍奉", "/", LOCALS
+
+;体位变更的强硬ル
+IF TEQUIP:性交奉仕中
+	CALL ADD_CRI_VAR(LOCALS:(TEQUIP:性交奉仕中), 5, 5)
+ENDIF
+
+;────────────────────────────────────
+;同じ行动连续实行的确率被ダウンし增加
+;────────────────────────────────────
+@ACT_ACTM10_PREV
+
+LOCAL = 95, 96, 103, 97, 98
+SELECTCASE TFLAG:前ACT
+	;肛交是连续实行制限に引っかからない
+	CASE 95 TO 98, 103
+		LOCAL = FINDELEMENT(LOCAL, TFLAG:前ACT) + 351
+		CALL ADD_CRI_VAR(GET_ACTNAME(TFLAG:前ACT), -3 * TFLAG:LOCAL / 100, -4 * TFLAG:LOCAL / 100)
+ENDSELECT
+
+;────────────────────────────────────
+;修正値計算
+;────────────────────────────────────
+@ACT_ACTM10_CORRECTION(ARG)
+#DIM LCOUNT
+
+;ARG但0以外那么修正値被計算し、以后的处理被行わない
+IF ARG
+	FOR LCOUNT, 95, 100
+		CALL ACT_M_RES_CALC(LCOUNT, GET_CRI_VAR(GET_ACTNAME(LCOUNT) + "累计"))
+	NEXT
+	CALL ACT_M_RES_CALC(103, GET_CRI_VAR("逆强奸累计"))
+ELSE
+	;修正値被判定値に加算做
+	CALL ACT_ACTM_CORRECTION(10)
+ENDIF
+
+;────────────────────────────────────
+;其他变动や实行不可能的判定
+;────────────────────────────────────
+@ACT_ACTM10_ABLE
+#DIM LCOUNT
+
+;不可能判定
+CALL ACT_ACTM_ABLE(10)
+

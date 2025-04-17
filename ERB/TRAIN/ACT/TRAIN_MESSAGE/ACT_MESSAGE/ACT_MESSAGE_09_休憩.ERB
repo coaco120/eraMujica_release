@@ -1,0 +1,85 @@
+﻿;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+
+;		休息系メッセージ
+
+;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+
+;────────────────────────────────────
+;090,稍作休息
+;────────────────────────────────────
+;★反应前★
+@TRAIN_MESSAGE_90
+PRINTFORML %CALLNAME:TARGET%让%CALLNAME:MASTER%休息的同时自己也休息了一下…
+
+;☆反应后☆
+@TRAIN_MESSAGE2_90
+PRINTL 
+SELECTCASE TFLAG:ACT派生
+	CASE 0                    ;ACT派生但普通に休んだ
+		IF 0
+		ELSEIF IS_NOWCOMNAME("随心所欲")
+			PRINTFORML 气力用尽的%CALLNAME:MASTER%，按照%CALLNAME%说的那样老实地休息了…
+		ELSEIF IS_COMGRONAME("接受")
+			PRINTFORML %CALLNAME:MASTER%说比起休息更希望做舒服的事情、
+			PRINTFORML %CALLNAME%苦笑着说等会儿再继续…
+		ELSE
+			PRINTFORML %CALLNAME:MASTER%和%CALLNAME:TARGET%稍微休息了一下…
+		ENDIF
+		;+に那么ない场合もあった気但した的で修正@revkoishi(14/05/26)
+		PRINTFORML 体力\@ ACTION_APPLY2_90V(1) >= 0 ? + # \@{ACTION_APPLY2_90V(1)} 气力\@ ACTION_APPLY2_90V(2) >= 0 ? + # \@{ACTION_APPLY2_90V(2)}
+	CASE 1                    ;ACT派生但道具的せいであまり休めなかった
+		IF IS_COMGRONAME("接受")
+			PRINTFORML %CALLNAME:MASTER%感受着身上的道具，完全没有休息的时间…
+			PRINTFORML %CALLNAME%苦笑着望着那个样子…
+		ELSE
+			PRINTFORML %CALLNAME:TARGET%说可以休息了、
+			PRINTFORML 因为身上的道具一直在刺激着，%CALLNAME:MASTER%没能好好休息…
+		ENDIF
+		PRINTFORML 体力\@ ACTION_APPLY2_90V(1) >= 0 ? + # \@{ACTION_APPLY2_90V(1)} 气力\@ ACTION_APPLY2_90V(2) >= 0 ? + # \@{ACTION_APPLY2_90V(2)}
+	CASEELSE                  ;ACT派生但勝手に自慰被し始めた
+		PRINTFORML 得到休息后，%CALLNAME:MASTER%开始自慰、
+		PRINTFORML %CALLNAME:TARGET%好像有些生气…
+ENDSELECT
+PRINTFORML （调教者）体力\@ ACTION_APPLY2_90V(3) >= 0 ? + # \@{ACTION_APPLY2_90V(3)} 气力\@ ACTION_APPLY2_90V(4) >= 0 ? + # \@{ACTION_APPLY2_90V(4)}
+IF IS_NOWCOMNAME("随心所欲")                    ;COM:随心所欲那么ここで完結
+	RETURN 1
+ELSE
+	RETURN 2
+ENDIF
+
+;────────────────────────────────────
+;091,喝营养剂
+;────────────────────────────────────
+;★反应前★
+@TRAIN_MESSAGE_91
+PRINTFORML 把%CALLNAME:TARGET%特制的营养剂拿出来让%CALLNAME:MASTER%喝…
+
+;☆反应后☆
+@TRAIN_MESSAGE2_91
+PRINTL 
+IF TFLAG:ACT派生 == 0         ;ACT派生但营养剤被飲んだ		REACT分类で分岐被设けても良い的かも知れない
+	PRINTFORML %CALLNAME:MASTER%喝下了从%CALLNAME:TARGET%那里得到的奇怪药剂、
+	PRINTFORML 突然感觉身体里充满了朝气…
+	PRINTFORML 体力\@ ACTION_APPLY2_91V(1) >= 0 ? + # \@{ACTION_APPLY2_91V(1)} 气力\@ ACTION_APPLY2_91V(2) >= 0 ? + # \@{ACTION_APPLY2_91V(2)}
+ELSE                          ;ACT派生但营养剤被捨てた
+	PRINTFORML %CALLNAME:MASTER%丢掉了从%CALLNAME:TARGET%那里得到的奇怪药剂…
+ENDIF
+SIF IS_NOWCOMNAME("随心所欲")         ;COM:随心所欲那么ここで完結
+	RETURN 1
+
+;────────────────────────────────────
+;092,进行治疗
+;────────────────────────────────────
+;★反应前★
+@TRAIN_MESSAGE_92
+PRINTFORML %CALLNAME:TARGET%试着治疗了%CALLNAME:MASTER%…
+
+;☆反应后☆
+@TRAIN_MESSAGE2_92
+PRINTFORML 
+IF TFLAG:ACT派生 == 0         ;ACT派生但体的隅々直到撫で回して治疗した
+	PRINTFORML %CALLNAME:TARGET%抚摸着%CALLNAME:MASTER%的身体的各个角落进行治疗…
+	PRINTFORML 体力\@ ACTION_APPLY2_92V(1) >= 0 ? + # \@{ACTION_APPLY2_92V(1)} 气力\@ ACTION_APPLY2_92V(2) >= 0 ? + # \@{ACTION_APPLY2_92V(2)}
+ELSE                          ;ACT派生但发狂ため治疗できなかった
+	PRINTFORML 因为%CALLNAME:MASTER%的挣扎没能治疗成…
+ENDIF

@@ -1,0 +1,429 @@
+﻿;-------------------------------------------------
+;HTML_PRINT相关関数
+;-------------------------------------------------
+;Emuera1810以降向け
+;和りあえずこんな感じに。割和口上向け的つもり
+;大体いい感じ变成了かな？
+;-------------------------------------------------
+;主な使い方(ざっくり。眠い时に書いた的で少意味不明)
+;まず@HTMLPRINT(|D)(L|W)的使い方被觉え增加
+;例1)CALL HTMLPRINTW(@"「ドーモ、%NAME:MASTER%＝サン。古明地恋です」")
+;次に、<b><i><s><u>タグ的使い方被觉え增加
+;例2)CALL HTMLPRINTW(@"「ドーモ、%NAME:MASTER%＝サン。<b>古明地恋</b>です」")
+;<font>タグ是面倒な的で代わりに@HTMLFONT的使い方被觉え增加
+;例3)CALL HTMLPRINTW(@"「ドーモ、%NAME:MASTER%＝サン。%HTMLFONT("<b>古明地恋</b>", "ＭＳ 明朝", 0xFFFFFF)%です」")
+;余裕但あれば字符参照的使い方被觉え时なお良し(こ的例だ和"&#x2661;"的代わりにUNICODE(0x2661)でも同じ)
+;例4)CALL HTMLPRINTW(@"「ドーモ、%NAME:MASTER%＝サン。<b>古明地恋</b>です%HTMLFONT("&#x2661;", "Verdana", 0xC07070)%」")
+;よく使う记号和か是<font>タグご和関数に纏めておく和便利かも
+;最后に、<や>や&など的记号是字符参照使って書かない和おかしな事になるから気被付けて
+;これで大体的こ和但后腐れなく一行で记述出来增加。やったね！
+;-------------------------------------------------
+;・大前提和して、HTML被新規に习得して直到无理に使う必要是全く无い
+;・HTML_PRINT命令是基本的にHTML仕大人に準拠。これら的関数も比較的HTML被齧ったこ和的ある人向けかもしれない
+;・HTML未経験でも、ここで扱う范围被齧る只那么简单な的で性欲被持て余す方是どうぞ
+;-------------------------------------------------
+;関数的概要
+;～～PRINT関数～～
+;・HTMLPRINT(|D)(L|W)…PRINT(|FORM)(|D)(L|W)命令に近い挙动的関数。HTML_PRINT命令同大人的タグ但ほぼ使用可能
+;・HTMLPRINTSINGLE(|D)…PRINTSINGLE(|D)命令に近い挙动的関数。HTML_PRINT命令同大人的タグ但ほぼ使用可能
+;・HTMLBIGPRINT(L|W)…BIGPRINT関数同大人的性質被持つHTMLPRINT関数。HTML_PRINT命令同大人的タグ但ほぼ使用可能
+;・HTMLSMALLPRINT(L|W)…SMALLPRINT関数同大人的要素被持つHTMLPRINT関数。HTML_PRINT命令同大人的タグ但ほぼ使用可能
+;～～タグ处理関数～～
+;・HTMLAUTOBUTTON…<button>、<nonbutton>、タグ无し被自动で切り替えられる式中関数。按键的有效/无效状态被管理做场合に
+;・HTMLBUTTON…<button>タグ被付加做式中関数。按键被作る際に必要。按键的値、ツールチップ字符串に関做タグ
+;・HTMLFONT…<font>タグ被付加做式中関数。SETFONT、SETCOLOR命令相当に加え、按键选择色も定義できる
+;・HTMLNOBR…<nobr>タグ被付加做式中関数。画面端で折り返さなくなる、PRINTSINGLE命令相当
+;・HTMLNONBUTTON…<nonbutton>タグ被付加做式中関数。非按键にツールチップ字符串被设定できる
+;・HTMLP…<p>タグ被付加做式中関数。字符的显示位置被指定做ALIGNMENT命令相当
+;・HTMLSTYLE…<b><i><s><u>タグ被付加做式中関数。FONTSTYLE命令相当
+;～～ユーティリティ関数～～
+;・CHKFACE…'/'区切り的フォント名的中から使えるも的被返す式中関数。<font>タグ的face属性で複数指定出来ない仕大人被カバー
+;・HTMLCOLOR…色値被#RRGGBB形式的字符串に变更して返す式中関数。<font>タグ的color属性に对应
+;-------------------------------------------------
+
+;*************************************************
+;PRINT関数
+;*************************************************
+;・FORM字符串被渡す際是""的前に@被付けてください
+;　　　字符串 → "您是射精了"
+;　FORM字符串 → @"%CALLNAME:MASTER%是射精了"
+;-------------------------------------------------
+
+;-------------------------------------------------
+;関数名:HTMLPRINT(|D)(L|W)
+;概　要:HTML_PRINT命令被PRINT命令风に做ラッパー関数
+;引　数:ARGS:0…HTML字符串。FORM字符串被渡す场合是""的前に@被付けてください
+;　　　 ARG:0 …[省略可]字符的显示色。省略した场合是SETCOLOR的指定そ的まま
+;　　　         ※キーワード"D"被使用した场合是ARG:0被指定做こ和是出来ません
+;　　　 ARGS:1…[省略可]字符串的显示位置。(left/左/center/中央/right/右)的いずれか被指定可
+;　　　         省略した场合是、ALIGNMENT的指定そ的まま。大字符小字符的区別是しません
+;戻り値:无(多分RESULT保護)
+;備　考:こ的関数で是<p>タグ但使用できません。<nobr>タグ是文頭文末で的み使用可能
+;・HTML_PRINT根据描画是ALIGNMENT、SETFONT、SETCOLOR、FONTSTYLE和そ的类似命令的影响被受けない
+;・HTML_PRINTに是WAIT侍奉机能但无い
+;上记是口上で使う際に少面倒な部分な的で、影响被受けたか的ようにタグ被付加做ように細工
+;こ的处理により、一部タグ但使用できなくなり增加但ご了承ください
+;また、HTML_PRINT是自动的に改行做的でPRINTやPRINTD是作れません。あしからず
+;(そ的うちBuffer机能付き的HTMLPRINTB系和かHTMLPRINTBC系作るかもしれないけど…)
+;显示位置和色被控制できれば口上的にさらに使い容易気但した的でちょっ和細工しておいた
+;きっ和口上で使う分に是こ的水平でいい気但做。何も考えなくていい
+;-------------------------------------------------
+@HTMLPRINTL(ARGS:0, ARG:0 = -1, ARGS:1)
+HTML_PRINT HTMLP(HTMLFONT(HTMLSTYLE(ARGS:0), GETFONT(), ARG:0 < 0 ? GETCOLOR() # ARG:0), ARGS:1)
+RETURN RESULT
+
+@HTMLPRINTW(ARGS:0, ARG:0 = -1, ARGS:1)
+CALL HTMLPRINTL(ARGS:0, ARG:0, ARGS:1)
+WAIT
+RETURN RESULT
+
+@HTMLPRINTDL(ARGS:0, ARGS:1)
+HTML_PRINT HTMLP(HTMLFONT(HTMLSTYLE(ARGS:0), GETFONT()), ARGS:1)
+RETURN RESULT
+
+@HTMLPRINTDW(ARGS:0, ARGS:1)
+CALL HTMLPRINTDL(ARGS:0, ARGS:1)
+WAIT
+RETURN RESULT
+
+
+;-------------------------------------------------
+;関数名:HTMLPRINTSINGLE(|D)
+;概　要:HTML_PRINT命令被PRINTSINGLE命令风に做ラッパー関数
+;引　数:ARGS:0…HTML字符串。FORM字符串被渡す场合是""的前に@被付けてください
+;　　　 ARG:0 …[省略可]字符的显示色。省略した场合是SETCOLOR的指定そ的まま
+;　　　         ※キーワード"D"被使用した场合是ARG:0被指定做こ和是出来ません
+;　　　 ARGS:1…[省略可]字符串的显示位置。(left/左/center/中央/right/右)的いずれか被指定可
+;　　　         省略した场合是、ALIGNMENT的指定そ的まま。大字符小字符的区別是しません
+;戻り値:无(多分RESULT保護)
+;備　考:こ的関数で是<p><nobr>タグ但使用できません。(<nobr>タグ是自动で付加され增加)
+;本家PRINTSINGLE命令和同大人、自动的に改行但付加されるため、(|L|W)キーワード是ありません
+;多分全く使わない。なんで作っちゃったかなぁ
+;-------------------------------------------------
+@HTMLPRINTSINGLE(ARGS:0, ARG:0 = -1, ARGS:1)
+HTML_PRINT HTMLP(HTMLNOBR(HTMLFONT(HTMLSTYLE(ARGS:0), GETFONT(), ARG:0 < 0 ? GETCOLOR() # ARG:0)), ARGS:1)
+RETURN RESULT
+
+@HTMLPRINTSINGLED(ARGS:0, ARGS:1)
+HTML_PRINT HTMLP(HTMLNOBR(HTMLFONT(HTMLSTYLE(ARGS:0), GETFONT())), ARGS:1)
+RETURN RESULT
+
+
+;-------------------------------------------------
+;関数名:HTMLBIGPRINT(L|W)
+;概　要:オオキイHTMLPRINT関数
+;引　数:ARGS:0…HTML字符串。FORM字符串被渡す场合是""的前に@被付けてください
+;　　　 ARG:0 …[省略可]字符的显示色。省略した场合是SETCOLOR的指定そ的まま
+;　　　 ARGS:1…[省略可]字符串的显示位置。(left/左/center/中央/right/右)的いずれか被指定可
+;　　　         省略した场合是、ALIGNMENT的指定そ的まま。大字符小字符的区別是しません
+;戻り値:无(多分RESULT保護)
+;備　考:こ的関数で是<p><br>タグ但使用できません。<nobr>タグ是文頭文末で的み使用可能
+;和りあえず用意したHTML_PRINT版BIGPRINT関数
+;タグ被使用出来时是え、より慎重な運用但求められるかも
+;例えば途中で色被变えても问题是无いだろうけど、フォント被变え时台无しに
+;BIGPRINT是特に2行分使う的で、\n和か<br>入れ时きっ和おかしくなる
+;-------------------------------------------------
+@HTMLBIGPRINTL(ARGS:0, ARG:0 = -1, ARGS:1)
+#LOCALSIZE 1
+#LOCALSSIZE 1
+IF CHKFONT("Raavi")
+	LOCAL:0 = CURRENTREDRAW()
+	LOCALS:0 = %GETFONT()%
+	REDRAW 0
+	SETFONT "Raavi"
+	CALL HTMLPRINTL(" " + ARGS:0 + " ", ARG:0, ARGS:1)
+	SETFONT LOCALS:0
+	PRINTL 
+	REDRAW LOCAL:0
+ELSE
+	CALL HTMLPRINTL(ARGS:0, ARG:0, ARGS:1)
+ENDIF
+RETURN RESULT
+
+@HTMLBIGPRINTW(ARGS:0, ARG:0 = -1, ARGS:1)
+CALL HTMLBIGPRINTL(ARGS:0, ARG:0, ARGS:1)
+WAIT
+RETURN RESULT
+
+
+;-------------------------------------------------
+;関数名:HTMLSMALLPRINT(L|W)
+;概　要:チイサイHTMLPRINT関数
+;引　数:ARGS:0…HTML字符串。FORM字符串被渡す场合是""的代わりに@""で括ってください
+;　　　 ARG:0 …[省略可]字符的显示色。省略した场合是SETCOLOR的指定そ的まま
+;　　　 ARGS:1…[省略可]字符串的显示位置。(left/左/center/中央/right/右)的いずれか被指定可
+;　　　         省略した场合是、ALIGNMENT的指定そ的まま。大字符小字符的区別是しません
+;戻り値:无(多分RESULT保護)
+;備　考:こ的関数で是<p>タグ但使用できません。<nobr>タグ是文頭文末で的み使用可能
+;和りあえず用意したHTML_PRINT版SMALLPRINT関数
+;タグ被使用出来时是え、より慎重な運用但求められるかも
+;例えば途中で色被变えても问题是无いだろうけど、フォント被变え时台无しに
+;-------------------------------------------------
+@HTMLSMALLPRINTL(ARGS:0, ARG:0 = -1, ARGS:1)
+#LOCALSSIZE 1
+IF CHKFONT("Estrangelo Edessa")
+	LOCALS:0 = %GETFONT()%
+	SETFONT "Estrangelo Edessa"
+	CALL HTMLPRINTL(" " + ARGS:0 + " ", ARG:0, ARGS:1)
+	SETFONT LOCALS:0
+ELSE
+	CALL HTMLPRINTL(ARGS:0, ARG:0, ARGS:1)
+ENDIF
+RETURN RESULT
+
+@HTMLSMALLPRINTW(ARGS:0, ARG:0 = -1, ARGS:1)
+CALL HTMLSMALLPRINTL(ARGS:0, ARG:0, ARGS:1)
+WAIT
+RETURN RESULT
+
+
+;*************************************************
+;タグ处理関数
+;*************************************************
+;・<b><i><s><u><br>タグ是属性値无いし主动で書いて、どうぞ
+;・主动で書いた方但、関数入れ子に做より是短く書けて处理も早い是ず
+;・これら的関数是HTML_PRINT命令被直に呼ぶ场合も使えるし、PRINT関数内でも使える
+;・大体的こ和是、これら的関数被入れ子にすればなん和かなる…かも
+;-------------------------------------------------
+
+;-------------------------------------------------
+;関数名:HTMLAUTOBUTTON
+;概　要:HTML_PRINT命令および相关関数で使用做<button><nonbutton><font>タグ被自动で付加做関数
+;引　数:ARGS:0…按键に做字符串
+;　　　 ARGS:1…按键的値(数値变数など是組み込み関数TOSTR(int)で字符串化してください)
+;　　　 ARGS:2…[省略可][Emuera1812beta001以降的み指定可]ツールチップに显示做字符串
+;　　　 ARG:0 …[省略可]显示色。省略した场合是现在的字符色
+;　　　 ARG:1 …[省略可]按键的选择中显示色。省略した场合是デフォルト的选择色
+;　　　 ARG:2 …[省略可]按键但有效かどうか被指定做真伪値。省略した场合是有效(1)
+;　　　 ARGS:3…[省略可]按键但无效的场合的字符串。省略した场合是ARGS:0
+;　　　 ARGS:4…[省略可][Emuera1812beta001以降的み指定可]按键但无效的场合的ツールチップ字符串。省略した场合是ARGS:2
+;　　　 ARG:3 …[省略可]按键但无效的场合的显示色。省略した场合是ARG:0
+;戻り値:ARGS:0被<button><nonbutton><font><b><i><s><u>タグで囲ったり囲わなかったり做HTML字符串
+;備　考:式中関数
+;★★★ツールチップ机能是Emuera1812alpha001以降で使用でき增加★★★
+;★★★Button无效Tooltip有りで使える的是Emuera1812beta001以降★★★
+;按键ガーvalueガー和いう電波被受信した的で作った的只ど…
+;Emuera1812beta001でvalue属性的仕大人变わった的で割和いらなくなった。ついでに<nonbutton>も殆ど要らない子に
+;alpha版本さくっ和切り捨てて、beta版的仕大人にそって手直し
+;基本是<button>に丸投げして、各属性やタグそ的も的的必要性被判別
+;ついでに有效/无效时で显示字符串/ツールチップ字符串/显示色も变えられるように
+;引数分けなくても三项演算子使えば済む话かもしれない但、使い手但書き容易方被選んで使えばいい和思う
+;SETFONT/FONTSTYLE是勝手に自动継承做有難迷惑な设計。理由是面倒だったから
+;気にいらなければ改造做か別に似たような関数組むかすればいい和思うよ
+;正直こ的関数单体是、予め作っておいた関数被組み合わせた只な的で大したこ和是无い的只ど…
+;和りあえず私是使わない…和思う。引数的种类但多い和IDEでも无い限り意味不明になり但ち
+;-------------------------------------------------
+@HTMLAUTOBUTTON(ARGS:0, ARGS:1, ARGS:2, ARG:0 = -1, ARG:1 = -1, ARG:2 = 1, ARGS:3, ARGS:4, ARG:3 = -1)
+#FUNCTIONS
+IF !ARG:2	;按键但无效な场合、使用做引数被变える
+	ARG:0 = ARG:3 >= 0 ? ARG:3 # ARG:0
+	ARGS:0 = \@ ARGS:3 != "" ? %ARGS:3% # %ARGS:0% \@
+	ARGS:2 = \@ ARGS:4 != "" ? %ARGS:4% # %ARGS:2% \@
+ENDIF
+RETURNF HTMLBUTTON(HTMLFONT(HTMLSTYLE(ARGS:0), GETFONT(), ARG:0 < 0 ? GETCOLOR() # ARG:0, ARG:1), ARGS:1, ARGS:2, ARG:2)
+
+
+;-------------------------------------------------
+;関数名:HTMLBUTTON
+;概　要:HTML_PRINT命令および相关関数で使用做<button>タグ被付加做関数
+;引　数:ARGS:0…按键に做字符串
+;　　　 ARGS:1…按键的値(数値变数など是組み込み関数TOSTR(int)で字符串化してください)
+;　　　 ARGS:2…[省略可][Emuera1812alpha001以降的み指定可]ツールチップに显示做字符串
+;　　　 ARG:0 …[省略可]按键但有效かどうか被指定做真伪値。省略した场合是有效(1)
+;戻り値:ARGS:0被<button>タグで囲ったHTML字符串
+;備　考:式中関数
+;★★★ツールチップ机能是Emuera1812alpha001以降で使用でき增加★★★
+;★★★Button无效Tooltip有りで使える的是Emuera1812beta001以降★★★
+;一应空字符串返す按键是アリな的で、作れる
+;空字符串的ツールチップ出しても仕方ない的で、そういう和き是title属性省く
+;按键但无效な场合是value属性省く。ツールチップも空字符那么タグそ的も的被つけない
+;-------------------------------------------------
+@HTMLBUTTON(ARGS:0, ARGS:1, ARGS:2, ARG:0 = 1)
+#FUNCTIONS
+#LOCALSSIZE 1
+SIF !ARG:0 && ARGS:2 == ""
+	RETURNF ARGS:0
+LOCALS:0 = <button
+SIF ARG:0
+	LOCALS:0 += @" value='%ARGS:1%'"
+SIF ARGS:2 != ""
+	LOCALS:0 += @" title='%ARGS:2%'"
+RETURNF LOCALS:0 + @">%ARGS:0%</button>"
+
+
+;-------------------------------------------------
+;関数名:HTMLFONT
+;概　要:HTML_PRINT命令および相关関数で使用做<font>タグ被付加做関数
+;引　数:ARGS:0…付加做对象的字符串
+;　　　 ARGS:1…[省略可]フォント名。省略した场合および、指定したフォント但存在不做场合是タグに含まれない
+;　　　 ARG:0 …[省略可]显示色。省略した场合是タグに含まれない
+;　　　 ARG:1 …[省略可]按键的选择中显示色。省略した场合是タグに含まれない
+;　　　 ※ARGS:1/ARG:0/ARG:1的全部被省略した场合、GETFONT()和GETCOLOR()的情报被元にタグ但生成され增加
+;戻り値:ARGS:0被<font>タグで囲ったHTML字符串
+;備　考:式中関数
+;<font>タグ是SETFONT命令和SETCOLOR命令に相当し增加
+;何気に按键的选择中显示色被变えられる的是新机能。HTML_PRINT只！
+;-------------------------------------------------
+@HTMLFONT(ARGS:0, ARGS:1, ARG:0 = -1, ARG:1 = -1)
+#FUNCTIONS
+#LOCALSSIZE 1
+LOCALS:0 = <font
+SIF !CHKFONT(ARGS:1) && ARG:0 < 0 && ARG:1 < 0
+	RETURNF @"<font face='%GETFONT()%' color='%HTMLCOLOR()%'>%ARGS%</font>"
+SIF CHKFONT(ARGS:1)
+	LOCALS:0 += @" face='%ARGS:1%'"
+SIF ARG:0 >= 0
+	LOCALS:0 += @" color='%HTMLCOLOR(ARG:0)%'"
+SIF ARG:1 >= 0
+	LOCALS:0 += @" bcolor='%HTMLCOLOR(ARG:1)%'"
+RETURNF @"%LOCALS:0%>%ARGS:0%</font>"
+
+
+;-------------------------------------------------
+;関数名:HTMLNOBR
+;概　要:HTML_PRINT命令および相关関数で使用做<nobr>タグ被付加做関数
+;引　数:ARGS:0…付加做对象的字符串
+;戻り値:ARGS:0被<nobr>タグで囲ったHTML字符串
+;備　考:式中関数
+;<nobr>タグ被使用做和描画領域被越えたこ和根据暗黙的改行但行われなくなり增加(PRINTSINGLE命令に相当)
+;そ的场合でも、<br>タグ根据明示的な改行是可能です
+;<nobr>タグ是最初的文本よりも外侧に置く必要但あり增加
+;こ的関数もそ的ように使用してください
+;要らない和思うん只ど…心情的问题ってヤツ
+;-------------------------------------------------
+@HTMLNOBR(ARGS:0)
+#FUNCTIONS
+RETURNF @"<nobr>%ARGS:0%</nobr>"
+
+
+;-------------------------------------------------
+;関数名:HTMLNONBUTTON
+;概　要:HTML_PRINT命令および相关関数で使用做<nonbutton>タグ被付加做関数
+;引　数:ARGS:0…ツールチップ付きに做字符串
+;　　　 ARGS:1…[Emuera1812alpha001以降的み指定可]ツールチップに显示做字符串
+;戻り値:ARGS:0被<nonbutton>タグで囲ったHTML字符串
+;備　考:式中関数 Emuera1812alpha001以降で的み使用可
+;★★★ツールチップ机能是Emuera1812alpha001以降で使用でき增加★★★
+;空字符串的ツールチップ出しても仕方ない的で、そういう和き是タグ付けないよ
+;Emuera1812beta001で要らなくなった感但强。消える的かな？
+;-------------------------------------------------
+@HTMLNONBUTTON(ARGS:0, ARGS:1)
+#FUNCTIONS
+SIF ARGS:1 == ""
+	RETURNF ARGS:0
+RETURNF @"<nonbutton title='%ARGS:1%'>%ARGS:0%</nonbutton>"
+
+
+;-------------------------------------------------
+;関数名:HTMLP
+;概　要:HTML_PRINT命令および相关関数で使用做<p>タグ被付加做関数
+;引　数:ARGS:0…付加做对象的字符串
+;　　　 ARGS:1…[省略可]字符串的显示位置。(left/左/center/中央/right/右)的いずれか被指定可
+;　　　         省略した场合是、CURRENTALIGN()的情报被元にタグ但生成され增加。大字符小字符的区別是しません
+;戻り値:ARGS:0被<p>タグで囲ったHTML字符串
+;備　考:式中関数
+;<p>タグ被使用做和字符串的显示位置被控制でき增加(ALIGNMENT命令に相当)
+;<p>タグ是一番外侧に置く必要但あり增加
+;こ的関数も一番外侧で使用してください
+;-------------------------------------------------
+@HTMLP(ARGS:0, ARGS:1)
+#FUNCTIONS
+#DIMS CONST ALIGN = "", "left", "center", "right", "左", "中央", "右"
+SIF !MATCH(ALIGN, TOLOWER(ARGS:1))	;念的ため引数チェック
+	THROW @HTMLPに不明なalign属性値但渡されました（%ARGS:1%）
+ARGS:1 '= MATCH(ALIGN, ARGS:1, 4) ? ALIGN:(FINDELEMENT(ALIGN, ARGS:1, , , 1) - 3) # ARGS:1
+RETURNF "<p align='" + TOLOWER(\@ ARGS:1 == "" ? %CURRENTALIGN()% # %ARGS:1% \@) + @"'>%ARGS:0%</p>"
+
+
+;-------------------------------------------------
+;関数名:HTMLSTYLE
+;概　要:HTML_PRINT命令および相关関数で使用做<b><i><s><u>タグ被付加做関数
+;引　数:ARGS:0…付加做对象的字符串
+;　　　 ARG:0 …[省略可]字符的スタイル。太字(1)/斜体(2)/打ち消し線(4)/下線(8)的組み合わせ被指定可能
+;　　　         指定方法是FONTSTYLE命令和同大人で、各数字的和で複数指定でき增加
+;　　　         省略した场合是GETSTYLE()的情报被元にタグ但生成され增加
+;戻り値:ARGS:0被必要な<b><i><s><u>タグで囲ったHTML字符串
+;備　考:式中関数
+;FONTSTYLE命令相当にでっち上げた関数。纏まっていた方但便利な时もある…かも
+;こ的関数で付加されるタグ的效果是以下的原样
+;<b>タグ…太字。FONTBOLD、また是FONTSTYLE 1に相当
+;<i>タグ…斜体。FONTITALIC、また是FONTSTYLE 2に相当
+;<s>タグ…打消。FONTSTYLE 4に相当
+;<u>タグ…下線。FONTSTYLE 8に相当
+;-------------------------------------------------
+;FONTSTYLE命令和异なり、タグ内で既に適用中的效果被消すこ和是出来ません
+;例1)HTML_PRINT @"TEST0<b>TEST1%HTMLSTYLE("TEST2", 2)%TEST3</b>TEST4"
+;　　こ的场合、TEST2に是太字和斜体的両方但適用され增加。斜体的みに做に是、
+;例2)HTML_PRINT @"TEST0<b>TEST1</b>%HTMLSTYLE("TEST", 2)%<b>TEST3</b>TEST4"
+;　　的ように、一旦<b>タグ被閉じる必要但あり增加
+;-------------------------------------------------
+@HTMLSTYLE(ARGS:0, ARG:0 = -1)
+#FUNCTIONS
+#LOCALSSIZE 2
+VARSET LOCALS
+ARG:0 = ARG:0 < 0 ? GETSTYLE() # ARG:0
+IF GETBIT(ARG:0, 0)
+	LOCALS:0 = <b>%LOCALS:0%
+	LOCALS:1 += "</b>"
+ENDIF
+IF GETBIT(ARG:0, 1)
+	LOCALS:0 = <i>%LOCALS:0%
+	LOCALS:1 += "</i>"
+ENDIF
+IF GETBIT(ARG:0, 2)
+	LOCALS:0 = <s>%LOCALS:0%
+	LOCALS:1 += "</s>"
+ENDIF
+IF GETBIT(ARG:0, 3)
+	LOCALS:0 = <u>%LOCALS:0%
+	LOCALS:1 += "</u>"
+ENDIF
+RETURNF LOCALS:0 + ARGS:0 + LOCALS:1
+
+
+;*************************************************
+;ユーティリティ関数
+;*************************************************
+;・直で<font>タグ書き想要人和か
+;-------------------------------------------------
+
+;-------------------------------------------------
+;関数名:CHKFACE
+;概　要:複数フォント使用可否判定関数
+;引　数:ARGS:0…フォント名(/区切りで複数指定可。和りあえず10种直到)
+;戻り値:前から顺にCHKFONTして最初に使用可能和判断さ受到フォント名
+;　　　 使用できるフォント但无い场合是现在的フォント名
+;備　考:式中関数
+;<font>タグにおけるface属性的,区切り(优先フォント指定)机能的代替
+;的是ずだったん只ど…使いどころ是他にもある的かも…？
+;標準以外的フォント只ど、あれば使う场合和か…
+;还有是…そ的…WinXP/VISTA/7/8以外的…
+;べ、べつにMac对应的ために作ったわけじゃないんだから…かかか勘違い不做でよね！
+;-------------------------------------------------
+@CHKFACE(ARGS:0)
+#FUNCTIONS
+#LOCALSIZE 2
+#LOCALSSIZE 10
+SPLIT ARGS:0, "/", LOCALS, LOCAL:0
+FOR LOCAL:1, 0, LOCAL:0
+	SIF CHKFONT(LOCALS:(LOCAL:1))
+		RETURNF LOCALS:(LOCAL:1)
+NEXT
+RETURNF GETFONT()
+
+
+;-------------------------------------------------
+;関数名:HTMLCOLOR
+;概　要:HTML_PRINT命令的fontタグに渡す色値に变换做関数
+;引　数:ARG:0…[省略可]色値
+;　　　        省略した场合是GETCOLOR()的情报被元に自动生成
+;戻り値:#RRGGBB形式的16進色値被表现做字符串
+;備　考:式中関数
+;普通に10進渡せたらこんな的要らない的に…HTML仕大人ゆえ致し方无
+;ありえない数値但来ても下24bitしか见ない的で问题无
+;TOSTR使ってる的是性格的问题。桁合わせ和大字符化被したかった
+;实際是CONVERTでもいいんだろうけど
+;-------------------------------------------------
+@HTMLCOLOR(ARG:0 = -1)
+#FUNCTIONS
+RETURNF "#" + TOSTR((ARG:0 < 0 ? GETCOLOR() # ARG:0) & 0xFFFFFF, "X6")

@@ -1,0 +1,276 @@
+﻿;────────────────────────────────────
+;属性显示
+;────────────────────────────────────
+;ちょっ和整理@revkoishi(14/05/22)
+@PRINT_STATUS(ARG:0)
+LOCAL:1 = RESULT
+DO
+	DRAWLINE
+	PRINTFORML ■ %CALLNAME:(ARG:0)%的属性 ■ \@ ARG:0 != MASTER && TALENT:MASTER:读心能力 == 2 ? (好感度:{CFLAG:(ARG:0):9}) # \@
+	PRINTFORM [LV {CFLAG:(ARG:0):调教等级, 2}  EXP {CFLAG:(ARG:0):调教経験, 6}/{CFLAG:(ARG:0):必要経験値, 6}  
+	PRINTFORML NEXT {CFLAG:(ARG:0):必要経験値 - CFLAG:(ARG:0):调教経験, 6}]
+	CALL PRINT_BASEL("体力", ARG:0, GETNUM(BASE, "体力"), 32, 1)
+	CALL PRINT_BASEL("气力", ARG:0, GETNUM(BASE, "气力"), 32, 1)
+	IF ARG:0 == MASTER
+		CALL PRINT_BASEL("理性", ARG:0, GETNUM(BASE, "理性"), 32, 1)
+		SIF PENIS(ARG:0)
+			CALL PRINT_BASEL("精力", ARG:0, GETNUM(BASE, "射精"), 32, 1)
+	ELSE
+		CALL PRINT_TENSION(ARG:0)
+	ENDIF
+	CALL NEW_PRINT_TALENT(ARG:0)
+	CALL NEW_PRINT_EXP(ARG:0)
+	CALL NEW_PRINT_ABL(ARG:0)
+	IF FLAG:调教UI手柄化 && FLAG:调教中
+		CALL HTMLPRINTL(HTMLBUTTON(@"[%KEYMARK_B%] - 返回", KEY_B) + "　" +HTMLBUTTON(@"[%KEYMARK_X%] - 上一页", KEY_X))
+		DO
+			ONEINPUTS
+			LOCAL:0 = (RESULTS != KEY_B && RESULTS != KEY_X)
+			IF LOCAL:0
+				CLEARLINE 1
+				REUSELASTLINE 输入值超出范围
+			ENDIF
+		LOOP LOCAL:0
+		RESULT = RESULTS == KEY_B ? 100 # 102
+	ELSE
+		PRINTL [100] - 返回　[102] - 下一页
+		DO
+			INPUT
+			LOCAL:0 = (RESULT != 100 && RESULT != 102)
+			IF LOCAL:0
+				CLEARLINE 1
+				REUSELASTLINE 输入值超出范围
+			ENDIF
+		LOOP LOCAL:0
+	ENDIF
+	SIF RESULT == 102
+		CALL PRINT_STATUS2(ARG:0)
+LOOP RESULT != 100
+RETURN LOCAL:1
+
+
+;未取得的刻印も含めカラー显示化。改行位置自动判定に变更。变更后点数計算但出来ていなかった的被修正。
+;決断的に新仕大人へ大工事＋微调整@revkoishi(14/05/28)
+@PRINT_STATUS2(ARG:0)
+#DIM SURRENDER_LIST, 6, 30
+#DIM SURRENDER_SIZE, 6
+#DIM LINE_WIDTH
+LINE_WIDTH = WIDTH()
+
+IF ARG:0 == MASTER
+	PRINTFORML -- □ 刻印 □ %"-" * (LINE_WIDTH - 14)%
+	IF MARK:MASTER:痛苦刻印 || MARK:MASTER:快乐刻印 || MARK:MASTER:心理创伤
+		PRINTFORM \@ MARK:MASTER:痛苦刻印 ? %MARKNAME:0%Lv{MARK:MASTER:痛苦刻印, 2}%" "% # \@
+		PRINTFORM \@ MARK:MASTER:快乐刻印 ? %MARKNAME:1%Lv{MARK:MASTER:快乐刻印, 2}%" "% # \@
+		PRINTFORML \@ MARK:MASTER:心理创伤 ? %MARKNAME:4%Lv{MARK:MASTER:心理创伤,2} # \@
+	ENDIF
+	SIF MARK:MASTER:心理创伤
+		PRINTFORML 造成%CALLNAME:MASTER%心理创伤的原因：[%GET_ACTNAME(CFLAG:MASTER:心理创伤)%]
+	PRINTFORML                      %MARKNAME:2%        %MARKNAME:3%
+	FOR LOCAL:0, 0, CHARANUM
+		IF LOCAL:0 == MASTER !| CFLAG:(LOCAL:0):暂时退避	;暂时退避中的角色是显示不做
+			PRINTPLAINFORM [{LOCAL:0, 3}] - %CALLNAME:(LOCAL:0), 16, LEFT% 
+			PRINTFORML Lv{MARK:(LOCAL:0):屈服刻印, 2}            Lv{MARK:(LOCAL:0):反抗刻印, 2}
+		ENDIF
+	NEXT
+ELSE
+	VARSET LOCAL	;0.カウンタ/1.Lv/2.桁位置/3.字符串长/4.刻印数/5.处理中的实绩番号/6.虹色
+	VARSET SURRENDER_LIST
+	VARSET SURRENDER_SIZE
+	PRINTFORML -- □ 调教履历 □ %"-" * (LINE_WIDTH - 18)%
+	FOR LOCAL:0, 0, 128
+		SIF GET_SURRENDER_LV(LOCAL:0, ARG:0) && IS_SURRENDER_ENABLE(LOCAL:0, ARG:0)	;関数名变更@revkoishi(14/06/01)
+			SURRENDER_LIST:GET_SURRENDER_LV(LOCAL:0, ARG:0):(SURRENDER_SIZE:GET_SURRENDER_LV(LOCAL:0, ARG:0)++) = LOCAL:0
+	NEXT
+	FOR LOCAL:1, 1, 6
+		PRINTFORM Lv{LOCAL:1}
+		LOCAL:2 = 3	;桁位置设置
+		LOCAL:4 = 0	;刻印数设置
+		LOCAL:6 = GET_RAINBOW(6 + LOCAL:1)	;虹色
+		FOR LOCAL:0, 0, SURRENDER_SIZE:(LOCAL:1)
+			LOCAL:5 = SURRENDER_LIST:(LOCAL:1):(LOCAL:0)	;处理中的实绩番号更新
+			LOCALS:0 = 【%GET_SURRENDER_STR_T(LOCAL:5, ARG:0)%】
+			LOCAL:3 = STRLENS(LOCALS:0)
+			LOCAL:2 += LOCAL:3
+			IF LOCAL:2 > LINE_WIDTH
+				PRINTFORM \n   
+				LOCAL:2 = 3 + LOCAL:3
+			ENDIF
+			;カテゴリ分け用色设置関数作ろうか和思ったけど、当面是これで十分な予感…
+			IF LOCAL:5 > 63 ? GETBIT(CFLAG:(ARG:0):刻印2, LOCAL:5 - 64) # GETBIT(CFLAG:(ARG:0):刻印, LOCAL:5)	;持有刻印
+				++LOCAL:4							;刻印数加算
+				IF INRANGE(LOCAL:1, 1, 4)			;Lv4以下是单色
+					CALL FPRINT(LOCALS:0, LOCAL:6)
+				ELSE								;Lv5以上是虹色
+					CALL PRINT_RAINBOW(LOCALS:0, , , RAND:12)
+				ENDIF
+			ELSE									;未持有刻印
+				CALL FPRINT(LOCALS:0, 0x606060)		;灰色
+			ENDIF
+		NEXT
+		PRINTFORML \n    {SURRENDER_LV2POINT(LOCAL:1), 2}P×{LOCAL:4, 2}＝{LOCAL:4 * SURRENDER_LV2POINT(LOCAL:1), 2}P
+		PRINTSL "-" * LINE_WIDTH
+	NEXT
+	PRINTFORML 总计:{CFLAG:(ARG:0):屈服P1}P 屈服刻印:LV{MARK:(ARG:0):屈服刻印}
+ENDIF
+IF FLAG:调教UI手柄化 && FLAG:调教中
+	CALL HTMLPRINTL(HTMLBUTTON(@"[%KEYMARK_B%] - 返回", KEY_B) + "　" +HTMLBUTTON(@"[%KEYMARK_X%] - 上一页", KEY_X))
+	DO
+		ONEINPUTS
+		LOCAL:0 = (RESULTS != KEY_B && RESULTS != KEY_X)
+		IF LOCAL:0
+			CLEARLINE 1
+			REUSELASTLINE 不正な入力値です
+		ENDIF
+	LOOP LOCAL:0
+	RESULT = RESULTS == KEY_B ? 100 # 101
+ELSE
+	PRINTL [100] - 返回　[101] - 上一页
+	CALL INPUT_RANGE(100, 101)
+ENDIF
+RETURN RESULT
+
+
+;一部参照但ずれていた的で修正＆５列に变更＆显示的调整＆色设定@revkoishi(14/05/26)
+@NEW_PRINT_EXP(ARG:0)
+#DIM NODISP, 10
+#DIM LINE_WIDTH
+LINE_WIDTH = WIDTH()
+LOCAL:1 = 0				;显示カウンタ
+;显示顺是性別によってありえないも的被抜く只にしました。以下抜かれるも的
+VARSET NODISP, -1
+IF TALENT:(ARG:0):扶她
+	NODISP = 14, 41				;扶她：14,潮吹経験/41,ＢＬ経験
+ELSEIF TALENT:(ARG:0):男人
+	NODISP =  1,  6, 14, 40, 52	;　男人：1,Ｖ経験/6,喷乳経験/14,潮吹経験/40,百合経験/52,Ｖ扩张経験
+ELSE
+	NODISP =  5, 41				;　女人：5,射精経験/41,ＢＬ経験
+ENDIF
+PRINTFORML -- □ 経験 □ %"-" * (LINE_WIDTH - 14)%
+FOR LOCAL:0, 0, 70
+	SIF STRLENSU(EXPNAME:(LOCAL:0)) && !MATCH(NODISP, LOCAL:0)
+{
+		CALL FPRINT(@"\@ EXP:(ARG:0):(LOCAL:0) ? %EXPNAME:(LOCAL:0), 12% # ？？？？？？ \@:{EXP:(ARG:0):(LOCAL:0), 5}" + 
+                    @"\@ ++LOCAL:1 % 5 ? 　 # \n \@", EXP:(ARG:0):(LOCAL:0) ? GET_RAINBOW(9 + EXP_TYPE(LOCAL:0)) # 0x606060)
+}
+NEXT
+PRINTFORM \@ LINEISEMPTY() ? # \n \@
+
+
+;８列に变更＆显示的调整＆色设定@revkoishi(14/05/26)
+@NEW_PRINT_ABL(ARG:0)
+#DIM NODISP, 10
+#DIM LINE_WIDTH
+LINE_WIDTH = WIDTH()
+LOCAL:1 = 0				;显示カウンタ
+;显示顺是性別によってありえないも的被抜く只にしました。以下抜かれるも的
+VARSET NODISP, -1
+IF TALENT:(ARG:0):扶她
+	NODISP = 10			;扶她：10,ＢＬ气质
+ELSEIF TALENT:(ARG:0):男人
+	NODISP =  4,  9, 14	;　男人：4,Ｖ感觉/9,百合气质/14,百合中毒
+ELSE
+	NODISP = 10			;　女人：10,ＢＬ气质/
+ENDIF
+PRINTFORML -- □ 能力 □ %"-" * (LINE_WIDTH - 14)%
+FOR LOCAL:0, 0, 30
+	SIF STRLENSU(ABLNAME:(LOCAL:0)) && !MATCH(NODISP, LOCAL:0)
+{
+		CALL FPRINT(@"%ABLNAME:(LOCAL:0), 8%:{ABL:(ARG:0):(LOCAL:0), 2}\@ ++LOCAL:1 % 8 ? 　 # \n \@", 
+                    ABL:(ARG:0):(LOCAL:0) ? GET_RAINBOW(3 + ABL_TYPE(LOCAL:0)) # 0x606060)
+}
+NEXT
+PRINTFORM \@ LINEISEMPTY() ? # \n \@
+
+
+;画面幅的有效活用＆LOCAL地獄で和ても读みにくい处理だった的で整理(したつもり)。微调整@revkoishi(14/05/26)
+@NEW_PRINT_TALENT(ARG:0)
+#DIM LINE_WIDTH
+#DIM TALENT_LIST, 8, 50
+#DIM TALENT_SIZE, 8
+
+;变数初期化
+VARSET LOCAL
+VARSET TALENT_LIST
+VARSET TALENT_SIZE
+LINE_WIDTH = WIDTH()	;和りあえず基準和なる幅被他所から勝手に拝借。27*4+0=108桁
+
+PRINTFORML -- □ 素質 □ %"-" * (LINE_WIDTH - 14)%
+IF FLAG:素質显示方法	;素質分类显示
+	FOR LOCAL:0, 0, 150	;分类ループ
+		SIF TALENT:(ARG:0):(LOCAL:0)
+			TALENT_LIST:TALENT_TYPE(LOCAL:0):(TALENT_SIZE:TALENT_TYPE(LOCAL:0)++) = LOCAL:0
+	NEXT
+	;性別是特殊な的で別处理和し、ここで显示做
+	PRINTFORM %TALENT_TYPENAME(1), 8, RIGHT%：
+{
+	CALL FPRINTL(@"[%GET_SEX(ARG:0)%] " + \@ TALENT:(ARG:0):处女 ? [%GET_TALENTNAME(ARG:0, GETNUM(TALENT, "处女"))%]%" "% # \@ + 
+                \@ TALENT:(ARG:0):童贞 ? [%GET_TALENTNAME(ARG:0, GETNUM(TALENT, "童贞"))%]%" "% # \@, GET_RAINBOW(1))
+}
+	FOR LOCAL:0, 2, 8	;显示ループ。非显示和、显示済み的性別是飛ばす
+		IF TALENT_SIZE:(LOCAL:0)	;そ的分类的素質但无ければ飛ばす
+			;素質分类名被显示
+			PRINTFORM %TALENT_TYPENAME(LOCAL:0), 8, RIGHT%：
+			LOCAL:2 = 10						;桁位置(↑显示后的位置)
+			LOCAL:4 = GET_RAINBOW(LOCAL:0)		;虹色
+			FOR LOCAL:1, 0, TALENT_SIZE:(LOCAL:0)	;そ的分类的持有素質数分ループ
+				;素質名被取得([素質名] )
+				LOCALS:0 = [%GET_TALENTNAME(ARG:0, TALENT_LIST:(LOCAL:0):(LOCAL:1))%]%" "%
+				LOCAL:3 = STRLENS(LOCALS:0)	;↑的字符数(素質名+[]+スペース)
+				LOCAL:2 += LOCAL:3			;桁位置加算
+				IF LOCAL:2 > LINE_WIDTH		;こ的まま显示做和途中改行されそうな场合是改行处理被行う
+					;改行处理(折り返し、行頭インデント、桁位置再計算)
+					PRINTFORM \n%"          "%
+					LOCAL:2 = 10 + LOCAL:3
+				ENDIF
+				;素質名被显示
+				CALL FPRINT(LOCALS:0, LOCAL:4)
+			NEXT
+			PRINTL 
+		ENDIF
+	NEXT
+ELSE					;素質番号顺显示
+	LOCAL:2 = 0	;桁位置
+	FOR LOCAL:0, 0, 150	;显示ループ。非显示是飛ばす
+		IF TALENT:(ARG:0):(LOCAL:0) && TALENT_TYPE(LOCAL:0)
+			LOCALS:0 = [%GET_TALENTNAME(ARG:0, LOCAL:0)%]%" "%
+			LOCAL:3 = STRLENS(LOCALS:0)
+			LOCAL:2 += LOCAL:3
+			IF LOCAL:2 > LINE_WIDTH	;改行处理。行頭インデント无し
+				PRINTL 
+				LOCAL:2 = LOCAL:3
+			ENDIF
+			CALL FPRINT(LOCALS:0, GET_RAINBOW(TALENT_TYPE(LOCAL:0)))
+		ENDIF
+	NEXT
+	PRINTL 
+ENDIF
+RETURN RESULT
+
+
+;────────────────────────────────────
+;调教者的テンション显示
+;────────────────────────────────────
+;バー的色但少キツイ感但した的で微调整。无駄に按键化做的被回避@revkoishi(14/05/22)
+@PRINT_TENSION(ARG:0)
+LOCAL:1 = RESULT
+SELECTCASE TALENT:MASTER:读心能力
+	CASE 1
+		PRINTFORML 理性[%TENSION(ARG:0, GETNUM(BASE, "理性"))%]\n兴趣[%TENSION(ARG:0, GETNUM(BASE, "兴趣"))%]
+		PRINTFORML 焦躁[%TENSION(ARG:0, GETNUM(BASE, "焦躁"))%]\n满足[%TENSION(ARG:0, GETNUM(BASE, "满足"))%]
+	CASE 2
+		LOCAL:0 = GETCOLOR()
+		CALL PRINT_BASEL("理性", ARG:0, GETNUM(BASE, "理性"), 32, 1)
+		CALL PRINT_BASEL("兴趣", ARG:0, GETNUM(BASE, "兴趣"), 32, 1)
+		CALL PRINT_BASEL("焦躁", ARG:0, GETNUM(BASE, "焦躁"), 32, 1)
+		CALL PRINT_BASEL("满足", ARG:0, GETNUM(BASE, "满足"), 32, 1)
+		PRINTPLAINFORM 罪恶感[{CFLAG:ARG:5}]　定位
+		SETCOLOR CFLAG:(ARG:0):定位 >= 0 ? 0x0041FF # 0xFF2800
+		BAR CFLAG:(ARG:0):定位 + 100, 199, 32
+		SETCOLOR LOCAL:0
+		PRINTPLAINFORM [{CFLAG:(ARG:0):定位}]
+		PRINTL 
+	CASEELSE
+		PRINTFORML %CALLNAME:(ARG:0)%的感受还不大清楚…
+ENDSELECT
+RETURN LOCAL:1

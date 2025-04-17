@@ -1,0 +1,239 @@
+﻿;────────────────────────────────────
+;新しい调教者的追加
+;────────────────────────────────────
+@NEW_TRAINER
+#DIM LCOUNT, 1
+#DIM PRINTCOUNT, 1
+
+;选择肢被呼び出す
+LOCALS = 
+LOCALS += "<识別>NEW_TRAINER"
+LOCALS += "<对象>可登场"
+LOCALS += "<上部>NEW_TRAINER_T"
+LOCALS += "<条件>NEW_TRAINER_R"
+LOCALS += "<口上>调教者"
+LOCALS += "<取消>停止"
+LOCALS += "<项目>名前/外号"
+CALL SELECT_CHARA_LIST(LOCALS)
+IF RESULT != -1
+	;魔力消费
+	CFLAG:魔力 -= 1000
+	;召唤者记忆
+	LOCAL:1 = TARGET
+	;召唤处理
+	ADDCHARA RESULT
+	;调教者被今召唤した角色に交代
+	TARGET = CHARANUM - 1
+	;登场标志被折る
+	FLAG:(RESULT + 99) = 0
+	;追加调教者数被加算
+	FLAG:追加调教者数++
+	;处女・童贞丧失状況被记录
+	CFLAG:已失去处女 = !TALENT:处女
+	CFLAG:已失去童贞 = !TALENT:童贞
+	;RESULT初期化
+	RESULT = 0
+	;召唤角色的カットイン
+	PRINTL
+	CALL CHARA_CUTIN(CSTR:外号, CSTR:登场名, CSTR:单词)
+	PRINTL
+	;调教者被召唤した口上
+	CALL KOJO_EVENT(111, LOCAL:1, LOCAL:1)
+	SIF RESULT
+		PRINTL 
+	PRINTFORMW 将调教者设定为「%NAME:TARGET%」
+	;主人侧で許可している场合、调教者和して召唤さ受到口上
+	SIF RESULT != 12
+		CALL KOJO_EVENT(112, 1)
+	;ゲージ设置上升
+	CALL BASE_TRAINER_SETUP
+	;すでに取得した奖励被新しい调教者に適用
+	;CALL BONUS_APPLY
+	RETURN 1
+ENDIF
+RETURN 0
+
+@NEW_TRAINER_T
+DRAWLINE
+PRINTV DAY+1
+PRINT 日目
+IF TIME == 0
+	PRINTL  昼
+ELSE
+	PRINTL  夜
+ENDIF
+SIF TARGET >= 0
+	PRINTFORM %CALLNAME:TARGET%调教中
+SIF ASSI >= 0
+	PRINTFORM （助手：%CALLNAME:ASSI%）
+PRINTFORML (残余魔力　{CFLAG:魔力})
+
+@NEW_TRAINER_R(ARG)
+;登场标志但立っていれば显示
+IF FLAG:(ARG + 99) > 0
+	;召唤可能的判定
+	IF CSTR:可召唤助手 == "" || STRFIND(CSTR:可召唤助手, @"%CSVNAME(ARG)%/") >= 0
+		RETURN 1
+	ENDIF
+ENDIF
+RETURN 0
+
+;────────────────────────────────────
+;调教者的ゲージ设置上升
+;────────────────────────────────────
+@BASE_TRAINER_SETUP
+;调教者的射精/母乳/尿意ゲージ被设置上升
+CALL BASE_SETUP_PENIS(TARGET)
+MAXBASE:母乳 = 0
+MAXBASE:尿意 = 0
+SIF TALENT:母乳体質
+	MAXBASE:母乳 = 10000
+SIF TALENT:漏尿癖
+	MAXBASE:尿意 = 10000
+
+;调教者的理性/兴趣/焦躁/满足ゲージ被设置上升
+MAXBASE:理性 = 1000
+MAXBASE:兴趣 = 1000
+MAXBASE:焦躁 = 1000
+MAXBASE:满足 = 1000
+
+;胆怯/刚毅
+IF TALENT:胆怯
+	MAXBASE:理性 -= 50
+ELSEIF TALENT:刚毅
+	MAXBASE:理性 += 50
+ENDIF
+;反抗的/坦率
+IF TALENT:反抗的
+	MAXBASE:焦躁 -= 50
+ELSEIF TALENT:坦率
+	MAXBASE:焦躁 += 50
+ENDIF
+;成熟/自大
+IF TALENT:成熟
+	MAXBASE:焦躁 -= 50
+ELSEIF TALENT:自大
+	MAXBASE:焦躁 += 50
+ENDIF
+;自尊心高/自尊心低
+IF TALENT:自尊心高
+	MAXBASE:理性 += 50
+	MAXBASE:焦躁 -= 25
+	MAXBASE:满足 += 25
+ELSEIF TALENT:自尊心低
+	MAXBASE:理性 -= 50
+	MAXBASE:焦躁 += 25
+	MAXBASE:满足 -= 25
+ENDIF
+;缺乏感情/感情丰富な
+IF TALENT:缺乏感情
+	MAXBASE:理性 += 50
+ELSEIF TALENT:感情丰富
+	MAXBASE:理性 -= 50
+ENDIF
+;自制的/冲动的
+IF TALENT:MASTER:自制的
+	MAXBASE:理性 += 50
+	MAXBASE:焦躁 += 50
+ELSEIF TALENT:冲动的
+	MAXBASE:理性 -= 50
+	MAXBASE:焦躁 -= 50
+ENDIF
+;无关心/好奇心
+IF TALENT:MASTER:无关心
+	MAXBASE:兴趣 -= 50
+	MAXBASE:满足 -= 50
+ELSEIF TALENT:好奇心
+	MAXBASE:兴趣 += 50
+	MAXBASE:满足 += 50
+ENDIF
+;渴望关注
+IF TALENT:渴望关注
+	MAXBASE:焦躁 -= 50
+	MAXBASE:满足 += 50
+ENDIF
+;压抑/解放
+IF TALENT:MASTER:压抑
+	MAXBASE:兴趣 -= 50
+	MAXBASE:满足 -= 50
+ELSEIF TALENT:解放
+	MAXBASE:兴趣 += 50
+	MAXBASE:满足 += 50
+ENDIF
+;自慰し容易
+SIF TALENT:自慰し容易
+	MAXBASE:理性 -= 50
+;倒错的
+SIF TALENT:倒错的
+	MAXBASE:理性 -= 50
+;恐男
+SIF TALENT:恐男 && TALENT:MASTER:男人
+	MAXBASE:兴趣 -= 50
+;幼稚
+IF TALENT:幼稚
+	MAXBASE:理性 -= 50
+	MAXBASE:兴趣 += 25
+	MAXBASE:焦躁 -= 50
+ENDIF
+;疯狂
+IF TALENT:疯狂
+	MAXBASE:理性 -= 200
+	MAXBASE:焦躁 -= 100
+	MAXBASE:满足 += 200
+ENDIF
+;禁忌的知识
+SIF TALENT:禁忌的知识
+	MAXBASE:理性 += 100
+
+;极端な数値被ギャップ
+SIF MAXBASE:理性 < 500
+	MAXBASE:理性 = 500
+SIF MAXBASE:理性 > 1500
+	MAXBASE:理性 = 1500
+SIF MAXBASE:兴趣 < 500
+	MAXBASE:兴趣 = 500
+SIF MAXBASE:兴趣 > 1500
+	MAXBASE:兴趣 = 1500
+SIF MAXBASE:焦躁 < 500
+	MAXBASE:焦躁 = 500
+SIF MAXBASE:焦躁 > 1500
+	MAXBASE:焦躁 = 1500
+SIF MAXBASE:满足 < 500
+	MAXBASE:焦躁 = 500
+SIF MAXBASE:满足 > 1500
+	MAXBASE:焦躁 = 1500
+B = 0
+REPEAT CFLAG:调教等级 + 1
+	B += 100 + COUNT * COUNT * 10
+REND
+
+CFLAG:必要経験値 = B
+
+;ゲージ被初期化做
+BASE:体力 = MAXBASE:体力
+BASE:气力 = MAXBASE:气力
+BASE:射精 = MAXBASE:射精
+BASE:母乳 = MAXBASE:母乳
+BASE:尿意 = 0
+BASE:理性 = MAXBASE:理性
+BASE:兴趣 = MAXBASE:兴趣
+BASE:焦躁 = 0
+BASE:满足 = 0
+
+;ついでに衣服的初期化被呼び出し增加
+CALL CLOTHES_SETUP(TARGET)
+
+;精力设定関数
+;※现状阴茎被失う度に射精ゲージや精力界限被作りなおしている的で、
+;　将来的にMASTER的阴茎有无但变化做仕大人やTARGETで精力界限被使う仕大人に做那么
+;　阴茎但ない状态でもこ的2つ被どこかに保存しておく必要但あ时思う@これみ
+@BASE_SETUP_PENIS(ARG)
+
+;射精ゲージ被设定做
+IF PENIS(ARG)
+	MAXBASE:ARG:射精 = 15000 - 5000 * TALENT:ARG:精力薄弱 + 5000 * TALENT:ARG:精力绝伦
+ELSE
+	MAXBASE:ARG:射精 = 0
+ENDIF
+;精力界限被设定做
+CFLAG:ARG:精力界限 = MAXBASE:ARG:射精 / 500 + 5

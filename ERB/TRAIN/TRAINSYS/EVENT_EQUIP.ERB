@@ -1,0 +1,6 @@
+﻿@EVENT_EQUIP
+;推到解除
+IF TEQUIP:性交中 || TEQUIP:性交奉仕中 || TFLAG:惩罚标志
+	TEQUIP:推到中 = 0
+	TFLAG:推到经过 = TFLAG:经过时间
+ENDIF

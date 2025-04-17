@@ -1,0 +1,73 @@
+﻿;────────────────────────────────────
+;调教者行动 旁白(反应前)
+;
+;调教者行动但決まったらここから旁白被呼び出し增加。
+;口上で指定做こ和によって置换した文章被显示し呼ばれないように做こ和但でき增加。
+;────────────────────────────────────
+@TRAIN_MESSAGE
+CALL KOJO_TRAIN_MESSAGE
+IF !RESULT
+	IF TFLAG:ＳＰ行动 >= 200
+		CALL SP_TRAIN_MESSAGE
+	ELSE
+		TRYCCALLFORM TRAIN_MESSAGE_{TFLAG:ACT}
+		CATCH
+			RETURN 0
+		ENDCATCH
+	ENDIF
+	WAIT
+ENDIF
+RETURN RESULT
+
+;────────────────────────────────────
+;调教对象行动 旁白(反应后)
+;
+;调教对象反应但決まったらここからメッセージ被呼び出し增加。
+;口上で指定做こ和によって置换した文章被显示し呼ばれないように做こ和但でき增加。
+;────────────────────────────────────
+@TRAIN_MESSAGE2
+;COM但优先REACT的时候是处理せずに戻す。ACT但放置PLAY/稍作休息/喝营养剂那么通す@/L
+SIF IS_NOWCOMNAME("随心所欲") && !IS_NOWACTNAME("放置PLAY/稍作休息/喝营养剂")
+	RETURN 0
+CALL KOJO_TRAIN_MESSAGE2
+IF !RESULT
+	;SHOW_USERCOM_COMにツールチップ但仕込ま受到的で封印。ここでREACT派生被显示做ようにしてもいい的かも知れない
+	;IF !IS_NOWCOMNAME("随心所欲")					;COM:随心所欲那么弹く
+	;	PRINTFORML [%COM_RANK(TFLAG:REACT负荷)%]
+	;	PRINTL
+	;ENDIF
+	;调教项目毎的旁白被呼び出し
+	TRYCCALLFORM TRAIN_MESSAGE2_{TFLAG:ACT}
+		RETURN RESULT
+	CATCH
+		RETURN 0
+	ENDCATCH
+ENDIF
+RETURN RESULT
+
+;────────────────────────────────────
+;反应后的脱衣动画显示
+;────────────────────────────────────
+@TRAIN_MESSAGE2_5_ANIME
+;衣服变更不是场合是返回
+SIF !IS_NOWACTNAME("请求变更服装") || !IS_COMGRONAME("消极的服从/淡然的服从/积极的服从")
+	RETURN RESULT
+PRINTL
+;服被脱いだ场合
+IF TFLAG:ACT派生 == 0 && IS_COMGRONAME("消极的服从/淡然的服从/积极的服从")
+	;调教对象服装的显示
+	CALL CLOTHE_SHOW(MASTER)
+;服被着た场合
+ELSEIF  TFLAG:ACT派生 && IS_COMGRONAME("消极的服从/淡然的服从/积极的服从")
+	;调教对象服装的显示
+	CALL CLOTHE_SHOW(MASTER, 1)
+ENDIF
+RETURN RESULT
+
+;────────────────────────────────────
+;调教者行动旁白(行动毎)
+;
+;反应前、反应后的旁白被一部位にま和めた
+;REACTION后、RESULT値但1以外的场合是REACTION_MESSAGEも呼び出される
+;────────────────────────────────────
+;ACT分类毎に文件被切り分け。单独的文件是ACT_MESSAGEフォルダへ移设@/L

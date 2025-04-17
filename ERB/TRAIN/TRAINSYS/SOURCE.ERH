@@ -1,0 +1,3 @@
+﻿
+;ディープスロート参照用。设置和代入是共にSOURCE_1.ERBで行う
+#DIM DEEP_THROAT

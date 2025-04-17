@@ -1,0 +1,83 @@
+﻿;────────────────────────────────────
+;屈从的ソース（屈服、抑郁、兴趣）
+;────────────────────────────────────
+@CALC_SOURCE30
+
+;ABL:顺从、反抗刻印、调教度合い、素質みる
+CUP:MASTER:屈服 += SOURCE:MASTER:屈从 * (3 + GET_ABL(MASTER, "顺从")) * (11 - MARK:反抗刻印) / 800
+CUP:MASTER:抑郁 += SOURCE:MASTER:屈从 * (140 - GET_ABL(MASTER, "顺从")) * (2 + TALENT:MASTER:悲观的 - TALENT:MASTER:乐观的 - TALENT:MASTER:隶属) / ((10 + CFLAG:MASTER:调教等级) * 20)
+
+;调教但まだ進ん不是段階で简单に折时、虐待狂持ち的调教者是興ざめ
+SIF SOURCE:MASTER:屈从 > (CFLAG:MASTER:调教等级 + 1) * (10 + GET_ABL(MASTER, "顺从")) * 10 && TALENT:虐待狂
+	BASE:兴趣 -= SOURCE:MASTER:屈从 / (CFLAG:MASTER:调教等级 + 1)
+
+;────────────────────────────────────
+;达成感的ソース（焦躁、满足）
+;────────────────────────────────────
+@CALC_SOURCE31
+
+;惩罚模式的特典
+SIF TFLAG:惩罚标志
+	SOURCE:MASTER:达成 += SOURCE:MASTER:恐怖 * (2 + TALENT:MASTER:胆怯 - TALENT:MASTER:刚毅) / 20
+
+;焦躁但減少、满足但増大
+BASE:焦躁 -= SOURCE:MASTER:达成 / 10
+DOWNBASE:满足 -= SOURCE:MASTER:达成 / 2
+
+;────────────────────────────────────
+;乐趣的ソース（恭顺、焦躁）
+;────────────────────────────────────
+@CALC_SOURCE32
+
+;恭顺増大、焦躁減少
+CUP:MASTER:恭顺 += SOURCE:MASTER:乐趣 * (20 - MARK:反抗刻印) / 60
+BASE:焦躁 -= SOURCE:MASTER:乐趣 / 100
+
+;────────────────────────────────────
+;反抗的ソース（反抗、焦躁）
+;────────────────────────────────────
+@CALC_SOURCE33
+
+;REACT分类に应じてSOURCE減少
+SIF IS_COMGRONAME("无")
+	TIMES SOURCE:MASTER:反抗 , 0.75
+SIF IS_COMGRONAME("消极的服从")
+	TIMES SOURCE:MASTER:反抗 , 0.50
+SIF IS_COMGRONAME("积极的服从")
+	TIMES SOURCE:MASTER:反抗 , 0.05
+SIF IS_COMGRONAME("请求宽恕")
+	TIMES SOURCE:MASTER:反抗 , 0.30
+SIF IS_COMGRONAME("拒绝")
+	TIMES SOURCE:MASTER:反抗 , 0.90
+
+;反抗PALAM増大
+CUP:MASTER:反抗 += SOURCE:MASTER:反抗 * (31 - MARK:MASTER:心理创伤 - MARK:屈服刻印 * 2) * (5 + MARK:反抗刻印) / 200
+
+;反抗SOURCEから修正値被作る
+LOCAL = LINE_CALC(SOURCE:MASTER:反抗, "0→0,5000→65,LIMIT/0～65")
+
+;调教者但愤怒那么焦躁修正
+SIF TCVAR:状态变化 == 6
+	TIMES LOCAL, 1.50
+
+;焦躁増大
+BASE:焦躁 += LOCAL * (2 + TALENT:急躁 - TALENT:慎重) * (2 + TALENT:感情丰富 - TALENT:缺乏感情)
+
+;────────────────────────────────────
+;恐怖的ソース（恐怖、理性、兴趣）
+;────────────────────────────────────
+@CALC_SOURCE34
+
+;胆怯/刚毅
+SIF TALENT:MASTER:胆怯
+	TIMES SOURCE:MASTER:恐怖 , 1.50
+SIF TALENT:MASTER:刚毅
+	TIMES SOURCE:MASTER:恐怖 , 0.80
+
+;恐怖増大
+CUP:MASTER:恐怖 += SOURCE:MASTER:恐怖
+
+;兴趣BASE的现在量に应じて调教对象理性減少、兴趣増大
+LOCAL = MIN(BASE:兴趣 / 100, 100)
+DOWNBASE:MASTER:理性 += LOCAL
+BASE:兴趣 += LOCAL

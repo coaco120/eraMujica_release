@@ -1,0 +1,443 @@
+﻿
+;------------------------------------------------------------------------
+;EDIT	001		KOremi			2011/11/04		全体的書き直し、並べ替え
+;												ACT_APPLY_PROCESS.ERBから旁白被切り出す
+;												强制脱衣、自主脱衣处理被调整
+;------------------------------------------------------------------------
+
+;────────────────────────────────────
+;拒绝时旁白(反应によって调教但キャンセルされる)
+;────────────────────────────────────
+
+;────────────────────────────────────
+;性交的キャンセル
+;────────────────────────────────────
+@CANCEL_INSERT_TO_M_MESSAGE
+PRINTL 
+;性交开始时
+IF TFLAG:ACT分类 == 3
+	PRINTFORML %CALLNAME:TARGET%想和%CALLNAME:MASTER%性交，但因%CALLNAME:MASTER%的暴走而没能顺利进行…
+;性交中
+ELSE
+	PRINTFORML %CALLNAME:TARGET%虽然插入了%CALLNAME:MASTER%，但是因为%CALLNAME:MASTER%暴走了所以只能暂时停止…
+ENDIF
+RETURN 1
+;────────────────────────────────────
+;性交奉仕的キャンセル
+;────────────────────────────────────
+@CANCEL_INSERT_TO_T_MESSAGE
+PRINTL 
+;性交开始时
+IF TFLAG:ACT分类 == 10
+	;ACT但肛交侍奉那么
+	IF IS_NOWACTNAME("肛交侍奉")
+		PRINTFORML %CALLNAME:TARGET%想让%CALLNAME:MASTER%的\@ TEQUIP:假阴茎 ? 假阴茎 # 阴茎 \@插入肛门，但是因%CALLNAME:MASTER%的暴走而没能顺利进行…
+	;其他
+	ELSE
+		PRINTFORML %CALLNAME:TARGET%想让%CALLNAME:MASTER%的\@ TEQUIP:假阴茎 ? 假阴茎 # 阴茎 \@插入小穴，但是因%CALLNAME:MASTER%的暴走而没能顺利进行…
+	ENDIF
+;性交中
+ELSE
+	;肛交状态であれば
+	IF TEQUIP:性交奉仕中 == 6
+		PRINTFORML 因为%CALLNAME:MASTER%的暴走、插入%CALLNAME:TARGET%肛门的\@ TEQUIP:假阴茎 ? 假阴茎 # 阴茎 \@被拔了出来…
+	;其他
+	ELSE
+		PRINTFORML 因为%CALLNAME:MASTER%的暴走、插入%CALLNAME:TARGET%身体里的\@ TEQUIP:假阴茎 ? 假阴茎 # 阴茎 \@被拔了出来…
+	ENDIF
+ENDIF
+RETURN 1
+;────────────────────────────────────
+;施虐、露出PLAY的キャンセル（疼痛、捆绑、露出、逃脱）
+;────────────────────────────────────
+;捆绑キャンセル
+@CANCEL_TEQUIP_RESTRAINT_MESSAGE
+PRINTL 
+PRINTFORML 接受了%CALLNAME:MASTER%的哀求，%CALLNAME:TARGET%解开了%CALLNAME:MASTER%的束缚…
+RETURN 1
+;三角木马キャンセル
+@CANCEL_TEQUIP_W_HORSE_MESSAGE
+PRINTL 
+PRINTFORML 接受了%CALLNAME:MASTER%的哀求，%CALLNAME:TARGET%将%CALLNAME:MASTER%从木马上放了下来…
+RETURN 1
+;野外PLAYキャンセル
+@CANCEL_TEQUIP_OUTDOOR_MESSAGE
+PRINTL 
+PRINTFORML 接受了%CALLNAME:MASTER%的哀求，%CALLNAME:TARGET%带着%CALLNAME:MASTER%回到了房间…
+RETURN 1
+;大镜キャンセル
+@CANCEL_TEQUIP_MIRROR_MESSAGE
+PRINTL 
+PRINTFORML 接受了%CALLNAME:MASTER%的哀求，%CALLNAME:TARGET%带着%CALLNAME:MASTER%离开了镜子前…
+RETURN 1
+;COSPLAYキャンセル
+@CANCEL_TEQUIP_COSPLAY_MESSAGE
+PRINTL 
+PRINTFORML 接受了%CALLNAME:MASTER%的哀求，%CALLNAME:TARGET%允许了%CALLNAME:MASTER%换回衣服，回收了COSPLAY服装…
+RETURN 1
+
+;────────────────────────────────────
+;特殊状況时旁白(特別な状況但起きた时的旁白)
+;────────────────────────────────────
+
+;────────────────────────────────────
+;自慰绝顶时的旁白显示
+;────────────────────────────────────
+@ONANIE_EX_MESSAGE
+;ACT但自慰的场合内容但被る的で显示不做
+SIF TFLAG:ACT == GET_ACTNUM("自慰")
+	RETURN 0
+;阴茎あり
+IF PENIS(MASTER)
+	;REACT分类但积极的服从系
+	IF IS_COMGRONAME("积极的服从")
+		;顔射自慰绝顶
+		IF ME_PLAYER(1) == 9
+			PRINTFORML %CALLNAME:MASTER%一边捋着自己的阴茎一边告诉对方马上要射了、
+			PRINTFORML %CALLNAME:TARGET%是命令在马眼前伸出舌头，让其直到飞进嘴里…
+		;其他
+		ELSE
+			PRINTFORML %CALLNAME:MASTER%一边捋着自己的阴茎一边告诉对方马上要射了、
+			PRINTFORML %CALLNAME:TARGET%一边低声说着着下流的话一人でイくように命じた…
+		ENDIF
+	;REACT分类但其他
+	ELSE
+		;顔射自慰绝顶
+		IF ME_PLAYER(1) == 9
+			PRINTFORML %CALLNAME:TARGET%察觉到了正在撸动自己阴茎的%CALLNAME:MASTER%的绝顶
+			PRINTFORML 命令在马眼前伸出舌头，让其直到飞进嘴里…
+		;其他
+		ELSE
+			PRINTFORML %CALLNAME:TARGET%察觉到了正在撸动自己阴茎的%CALLNAME:MASTER%的绝顶
+			PRINTFORML 轻声细语着猥亵的话语来命令其独自行动…
+		ENDIF
+	ENDIF
+ELSE
+	;REACT分类但积极的服从系
+	IF IS_COMGRONAME("积极的服从")
+		PRINTFORML %CALLNAME:MASTER%玩弄自己阴蒂的同时告诉对方快要绝顶了、
+		PRINTFORML %CALLNAME:TARGET%一边低声说着着下流的话一边命令她高潮…
+	;REACT分类但其他
+	ELSE
+		PRINTFORML %CALLNAME:TARGET%察觉到了揉弄自己阴核的%CALLNAME:MASTER%的高潮
+		PRINTFORML 轻声细语着猥亵的话语来命令其独自行动…
+	ENDIF
+ENDIF
+RETURN 1
+
+;────────────────────────────────────
+;实行时旁白(ACT种によらない旁白)
+;────────────────────────────────────
+
+;────────────────────────────────────
+;媚药・润滑液使用时的旁白/口上显示
+;────────────────────────────────────
+@USE_MESSAGE
+;媚药・润滑液被使用した旨的メッセージ被显示し增加
+;ここ的改行处理是あやしい的で后でいろいろ调整但必要
+
+;RESULT初期化
+RESULT = 0
+
+;媚药等使用口上呼び出し
+IF TFLAG:媚药等使用口上 && ((ASSI:1) < 0 || TCVAR:(ASSI:1):助手ACT != 71)
+	PRINTL 
+	CALL KOJO_USE
+ENDIF
+
+;口上显示后旁白被显示做场合
+SIF RESULT && TFLAG:媚药等使用旁白跳过
+	PRINTL 
+;旁白显示种別によって分岐
+SELECTCASE TFLAG:媚药等使用旁白跳过
+	;润滑液
+	CASE 1
+		;助手協力时
+		IF (ASSI:1) >= 0 && TCVAR:(ASSI:1):助手ACT == 71
+			ALIGNMENT RIGHT
+			PRINTFORML %CALLNAME:(ASSI:1)%在%CALLNAME:MASTER%身上涂上了润滑液…
+			ALIGNMENT LEFT
+		;助手非協力时
+		ELSE
+			PRINTFORML %CALLNAME:TARGET%在%CALLNAME:MASTER%身上涂上了润滑液…
+		ENDIF
+	;媚药
+	CASE 2
+		;助手協力时
+		IF (ASSI:1) >= 0 && TCVAR:(ASSI:1):助手ACT == 71
+			ALIGNMENT RIGHT
+			PRINTFORML %CALLNAME:(ASSI:1)%向%CALLNAME:MASTER%使用了媚药…
+			ALIGNMENT LEFT
+		;接吻时
+		ELSEIF IS_NOWACTNAME("接吻")
+			PRINTFORML %CALLNAME:TARGET%含住媚药，一边亲吻着一边渡给%CALLNAME:MASTER%喝下去…
+		;助手非協力时
+		ELSE
+			PRINTFORML %CALLNAME:TARGET%向%CALLNAME:MASTER%使用了媚药…
+		ENDIF
+	;润滑液＆媚药
+	CASE 3
+		;助手協力时
+		IF (ASSI:1) >= 0 && TCVAR:(ASSI:1):助手ACT == 71
+			ALIGNMENT RIGHT
+			PRINTFORML %CALLNAME:(ASSI:1)%向%CALLNAME:MASTER%使用了媚药…
+			PRINTFORML 而且%CALLNAME:(ASSI:1)%还在%CALLNAME:MASTER%火热的身上涂上了润滑液…
+			ALIGNMENT LEFT
+		;接吻时
+		ELSEIF IS_NOWACTNAME("接吻")
+			PRINTFORML %CALLNAME:TARGET%含住媚药，一边亲吻着一边渡给%CALLNAME:MASTER%喝下去…
+			PRINTFORML 而且一边亲吻着一边在%CALLNAME:MASTER%火热的身体上涂上了润滑液…
+		;助手非協力时
+		ELSE
+			PRINTFORML %CALLNAME:TARGET%向%CALLNAME:MASTER%使用了媚药…
+			PRINTFORML 而且%CALLNAME:TARGET%还在%CALLNAME:MASTER%火热的身上涂了乳液…
+		ENDIF
+ENDSELECT
+WAIT
+
+;-----------EDIT 001 START--------------
+;主に引数によって判定做方式に变更
+;---------------------------------------
+;────────────────────────────────────
+;强制脱衣、自主脱衣时的旁白/口上显示
+;────────────────────────────────────
+;强制脱衣・自主脱衣的メッセージ被显示し增加
+
+;脱衣寸前で的旁白/口上
+@DATUI_MESSAGE(ARG, ARG:1)
+
+;脱衣前に服装被保存做(脱衣直后で的旁白で使用)
+CALLF CLOTHE_SAVE(TARGET)
+CALLF CLOTHE_SAVE(MASTER)
+
+;助手但脱衣的手伝い被做场合
+IF NOWASSIACTNAME(ASSI:1) == "脱衣"
+	ALIGNMENT RIGHT
+	PRINTFORML 突然，%CALLNAME:(ASSI:1)%把手搭在了%CALLNAME:MASTER%的衣服上…
+	ALIGNMENT LEFT
+	;调教者脱衣も发生
+	SIF ARG:1 > 0
+		PRINTFORML %CALLNAME:TARGET%也把手放在了自己的衣服上，开始脱了起来…
+	WAIT
+;调教对象、调教者和もに脱衣
+ELSEIF ARG > 0 && ARG:1 > 0
+	PRINTFORMW %CALLNAME:TARGET%把手放在了%CALLNAME:MASTER%和自己的衣服上…
+;调教对象脱衣
+ELSEIF ARG > 0
+	PRINTFORMW 突然，%CALLNAME:TARGET%把手搭在了%CALLNAME:MASTER%的衣服上…
+;调教者脱衣
+ELSEIF ARG:1 > 0
+	PRINTFORMW %CALLNAME:TARGET%把手放在了自己的衣服上，开始脱了起来…
+ENDIF
+
+;RESULT初期化
+RESULT = 0
+;脱衣时口上呼び出し
+CALL KOJO_DATUI
+
+;调教对象脱衣失敗
+IF TFLAG:强制脱衣 < 0
+	PRINTFORML %CALLNAME:TARGET%想脱下%CALLNAME:MASTER%的衣服，却被%CALLNAME:MASTER%制止了…
+;调教对象脱衣成功
+ELSEIF ARG > 0
+	;LOCAL初期化
+	VARSET LOCAL
+	;助手但脱衣的手伝い被做场合
+	IF NOWASSIACTNAME(ASSI:1) == "脱衣"
+		;调教者脱衣も发生
+		SIF ARG:1 > 0
+			ALIGNMENT RIGHT
+		PRINTFORM %CALLNAME:(ASSI:1)%\@ ARG:1 > 0 ? 但 # 是 \@%CALLNAME:MASTER%的
+	;助手但脱衣的手伝い被不做场合
+	ELSE
+		PRINTFORM %CALLNAME:TARGET%是%CALLNAME:MASTER%的
+	ENDIF
+	;脱衣枚数确认(LOCAL:1に脱衣枚数被代入)
+	FOR LOCAL, 0, 7
+		SIF GETBIT(ARG, LOCAL)
+			LOCAL:1 ++
+	NEXT
+	;最终着衣枚数确认(LOCAL:2に最终着衣枚数被代入)
+	FOR LOCAL, 0, 7
+		SIF TEQUIP:MASTER:LOCAL != 0 && !GETBIT(ARG, LOCAL)
+			LOCAL:2 ++
+	NEXT
+	;最终着衣但全裸那么
+	IF LOCAL:2 == 0
+		;脱衣枚数但3枚以上
+		IF LOCAL:1 > 2
+			PRINT 身上穿的所有衣服
+		;脱衣枚数但2枚
+		ELSEIF LOCAL:1 == 2
+			PRINTFORM 所有的衣服
+		;脱衣枚数但1枚(脱衣侧被显示)
+		ELSE
+			CALL DATUI_MESSAGE_SORT(0, ARG, MASTER)
+		ENDIF
+	;内衣的み脱衣时、残着衣あり
+	ELSEIF !(ARG & ~12) && (LOCAL:2 >= 0)
+		;下半身、上半身外套
+		IF TEQUIP:MASTER:下半身外套 && TEQUIP:MASTER:上半身外套
+			PRINTFORM %OUTER_T(MASTER, 0, 1)%和%OUTER_B(MASTER, 0, 1)%只剩下内衣
+		;下半身外套
+		ELSEIF TEQUIP:MASTER:下半身外套
+			PRINTFORM %OUTER_B(MASTER, 0, 1)%只剩下内衣
+		;上半身、全身外套
+		ELSEIF TEQUIP:MASTER:上半身外套 || TEQUIP:MASTER:全身外套
+			PRINTFORM %OUTER_T(MASTER, 0, 1)%只剩下内衣
+		;片方的内衣的み脱衣(脱衣侧被显示)
+		ELSEIF LOCAL:1 == 1
+			CALL DATUI_MESSAGE_SORT(0, ARG, MASTER)
+		;其他
+		ELSE
+			PRINTFORM 全部的内衣
+		ENDIF
+	;最终着衣但全裸以外那么
+	ELSE
+		;脱衣枚数但最终着衣以下那么脱衣侧被显示
+		IF LOCAL:1 <= LOCAL:2
+			CALL DATUI_MESSAGE_SORT(0, ARG, MASTER)
+		;そうでなければ着衣侧被显示
+		ELSE
+			CALL DATUI_MESSAGE_SORT(1, ARG, MASTER)
+		ENDIF
+	ENDIF
+	;脱いだ結果全裸
+	IF LOCAL:2 == 0
+		PRINTFORML 强行\@ ARG:1 > 0 ? 全部脱光、 # 脱下、直到全裸… \@
+	;脱いだ結果全裸以外
+	ELSE
+		PRINTFORML 强行\@ ARG:1 > 0 ? 脱下后、 # 脱下了… \@
+	ENDIF
+	ALIGNMENT LEFT
+ENDIF
+;调教者脱衣发生
+IF ARG:1 > 0
+	;LOCAL初期化
+	VARSET LOCAL
+	;调教对象脱衣失敗时
+	IF TFLAG:强制脱衣 < 0
+		PRINTFORM %CALLNAME:TARGET%主动放弃了
+	;助手但脱衣的手伝い被做场合
+	ELSEIF NOWASSIACTNAME(ASSI:1) == "脱衣"
+		PRINTFORM %CALLNAME:TARGET%也是主动的
+	;调教对象脱衣成功时
+	ELSEIF ARG > 0
+		PRINT 主动也
+	;调教对象脱衣不发生时
+	ELSE
+		PRINTFORM %CALLNAME:TARGET%主动将
+	ENDIF
+	;脱衣枚数确认(LOCAL:1に脱衣枚数被代入)
+	FOR LOCAL, 0, 7
+		SIF GETBIT(ARG:1, LOCAL)
+			LOCAL:1 ++
+	NEXT
+	;最终着衣枚数确认(LOCAL:2に最终着衣枚数被代入)
+	FOR LOCAL, 0, 7
+		SIF TEQUIP:LOCAL != 0 && !GETBIT(ARG:1, LOCAL)
+			LOCAL:2 ++
+	NEXT
+	;最终着衣但全裸那么
+	IF LOCAL:2 == 0
+		;脱衣枚数但3枚以上
+		IF LOCAL:1 > 2
+			PRINT 身上穿的所有衣服
+		;脱衣枚数但2枚
+		ELSEIF LOCAL:1 == 2
+			PRINTFORM 所有的衣服
+		;脱衣枚数但1枚(脱衣侧被显示)
+		ELSE
+			CALL DATUI_MESSAGE_SORT(0, ARG:1, TARGET)
+		ENDIF
+	;内衣的み脱衣时、残着衣あり
+	ELSEIF !(ARG:1 & ~12) && (LOCAL:2 >= 0)
+		;下半身、上半身外套
+		IF TEQUIP:下半身外套 && TEQUIP:上半身外套
+			PRINTFORM %OUTER_T(TARGET, 0, 1)%和%OUTER_B(TARGET, 0, 1)%只剩下内衣
+		;下半身外套
+		ELSEIF TEQUIP:下半身外套
+			PRINTFORM %OUTER_B(TARGET, 0, 1)%只剩下内衣
+		;上半身、全身外套
+		ELSEIF TEQUIP:上半身外套 || TEQUIP:全身外套
+			PRINTFORM %OUTER_T(TARGET, 0, 1)%只剩下内衣
+		;片方的内衣的み脱衣(脱衣侧被显示)
+		ELSEIF LOCAL:1 == 1
+			CALL DATUI_MESSAGE_SORT(0, ARG:1, TARGET)
+		;其他
+		ELSE
+			PRINTFORM 全部的内衣
+		ENDIF
+	;最终着衣但全裸以外那么
+	ELSE
+		;脱衣枚数但最终着衣以下那么脱衣侧被显示
+		IF LOCAL:1 <= LOCAL:2
+			CALL DATUI_MESSAGE_SORT(0, ARG:1, TARGET)
+		;そうでなければ着衣侧被显示
+		ELSE
+			CALL DATUI_MESSAGE_SORT(1, ARG:1, TARGET)
+		ENDIF
+	ENDIF
+	;脱いだ結果全裸
+	IF LOCAL:2 == 0
+		PRINTFORML 脱下，变成全裸了…
+	;脱いだ結果全裸以外
+	ELSE
+		PRINTFORML 脱下后扔掉了…
+	ENDIF
+ENDIF
+;调教对象脱衣失敗时
+SIF TFLAG:强制脱衣 < 0
+	PRINTFORML %CALLNAME:TARGET%似乎很生气…
+WAIT
+
+RETURN RESULT
+
+;脱衣直后で的旁白/口上
+@DATUI_MESSAGE2(ARG, ARG:1)
+PRINTL 
+;调教对象、调教者脱衣时結果被显示
+SIF ARG > 0
+	CALL CLOTHE_SHOW(MASTER)
+SIF ARG:1 > 0
+	CALL CLOTHE_SHOW(TARGET)
+SIF  ARG > 0 || ARG:1 > 0
+	WAIT
+
+@DATUI_MESSAGE_SORT(ARG, ARG:1, ARG:2)
+;脱衣(最终着衣)种被外侧から顺に显示
+;ARG:0	0 = 脱衣种　1 = 最终着衣种
+;ARG:1	脱衣指定部位
+;ARG:2	对象者
+
+;LOCAL初期化
+VARSET LOCAL
+
+;外侧的着衣から确认
+LOCAL = 6
+;无限ループ
+WHILE 1
+	;确认着衣被脱衣(着衣)していた场合
+	IF  TEQUIP:(ARG:2):LOCAL != 0 && !ARG == GETBIT(ARG:1, LOCAL)
+		;二つ目以降是繋ぎ語も显示
+		SIF LOCAL:1
+			PRINT 和
+		;脱衣(着衣)内容被显示
+		PRINTS CLOTHES(LOCAL, ARG:2)
+		;显示数カウント
+		LOCAL:1++
+	ENDIF
+	;确认做部位但无ければ脱出
+	SIF LOCAL == 0
+		BREAK
+	;确认着衣被内侧へシフト
+	LOCAL--
+WEND
+;脱衣种显示时
+IF ARG == 0
+	PRINT 被
+;最终着衣种显示时
+ELSE
+	PRINT 以外所有衣服全部
+ENDIF
+;-----------EDIT 001 END  --------------

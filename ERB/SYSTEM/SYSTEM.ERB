@@ -1,0 +1,146 @@
+﻿;────────────────────────────────────
+;新しいゲーム的处理
+;────────────────────────────────────
+@EVENTFIRST
+#DIM LCOUNT
+
+;GLOBAL变数から动画ーション设定被读み込む
+LOADGLOBAL
+CALLF ANIME_CONFIG("SET", GLOBAL)
+SAVEGLOBAL
+LOADGLOBAL
+;出场人物役割变数被初期化
+TARGET = -1
+ASSI = -1
+ASSI:1 = -1
+ASSI:2 = -1
+ASSI:3 = -1
+;諸变数被初期化
+FLAG:模式 = 0
+FLAG:TXT频率 = 1
+FLAG:追加调教者数 = 0
+
+;テスト用记述。いつでも消していいよ
+;CALL GET_REVISION_SQRT_PROP_TEST(, 1, 5, 12, 50)
+;PRINTVL LINE_CALC(-2000, "-2000→-12,2000→0,LIMIT/-12～0")
+;PRINTV IS_NOWACTNAME("くそ但っ")
+;CALL MAKE_CSV
+;SKIPDISP 1
+;CALL INPUTINT(0, 1, 2, 3, 4)
+;SKIPDISP 0
+
+;PLAY时间的初期化  →SYSTEM_DATAMENU.ERB
+CALLF PLAYTIME("SET")
+
+;「您」以外的出场人物的总数。
+DO
+	FLAG:Cha总数++
+LOOP EXISTCSV(FLAG:Cha总数 + 1, 0)
+;登场标志被设置
+VARSET FLAG, 1, 100, 100 + FLAG:Cha总数
+;
+FLAG:155 = 0
+;模式选择
+PRINTL ★★请选择模式★★
+PRINTL [ 1]SANDBOX ―― NORMAL + 角色调教角色，导入了试验性的新功能（容易出BUG）
+PRINTL [ 9]EXTRA   ―― 没有故事，角色调教角色，可以随便调教喜欢角色的模式
+PRINTL [-1]返回
+CALL INPUTINT(0, 1, 9, -1)
+;オプション被设定
+FLAG:素質显示方法 = 1
+FLAG:日常 = 1
+FLAG:AI自由度 = 15
+;模式确定
+FLAG:模式 = RESULT
+;NORMAL那么ゆかりんにお呼ばれ
+IF FLAG:模式 == 0
+	CALL CHARA_MAKER
+	;调教对象的衣服设定
+	CALL CLOTHES_SETUP(MASTER)
+;SANDBOX、EXTRA那么主人公(调教对象)选择
+ELSEIF FLAG:模式 == 1 || FLAG:模式 == 9
+	DELCHARA 0
+	CALL START_CHARA_SELECT
+;ニューゲーム做つもりじゃなかった那么标题へ返回
+ELSE
+	RESETDATA
+	BEGIN TITLE
+ENDIF
+
+;CALL CONFIGURE
+
+CALL START_CHARA_SELECT_T
+CALL BASE_TRAINER_SETUP
+
+;主人认定
+TALENT:主人 = 1
+FLAG:主人 = TARGET
+
+FLAG:妊娠 = 1
+FLAG:奴隶妊娠 = 1
+
+CFLAG:MASTER:已失去处女 = !TALENT:MASTER:处女
+CFLAG:MASTER:已失去童贞 = !TALENT:MASTER:童贞
+
+CFLAG:已失去处女 = !TALENT:处女
+CFLAG:已失去童贞 = !TALENT:童贞
+
+ITEM:505 = 1
+FLAG:口上 = 1
+PRINTL 
+DRAWLINE
+;オープニング
+CALL KOJO_EVENT(1)
+;オープニング但ない场合是通用
+IF !RESULT
+	CALL WAIT_3
+	PRINTFORMW 睡了多久了呢。
+	PRINTL 
+	CALL CHARA_CUTIN(CSTR:外号, CSTR:登场名, CSTR:单词)
+	PRINTL 
+	PRINTFORMW 迎接%CALLNAME:MASTER%刚醒来的是%CALLNAME%的面容。
+	PRINTL 
+	PRINTFORMW ――要开始调教了，%CNAME()%。
+	PRINTL 
+	PRINTFORMW %CALLNAME%静静地宣告了这件事，然后继续说明起来。
+	PRINTFORMW %CALLNAME%对%CALLNAME:MASTER%强大的独占欲使其把对方囚禁在家的地下室内进行调教
+	PRINTFORMW 过程中%CALLNAME%发现%CALLNAME:MASTER%对于性的觉醒以及高潮绝顶时释放出来的能量
+	PRINTFORMW 能够成为某种魔力，就像阁楼之月赋给人偶那般神奇的力量――
+	PRINTFORMW %CALLNAME%这种魔力能够做到很多事…不管是似乎有十分重要的用途，还是用来完成Ave Mujica的剧本、词曲
+	PRINTFORMW 甚至能用来遗忘某些记忆和悲伤，或是唤回某些意外忘却了的记忆的…
+	PRINTL 
+	PRINTFORMW 在数次尝试后，%CALLNAME:MASTER%意识到再没有逃脱的可能了。
+	PRINTFORMW 从现在起%CALLNAME:MASTER%就是%CALLNAME%的所有物。
+	CALL BGM_CUTIN(CSTR:曲１)
+	PRINTL 
+	PRINTFORMW %CALLNAME:MASTER%，只能把自己的人生奉献给%CALLNAME%，全部――
+	PRINTL 
+	ENDIF
+
+REDRAW 0
+SETFONT "ＭＳ 明朝"
+FONTSTYLE 3
+
+;RESULT但2那么ロゴ被跳过
+IF RESULT != 2
+	;ネタ。标题ロゴ
+	CALL FULLCUTIN(40, 17, "eramujica Яeverse――","　","　","　　　　　　――如今，調教開始")
+ENDIF
+FOR LOCAL, 0, 100
+	PRINTL
+NEXT
+CALL DAY_EFFECT
+CLEARLINE 100
+;Emuera被DEBUG模式で启动した场合に的み显示做ように
+;和思ったけど、DEBUG时に是普通に[777]但显示される的でや针要らない和判断@/L
+[SKIPSTART]
+[IF_DEBUG]
+PRINTL 
+PRINTL 
+PRINTW 在SHOP画面输入777时可以进行DEBUG模式的信息输出、TARGET的行动指定、MASTER的素质变更等
+[ENDIF]
+[SKIPEND]
+;数据ベース初期化
+CALL DATABASE_INPUT_INIT
+BEGIN SHOP
+

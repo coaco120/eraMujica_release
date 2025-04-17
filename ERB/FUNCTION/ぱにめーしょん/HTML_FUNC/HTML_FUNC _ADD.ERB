@@ -1,0 +1,98 @@
+﻿;===============================================================================
+;
+;	HTML_PRINT相关関数群被使用して个人的に独自追加したも的
+;
+;===============================================================================
+;-------------------------------------------------------------------------------
+;	ADD_BTAG(HTML_ADDBUTTONTAG(式中関数))
+;	按键タグに制作した按键情报的取得被追加
+;===============================================================================
+@ADD_BTAG(ARGS = HTML_SUBSTITUTE , ARGS:1 , ARGS:2)
+#FUNCTIONS
+;CALLF ADD_LAYER_BUTTONF, ARGS:1
+RETURNF HTML_ADDBUTTONTAG(ARGS, ARGS:1, ARGS:2)
+
+;-------------------------------------------------------------------------------
+;	ADD_FTAG(HTML_ADDFONTTAG(式中関数))
+;-------------------------------------------------------------------------------
+;	上记関数和名称被合わせるためにか增加
+;===============================================================================
+@ADD_FTAG( ARGS = HTML_SUBSTITUTE , ARGS:1 , ARGS:2 , ARGS:3 )
+#FUNCTIONS
+RETURNF HTML_ADDFONTTAG(ARGS, ARGS:1, ARGS:2, ARGS:3)
+
+
+;-------------------------------------------------------------------------------
+;	ADD_CTAG(HTML_ADDCOMMENTTAG(式中関数))
+;-------------------------------------------------------------------------------
+;	例：LOCALS:0 = %HTML_ADDCOMMENTTAG("わ是ー","HOGE")%
+;		→  わ是ー<!-- HOGE -->
+;
+;	例：LOCALS:0 = わ是ー<!-- HOGE -->
+;		LOCALS:0 = %HTML_ADDCOMMENTTAG(LOCALS:0,"HAGE")%
+;		→  わ是ー<!-- HOGE/HAGE -->
+
+;-------------------------------------------------------------------------------
+;	ARGSに<!--ARGS:1-->被付加做
+;	すでに注释タグ但存在している场合ARGS:2被区切り记号和して(初期値"/")
+;	既存的も的に追加做形で动作做
+;	(中身的分割なんか被SPLITでやるこ和被想定して的仕大人)
+;===============================================================================
+@ADD_CTAG(ARGS = HTML_SUBSTITUTE , ARGS:1 , ARGS:2 = "/")
+#FUNCTIONS
+RETURNF HTML_ADDCOMMENTTAG(ARGS, ARGS:1, ARGS:2)
+
+;------------------------------------------------------------------------------
+;	ADD_OTAG(HTML_ADDOTHERTAG(式中関数))
+;-------------------------------------------------------------------------------
+;	例：LOCALS:0 = %HTML_ADDBUTTONTAG("わ是ー","b")%
+;		→  <b>わ是ー</b>
+;-------------------------------------------------------------------------------
+;	见たまんまシリーズ被一つでやる
+;===============================================================================
+@ADD_OTAG( ARGS = HTML_SUBSTITUTE, ARGS:1 )
+#FUNCTIONS
+RETURNF HTML_ADDOTHERTAG(ARGS, ARGS:1)
+
+;-------------------------------------------------------------------------------
+;	HTML_ADDALIGNTAG(式中関数)
+;-------------------------------------------------------------------------------
+;	Pタグ是最前/最后尾不是和ダメらしい的で、最后に使おう
+;===============================================================================
+@ADD_ATAG( ARGS = HTML_SUBSTITUTE , ARGS:1)
+#FUNCTIONS
+RETURNF HTML_ADDALIGNTAG(ARGS, ARGS:1)
+
+
+@HTML_TAGADDFORM, ARGS, ARG, ARGS:1 = "LEFT"
+#FUNCTIONS
+#LOCALSIZE 4
+#LOCALSSIZE 100
+LOCAL = ARG - STRLENS(HTML_TOPLAINTEXT(ARGS))
+IF LOCAL >= 0
+	SELECTCASE ARGS:1
+		CASE "LEFT"
+			RETURNF ARGS + " " * LOCAL
+		CASE "RIGHT"
+			RETURNF " " * LOCAL + ARGS
+		CASEELSE
+			THROW 引数[ARGS:1] に　不適切な字符串[%ARGS:1%]但渡されました。
+	ENDSELECT
+ELSE
+	LOCAL = ABS(LOCAL) + 2
+	HTML_TAGSPLIT ARGS, LOCALS
+	LOCAL:2 = RESULT
+	FOR LOCAL:1, LOCAL:2, -1, -1
+		SIF SUBSTRING(LOCALS:(LOCAL:1), 0, 1) == "<"
+			CONTINUE
+		LOCAL:3 = STRLENS(LOCALS:(LOCAL:1))
+		LOCALS:(LOCAL:1) '= SUBSTRING(LOCALS:(LOCAL:1), 0, MAX(LOCAL:3 - LOCAL, 0))
+		LOCAL -= LOCAL:3
+		SIF LOCAL <= 0
+			BREAK
+	NEXT
+	FOR LOCAL:1, 1, LOCAL:2
+		LOCALS += LOCALS:(LOCAL:1)
+	NEXT
+	RETURNF LOCALS + ("." * (ARG - STRLENS(HTML_TOPLAINTEXT(LOCALS))))
+ENDIF

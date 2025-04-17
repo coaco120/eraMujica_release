@@ -1,0 +1,140 @@
+﻿@ASSI_ACT_APPLY, ARG
+SELECTCASE NOWASSIACTNAME(ARG)
+	;手淫
+	CASE "用手爱抚"
+		SOURCE:MASTER:快Ｃ += 100 +ACT_FROM(ASSI, 1) * (2 + TALENT:ASSI:灵巧的指尖) /2
+		TCVAR:MASTER:这回合的勃起 += GET_ABL(ASSI, "技巧") + GET_ABL(ASSI, "爱抚") + TALENT:ASSI:灵巧的指尖 * 50
+	;舔阴・口交チオ
+	CASE "用口爱抚"
+		SOURCE:MASTER:快Ｃ += 150 +ACT_FROM(ASSI, 1) * (3 + TALENT:ASSI:舌使 + TALENT:ASSI:161) / 3
+		TCVAR:MASTER:这回合的勃起 += (GET_ABL(ASSI, "技巧") + GET_ABL(ASSI, "爱抚") + TALENT:ASSI:舌使 * 50 + TALENT:ASSI:猫舌 * 50)
+	;素股・貝合わせ
+	CASE "素股"
+		SOURCE:MASTER:快Ｃ += 100 +ACT_FROM(ASSI, 1) * (3 + TALENT:ASSI:易湿 - TALENT:ASSI:不易湿) / 3
+		TCVAR:MASTER:这回合的勃起 += GET_ABL(ASSI, "技巧") + GET_ABL(ASSI, "爱抚")
+	;乳交
+	CASE "进行乳交"
+		SOURCE:MASTER:快Ｃ += 100 +ACT_FROM(ASSI, 1) * (4 + TALENT:ASSI:巨乳 - TALENT:ASSI:貧乳) / 4
+		TCVAR:MASTER:这回合的勃起 += (GET_ABL(ASSI, "技巧") + GET_ABL(ASSI, "爱抚") + TALENT:ASSI:巨乳 * 50 - TALENT:ASSI:貧乳 * 50 + TALENT:ASSI:淫乳 * 50)
+	;足交
+	CASE "进行足交"
+		SOURCE:MASTER:快Ｃ += 50 + ACT_FROM(TARGET, 1) * (3 + TALENT:ASSI:美脚) / 3
+		TCVAR:MASTER:这回合的勃起 += GET_ABL(ASSI, "技巧") + GET_ABL(ASSI, "爱抚") + GET_ABL(MASTER, "受虐气质")
+	;跳蛋, 飞机杯
+	CASE "Ｃ道具"
+		SOURCE:MASTER:快Ｃ += 300 + ITEM:9 * 100 + (TALENT:ASSI:道具使 + 3) *ACT_FROM(ASSI, 11) / 3
+		TCVAR:MASTER:这回合的勃起 += GET_ABL(ASSI, "技巧") + GET_ABL(ASSI, "道具")
+		SIF TFLAG:助手ACT派生 == 1
+			TEQUIP:飞机杯 = 1 + ITEM:9
+	;逆强奸
+	CASE "逆强奸"
+		SOURCE:MASTER:快Ｃ += 300 + 2 *ACT_FROM(TARGET, 7)
+		;--------EDIT 001 START--------
+		;插入中标志的中身被角色登录番号に变更
+		;------------------------------
+		TEQUIP:助手性交奉仕中 = ARG
+		TFLAG:插入助手中 = ARG == ASSI:1 ? 1 # 2
+		TCVAR:MASTER:勃起度 = 1500
+		;--------EDIT 001 END  --------
+	;肛门爱抚
+	CASE "肛门爱抚"
+		SOURCE:MASTER:快Ａ += 60 +ACT_FROM(ASSI, 3) * (2 + TALENT:ASSI:灵巧的指尖) / 2
+		TCVAR:MASTER:这回合的勃起 += (GET_ABL(MASTER, "Ａ感觉") * 10 + GET_ABL(MASTER, "受虐气质") * GET_ABL(ASSI, "技巧")) / 10
+	;舔肛门
+	CASE "舔肛门"
+		SOURCE:MASTER:快Ａ += 60 +ACT_FROM(ASSI, 3) * (3 + TALENT:ASSI:舌使) / 3
+		TCVAR:MASTER:这回合的勃起 += GET_ABL(MASTER, "Ａ感觉")
+	;肛门跳蛋
+	CASE "肛门跳蛋"
+		SOURCE:MASTER:快Ａ += 100 + ITEM:9 * 100 + (TALENT:ASSI:道具使 + 3) *ACT_FROM(ASSI, 13) / 3
+		;男人是Ａで前列腺刺激
+		SIF TALENT:MASTER:男人
+			TCVAR:MASTER:前列腺刺激 += 1
+		TCVAR:MASTER:这回合的勃起 += GET_ABL(MASTER, "Ａ感觉")
+	;肛门震动棒
+	CASE "肛门震动棒"
+		SOURCE:MASTER:快Ａ += 100 + ITEM:9 * 200 + (TALENT:ASSI:道具使 + 3) *ACT_FROM(ASSI, 13) / 3
+		;男人是Ａで前列腺刺激
+		SIF TALENT:MASTER:男人
+			TCVAR:MASTER:前列腺刺激 += 1
+		TCVAR:MASTER:这回合的勃起 += (GET_ABL(MASTER, "Ａ感觉") * 10 + GET_ABL(MASTER, "受虐气质") * GET_ABL(ASSI, "技巧")) / 10
+		TEQUIP:肛门震动棒 = 1 + ITEM:9
+	;胸爱抚
+	CASE "胸爱抚"
+		SOURCE:MASTER:快Ｂ += 75 +ACT_FROM(ASSI, 4) * (2 + TALENT:ASSI:灵巧的指尖) / 3
+		TCVAR:MASTER:这回合的勃起 += (GET_ABL(ASSI, "技巧") + GET_ABL(ASSI, "爱抚") + TALENT:ASSI:灵巧的指尖 * 50) / 2
+	;舔乳头
+	CASE "舔乳头"
+		SOURCE:MASTER:快Ｂ += 150 +ACT_FROM(ASSI, 4) * (3 + TALENT:ASSI:舌使) / 3
+		TCVAR:MASTER:这回合的勃起 += (GET_ABL(ASSI, "技巧") + GET_ABL(ASSI, "爱抚") + TALENT:ASSI:舌使 * 50) / 2
+	;玩弄乳头
+	CASE "玩弄乳头"
+		SOURCE:MASTER:快Ｂ += 100 + ITEM:9 * 100 + (TALENT:ASSI:道具使 + 3) *ACT_FROM(ASSI, 14) / 3
+		TCVAR:MASTER:这回合的勃起 += (GET_ABL(ASSI, "技巧") + GET_ABL(ASSI, "爱抚") + TALENT:ASSI:道具使 * 50)/ 2
+	;手指插入
+	CASE "手指插入"
+		SOURCE:MASTER:快Ｖ +=  100 +ACT_FROM(ASSI, 2) * (2 + TALENT:ASSI:灵巧的指尖) / 2
+		;扶她是Ｖで前列腺刺激
+		SIF TALENT:MASTER:扶她
+			TCVAR:MASTER:前列腺刺激 += 1
+		TCVAR:MASTER:这回合的勃起 += (GET_ABL(ASSI, "技巧") + GET_ABL(ASSI, "爱抚") + TALENT:ASSI:灵巧的指尖 * 50) / 2
+	;震动棒
+	CASE "震动棒"
+		SOURCE:MASTER:快Ｖ += 150 + ITEM:9 * 200 +ACT_FROM(ASSI, 2) * (TALENT:ASSI:道具使 + 3) / 3
+		;扶她是Ｖで前列腺刺激
+		SIF TALENT:MASTER:扶她
+			TCVAR:MASTER:前列腺刺激 += 1
+		TCVAR:MASTER:这回合的勃起 += (GET_ABL(MASTER, "Ｖ感觉") + TALENT:ASSI:道具使 * 50 + GET_ABL(ASSI, "技巧"))
+		TEQUIP:震动棒 = 1 + ITEM:9
+	;性交
+	CASE "性交"
+		SOURCE:MASTER:快Ｖ +=  300 +ACT_FROM(ASSI, 5) * 3 / 2
+		;扶她是Ｖで前列腺刺激
+		SIF TALENT:MASTER:扶她
+			TCVAR:MASTER:前列腺刺激 += 1
+		TCVAR:MASTER:这回合的勃起 += (GET_ABL(ASSI, "技巧") + GET_ABL(ASSI, "性交")) / 2
+	;接吻
+	CASE "接吻"
+		TCVAR:MASTER:这回合的勃起 += 50 + (GET_ABL(ASSI, "技巧") + GET_ABL(ASSI, "爱抚") + TALENT:ASSI:舌使 * 50 + TALENT:ASSI:猫舌 * 50) / 2
+	;顔面骑乘
+	CASE "顔面骑乘"
+		TCVAR:MASTER:这回合的勃起 += (GET_ABL(MASTER, "欲望") + GET_ABL(MASTER, "受虐气质")) * 2
+	;舔足侍奉
+	CASE "舔足侍奉"
+		TCVAR:MASTER:这回合的勃起 += (GET_ABL(ASSI, "施虐") + GET_ABL(MASTER, "受虐气质")) * 2
+	;卖弄自慰
+	CASE "卖弄自慰"
+		TCVAR:MASTER:这回合的勃起 += (GET_ABL(MASTER, "欲望") + GET_ABL(ASSI, "羞耻")) * 2
+	;辱骂
+	CASE "辱骂"
+		TCVAR:MASTER:这回合的勃起 += (GET_ABL(MASTER, "受虐气质") + GET_ABL(MASTER, "露出癖"))
+	;拍摄写真
+	CASE "拍摄写真"
+		TCVAR:MASTER:这回合的勃起 += (GET_ABL(MASTER, "受虐气质") + GET_ABL(MASTER, "露出癖"))
+	;与调教者接吻
+	CASE "与调教者接吻"
+		TCVAR:MASTER:这回合的勃起 += (GET_ABL(MASTER, "受虐气质") + GET_ABL(MASTER, "欲望"))
+	;展露痴态
+	CASE "展露痴态"
+		TCVAR:MASTER:这回合的勃起 += (GET_ABL(MASTER, "受虐气质") + GET_ABL(MASTER, "露出癖"))
+	;把头踩在脚下
+	CASE "把头踩在脚下"
+		TCVAR:MASTER:这回合的勃起 += (GET_ABL(MASTER, "受虐气质") + TALENT:ASSI:虐待狂 * 5) * 10
+	;-------------------------------------------------
+	;SP活动ション
+	;-------------------------------------------------
+	CASE "刊登在报纸上"
+		SOURCE:MASTER:露出 += 25 * (2 + ABL:ASSI:技巧 * 2 + ABL:ASSI:异常) * (2 + ITEM:9)
+		SOURCE:MASTER:逃脱 += 20 * SOURCE:MASTER:露出 / (3 + ABL:MASTER:顺从 + ABL:MASTER:欲望 + ABL:MASTER:露出癖 * 3 + ABL:MASTER:受虐气质 * 2 + CFLAG:MASTER:调教等级 + EXP:MASTER:被写経験 + EXP:MASTER:异常経験 / 2)
+		SOURCE:MASTER:心理创伤 += (2 + TALENT:MASTER:羞涩 - TALENT:MASTER:无耻) * (SOURCE:MASTER:逃脱 + 1000) / (1000 + MARK:反抗刻印 * 100 - MARK:MASTER:心理创伤 * 50 + EXP:MASTER:异常経験 * 10 + ABL:MASTER:露出癖 * 250 + EXP:MASTER:被写経験 * 100)
+		SOURCE:MASTER:中毒充足 += SOURCE:MASTER:露出 * (CFLAG:MASTER:调教等级 + ABL:MASTER:露出癖 + 1) * (ABL:MASTER:露出癖 * 2 + 5) / (1000 + SOURCE:MASTER:心理创伤)
+		IF TEQUIP:自慰中 == 1 || TEQUIP:自慰中 == 3
+			SOURCE:MASTER:露出 += 200 + SOURCE:MASTER:露出 / 5
+			TIMES SOURCE:MASTER:逃脱 , 1.35
+			TIMES SOURCE:MASTER:中毒充足 , 1.50
+			TIMES SOURCE:MASTER:达成 , 1.50
+		ENDIF
+		;本次的调教で撮影した回数被カウント
+		TFLAG:51 += 1
+ENDSELECT
+

@@ -1,0 +1,281 @@
+﻿;────────────────────────────────────
+;010,感到害羞（露出逆、屈从、反抗、消极的服从、惩罚点数）
+;────────────────────────────────────
+@COM10
+LOCAL = 200 + MARK:反抗刻印 * 10 - CFLAG:MASTER:调教等级 * 15
+;露出SOURCE減少
+SOURCE:MASTER:露出 -= LOCAL
+;露出SOURCE是负に那么ない
+IF SOURCE:MASTER:露出 < 0
+	SOURCE:MASTER:露出 = 0
+	LOCAL = 0
+ENDIF
+;屈从、反抗SOURCE増加
+SOURCE:MASTER:屈从 += 200 - LOCAL / 2
+SOURCE:MASTER:反抗 += LOCAL / 10
+;惩罚点数加算
+SIF LOCAL > 0 && BASE:焦躁 / 100 + RAND:5 > BASE:满足 / 100 + MARK:屈服刻印 + ABL:MASTER:顺从 + CFLAG:定位 / 10
+	TFLAG:惩罚点数 += 1 + RAND:3
+;快感により派生
+IF SOURCE:MASTER:快Ｃ + SOURCE:MASTER:快Ｖ + SOURCE:MASTER:快Ａ + SOURCE:MASTER:快Ｂ > 10
+	;派生：快感に感到害羞
+	TFLAG:REACT派生 = 1
+ELSE
+	;派生：状況に感到害羞
+	TFLAG:REACT派生 = 0
+ENDIF
+;COM分类
+CALL SET_COMGRO("消极的服从")
+;依存度变化
+CALL ADD_DEPEND(+1, 0)
+RETURN 1
+
+
+;────────────────────────────────────
+;011,讨厌（心理创伤、反抗、发狂、惩罚点数）
+;────────────────────────────────────
+@COM11
+;心理创伤化加速
+TIMES SOURCE:MASTER:心理创伤 , 1.20
+;反抗SOURCE増加
+LOCAL = 200 + SOURCE:MASTER:心理创伤 / 3 - MARK:屈服刻印 * 20 - GET_ABL(MASTER, "顺从") * 5 + MARK:反抗刻印 * 20
+LOCAL = LIMIT(LOCAL, 0, 1000)
+SOURCE:MASTER:反抗 += LOCAL
+;COM32的发狂より判定但弱い
+LOCAL:1 = MARK:反抗刻印 + BASE:MASTER:体力 / 150 + BASE:MASTER:气力 / 100 - TALENT:MASTER:矮小 * 5 + TALENT:MASTER:高大 * 5 + PALAM:MASTER:反抗 / 1000 - (TEQUIP:绳) * 3 - TEQUIP:眼罩 * 4 - TEQUIP:口球
+LOCAL:3 = BASE:体力 / 120 + BASE:气力 / 80 - TALENT:矮小 * 5 + TALENT:高大 * 5 + GET_TRAINLV(TARGET) * 2
+;助手的人数和体格
+SIF ASSI:1 > 0
+	LOCAL:3 += 6 + TALENT:(ASSI:1):高大 * 3 - TALENT:(ASSI:1):矮小 * 3
+SIF ASSI:2 > 0
+	LOCAL:3 += 6 + TALENT:(ASSI:2):高大 * 3 - TALENT:(ASSI:2):矮小 * 3
+;ACT修正値
+IF IS_NOWACTNAME("用口爱抚")
+	LOCAL:2 = 2
+ELSEIF IS_NOWACTNAME("接吻")
+	LOCAL:2 = 5
+ELSEIF IS_NOWACTNAME("进行乳交")
+	LOCAL:2 = 3
+ELSEIF IS_NOWACTNAME("进行足交")
+	LOCAL:2 = 0
+ELSEIF IS_NOWACTNAME("肛门震动棒/肛门拉珠")
+	LOCAL:2 = 12
+ELSEIF IS_NOWACTNAME("深喉")
+	LOCAL:2 = 14
+ELSEIF IS_NOWACTNAME("打屁股")
+	LOCAL:2 = 12
+ELSEIF IS_NOWACTNAME("鞭")
+	LOCAL:2 = 15
+ELSEIF IS_NOWACTNAME("针")
+	LOCAL:2 = 14
+ELSEIF IS_NOWACTNAME("绳")
+	LOCAL:2 = 12
+ELSEIF IS_NOWACTNAME("眼罩")
+	LOCAL:2 = 12
+ELSEIF IS_NOWACTNAME("进行治疗")
+	LOCAL:2 = -10
+ELSEIF IS_NOWACTNAME("正常位") || TEQUIP:性交中 == 1
+	LOCAL:2 = 12
+ELSEIF IS_NOWACTNAME("后背位") || TEQUIP:性交中 == 2
+	LOCAL:2 = 18
+ELSEIF IS_NOWACTNAME("骑乘位") || TEQUIP:性交中 == 3
+	LOCAL:2 = 7
+ELSEIF IS_NOWACTNAME("对面座位") || TEQUIP:性交中 == 4
+	LOCAL:2 = 15
+ELSEIF IS_NOWACTNAME("背面座位") || TEQUIP:性交中 == 5
+	LOCAL:2 = 16
+ELSEIF IS_NOWACTNAME("肛交") || TEQUIP:性交中 == 6
+	LOCAL:2 = 20
+ELSEIF IS_NOWACTNAME("正常位侍奉") || TEQUIP:性交奉仕中 == 1
+	LOCAL:2 = 10
+ELSEIF IS_NOWACTNAME("后背位侍奉") || TEQUIP:性交奉仕中 == 2
+	LOCAL:2 = 10
+ELSEIF IS_NOWACTNAME("逆强奸") || TEQUIP:性交奉仕中 == 3
+	LOCAL:2 = 12
+ELSEIF IS_NOWACTNAME("对面座位侍奉") || TEQUIP:性交奉仕中 == 4
+	LOCAL:2 = 12
+ELSEIF IS_NOWACTNAME("背面座位侍奉") || TEQUIP:性交奉仕中 == 5
+	LOCAL:2 = 12
+ELSEIF IS_NOWACTNAME("肛交侍奉") || TEQUIP:性交奉仕中 == 6
+	LOCAL:2 = 22
+ELSE
+	LOCAL:2 = 10
+ENDIF
+;助手存在时修正
+SIF ASSI > 0
+	LOCAL:2 += GET_TRAINLV(ASSI) / 2 + 3
+;ＳＰ行动
+SIF TFLAG:ＳＰ行动 > 199
+	LOCAL:2 += 10
+;修正値被满足すれば		逆强奸抵抗できなくてよいらしい的で、发狂扱いに那么ないように变更@/L
+IF LOCAL:1 > LOCAL:2 + LOCAL:3 && TEQUIP:三角木马 == 0 && !IS_NOWACTNAME("逆强奸")
+	;惩罚点数加算
+	TFLAG:惩罚点数 += (LOCAL:1 - LOCAL:3) / 2 + 3
+	;COM分类
+	CALL SET_COMGRO("发狂")
+ELSE
+	;惩罚点数加算
+	TFLAG:惩罚点数 += LOCAL:1 / 5 + 2
+ENDIF
+IF !IS_COMGRONAME("发狂") || IS_NOWACTNAME("逆强奸")
+	;COM分类
+	CALL SET_COMGRO("消极的服从")
+	;COM印象
+	CALL SET_COMIMP("恶印象小")
+	;派生：讨厌但ACT是妨害せず
+	TFLAG:REACT派生 = 0
+ELSE
+	DOWNBASE:体力 += 5 * (4 + MARK:反抗刻印 + TALENT:MASTER:高大 * 2 - TALENT:MASTER:矮小 * 2)
+	DOWNBASE:气力 += 8 * (7 + CFLAG:MASTER:反抗强度 + TALENT:MASTER:反抗的 * 3 + TALENT:MASTER:自大 * 3 - TALENT:MASTER:坦率 * 3 - TALENT:MASTER:成熟 * 3)
+	;COM印象
+	CALL SET_COMIMP("恶印象大")
+	;派生：嫌但ってACT妨害
+	TFLAG:REACT派生 = 1
+ENDIF
+;依存度变化
+CALL ADD_DEPEND(-1, -1)
+RETURN 1
+
+
+;────────────────────────────────────
+;012,骂笨手笨脚（达成逆、反抗、惩罚点数）
+;────────────────────────────────────
+@COM12
+LOCAL = 20 + TALENT:MASTER:自尊心高 * 5 + TALENT:MASTER:刚毅 * 5 + MARK:反抗刻印 + PALAM:MASTER:反抗 / 500 - GET_ABL(MASTER, "顺从") * 3 / 10 - CFLAG:MASTER:调教等级
+LOCAL:1 = SOURCE:MASTER:快Ｃ * (1 + TALENT:MASTER:Ｃ敏感) + SOURCE:MASTER:快Ｖ * (1 + TALENT:MASTER:Ｖ敏感) + SOURCE:MASTER:快Ａ * (1 + TALENT:MASTER:Ａ敏感) + SOURCE:MASTER:快Ｂ * (1 + TALENT:MASTER:Ｂ敏感)
+LOCAL -= LOCAL:1 / (500 - TALENT:承认快感 * 100 + TALENT:否定快感 * 50)
+SIF LOCAL < 0
+	LOCAL = 0
+;达成SOURCE減少
+SOURCE:MASTER:达成 -= LOCAL * 50
+;反抗SOURCE増加
+SOURCE:MASTER:反抗 += 200 + LOCAL * 30
+;惩罚点数加算
+TFLAG:惩罚点数 += LOCAL / 4 + 5
+IF LOCAL > 0
+	;COM印象
+	CALL SET_COMIMP("恶印象大")
+	;派生：こきおろす
+	TFLAG:REACT派生 = 0
+	;COM分类
+	CALL SET_COMGRO("淡然的服从")
+ELSE
+	;COM印象
+	CALL SET_COMIMP("恶印象小")
+	;派生：强但る
+	TFLAG:REACT派生 = 1
+	;COM分类
+	CALL SET_COMGRO("消极的服从")
+ENDIF
+;依存度变化
+CALL ADD_DEPEND(-2, -3)
+RETURN 1
+
+
+;────────────────────────────────────
+;013,无所畏惧的笑（心理创伤逆、反抗、消极的服从、惩罚点数）
+;────────────────────────────────────
+@COM13
+;心理创伤化減速
+TIMES SOURCE:MASTER:心理创伤 , 0.80
+;反抗SOURCE増加
+SOURCE:MASTER:反抗 += 500 - SOURCE:MASTER:快Ｃ / 50 * (1 + TALENT:MASTER:Ｃ敏感) + SOURCE:MASTER:快Ｖ / 50 * (1 + TALENT:MASTER:Ｖ敏感) + SOURCE:MASTER:快Ａ / 50 * (1 + TALENT:MASTER:Ａ敏感) + SOURCE:MASTER:快Ｂ / 50 * (1 + TALENT:MASTER:Ｂ敏感)
+SIF SOURCE:MASTER:反抗 < 0
+	SOURCE:MASTER:反抗 = 0
+;惩罚点数加算
+TFLAG:惩罚点数 += BASE:焦躁 / 80 - BASE:兴趣 / 150 + 1 + RAND:3
+;COM分类
+CALL SET_COMGRO("淡然的服从")
+;COM印象
+CALL SET_COMIMP("恶印象小")
+;依存度变化
+CALL ADD_DEPEND(0, -1)
+RETURN 1
+
+
+;────────────────────────────────────
+;014,忍受快感（快ＣＶＡＢ修正、不快追加、达成、乐趣、反抗、哀求、惩罚点数）
+;────────────────────────────────────
+@COM14
+;快ＸSOURCE減少
+TIMES SOURCE:MASTER:快Ｃ , 0.80
+TIMES SOURCE:MASTER:快Ｖ , 0.80
+TIMES SOURCE:MASTER:快Ａ , 0.80
+TIMES SOURCE:MASTER:快Ｂ , 0.80
+;不快PALAM加算
+CUP:MASTER:不快 += SOURCE:MASTER:快Ｃ / 25 + SOURCE:MASTER:快Ｖ / 25 + SOURCE:MASTER:快Ａ / 25 + SOURCE:MASTER:快Ｂ / 25
+;达成、乐趣SOURCE増加
+SOURCE:MASTER:达成 += 100 + SOURCE:MASTER:快Ｃ / 50 + SOURCE:MASTER:快Ｖ / 50 + SOURCE:MASTER:快Ａ / 50 + SOURCE:MASTER:快Ｂ / 50
+SOURCE:MASTER:乐趣 += 100 + SOURCE:MASTER:快Ｃ / 50 + SOURCE:MASTER:快Ｖ / 50 + SOURCE:MASTER:快Ａ / 50 + SOURCE:MASTER:快Ｂ / 50
+LOCAL = (MARK:反抗刻印 + 1) * (100 + SOURCE:MASTER:快Ｃ + SOURCE:MASTER:快Ｖ + SOURCE:MASTER:快Ａ + SOURCE:MASTER:快Ｂ) / 500
+SIF LOCAL > 500
+	LOCAL = 500
+;反抗SOURCE増加
+SOURCE:MASTER:反抗 += LOCAL
+;忍耐标志
+TCVAR:MASTER:忍耐 = 3
+;哀求成立的判定
+IF SOURCE:MASTER:反抗 < 500 && (TALENT:好心眼 * 5 - TALENT:坏心眼 * 5 - BASE:焦躁 / 100 + BASE:满足 / 100 > 0 + CFLAG:定位 / 10) && TEQUIP:口球 == 0
+	;COM分类
+	CALL SET_COMGRO("请求宽恕")
+	;COM印象
+	CALL SET_COMIMP("0接近")
+	;派生：哀求
+	TFLAG:REACT派生 = 1
+ELSE
+	;COM分类
+	CALL SET_COMGRO("消极的服从")
+	;派生：耐久
+	TFLAG:REACT派生 = 0
+ENDIF
+;依存度变化
+CALL ADD_DEPEND(+1, -1)
+RETURN 1
+
+
+;────────────────────────────────────
+;015,接受快感（快ＣＶＡＢ修正、屈从、达成、乐趣、接受）
+;ほ和んど心情舒畅！和同じです但、主动但依存し容易
+;────────────────────────────────────
+@COM15
+;逃脱SOURCE減少
+TIMES SOURCE:MASTER:逃脱 , 0.70
+;心理创伤化減速
+TIMES SOURCE:MASTER:心理创伤 , 0.80
+;屈从、达成、乐趣SOURCE増加
+SOURCE:MASTER:屈从 += 50 + (MARK:MASTER:快乐刻印 + 1) * (SOURCE:MASTER:快Ｃ + SOURCE:MASTER:快Ｖ + SOURCE:MASTER:快Ａ + SOURCE:MASTER:快Ｂ) * CFLAG:MASTER:调教等级 / 200
+SOURCE:MASTER:达成 += 100 + (CFLAG:MASTER:调教等级 + 5) * (SOURCE:MASTER:快Ｃ + SOURCE:MASTER:快Ｖ + SOURCE:MASTER:快Ａ + SOURCE:MASTER:快Ｂ) / 100
+SOURCE:MASTER:乐趣 += 100 + SOURCE:MASTER:快Ｃ / 25 + SOURCE:MASTER:快Ｖ / 25 + SOURCE:MASTER:快Ａ / 25 + SOURCE:MASTER:快Ｂ / 25
+;COM分类
+CALL SET_COMGRO("接受")
+;COM印象
+CALL SET_COMIMP("好印象大")
+;忍耐标志解消
+TCVAR:MASTER:忍耐 = 0
+;依存度变化
+CALL ADD_DEPEND(+1, +5)
+RETURN 1
+
+
+;────────────────────────────────────
+;016,心情舒畅！（快ＣＶＡＢ修正、屈从、达成、乐趣、接受）
+;ほ和んど接受快感和同じです但、主人侧的依存被誘い容易
+;────────────────────────────────────
+@COM16
+;逃脱SOURCE減少
+TIMES SOURCE:MASTER:逃脱 , 0.70
+;心理创伤化減速
+TIMES SOURCE:MASTER:心理创伤 , 0.80
+;屈从、达成、乐趣SOURCE増加
+SOURCE:MASTER:屈从 += 50 + (MARK:MASTER:快乐刻印 + 1) * (SOURCE:MASTER:快Ｃ + SOURCE:MASTER:快Ｖ + SOURCE:MASTER:快Ａ + SOURCE:MASTER:快Ｂ) * CFLAG:MASTER:调教等级 / 200
+SOURCE:MASTER:达成 += 100 + (CFLAG:MASTER:调教等级 + 5) * (SOURCE:MASTER:快Ｃ + SOURCE:MASTER:快Ｖ + SOURCE:MASTER:快Ａ + SOURCE:MASTER:快Ｂ) / 100
+SOURCE:MASTER:乐趣 += 100 + SOURCE:MASTER:快Ｃ / 25 + SOURCE:MASTER:快Ｖ / 25 + SOURCE:MASTER:快Ａ / 25 + SOURCE:MASTER:快Ｂ / 25
+;COM分类
+CALL SET_COMGRO("接受")
+;COM印象
+CALL SET_COMIMP("好印象大")
+;忍耐标志解消
+TCVAR:MASTER:忍耐 = 0
+;依存度变化
+CALL ADD_DEPEND(+4, +1)
+RETURN 1

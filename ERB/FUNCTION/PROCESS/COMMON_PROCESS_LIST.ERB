@@ -1,0 +1,646 @@
+﻿;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+;
+;	Module		:SELECT_CHARA.ERB
+;	Facility	:条件被满たしている角色クタ被目录上升し、そ的中から一人被PLAYER但选择してそ的結果被返す
+;				 関数・@SELECT_CHARA_LIST和そ的相关関数被ま和めた文件
+;
+;	Licence		:ライセンスフリー。
+;
+;	Modification Data:
+;
+;	Edit	Date			Author					Reason
+;	001		20XX/XX/XX		----					新規作成
+;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+
+;=============================================================================
+;角色目录显示＋入力関数@SELECT_CHARA_LIST
+;
+;ARGS == オプション
+;『<指定>内容』的形で记述し、实行被控制し增加。
+;
+;<识別> 识別字符串。
+;	他和重複不做名称被指定しておけばオプション被记忆しておけ增加。
+;
+;<说明> 说明文
+;
+;<对象> 目录に显示做角色クタ的分类
+;	"関係者" 既に登场した角色クタ(デフォルト)
+;		※登录番号で处理被行う
+;	"可登场" 今后登场的可能性但ある角色クタ
+;		※csv番号で处理被行う
+;
+;<条件> 显示的可否被判断做関数名
+;	第一引数に番号("関係者"指定で是登录番号、"可登场"指定で是csv番号)被渡す的で、
+;	特定的条件被满たしたかどうか被判定し、
+;	显示可能的场合是1、显示できない场合是0被返す関数被別途に作ってください。
+;	指定した関数但存在不做场合是无条件で全部的角色被显示し增加。
+;
+;<上部> 上部追加显示被行う関数名
+;<下部> 下部追加显示被行う関数名
+;	それぞれ目录的上部、下部に何か特殊な显示被し想要时に指定し增加。
+;	单なる显示处理的み被想定しており、返り値但参照される事もありません。
+;
+;<口上> 指定做和字符色被口上指定色に变え增加
+;	当前正在"调教者"(调教者指定口上)的み有效です
+;
+;<选择> 选择肢被追加做ため的関数名
+;	角色选择、ページ送り、キャンセル以外的选择肢但必要な场合に指定し增加。
+;	こ的関数是选择肢的显示时(引数=-1)和INPUT直后(引数=RESULT)的2回呼び出され增加。
+;	引数但-1的时に选择肢的显示、それ以外的时に选择后的处理被行うよう设計してください。
+;	また、新たに関数被CALL做事でRESULT的値但变化做事に留意してください。
+;	选择后に呼び出した后是RESULT被参照し增加。
+;	RESULT但0であれば现在的RESULTで处理被终了、
+;	-1那么RESTART、-2で入力的やり直し、それ以外那么续行し增加。
+;
+;<取消> "不可取消"被指定做和キャンセル处理但无效化され增加。
+;	また、其他的字符串被指定做和キャンセル选择肢部分にそれ但显示され增加。
+;
+;<项目> 角色目录に显示做项目
+;	詳細是@SHOW_CHARA_LISTにて
+;<行数> 角色目录行数
+;<列数> 角色目录最大列数(显示但是み出す场合是自动で削減され增加)
+;
+;<固定> "显示不可修改"被指定做和显示变更处理但无效化され增加。
+;
+;=============================================================================
+@SELECT_CHARA_LIST(C_ARGS)
+
+;通用関数宣言
+#LOCALSSIZE 5
+#DIM LCOUNT
+
+;开始行位置(再描画用)
+#DIM LINE
+
+;最终ページ
+#DIM MPAGE
+
+;オプション变数
+#DIMS 说明
+#DIMS 条件
+#DIMS 上部
+#DIMS 下部
+#DIMS 选择
+#DIMS 取消
+#DIMS 固定
+
+;オプション切り出し
+说明 = %SELECT_CHARA_LIST_CUT(C_ARGS, "说明")%
+条件 = %SELECT_CHARA_LIST_CUT(C_ARGS, "条件")%
+上部 = %SELECT_CHARA_LIST_CUT(C_ARGS, "上部")%
+下部 = %SELECT_CHARA_LIST_CUT(C_ARGS, "下部")%
+选择 = %SELECT_CHARA_LIST_CUT(C_ARGS, "选择")%
+取消 = %SELECT_CHARA_LIST_CUT(C_ARGS, "取消")%
+固定 = %SELECT_CHARA_LIST_CUT(C_ARGS, "固定")%
+C_LINM = TOINT(CHARA_LIST_R("行数", C_G_LINM))
+C_ROWM = TOINT(CHARA_LIST_R("列数", C_G_ROWM))
+C_IDES = %SELECT_CHARA_LIST_CUT(C_ARGS, "识別")%
+C_TARS = %SELECT_CHARA_LIST_CUT(C_ARGS, "对象")%
+C_KOJS = %SELECT_CHARA_LIST_CUT(C_ARGS, "口上")%
+
+;开始行位置记忆
+REDRAW 0
+LINE = LINECOUNT
+
+;显示侍奉角色被抽出
+;目录初期化
+VARSET CHARA_LIST, -1
+;条件指定但变更されていれば现在ページ被初期化
+SIF LOCALS != 条件
+	C_PAGE = 0
+;现在的条件指定被记忆
+LOCALS = %条件%
+;对象和なる角色クタから条件に当て是まるも的被目录に追加
+LOCAL = 0
+FOR LCOUNT, 0, C_TARS == "可登场" ? FLAG:Cha总数 + 1 # CHARANUM
+	;条件関数呼び出し
+	TRYCCALLFORM %条件%, LCOUNT
+	;関数但なければ宽容
+	CATCH
+		RESULT = 1
+	ENDCATCH
+	;拒绝さ受到场合次的角色クタへ
+	SIF RESULT == 0
+		CONTINUE
+	;宽容されれば目录に追加
+	CHARA_LIST:LOCAL = LCOUNT
+	LOCAL++
+NEXT
+
+;行数指定
+C_LINE = MIN(C_LINM, LOCAL)
+;必要字符数被取得
+C_CHAR = 0
+CALL SHOW_CHARA_LIST_ITEM(0)
+RESETCOLOR
+;改行被行うこ和で描画开始时に取得用字符串被消す
+PRINTL 
+;列数指定
+C_ROW = MIN(C_ROWM, (WIDTH() + 2) / (C_CHAR + 2))
+C_ROW = MAX(C_ROW, 1)
+
+;最终ページ被取得
+MPAGE = (LOCAL - 1) / C_LINE / C_ROW
+
+;现在ページ被ページ范围内に収める
+C_PAGE = LIMIT(C_PAGE, 0, MPAGE)
+
+;描画开始
+$PRINT_LIST
+;表被消去
+REDRAW 0
+CLEARLINE LINECOUNT - LINE
+DRAWLINE
+;上部関数呼び出し
+TRYCALLFORM %上部%
+;说明显示
+SIF 说明 != ""
+	PRINTFORML %说明%
+SIF 上部 != "" || 说明 != ""
+	DRAWLINE
+;本体显示处理
+CALL SHOW_CHARA_LIST()
+DRAWLINE
+;ページ数显示
+SIF LOCAL > C_LINE
+	PRINTFORML %" "*25%＜page.{C_PAGE}/{MPAGE}＞
+;キャンセル用字符串但存在しなければ返回被指定
+取消 = % 取消 == "" ? "返回" # 取消 %
+;ページ控制按键显示
+LOCALS:1 = 　\@ MPAGE > 0 ? [-]上一页 # \@
+LOCALS:2 = 　[/]\@ 取消 != "不可取消" ? %取消% # ---- \@
+LOCALS:3 = 　\@ MPAGE > 0 ? [+]下一页 # \@
+LOCALS:4 = 　[*]\@ 固定 != "显示不可修改" && C_IDES != "" && C_IDES != "" ? 显示变更 # ---- \@
+PRINTBUTTON @"%LOCALS:1 , 25 , LEFT%" , "-"
+PRINTBUTTON @"%LOCALS:2 , 25 , LEFT%" , "/"
+PRINTBUTTON @"%LOCALS:3 , 25 , LEFT%" , "+"
+PRINTBUTTON @"%LOCALS:4 , 25 , LEFT%" , "*"
+PRINTL
+;追加选择肢显示
+TRYCALLFORM %选择%("-1")
+;下部関数呼び出し
+TRYCALLFORM %下部%
+
+;入力控制开始
+$INPUT_LOOP_1
+REDRAW 1
+INPUTS
+;追加选择肢处理
+TRYCCALLFORM %选择%(RESULTS)
+	;返り値0で处理终了。TOINT(RESULTS)被返す
+	SIF RESULT == 0
+		RETURN TOINT(RESULTS)
+	;返り値-1でRESTART
+	SIF RESULT == -1
+		RESTART
+	;返り値-2で入力的やり直し
+	SIF RESULT == -2
+		GOTO PRINT_LIST
+	;其他的返り値で续行
+CATCH
+ENDCATCH
+;选择肢处理
+SELECTCASE RESULTS
+	;无入力
+	CASE ""
+		GOTO INPUT_LOOP_1
+	;处理キャンセル(不可取消的场合入力的やり直し)
+	CASE "/"
+		SIF 取消 != "不可取消"
+			RETURN -1
+		CLEARLINE 1
+		GOTO INPUT_LOOP_1
+	;上一页(范围外になる场合最终ページへ)
+	CASE "-"
+		C_PAGE = C_PAGE <= 0 ? MPAGE # C_PAGE - 1
+	;下一页(范围外になる场合最初的ページへ)
+	CASE "+"
+		C_PAGE = C_PAGE >= MPAGE ? 0 # C_PAGE + 1
+	;显示变更
+	CASE "*"
+		SIF 固定 == "显示不可修改" || C_IDES == ""
+			GOTO INPUT_LOOP_1
+		CALL SELECT_CHARA_LIST_OPT()
+		RESTART
+	;角色クタ选择
+	CASEELSE
+		;角色クタ指定但不正であれば入力的やり直し
+		;該当角色的不在
+		SIF MATCH(CHARA_LIST, TOINT(RESULTS), 0) == 0
+			GOTO INPUT_LOOP_1
+		;角色クタ选择成功
+		RETURN TOINT(RESULTS)
+ENDSELECT
+;再描画
+GOTO PRINT_LIST
+
+;-------------------------------------------------
+;显示变更関数
+;-------------------------------------------------
+@SELECT_CHARA_LIST_OPT()
+#LOCALSSIZE 10
+#DIMS LTEMPS, 10
+#DIM LCOUNT
+#DIM SELECT
+#DIM LINE
+#DIM 项目数
+SELECT = -1
+;项目呼び出し/切り出し
+LOCALS = %CHARA_LIST_R("项目", C_G_ITES)%
+IF LOCALS == "空"
+	LOCALS = 
+	LOCAL = 0
+ELSE
+	SPLIT LOCALS, "/", LOCALS, LOCAL
+ENDIF
+;其他项目切り出し
+SPLIT "←显示/名前/外号/体力・气力/経験値/性別", "/", LTEMPS, 项目数
+;其他项目被配置
+FOR LCOUNT, 0, 项目数
+	IF FINDELEMENT(LOCALS, LTEMPS:LCOUNT, , , 1) == -1
+		LOCALS:LOCAL = %LTEMPS:LCOUNT%
+		LOCAL++
+	ENDIF
+NEXT
+;开始行位置记忆
+LINE = LINECOUNT
+$PRINT_OPTION
+;记述被消去
+REDRAW 0
+CLEARLINE LINECOUNT - LINE
+;设定被显示
+DRAWLINE
+PRINTBUTTON @"[行数({C_LINM})]", 1001
+PRINTBUTTON @"[列数({C_ROWM})]", 1002
+PRINTL
+DRAWLINE
+PRINTFORML <显示项目>
+;项目显示
+FOR LCOUNT, 0, 项目数
+	SIF LCOUNT == SELECT
+		SETCOLOR 0xC07070
+	PRINTBUTTON @"%"["+LOCALS:LCOUNT+"]",24,LEFT% > ", LCOUNT
+	SIF LCOUNT % 4 == 3
+		PRINTL 
+	RESETCOLOR
+NEXT
+PRINTL 
+DRAWLINE
+PRINTFORML [-1]返回
+$INPUT_LOOP
+REDRAW 1
+INPUT
+SELECTCASE RESULT
+	;返回
+	CASE -1
+		;显示指定ポインタ的位置被取得
+		LOCAL = FINDELEMENT(LOCALS, "←显示", , , 1)
+		;显示指定部分被积み上げて作成
+		LTEMPS = 
+		FOR LCOUNT, 0, LOCAL
+			SIF LCOUNT > 0
+				LTEMPS += "/"
+			LTEMPS += LOCALS:LCOUNT
+		NEXT
+		;内容但无かった场合ダミー字符串被记忆
+		SIF LTEMPS == ""
+			LTEMPS = 空
+		;记忆处理
+		CALLF CHARA_LIST_W(C_G_ITES, LTEMPS)
+		RETURN 0
+	;显示指定並べ替え处理
+	CASE 0 TO 项目数 - 1
+		;既にどれか被选择していれば入れ替え被行う
+		IF 0 <= SELECT && SELECT < 项目数
+			SWAP LOCALS:SELECT, LOCALS:RESULT
+			SELECT = -1
+		;まだ选择していなければ选择状态に做
+		ELSE
+			SELECT = RESULT
+		ENDIF
+		GOTO PRINT_OPTION
+	;行数指定
+	CASE 1001
+		CALL INPUT_MANY, 1, 20
+		C_LINM = RESULT
+		CALLF CHARA_LIST_W(C_G_LINM, TOSTR(RESULT))
+		GOTO PRINT_OPTION
+	;列数指定
+	CASE 1002
+		CALL INPUT_MANY, 1, 4
+		C_ROWM = RESULT
+		CALLF CHARA_LIST_W(C_G_ROWM, TOSTR(RESULT))
+		GOTO PRINT_OPTION
+ENDSELECT
+GOTO INPUT_LOOP
+
+;-------------------------------------------------
+;角色一览显示处理・基本
+;<项目>オプション……『/』区切りで显示项目被指定
+;-------------------------------------------------
+@SHOW_CHARA_LIST(ARGS)
+#DIM LLINE
+#DIM LROW
+;行ループ
+FOR LLINE, 0, C_LINE
+	;列ループ
+	FOR LROW, 0, C_ROW
+		;二行目以降是スペース被空ける
+		SIF LROW > 0
+			PRINT 　
+		;现在行的角色クタ被读み込み
+		LOCAL = CHARA_LIST:(C_LINE * C_ROW * C_PAGE + C_LINE * LROW + LLINE)
+		;角色クタ但存在しなければ空行被出力
+		SIF LOCAL < 0
+			CONTINUE
+		;项目被顺に显示
+		CALL SHOW_CHARA_LIST_ITEM(LOCAL)
+		RESETCOLOR
+	NEXT
+	PRINTL 
+NEXT
+RESETCOLOR
+PRINTL 　　　　★：调教中　☆：助手　○：休息中　表现形式
+PRINTL 　　　　另外，主人将用红色显示
+
+;项目被顺に显示做
+@SHOW_CHARA_LIST_ITEM(ARG)
+#LOCALSSIZE 10
+#DIM LCOUNT
+;实際列数初期化
+LOCALS = %CHARA_LIST_R("项目", C_G_ITES)%
+SPLIT LOCALS, "/", LOCALS, LOCAL
+;ヘッダー呼び出し
+CALL SHOW_CHARA_LIST_HEADER(ARG)
+;オプション项目被顺に呼び出し
+FOR LCOUNT, 0, LOCAL
+	CALL SHOW_CHARA_LIST_C(LOCALS:LCOUNT, ARG)
+NEXT
+
+;ヘッダー関数
+@SHOW_CHARA_LIST_HEADER(ARG)
+;调教者・助手など的アイコン显示
+CALL ARRANGE_TARGETSIGN, ARG
+;角色番号被显示
+CALL ARRANGE_CHARANUM, ARG
+
+;呼び出し处理
+@SHOW_CHARA_LIST_C(ARGS, ARG)
+;项目追加时@SELECT_CHARA_LIST_OPTにも追加做こ和
+SELECTCASE ARGS
+	;角色名被显示
+	CASE "名前"
+		CALL ARRANGE_CHARANAME, ARG
+	;外号被显示
+	CASE "外号"
+		CALL ARRANGE_AKA, ARG
+	;体力・气力显示
+	CASE "体力・气力"
+		CALL ARRANGE_CHARALIFE, ARG
+	;経験値显示
+	CASE "経験値"
+		CALL ARRANGE_EXP, ARG
+	;性別显示
+	CASE "性別"
+		CALL ARRANGE_SEX, ARG
+ENDSELECT
+
+;=============================================================================
+;情报显示補助处理
+;(※对象角色によって显示字符数但变化不做ように设定做)
+;=============================================================================
+;-------------------------------------------------
+;调教者・助手など的设定被显示侍奉处理
+;-------------------------------------------------
+@ARRANGE_TARGETSIGN, ARG
+;显示字符数加算
+C_CHAR += 2
+;csv番号で的指定であれば登录番号被割り出す
+SIF C_TARS == "可登场"
+	ARG = GETCHARA(ARG)
+;登录番号から对象的属性被割り出す
+IF ARG == -1
+	LOCAL = 0
+ELSE
+	LOCAL = EQUALCHECK_TURN(1, ARG == TARGET, ARG != 0 && FINDELEMENT(ASSI, ARG) != -1, ARG != MASTER)
+ENDIF
+;属性被出力做
+CALL COLORPRINT(\@ ARG == FLAG:主人 ? /0xFF0000/ # \@ + AUTO_SPLIT("　_★_☆_○", "_", LOCAL), "/")
+
+;-------------------------------------------------
+;角色一览显示时に角色番号被显示侍奉处理
+;-------------------------------------------------
+@ARRANGE_CHARANUM, ARG
+;口上色に变更的オプション但あれば
+IF C_KOJS == "调教者"
+	;csv番号被读み込む
+	LOCAL = C_TARS == "可登场" ? ARG # NO:ARG
+	;口上色に做
+	TRYCCALLFORM KOJO_COLOR_K{LOCAL}
+	CATCH
+		SETCOLOR 160, 160, 160
+	ENDCATCH
+ENDIF
+;角色番号的显示(角色番号的最大幅被取得し、それに合わせる)
+LOCAL = STRLENS(@"{MAXARRAY(CHARA_LIST)}")
+PRINTFORM [{ARG, LOCAL}] 
+;显示字符数加算
+C_CHAR += LOCAL
+
+;-------------------------------------------------
+;角色一览显示时に角色名被显示侍奉处理
+;-------------------------------------------------
+@ARRANGE_CHARANAME, ARG
+#DIM LCOUNT
+;行数取得
+LOCAL = 0
+FOR LCOUNT, 0, C_TARS == "可登场" ? FLAG:Cha总数 + 1 # CHARANUM
+	LOCAL = MAX(LOCAL, STRLENS(\@ C_TARS == "可登场" ? CSVNAME(LCOUNT) # CALLNAME:LCOUNT \@))
+NEXT
+;角色名称的读み込み(csv番号的场合是角色クタcsvから读み込み)
+IF C_TARS == "可登场"
+	PRINTFORM %ARRANGE_STRLENS(CSVNAME(ARG), LOCAL), LOCAL, LEFT%
+ELSE
+	PRINTFORM %ARRANGE_STRLENS(CALLNAME:ARG, LOCAL), LOCAL, LEFT%
+ENDIF
+PRINT  
+;显示字符数加算
+C_CHAR += LOCAL + 1
+
+;-------------------------------------------------
+;角色一览显示时に外号被显示侍奉处理
+;-------------------------------------------------
+@ARRANGE_AKA, ARG
+#DIM LCOUNT
+;行数取得
+LOCAL = 0
+FOR LCOUNT, 0, C_TARS == "可登场" ? FLAG:Cha总数 + 1 # CHARANUM
+	LOCAL = MAX(LOCAL, STRLENS(C_TARS == "可登场" ? CSVCSTR(LCOUNT, 10) # CSTR:LCOUNT:外号))
+NEXT
+;外号的读み込み(csv番号的场合是角色クタcsvから读み込み)
+IF C_TARS == "可登场"
+	PRINTFORM %ARRANGE_STRLENS(CSVCSTR(ARG, 10), LOCAL), LOCAL, LEFT%
+ELSE
+	PRINTFORM %ARRANGE_STRLENS(CSTR:ARG:外号, LOCAL), LOCAL, LEFT%
+ENDIF
+PRINT  
+;显示字符数加算
+C_CHAR += LOCAL + 1
+
+;-------------------------------------------------
+;角色一览显示时に体力・气力被显示侍奉处理
+;-------------------------------------------------
+@ARRANGE_CHARALIFE, ARG
+;显示字符数加算
+C_CHAR += 16
+LOCAL = ARG
+;csv番号で的指定であれば登录番号被割り出す
+SIF C_TARS == "可登场"
+	ARG = GETCHARA(ARG)
+;登录番号但存在しなければ専用的显示被行う
+IF ARG == -1
+	PRINTFORM 体力(----/{CSVBASE(LOCAL, 0), 4}) 
+	PRINTFORM 气力(----/{CSVBASE(LOCAL, 1), 4}) 
+ELSE
+	PRINTFORM 体力({BASE:ARG:体力, 4}/{MAXBASE:ARG:体力, 4}) 
+	PRINTFORM 气力({BASE:ARG:气力, 4}/{MAXBASE:ARG:气力, 4}) 
+ENDIF
+
+;-------------------------------------------------
+;角色一览显示时にLV・必要経験値被显示侍奉处理
+;-------------------------------------------------
+@ARRANGE_EXP, ARG
+;显示字符数加算
+C_CHAR += 16
+LOCAL = ARG
+;csv番号で的指定であれば登录番号被割り出す
+SIF C_TARS == "可登场"
+	ARG = GETCHARA(ARG)
+;登录番号但存在しなければ専用的显示被行う
+IF ARG == -1
+	PRINTFORM [LV -- 
+	PRINTFORM NEXT ------] 
+ELSE
+	PRINTFORM [LV {CFLAG:ARG:调教等级, 2} 
+	PRINTFORM NEXT {CFLAG:ARG:必要経験値 - CFLAG:ARG:调教経験, 6}] 
+ENDIF
+
+;-------------------------------------------------
+;性別显示
+;-------------------------------------------------
+@ARRANGE_SEX, ARG
+;显示字符数加算
+C_CHAR += 2
+LOCAL = ARG
+;csv番号で的指定であれば登录番号被割り出す
+SIF C_TARS == "可登场"
+	ARG = GETCHARA(ARG)
+;登录番号但存在しなければ専用的显示被行う
+IF ARG == -1
+	LOCAL = EQUALCHECK_TURN(1, CSVTALENT(LOCAL, 122))
+	PRINTFORM %AUTO_SPLIT("♀_♂","_",LOCAL)% 
+ELSE
+	LOCAL = EQUALCHECK_TURN(1, TALENT:ARG:男人)
+	PRINTFORM %AUTO_SPLIT("♀_♂","_",LOCAL)% 
+ENDIF
+
+;;-------------------------------------------------
+;;陥落素質显示
+;;-------------------------------------------------
+;@ARRANGE_FALLTALENT,ARG
+;LOCAL = EQUALCHECK_TURN(1,TALENT:ARG:恋慕,TALENT:ARG:淫乱,TALENT:ARG:服从,TALENT:ARG:親爱,TALENT:ARG:娼婦,TALENT:ARG:隶属,TALENT:ARG:崩壊)
+;PRINTFORM %AUTO_SPLIT("－ ,恋 ,淫 ,服 ,親 ,娼 ,隶 ,崩 ,",",",LOCAL)%
+
+;-------------------------------------------------
+;オプション切り出し関数
+;-------------------------------------------------
+@SELECT_CHARA_LIST_CUT(ARGS:0 = "", ARGS:1 = "")
+#FUNCTIONS
+;オプション被探す
+LOCAL:0 = STRFINDU(ARGS:0, "<" + ARGS:1 + ">")
+;无ければ空字符被返す
+SIF LOCAL:0 == -1
+	RETURNF ""
+;有れば内容的范围被探す
+LOCAL:0 += STRLENSU(ARGS:1) + 2
+LOCAL:1 = STRFINDU(ARGS:0, "<", LOCAL:0)
+;内容被切り出す
+LOCALS = %SUBSTRINGU(ARGS:0, LOCAL:0, LOCAL:1 - LOCAL:0)%
+;内容被返す
+RETURNF LOCALS
+
+;-------------------------------------------------
+;オプション记忆呼び出し関数
+;-------------------------------------------------
+@CHARA_LIST_R(ARGS, LREF)
+#FUNCTIONS
+#DIMS REF LREF
+;显示项目被思い出す
+LOCALS = %SELECT_CHARA_LIST_CUT(LREF, C_IDES)%
+;记忆している显示项目但无い场合、関数呼び出し时指定的値に
+IF LOCALS == ""
+	LOCALS = %SELECT_CHARA_LIST_CUT(C_ARGS, ARGS)%
+	;无指定的场合デフォルト的设定に
+	SIF LOCALS == ""
+		LOCALS = %C_DEFAULT:FINDELEMENT(C_OPTION, ARGS, , , 1)%
+	;オプション被记忆
+	SIF C_IDES != ""
+		CALLF CHARA_LIST_W(LREF, LOCALS)
+ENDIF
+RETURNF LOCALS
+
+;-------------------------------------------------
+;オプション记忆書き込み関数
+;-------------------------------------------------
+@CHARA_LIST_W(LREF, ARGS)
+#FUNCTION
+#DIMS REF LREF
+;记忆被消去
+LOCAL:0 = STRFINDU(LREF, "<" + C_IDES + ">")
+LOCAL:1 = STRFINDU(LREF, "<", LOCAL:0 + 1)
+IF LOCAL:0 < LOCAL:1
+	LREF = %SUBSTRINGU(LREF, 0, LOCAL:0) + SUBSTRINGU(LREF, LOCAL:1)%
+ELSE
+	LREF = %SUBSTRINGU(LREF, 0, LOCAL:0)%
+ENDIF
+;オプション被记忆
+LREF += "<" + C_IDES + ">" + ARGS
+RETURNF 0
+
+;-------------------------------------------------
+;等値チェック関数@EQUALCHECK_TURN
+;	引数0：チェックされる对象
+;	引数1～20：チェックに用いられる数値
+;@EQUALCHECK和同大人です但、一致した场合に返す値是1で是なく、最初に一致した引数的番号になり增加。
+;-------------------------------------------------
+@EQUALCHECK_TURN(ARG, ARG:1, ARG:2, ARG:3, ARG:4, ARG:5, ARG:6, ARG:7, ARG:8, ARG:9, ARG:10, ARG:11, ARG:12, ARG:13, ARG:14, ARG:15, ARG:16, ARG:17, ARG:18, ARG:19, ARG:20)
+#FUNCTION
+#LOCALSIZE 2
+IF ARG
+	FOR LOCAL:1, 1, 20
+		SIF ARG == ARG:(LOCAL:1)
+			RETURNF LOCAL:1
+	NEXT
+ELSE
+	;指定的变数但0的场合的み別挙动
+	LOCAL = 0
+	FOR LOCAL:1, 0, 20
+		SIF ARG:(20-(LOCAL:1)) && !LOCAL
+			LOCAL = (LOCAL:1)
+	NEXT
+	FOR LOCAL:1, 1, 20-LOCAL
+		SIF ARG == ARG:(LOCAL:1)
+			RETURNF LOCAL:1
+	NEXT
+ENDIF
+RETURNF 0
+
+;-------------------------------------------------
+;ARGS的长さ但ARG被超えている场合、最后的3字符被...にして返す
+;-------------------------------------------------
+@ARRANGE_STRLENS(ARGS, ARG)
+#FUNCTIONS
+IF STRLENS(ARGS) > ARG
+	ARGS = %SUBSTRING(ARGS , 0 , ARG - 3)%...
+ENDIF
+RETURNF ARGS

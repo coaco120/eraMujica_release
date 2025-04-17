@@ -1,0 +1,341 @@
+﻿;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+
+;		道具系メッセージ
+
+;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+
+;────────────────────────────────────
+;020,跳蛋
+;────────────────────────────────────
+;★反应前★
+@TRAIN_MESSAGE_20
+IF TCVAR:MASTER:位置前后 == 1                     ;前から爱抚
+	IF TCVAR:MASTER:高潮  ;调教对象但高潮
+		SELECTCASE TCVAR:MASTER:焦虑度
+			CASE IS > 1                 ;焦虑中
+				IF TEQUIP:顔面骑乘 || TEQUIP:顔面骑乘肛门           ;顔面骑乘中
+					PRINTFORML %CALLNAME:TARGET%一边用%CALLNAME:MASTER%的脸\@ TEQUIP:顔面骑乘 ? 摩擦性器 # 按压肛门 \@
+				ELSE                                                  ;其他
+					PRINTFORML %CALLNAME:TARGET%按着%CALLNAME:MASTER%的腰因预感到%TARGET_DESCRIPTION("保持")%的绝顶而扭动着腰部、
+				ENDIF
+				PRINTFORML 拿起连着电线还在不断跳动的跳蛋对着\@ PENIS(MASTER) ? 龟头 # 阴核 \@按上又放开…
+			CASEELSE                    ;焦虑无・焦虑终了
+				IF TEQUIP:顔面骑乘 || TEQUIP:顔面骑乘肛门           ;顔面骑乘中
+					PRINTFORML %CALLNAME:TARGET%一边用%CALLNAME:MASTER%的脸\@ TEQUIP:顔面骑乘 ? 摩擦性器 # 按压肛门 \@
+				ELSE                                                  ;其他
+					PRINTFORML %CALLNAME:TARGET%一边凝视着%CALLNAME:MASTER%的脸、
+				ENDIF
+				PRINTFORML 加强了跳蛋的振动，用力压上已经充血了的\@ PENIS(MASTER) ? 龟头 # 阴核 \@…
+		ENDSELECT
+	ELSE                      ;通常
+		IF PANTSCHECK(1, 1)             ;下半身服装但要押し退け
+			PRINTFORM %CALLNAME:TARGET%是%TARGET_DESCRIPTION("保持")%%CALLNAME:MASTER%的
+			IF PANTSCHECK(1)                      ;下半身服装但邪魔
+				PRINTFORM 隔着衣服、
+			ELSE                                  ;其他
+				SIF LOWERJACKET(1) == 1                     ;下半身外套但要押し退け
+					PRINTFORM 从%OUTER_B(MASTER, 0, 1)%的下摆入手、
+				SIF LOWERUNDER(1) == 1                      ;下半身内衣但要押し退け
+					PRINTFORM 挪开内衣、
+			ENDIF
+			PRINTFORML 
+			PRINTFORML \@ PENIS(MASTER) ? 亀頭 # 阴核 \@に震える跳蛋被押し当てた…
+			TEQUIP:着衣露出 |= 4                  ;调教对象性器露出
+		ELSE                            ;其他
+			PRINTFORML %CALLNAME:TARGET%按住了%TARGET_DESCRIPTION("保持")%%CALLNAME:MASTER%的腰、
+			PRINTFORML 对着看起来很敏感的\@ PENIS(MASTER) ? 龟头 # 阴核 \@按下了震动的跳蛋…
+		ENDIF
+	ENDIF
+ELSE                                              ;后ろから爱抚
+	IF TCVAR:MASTER:高潮  ;调教对象但高潮
+		SELECTCASE TCVAR:MASTER:焦虑度
+			CASE IS > 1                 ;焦虑中
+				PRINTFORML %CALLNAME:TARGET%用%TARGET_DESCRIPTION("保持")%因为从腰间传来的绝顶的预感而紧紧抱住%CALLNAME:MASTER%的腰、
+				PRINTFORML 拿起连着电线还在不断跳动的跳蛋对着\@ PENIS(MASTER) ? 龟头 # 阴核 \@按上又放开…
+			CASEELSE                    ;焦虑无・焦虑终了
+				PRINTFORML %CALLNAME:TARGET%从背后%TARGET_DESCRIPTION("一边")%抱着%CALLNAME:MASTER%的腰、
+				PRINTFORML 加强了跳蛋的振动，用力压上已经充血了的\@ PENIS(MASTER) ? 龟头 # 阴核 \@…
+		ENDSELECT
+	ELSE                      ;通常
+		IF PANTSCHECK(1, 1)             ;下半身服装但要押し退け
+			PRINTFORM %CALLNAME:TARGET%是%TARGET_DESCRIPTION("保持")%%CALLNAME:MASTER%的
+			IF PANTSCHECK(1)                      ;下半身服装但邪魔
+				PRINTFORM 隔着衣服、
+			ELSE                                  ;其他
+				SIF LOWERJACKET(1) == 1                     ;下半身外套但要押し退け
+					PRINTFORM 从%OUTER_B(MASTER, 0, 1)%的下摆入手、
+				SIF LOWERUNDER(1) == 1                      ;下半身内衣但要押し退け
+					PRINTFORM 挪开内衣、
+			ENDIF
+			PRINTFORML 
+			PRINTFORML 从背后抱着腰\@ PENIS(MASTER) ? 龟头 # 阴核 \@将震动的跳蛋压了上去…
+			TEQUIP:着衣露出 |= 4                  ;调教对象性器露出
+		ELSE                            ;其他
+			PRINTFORML %CALLNAME:TARGET%从%TARGET_DESCRIPTION("保持")%背后紧紧抱住%CALLNAME:MASTER%
+			PRINTFORML 对着看起来很敏感的\@ PENIS(MASTER) ? 龟头 # 阴核 \@按下了震动的跳蛋…
+		ENDIF
+	ENDIF
+ENDIF
+
+;☆反应后☆
+@TRAIN_MESSAGE2_20
+SELECTCASE COMGRONAME(TFLAG:REACT分类)
+	CASE "接受"
+		IF TCVAR:MASTER:高潮        ;高潮状态
+			IF TCVAR:MASTER:焦虑度 > 1          ;焦虑中
+				PRINTFORML 被快感麻痹了的%CALLNAME:MASTER%情不自禁的弯腰追逐着这种美妙的感受、
+				PRINTFORML %CALLNAME%好像感觉很有趣似的摇晃着跳蛋…
+			ELSE                                  ;焦虑终了・焦虑无し
+				PRINTFORML %CALLNAME:MASTER%在强烈的快乐下\@ TALENT:MASTER:扶她 ? 死死压抑着的呻吟 # 娇滴滴的叫声 \@控制不住的提高了、
+				PRINTFORML %CALLNAME%毫不在意地不断将跳蛋推到一边…
+			ENDIF
+		ELSE                            ;其他的场合
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行动"
+					PRINTFORML %CALLNAME:MASTER%被玩具玩弄着敏感的突起成为了这种莫名其妙的快感的俘虏
+					PRINTFORML 发出了下流的娇声…
+				CASE "无理的ない行动"
+					PRINTFORML %CALLNAME:MASTER%按照要求抬起腰沉溺在无机物的快感中…
+				CASE "无理被した行动"
+					PRINTFORML %CALLNAME:MASTER%被奇妙的玩具玩弄着因羞耻紧咬着嘴唇、
+					PRINTFORML 强烈的快感使表情瞬间荡漾…
+			ENDSELECT
+		ENDIF
+		RETURN 2
+	CASE "积极的服从", "淡然的服从"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML 为了不成为%CALLNAME%的阻碍，%CALLNAME:MASTER%自己控制住了已经迫不及待的腰部…
+			CASE "无理的ない行动"
+				PRINTFORML 一边用奇妙的玩具执拗地爱抚着%CALLNAME:MASTER%
+				PRINTFORML 按照%CALLNAME%说的那样行动，老实地张开了腿…
+			CASE "无理被した行动"
+				IF COMCOR_POSI()                  ;实是感受いい
+					PRINTFORML %CALLNAME%一边用玩具责备着%CALLNAME:MASTER%、
+					PRINTFORML 忍住了几乎使腰部沉溺其中快要崩溃的快感…
+				ELSE                              ;实是嫌
+					PRINTFORML %CALLNAME:MASTER%拼命地从意识中驱赶着股间涌出的快感
+					PRINTFORML 按照%CALLNAME%所说的舞动起来…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+	CASE "请求宽恕"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%有些害怕那些不认识的玩具和它带来的感觉、
+				PRINTFORML 身体因为叫人帮忙而摔倒了…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME:MASTER%有些害怕玩具强制给予的快感…
+			CASE "无理被した行动"
+				IF COMCOR_POSI()                  ;实是感受いい
+					PRINTFORML %CALLNAME:MASTER%害怕被这些粗糙的玩具给玩弄得舒服起来、
+					PRINTFORML 把哀求的视线转向了%CALLNAME%…
+				ELSE                              ;实是嫌
+					PRINTFORML %CALLNAME:MASTER%有点害怕%CALLNAME%手中的跳蛋所带来的快乐、
+					PRINTFORML 小声说了句住手…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+	CASE "消极的服从"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%有些想要跳蛋的振动所强制给予的有点痒的快感了、
+				PRINTFORML 一边用喉咙和鼻子小声地叫唤着，一边拼命忍耐…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME:MASTER%染红了脸，忍耐着被强制给予的快感…
+			CASE "无理被した行动"
+				IF COMCOR_POSI()                  ;实是感受いい
+					PRINTFORML %CALLNAME:MASTER%因这样简单的玩具也能使自己感受到快感而感到后悔、
+					PRINTFORML 咬紧牙关朝着%CALLNAME%的方向看去…
+				ELSE                              ;实是嫌
+					PRINTFORML %CALLNAME:MASTER%惊讶于%CALLNAME%手中的跳蛋所带来的快乐、
+					PRINTFORML 拼命忍耐，但还是不由得呻吟了起来…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+ENDSELECT
+
+;────────────────────────────────────
+;021,震动棒
+;────────────────────────────────────
+;★反应前★
+@TRAIN_MESSAGE_21
+IF TFLAG:ACT派生 == 0         ;装着时
+	PRINTFORML %CALLNAME:TARGET%是%TARGET_DESCRIPTION("保持、")%%CALLNAME:MASTER%的秘裂
+	PRINTFORML 将振动的前端对准使之适应…
+ELSE                          ;解除时
+	PRINTFORML %CALLNAME:TARGET%是%TARGET_DESCRIPTION("保持、")%%CALLNAME:MASTER%的秘裂
+	PRINTFORML 慢慢地拔出了蠢动着的振动棒…
+ENDIF
+
+;☆反应后☆
+@TRAIN_MESSAGE2_21
+IF !TFLAG:ACT派生 && TALENT:MASTER:扶她       ;装着时、扶她的み旁白变化
+	PRINTFORML 振动棒的前端越过阴道壁捕捉到%CALLNAME:MASTER%的前列腺、
+	PRINTFORML 男性器不由自主的勃起，对射精的渴望情不自禁的涌上心头…
+	RETURN 2
+ENDIF
+
+;────────────────────────────────────
+;022,肛门震动棒
+;────────────────────────────────────
+;★反应前★
+@TRAIN_MESSAGE_22
+IF TFLAG:ACT派生 == 0         ;装着时
+	PRINTFORML %CALLNAME:TARGET%在%TARGET_DESCRIPTION("保持、")%%CALLNAME:MASTER%的%ANUS_DESCRIPTION(MASTER)%上
+	PRINTFORML 安装上了肛门振动棒…
+ELSE                          ;解除时
+	PRINTFORML %CALLNAME:TARGET%从%TARGET_DESCRIPTION("保持、")%%CALLNAME:MASTER%的%ANUS_DESCRIPTION(MASTER)%
+	PRINTFORML 拔出了肛门振动棒…
+ENDIF
+
+;☆反应后☆
+@TRAIN_MESSAGE2_22
+IF !TFLAG:ACT派生 && TALENT:MASTER:扶她         ;装着时、扶她的み旁白变化
+	PRINTFORML 肛门振动棒的前端越过肠壁捕捉到%CALLNAME:MASTER%的前列腺、
+	PRINTFORML 男性器不由自主的勃起，对射精的渴望情不自禁的涌上心头…
+	RETURN 2
+ENDIF
+
+;────────────────────────────────────
+;023,肛门拉珠
+;────────────────────────────────────
+;★反应前★
+@TRAIN_MESSAGE_23
+SELECTCASE TFLAG:ACT派生
+	CASE 0                    ;装着
+		PRINTFORML %CALLNAME:TARGET%在%TARGET_DESCRIPTION("保持、")%%CALLNAME:MASTER%的%ANUS_DESCRIPTION(MASTER)%上
+		PRINTFORML 肛门拉珠被吞了进去…
+	CASE 1                    ;解除
+		PRINTFORML %CALLNAME:TARGET%从%TARGET_DESCRIPTION("一面、")%%CALLNAME:MASTER%的%ANUS_DESCRIPTION(MASTER)%
+		PRINTFORML 想要把肛门拉珠拔出来…
+	CASEELSE                  ;追加
+		PRINTFORML %CALLNAME:TARGET%进入了%TARGET_DESCRIPTION("一面、")%%CALLNAME:MASTER%的%ANUS_DESCRIPTION(MASTER)%
+		PRINTFORML 将肛门拉珠再次按进去了一颗…
+ENDSELECT
+
+;☆反应后☆
+@TRAIN_MESSAGE2_23
+IF TFLAG:ACT派生 == 1                             ;解除时的み旁白变化
+	;扶她で、前列腺で高潮（解除时前列腺刺激2但つく）
+	IF TALENT:MASTER:扶她 && (TCVAR:MASTER:高潮 || PALAM:MASTER:快Ｃ >= 8000)
+		IF BASE:MASTER:射精 == 0        ;射精ゲージ但ない
+			PRINTFORML %CALLNAME:MASTER%鼓起的前列腺被拔出的珠子刺激了…
+			PRINTFORML %CALLNAME:MASTER%因为被进一步榨取干枯的精液而发出了苦闷的声音…
+		ELSE                            ;射精ゲージあり
+			PRINTFORML %CALLNAME:MASTER%鼓起的前列腺被拔出的珠子刺激了…
+			PRINTFORML %CALLNAME:MASTER%因为那种精液漏出来的不检点的感觉而叫了出来…
+		ENDIF
+		RETURN 2
+	ELSEIF IS_COMGRONAME("接受")
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%被珠子一个接一个地撑开肛门的感觉刺激的大脑一片空白、
+				PRINTFORML 因为快感而忍不住的从喉咙里传出尖叫，全身颤抖不已…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME:MASTER%每次被拔出肛门珠时都会因快感而苦闷…
+			CASE "无理被した行动"
+				PRINTFORML %CALLNAME:MASTER%拼命忍受着被拔出异物的原始快感、
+				PRINTFORML 噗哧，圆球每次穿过肛门时，理性之光就会从瞳孔中消失…
+		ENDSELECT
+		RETURN 2
+	ELSEIF IS_COMGRONAME("积极的服从/淡然的服从")
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%放松肛门的力量后，%CALLNAME%一口气把肛门拉珠拔了出来…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME:MASTER%为了尽可能轻松地将东西拔出来，自己放松了肛门的力量、
+				PRINTFORML 在排便的过程中帮助拉珠脱落了…
+			CASE "无理被した行动"
+				IF COMCOR_POSI()                  ;实是感受いい
+					PRINTFORML %CALLNAME%装模作样地拔出了肛门拉珠
+					PRINTFORML %CALLNAME:MASTER%拼命忍住声音颤抖着背脊…
+				ELSE                              ;实是嫌
+					PRINTFORML 不管怎样%CALLNAME:MASTER%都无法拔出因此只能放弃、
+					PRINTFORML 说了无论如何都要拔出来…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+	ELSEIF IS_COMGRONAME("请求宽恕")
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%感觉肠内仿佛咬住了小球任由其一个个把把肛门撬开、
+				PRINTFORML 吓得牙齿打颤…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME%用手强行将珠子从%CALLNAME:MASTER%的菊穴里拔出、
+				PRINTFORML 欲罢不能…
+			CASE "无理被した行动"
+				IF COMCOR_POSI()                  ;实是感受いい
+					PRINTFORML %CALLNAME:MASTER%因肛门的奇妙快感而膝盖颤抖、
+					PRINTFORML 因为害怕所以向%CALLNAME%哀求说请慢慢地拔出来…
+				ELSE                              ;实是嫌
+					PRINTFORML %CALLNAME:MASTER%害怕这种仿佛排泄的不安定感、
+					PRINTFORML 说了希望就这样不要拔出来…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+	ELSEIF IS_COMGRONAME("消极的服从")
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%被从肛门涌出的妖异的气氛扰乱了内心、
+				PRINTFORML 捂着脸拼命忍耐…
+			CASE "无理的ない行动"
+				PRINTFORML 为了让珠子容易拔出来%CALLNAME:MASTER%伸出屁股、
+				PRINTFORML 摇着头忍受着异样的感觉…
+			CASE "无理被した行动"
+				;实是感受いい
+				IF COMCOR_POSI()                  ;实是感受いい
+					PRINTFORML %CALLNAME:MASTER%一边被强烈的快乐和难以忍受的屈服感袭击着、
+					PRINTFORML 反复嘟囔着要慢慢地拔出来…
+				;实是嫌
+				ELSE                              ;实是嫌
+					PRINTFORML %CALLNAME:MASTER%用手臂抱着自己的身体、
+					PRINTFORML 无法忍受拉珠被拔出的感觉而颤抖着…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+	ENDIF
+ENDIF
+
+;────────────────────────────────────
+;024,阴蒂夹/飞机杯
+;────────────────────────────────────
+@TRAIN_MESSAGE_24
+SELECTCASE TFLAG:ACT派生
+	CASE 0                    ;阴蒂夹装着
+		PRINTFORML %CALLNAME:TARGET%在%TARGET_DESCRIPTION("一面、")%%CALLNAME:MASTER%
+		PRINTFORML 想要装上阴蒂夹…
+	CASE 1                    ;阴蒂夹解除
+		PRINTFORML %CALLNAME:TARGET%来自%TARGET_DESCRIPTION("一边、")%%CALLNAME:MASTER%
+		PRINTFORML \@ PALAM:MASTER:润滑 >= 1000 ? 想要取下沾满了爱液的 # \@阴蒂夹…
+	CASE 2                    ;飞机杯装着
+		PRINTFORML %CALLNAME:TARGET%在%TARGET_DESCRIPTION("一面、")%%CALLNAME:MASTER%
+		PRINTFORML 准备套上飞机杯…
+	CASEELSE                  ;飞机杯解除
+		PRINTFORML %CALLNAME:TARGET%来自%TARGET_DESCRIPTION("保持、")%%CALLNAME:MASTER%
+		PRINTFORML \@ GET_STAIN("阴茎", "精液", MASTER) ? 想要取下装满了精液的 # \@飞机杯…
+ENDSELECT
+
+;────────────────────────────────────
+;025,乳头夹
+;────────────────────────────────────
+@TRAIN_MESSAGE_25
+IF TFLAG:ACT派生 == 0         ;装着时
+	PRINTFORML %CALLNAME:TARGET%是%TARGET_DESCRIPTION("一面、")%%CALLNAME:MASTER%的乳头
+	PRINTFORML \@ TALENT:MASTER:扶她 ? 男性用 # \@想要装上跳蛋…
+ELSE                          ;解除时
+	PRINTFORML %CALLNAME:TARGET%来自%TARGET_DESCRIPTION("一边、")%%CALLNAME:MASTER%
+	PRINTFORML 想要取下跳蛋
+ENDIF
+
+;────────────────────────────────────
+;026,假阴茎
+;────────────────────────────────────
+@TRAIN_MESSAGE_26
+IF TFLAG:ACT派生 == 0         ;装着时
+	PRINTFORML %CALLNAME:TARGET%试图让%CALLNAME:MASTER%装上双头假阴茎…
+	PRINTFORML 假阴茎内侧的突起试图撑开%CALLNAME:MASTER%的小穴口…
+ELSE                          ;解除时
+	PRINTFORML %CALLNAME:TARGET%取下了%CALLNAME:MASTER%的假阴茎、
+	PRINTFORML 慢慢地将被小穴吞入的突起拔了出来…
+ENDIF

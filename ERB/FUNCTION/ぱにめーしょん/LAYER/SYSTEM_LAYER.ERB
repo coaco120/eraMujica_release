@@ -1,0 +1,560 @@
+﻿;===============================================================================
+;
+;	LAYER相关関数群
+;
+;===============================================================================
+;	字符串被狙った座標に、指定した色和フォントで、按键化も可能で、
+;	何枚でも破綻なく重ねられて、そこそこ重い関数
+;-------------------------------------------------------------------------------
+;	例：	CALL LAYER_INIT, "`"
+;			CALL LAYER_SET, @"あ`<font color='#ff0000'>な</font>`<font face='ＭＳ 明朝'>た</font>`",Y,X
+;			CALL LAYER_PRINT,0,40
+;
+;	こ的例だ和X,Y座標的和ころに"您"("な"是赤色で"た"是明朝で)显示される
+;	レイヤ机能但メインな的でかなり重ねられる(座標但かぶっても大丈夫)
+;	和りあえずY行是50行、X的ブロック数是100直到对应、同名的ERH参照的こ和。
+;
+;	显示是次的関数 LAYER_PRINT被使う
+;	例：	CALL LAYER_PRINT,开始行,终了行
+;-------------------------------------------------------------------------------
+;	■偉大なるN鳥先生作成的SET_PICTURE  的改变版です
+;
+;	■SET_PICTURE関数实行后		→	なにこれすげぇ…(驚愕)
+;	　SET_PICTURE.ERB开いてみて	→	なにこれすげぇ…(困惑)
+;
+;	■字符串的仕大人是HTML_PRINT方式に变更  →  高速化
+
+;	■注意
+;	　レイヤーで重ね时きに是、同じ一つ的ネスト的中に
+;	　タグで区切ら受到本文但複数入るこ和的ないように工夫してください
+;	　分割した際、内部的に一つ的ネスト的中に複数同じタグ但生成されてしまった场合
+;	　重ねた和きに破綻し增加（以下NEST_SEPARATOR = ` )
+;														  ↓本文1      ↓本文2
+;	　	具体例：	<button value='A'><font color='red'>うんこ</red>もれそう</button>`
+;
+;	　上的例的场合、重ね时き的字符串分割时、内部的に是无理やりこう解釈做
+;	　退避做TAG = <button value='A'><font color='red'>【HTML】</red>【HTML】</button>`
+;	　TOPLAINTEXT = うんこもれそう
+;	　さらに合成で、
+;	　<button value='A'><font color='red'>うんこもれそう</red>うんこもれそう</button>`
+;
+;	　同じネスト的中に本文但二重になっている的で合成した时に多重化し、
+;	　字符数も代入时全角*7的14で、返り値是倍的28和正常で是なくなる的で破綻
+;
+;	　	正解例：	<button value='A'><font color='red'>うんこ</red></button>`<button value='A'>もれそう</button>`
+;
+;	　重ねるこ和被考えない那么坦率に一番上的例で通る的でそ的ままどうぞ
+;	　问题被发生做的是あく直到重ねた和きに分割合成被发生した场合的みで候
+;
+;	■当然ライセンスフリー
+;
+;===============================================================================
+;
+;	Edit	Date			Author					Reason
+;	001		201X/XX/XX		Crow					新規作成
+;	001		2014/07/05		Ｎ鳥					<img><shape>机能に对应
+;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+
+;
+
+;-------------------------------------------------------------------------------
+;	LAYER_INIT
+;-------------------------------------------------------------------------------
+;	LAYER_SETで保存されているログ被削除し、区切り字符被设定做関数
+;	实是LAYER_SETに引数被何も入れないでCALL做こ和でここに来る但
+;	区切り字符是 ` になる。变更し想要场合是面倒但らずに直接よぼう
+;
+;	实際的和ころ区切り字符で例外なくぶった切るんで、デフォルト的ままか
+;	二字符使うなり、マルチ振动ト字符使うなり、うにこーど使うなりで
+;	行中に出现做可能性的ある字符是避けたほう但无難
+;	デフォルト的 ` 是SHIFT+@で出るんで乐なうえ、
+;	構文解釈的意味でも本文に使うにも用途但无い的でオススメ
+;
+;===============================================================================
+@LAYER_INIT, ARGS = "`" , ARG = 0 , ARG:1 = -1
+SIF ARG:1 == -1
+	ARG:1 = VARSIZE("LAYER_LOG")
+VARSET LAYER_LOG , "" , ARG , ARG:1
+NEST_SEPARATOR = %ARGS%
+RETURN RESULT
+
+;-------------------------------------------------------------------------------
+;	LAYER_SET
+;-------------------------------------------------------------------------------
+;	レイヤに设置、使い方是上记
+;===============================================================================
+;		    入力,	  Y行,  显示座標X
+@LAYER_SET , ARGS , ARG = 0 , XPOINT = -1
+#LOCALSIZE 3
+#LOCALSSIZE 10
+
+#DIMS L_RESULTS , 10
+#DIM LCOUNT , 2
+
+#DIM XPOINT,1			; X指定座標    
+#DIM XCOUNT,1			; それ直到的字符数的X座標
+#DIM INSSTRLEN,1		; それ直到的字符串数的总数
+#DIM NOWSTRLEN,1		; 本次的字符串数
+
+#DIM BLOCKNUM,1			; ブロック数
+#DIM FIRSTBLOCK,1		; 分割开始做ブロック位置
+#DIM LASTBLOCK,1		; 分割终了做ブロック位置
+
+#DIMS NOWBLK,1			; 现在的ブロック
+#DIMS LFTSTR,2			; 分割插入做際的左侧的字符串
+#DIMS NOWSTR,1			; 现在的字符串
+#DIMS RGTSTR,2			; 分割插入做際的右侧的字符串
+#DIMS NOWBLKPROP,1		; 分割时的ブロック属性的暂时退避场所
+
+#DIM CUTLFT,1			; LFTSTR的分割直到何字符？
+#DIM CUTRGT,1			; RGTSTR的分割直到何字符？
+
+LOCAL = RESULT
+
+IF ARGS == "" && ARG == 0 && XPOINT == -1
+	CALL LAYER_INIT
+	RETURN LOCAL
+ENDIF
+; 区切り记号的插入
+ARGS += NEST_SEPARATOR
+;img和shape是問答无用でNEST_SEPARATER被使って別ブロックへ隔離
+ARGS '= REPLACE(ARGS , "(<img.+?>)" , NEST_SEPARATOR + "$1" + NEST_SEPARATOR)
+ARGS '= REPLACE(ARGS , "(<shape.+?>)" , NEST_SEPARATOR + "$1" + NEST_SEPARATOR)
+
+;NEST_SEPARATER但二つ以上重なって空になっているブロック是削除
+ARGS '= REPLACE(ARGS ,  NEST_SEPARATOR + "+" , NEST_SEPARATOR)
+
+; XPOINT的指定但ない = ログ指定行的末尾に直接追加
+IF XPOINT == -1
+	LAYER_LOG:ARG += ARGS
+; XPOINT的指定但あるよ
+ELSE
+	; XPOINT的指定是ある但ログ是空  = XPOINT直到半スペ被放り込んで追加
+	IF LAYER_LOG:ARG == ""
+		SIF XPOINT > 0
+			LAYER_LOG:ARG = %" " * XPOINT + NEST_SEPARATOR%
+		LAYER_LOG:ARG += ARGS
+		
+	; XPOINT的指定但あってログもすでにある
+	ELSE
+		; 初期变数设定
+		FIRSTBLOCK = -1
+		LASTBLOCK = -1
+		XCOUNT = 0
+		LFTSTR =
+		RGTSTR =
+		; LAYER_TMPにARGS被ブロックご和に分割して退避
+		VARSET LAYER_TMP
+		SPLIT ARGS , NEST_SEPARATOR , LAYER_TMP
+		LOCAL:1 = RESULT
+		;----- 全ブロック的字符串部分的字符数总数 --------------------
+			INSSTRLEN = 0
+			FOR LCOUNT , 0 , LOCAL:1+1
+				SIF LAYER_TMP:LCOUNT == ""
+					CONTINUE
+				INSSTRLEN += LAYER_STRLENS(LAYER_TMP:LCOUNT)
+			NEXT
+		;-------------------------------------------------------------
+		; LAYER_TMPにログから本次的行被ブロックご和に分割して退避
+		VARSET LAYER_TMP
+		SPLIT LAYER_LOG:ARG , NEST_SEPARATOR , LAYER_TMP
+		;何ブロックある的？ (1ブロック是确定)
+		BLOCKNUM = RESULT
+		
+		FOR LCOUNT, 0, BLOCKNUM + 1
+			; NOWBLKにこ的ブロック被入れる
+			NOWBLK = %LAYER_TMP:LCOUNT%
+			; NOWSTRにこ的ブロック的本文只被入れる
+			NOWSTR = %HTML_TOPLAINTEXT(NOWBLK)%
+			; こ的ブロック的本文的字符数
+			;NOWSTRLEN = STRLENS(NOWSTR)
+			NOWSTRLEN = LAYER_STRLENS(NOWBLK)
+			; 本次的ブロック但空的场合是基本的に是飛ばし
+			IF NOWBLK == ""
+				; ブロック分割被していない的に最终ブロック直到きちゃった
+				IF (FIRSTBLOCK == -1) && (LCOUNT == BLOCKNUM)
+					; 空白だ但XPOINT指定但あるため、XPOINT直到XCOUNT分的半スペで埋める
+					LFTSTR += @"%" " * (XPOINT - XCOUNT) + NEST_SEPARATOR%"
+				ENDIF
+				CONTINUE
+			ENDIF
+
+		; ---- 分割ブロック未确定 ----------------------------------------------
+			IF FIRSTBLOCK == -1
+				;これ直到的字符串的字符数+本次的字符串的长さ但XPOINTよりも长い场合、そ的ブロック的途中から插入被开始做
+				IF ( XCOUNT + NOWSTRLEN ) > XPOINT
+					;分割做位置被特定
+					CUTRGT = ( XPOINT - XCOUNT )
+					FIRSTBLOCK = LCOUNT
+
+					; CUTRGT+INSSTRLEN的长さ但本次的字符串的长さより小さい场合、こ的ブロックで完結做
+					IF ( CUTRGT + INSSTRLEN ) <= NOWSTRLEN
+						CUTLFT = CUTRGT + INSSTRLEN
+						LASTBLOCK = LCOUNT
+
+
+						; ---- 当該ブロック的字符串被二つに分割 ----------------
+							;img的场合和shape的场合和そう不是场合で分岐
+							IF STRFIND(NOWBLK , "<shape") > -1
+								;図形内へ的插入处理
+								;こ的场合、1タグで单独的ブロック被形成している是ず
+								;param的中身被取得做
+								SPLIT NOWBLK , "param='" , LOCALS
+								SPLIT LOCALS:1 , "'" , LOCALS
+								IF STRFIND(LOCALS , ",") > -1
+									;LOCALS被更に分ける
+									SPLIT LOCALS , "," , L_RESULTS
+									;分けた后的幅被決定し、LOCALS:1～2和LOCAL:1～2に入れる
+									LOCALS:1 '= TOSTR(CUTRGT * 50) , TOSTR((NOWSTRLEN - CUTLFT) * 50)
+									LOCAL:1 = TOINT(LOCALS:1) , TOINT(LOCALS:2)
+									;他的要素(X,Y,width)和合流
+									LOCALS:1 = %L_RESULTS%,%L_RESULTS:1%,%LOCALS:1%,%L_RESULTS:3%
+									LOCALS:2 = %L_RESULTS%,%L_RESULTS:1%,%LOCALS:2%,%L_RESULTS:3%
+								ELSE
+									;分けた后的幅被決定し、LOCALS:1～2和LOCAL:1～2に入れる
+									LOCALS:1 '= TOSTR(CUTRGT * 50) , TOSTR((NOWSTRLEN - CUTLFT) * 50)
+									LOCAL:1 = TOINT(LOCALS:1) , TOINT(LOCALS:2)
+								ENDIF
+								;NOWBLK的param部分的要素被LOCALS:1和LOCALS:2に置换して左右に分ける
+								LFTSTR += REPLACE(NOWBLK , "(param=').+?(')" , "$1" + " " + LOCALS:1 + "$2") + NEST_SEPARATOR
+								SIF LOCAL:2 > 0
+									RGTSTR '= REPLACE(NOWBLK , "(param=').+?(')" , "$1" + " " + LOCALS:2 + "$2") + NEST_SEPARATOR
+							ELSEIF STRFIND(NOWBLK , "<img") > -1
+								;图像内へ的插入处理
+								;图像是全部2字符分和して扱う的で、こ的场合图像被丸ご和上書き做2字符分か半分只上書き做1字符分
+								;1字符分的场合只、前か頭に半スぺ被入れる
+								SIF CUTRGT == 1
+									LFTSTR += " " + NEST_SEPARATOR
+								SIF CUTRGT == 0 && INSSTRLEN == 1
+									RGTSTR '= " " + NEST_SEPARATOR
+							ELSE
+									
+								;フォントや色的情报被保存
+								NOWBLKPROP = %HTML_TOTAGTEXT(NOWBLK)%
+								
+								;通常的タグ文的插入处理
+								; 左侧是0～CUTRGT直到
+								LFTSTR:1 = %SUBSTRING(NOWSTR , 0 , CUTRGT)%
+								; 全角字符的途中から削ろう和した際、ズレ防止的ために左侧的最后的一字符被半スペに变换做
+								SIF STRLENS(LFTSTR:1) > CUTRGT
+									LFTSTR:1 = %SUBSTRING(LFTSTR:1 , 0 , STRLENS(LFTSTR:1) - 2) + " "% 
+								; 退避したフォントや色的情报被戻す
+								SIF LFTSTR:1 != "" && NOWBLKPROP != ""
+									LFTSTR:1 = %HTML_SETTAGTEXT(LFTSTR:1 , NOWBLKPROP)%
+
+								; 右侧是CUTLFT～字符串的最后直到
+								RGTSTR:1 = %SUBSTRING(NOWSTR , CUTLFT)%
+								; 全角字符的途中直到被削ろう和した際、ズレ防止的ために右侧的最初的一字符被半スペに变换做
+								SIF NOWSTRLEN > CUTLFT + STRLENS(RGTSTR:1)
+									RGTSTR:1 = %" " + SUBSTRING(RGTSTR:1, 0 , STRLENS(RGTSTR:1))% 
+								; 退避したフォントや色的情报被戻す
+								SIF RGTSTR:1 != "" && NOWBLKPROP != ""
+									RGTSTR:1 = %HTML_SETTAGTEXT(RGTSTR:1 , NOWBLKPROP)%
+
+								LFTSTR += LFTSTR:1 + NEST_SEPARATOR
+								RGTSTR = %RGTSTR:1 + NEST_SEPARATOR%
+							ENDIF
+						; ------------------------------------------------------
+
+					; そうでなければ终了位置被探す為に续ける
+					ELSE
+						CUTLFT = INSSTRLEN - (NOWSTRLEN - CUTRGT)
+						XCOUNT += NOWSTRLEN
+						
+						;img的场合和shape的场合和そう不是场合で分岐
+						IF STRFIND(NOWBLK , "<shape") > -1
+							;図形内へ的插入处理
+							;こ的场合、1タグで单独的ブロック被形成している是ず
+							;param的中身被取得做
+							SPLIT NOWBLK , "param='" , LOCALS
+							SPLIT LOCALS:1 , "'" , LOCALS
+							IF STRFIND(LOCALS , ",") > -1
+								;LOCALS被更に分ける
+								SPLIT LOCALS , "," , L_RESULTS
+								;分けた后的幅被決定し、LOCALS:1に入れる
+								LOCALS:1 '= TOSTR(CUTRGT * 50)
+								;他的要素(X,Y,width)和合流
+								LOCALS:1 = %L_RESULTS%,%L_RESULTS:1%,%LOCALS:1%,%L_RESULTS:3%
+							ELSE
+								;分けた后的幅被決定し、LOCALS:1に入れる
+								LOCALS:1 '= TOSTR(CUTRGT * 50)
+							ENDIF
+							;NOWBLK的param部分的要素被LOCALS:1和LOCALS:2に置换して左右に分ける
+							LFTSTR += REPLACE(NOWBLK , "(param=').+?(')" , "$1" + " " + LOCALS:1 + "$2") + NEST_SEPARATOR
+						ELSEIF STRFIND(NOWBLK , "<img") > -1
+							;图像内へ的插入处理
+							;图像是全部2字符分和して扱う的で、こ的场合图像被丸ご和上書き做2字符分か半分只上書き做1字符分
+							;1字符分的场合只、前か頭に半スぺ被入れる
+							SIF CUTRGT == 1
+								LFTSTR += " " + NEST_SEPARATOR
+						ELSE
+						
+							; CUTRGTより右的字符串是削る
+							NOWSTR = %SUBSTRING(NOWSTR , 0 , CUTRGT)%
+							NOWSTRLEN = STRLENS(NOWSTR)
+							; 全角字符的途中から削ろう和した際、ズレ防止的ために左侧的最后的一字符被半スペに变换做
+							IF NOWSTRLEN > CUTRGT
+								NOWSTR = %SUBSTRING(NOWSTR , 0 , NOWSTRLEN - 2) + " "%
+								XCOUNT -= 1
+							ENDIF
+							NOWBLKPROP = %HTML_TOTAGTEXT(NOWBLK)%
+							IF NOWBLKPROP != "" && NOWSTR != ""
+								LFTSTR = %LFTSTR + HTML_SETTAGTEXT(NOWSTR , NOWBLKPROP) + NEST_SEPARATOR%
+							ELSE
+								LFTSTR = %LFTSTR + NOWSTR + NEST_SEPARATOR%
+							ENDIF
+						ENDIF
+					ENDIF
+
+				; XPOINT直到届かなかった场合、XPOINT-XCOUNT分的空白被追加
+				ELSEIF LCOUNT == BLOCKNUM
+					LFTSTR += @"%" " * (XPOINT - XCOUNT) + NEST_SEPARATOR%"
+				;まだ开始ブロック被见つけていない场合是次的ブロックへ
+				ELSE
+					XCOUNT += NOWSTRLEN
+					LFTSTR += NOWBLK + NEST_SEPARATOR
+				ENDIF
+		; ---- 分割终了ブロック未确定-------------------------------------------
+			ELSEIF LASTBLOCK == -1
+				; CUTLFT但こ的字符串的长さ以下不是和削れないJK
+				IF CUTLFT <= NOWSTRLEN
+					LASTBLOCK = LCOUNT
+					
+					;img的场合和shape的场合和そう不是场合で分岐
+					IF STRFIND(NOWBLK , "<shape") > -1
+						;図形内へ的插入处理
+						;こ的场合、1タグで单独的ブロック被形成している是ず
+						;param的中身被取得做
+						SPLIT NOWBLK , "param='" , LOCALS
+						SPLIT LOCALS:1 , "'" , LOCALS
+						IF STRFIND(LOCALS , ",") > -1
+							;LOCALS被更に分ける
+							SPLIT LOCALS , "," , L_RESULTS
+							;分けた后的幅被決定し、LOCALS:1～2和LOCAL:1～2に入れる
+							LOCALS:2 '= TOSTR((NOWSTRLEN - CUTLFT) * 50)
+							;他的要素(X,Y,width)和合流
+							LOCALS:2 = %L_RESULTS%,%L_RESULTS:1%,%LOCALS:2%,%L_RESULTS:3%
+						ELSE
+							;分けた后的幅被決定し、LOCALS:1～2和LOCAL:1～2に入れる
+							LOCALS:2 '= TOSTR((NOWSTRLEN - CUTLFT) * 50)
+						ENDIF
+						RGTSTR '= REPLACE(NOWBLK , "(param=').+?(')" , "$1" + " " + LOCALS:2 + "$2") + NEST_SEPARATOR
+					ELSEIF STRFIND(NOWBLK , "<img") > -1
+						;图像内へ的插入处理
+						;图像是全部2字符分和して扱う的で、こ的场合图像被丸ご和上書き做2字符分か半分只上書き做1字符分
+						;1字符分的场合只、前か頭に半スぺ被入れる
+						SIF CUTRGT == 0 && INSSTRLEN == 1
+							RGTSTR '= " " + NEST_SEPARATOR
+					ELSE
+					
+						
+						; CUTLFTよりも左被削る
+						NOWSTR = %SUBSTRING(NOWSTR , CUTLFT)%
+						NOWSTRLEN = STRLENS(NOWSTR)
+						; 全角字符的途中直到被削ろう和した際、ズレ防止的ために右侧的最初的一字符被半スペに变换做
+						SIF STRLENS(HTML_TOPLAINTEXT(NOWBLK)) > CUTLFT + NOWSTRLEN
+							NOWSTR = %" " + SUBSTRING( NOWSTR, 0, NOWSTRLEN )% 
+						; RGTSTRに本次削ったも的被代入
+						NOWBLKPROP = %HTML_TOTAGTEXT(NOWBLK)%
+						IF NOWBLKPROP != "" && NOWSTR != ""
+							RGTSTR = %HTML_SETTAGTEXT(NOWSTR, NOWBLKPROP) + NEST_SEPARATOR%
+						ELSE
+							RGTSTR = %NOWSTR + NEST_SEPARATOR%
+						ENDIF
+					ENDIF
+				; CUTLFT被丸める
+				ELSE
+					CUTLFT -= NOWSTRLEN
+				ENDIF
+		; ---- 削らない --------------------------------------------------------
+			ELSE
+				;后是RGTSTRに残り被追加していく
+				RGTSTR += NOWBLK + NEST_SEPARATOR
+			ENDIF
+		NEXT
+	; ------------------------------------------------------------------------
+		LAYER_LOG:ARG = % LFTSTR + ARGS + RGTSTR %
+	ENDIF
+ENDIF
+RETURN LOCAL
+
+
+;-------------------------------------------------------------------------------
+;	LAYER_PRINT
+;-------------------------------------------------------------------------------
+;	例：	CALL LAYER_PRINT, 0, 40
+;
+;	0行目から40行目直到LAYER_SETで设置さ受到レイヤ被重ねて显示侍奉
+;===============================================================================
+;			显示开始行	终了行
+@LAYER_PRINT, ARG = 0, ARG:1 = -1
+#LOCALSIZE 2
+#LOCALSSIZE 1
+LOCAL:1 = RESULT
+; 终了行但未指定的场合、ログ的うち何行直到字符串但入っているか被取得
+IF ARG:1 == -1
+	FOR LOCAL, 0, VARSIZE("LAYER_LOG")
+		SIF LAYER_LOG:LOCAL != ""
+			ARG:1 = LOCAL
+	NEXT
+	ARG:1 += 1
+ENDIF
+; 各行ご和
+FOR LOCAL , ARG , (ARG + ARG:1)
+	LOCALS = %REPLACE(LAYER_LOG:LOCAL,NEST_SEPARATOR,"")%
+	IF LOCALS != ""
+		HTML_PRINT LOCALS
+	ELSE
+		PRINTL 
+	ENDIF
+NEXT
+RETURN LOCAL:1
+
+;-------------------------------------------------------------------------------
+;	カラーバー的LAYER对应版
+;-------------------------------------------------------------------------------
+;	例  %LAYER_CBAR(BASE:0,MAXBASE:0,10,UNICODE(0x2584),UNICODE(0x2584),GETCOLOR(),0x404040)%
+;===============================================================================
+;	引数是頭三つ是BAR和ほぼ一緒 + ARGSで描写字符的变更但可能(指定不做场合是BAR和同じ仕大人)
+;	ただし、前后的[]是省かれ增加
+;	ARG:3 = バー的色(0xFFFFFF形式で指定)  ARG:4 = バー的背景色(0xFFFFFF形式で指定)
+@LAYER_CBAR(ARG, ARG:1, ARG:2, ARGS = "*", ARGS:1 = ".", ARG:3 = 0xC0C0C0, ARG:4 = 0x404040)
+#FUNCTIONS
+#LOCALSIZE 3
+#LOCALSSIZE 2
+VARSET LOCAL
+VARSET LOCALS
+LOCAL:1 = ARG * ARG:2 / ARG:1
+FOR LOCAL, 1, ARG:2 + 1
+	IF LOCAL:1 >= LOCAL
+		; 最初的一度的み色变えるよ标志1
+		SIF !GETBIT(LOCAL:2, 1)
+			SETBIT LOCAL:2, 1
+		LOCALS:0 += ARGS
+	ELSE
+		; 最初的一度的み色变えるよ标志2
+		SIF !GETBIT(LOCAL:2, 2)
+			SETBIT LOCAL:2, 2
+		LOCALS:1 += ARGS:1
+	ENDIF
+NEXT
+SIF GETBIT(LOCAL:2, 1)
+	LOCALS:0 = %HTML_ADDFONTTAG( LOCALS:0 , TOSTR(ARG:3) )%
+SIF GETBIT(LOCAL:2, 2)
+	LOCALS:1 = %HTML_ADDFONTTAG( LOCALS:1 , TOSTR(ARG:4) )%
+RETURNF LOCALS + NEST_SEPARATOR + LOCALS:1
+
+@LAYER_DRAWLINE, ARG, ARGS = "-"
+CALL LAYER_SET, LAYER_DRAWLINEFORM(ARGS), ARG, 0
+RETURN RESULT
+
+@LAYER_DRAWLINEFORM(ARGS,ARG)
+#FUNCTIONS
+RETURNF ARGS * (STRLENS(DRAWLINESTR) / STRLENS(ARGS))
+
+;-------------------------------------------------------------------------------
+;	カラーバー的RECT对应版
+;-------------------------------------------------------------------------------
+;	例  %LAYER_CBAR(BASE:0,MAXBASE:0,10,UNICODE(0x2584),UNICODE(0x2584),GETCOLOR(),0x404040)%
+;===============================================================================
+;	引数是頭三つ是BAR和ほぼ一緒 + ARGSで描写字符的变更但可能(指定不做场合是BAR和同じ仕大人)
+;	ただし、前后的[]是省かれ增加
+;	ARG:3 = バー的色(0xFFFFFF形式で指定)  ARG:4 = バー的背景色(0xFFFFFF形式で指定)
+;-------------------------------------------------------------------------------
+@LAYER_RECTBAR(ARG, ARG:1, MAX_LENGTH, COLOR = 0xC0C0C0, COLOR:1 = 0x404040, BCOLOR = -1, BCOLOR:1 = -1, HEIGHT = 100, L_X = 0, L_Y = -1)
+#FUNCTIONS
+#LOCALSIZE 3
+#LOCALSSIZE 2
+#DIM CONST FONT_SIZE = 16
+#DIM MAX_LENGTH
+#DIM COLOR, 2
+#DIM BCOLOR, 2
+#DIMS COLORS, 2
+#DIMS BCOLORS, 2
+#DIM LENGTH, 2
+#DIM L_X
+#DIM L_Y
+#DIM HEIGHT
+SIF BCOLOR == -1
+	BCOLOR = GETBGCOLOR()
+SIF BCOLOR:1 == -1
+	BCOLOR:1 = GETBGCOLOR()
+;中央に揃える
+SIF L_Y == -1
+	L_Y = (100 - HEIGHT) / 2
+COLORS '= "#" + CONVERT(COLOR,16)
+COLORS:1 '= "#" + CONVERT(COLOR:1, 16)
+BCOLORS '= "#" + CONVERT(BCOLOR, 16)
+BCOLORS:1 '= "#" + CONVERT(BCOLOR:1, 16)
+VARSET LOCAL
+VARSET LOCALS
+MAX_LENGTH *= 100
+LENGTH = ARG * MAX_LENGTH / ARG:1 + (ARG * MAX_LENGTH % ARG:1 > 0)
+LENGTH:1 = MAX_LENGTH - LENGTH
+IF LENGTH
+	LOCALS =<shape type='rect' param = '{L_X}, {L_Y}, {LENGTH}, {HEIGHT}' color= '%COLORS%' bcolor= '%BCOLORS%'>
+ELSE
+	LOCALS = 
+ENDIF
+IF LENGTH:1
+	LOCALS:1 = <shape type='rect' param = '{L_X}, {L_Y}, {LENGTH:1}, {HEIGHT}' color= '%COLORS:1%' bcolor= '%BCOLORS:1%'>
+ELSE
+	LOCALS:1 = 
+ENDIF
+RETURNF LOCALS + LOCALS:1
+
+
+
+;	LAYER_STRLENS
+;-------------------------------------------------------------------------------
+;	ARGSに渡さ受到字符串但HTML_PRINT上で何字符使うか被カウント做
+;	ただし、img是2字符和して扱い、shape是フォント幅50%毎に半角1字符和してカウント做
+;===============================================================================
+;				显示开始行	终了行
+@LAYER_STRLENS, ARGS
+#FUNCTION
+#DIM INSSTRLEN
+#LOCALSIZE 2
+#LOCALSSIZE 3
+SWAP LOCAL:1 , RESULT
+;平文的字符数被カウント
+INSSTRLEN = STRLENS( HTML_TOPLAINTEXT(ARGS))
+;img・shape的字符数被カウント
+HTML_TAGSPLIT ARGS
+FOR LOCAL , 0 , RESULT
+	IF STRFIND(RESULTS:LOCAL , "<img") > -1
+		INSSTRLEN += 2
+	ELSEIF STRFIND(RESULTS:LOCAL , "<shape") > -1
+		SPLIT RESULTS:LOCAL , "param='" , LOCALS
+		SPLIT LOCALS:1 , "'" , LOCALS
+		IF STRFIND(LOCALS , "," ) > -1
+			SPLIT LOCALS , "," , LOCALS
+			INSSTRLEN += TOINT(REPLACE(LOCALS:2 , " " , ""))/50
+		ELSE
+			INSSTRLEN += TOINT(REPLACE(LOCALS , " " , ""))/50
+		ENDIF
+	ENDIF
+NEXT
+SWAP LOCAL:1 , RESULT
+RETURNF INSSTRLEN
+
+;---- EDIT 016 ADD END   -------------------------
+
+
+
+;-------------------------------------------------------------------------------
+;	LAYER_REFRESH
+;-------------------------------------------------------------------------------
+;	例：	CALL LAYER_REFRESH, 0, 40
+;
+;	G_LINEに记忆さ受到行数直到画面被一度消し、
+;	指定さ受到行数直到LAYER_SETで设置さ受到レイヤ被重ねて显示させ、
+;	WAITANYKEYで入力受付状态に做
+;===============================================================================
+;				显示开始行	终了行
+@LAYER_REFRESH, ARG = 0, ARG:1 = -1
+#LOCALSIZE 2
+#LOCALSSIZE 1
+CLEARLINE LINECOUNT - G_LINE
+CALL LAYER_PRINT , ARG , ARG:1
+WAITANYKEY

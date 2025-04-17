@@ -1,0 +1,778 @@
+﻿;────────────────────────────────────
+;010,爱抚/进行手淫
+;────────────────────────────────────
+;反应前（Ｓ/Ｎ/Ｈ）（快Ｃ、快Ｂ、接触、情爱、性行动、不洁）
+@ACTION_APPLY_10
+;爱抚修正値、灵巧的指尖素質に应じて、快ＣSOURCE増加
+SOURCE:MASTER:快Ｃ = 75 + ACT_FROM(TARGET, 1) * (2 + TALENT:灵巧的指尖) / 2
+;脱衣的处理
+;穿墙但あ时3/4で无视
+IF !TALENT:穿墙 || !RAND:4
+	;压抑/羞涩/着衣PLAY喜欢素質但ない场合
+	IF !TALENT:压抑 && !TALENT:羞涩 && !TALENT:着衣PLAY喜欢
+		;解放素質、调教者欲望、调教等级に应じて成功率上升
+		IF TALENT:解放 * 4 + GET_ABL(TARGET, "欲望") / 10 + GET_TRAINLV(TARGET) / 5 > 3 + RAND:3
+			;全裸直到强制脱衣
+			TFLAG:强制脱衣 = 8
+			;2/3的确率で配饰－直到强制脱衣に軽減
+			SIF RAND:3
+				TFLAG:强制脱衣 = 7
+		;1/3的确率で上＋下外套强制脱衣
+		ELSEIF !RAND:3
+			TFLAG:强制脱衣 = 3
+		ENDIF
+	ENDIF
+ENDIF
+;调教者配饰存在时、1/3的确率
+;また是手淫时阴茎に何らか的脏污但付いている(2是阴茎脏污な的でカウント不做)
+;また是爱抚时小穴に爱液、阴茎以外的脏污但付いている(濡れてたり插入但あったり是カウント不做)
+;场合、配件自主脱衣
+;※手套など被脱いで素用手爱抚做ため配件自主脱衣被发生
+SIF TEQUIP:配饰 && (!RAND:3 || (TFLAG:ACT派生 == 1 && STAIN:MASTER:阴茎 > 2) || (TFLAG:ACT派生 == 0 && STAIN:MASTER:小穴 > 3))
+	TFLAG:自主脱衣 = 6
+;必要那么ば媚药被使用
+CALL LOVEPOTION_USE
+;调教等级に应じて接触SOURCE増加
+SOURCE:MASTER:接触 = 100 + GET_TRAINLV(TARGET) * 5
+;快ＣSOURCEに应じて性行动SOURCE増加
+SOURCE:MASTER:性行动 = 50 + SOURCE:MASTER:快Ｃ / 10
+;接触SOURCE、调教者奉仕精神に应じて情爱SOURCE増加
+SOURCE:MASTER:情爱 = SOURCE:MASTER:接触 / 2 + GET_ABL(TARGET, "奉仕精神") * 5
+;调教者的手に爱液/阴茎/母乳脏污但存在做和不洁SOURCE小増加
+SIF STAIN:手 & (1 + 2 + 16)
+	SOURCE:MASTER:不洁 += 50
+;调教者的手に精液/肛门脏污但存在做和不洁SOURCE中増加
+SIF STAIN:手 & (4 + 8)
+	SOURCE:MASTER:不洁 += 100
+;调教者的手に血/粘液脏污但存在做和不洁SOURCE大増加
+SIF STAIN:手 & (32 + 64)
+	SOURCE:MASTER:不洁 += 300
+;脏污但相互に移る
+IF TFLAG:ACT派生 >= 1
+	STAIN:MASTER:阴茎 |= STAIN:手
+	STAIN:手 |= STAIN:MASTER:阴茎
+ELSE
+	STAIN:MASTER:小穴 |= STAIN:手
+	STAIN:手 |= STAIN:MASTER:小穴
+ENDIF
+;调教对象自慰被中断
+TEQUIP:自慰中 &= ~1
+;调教者技巧、爱抚、灵巧的指尖素質に应じて勃起度上升
+TCVAR:MASTER:这回合的勃起 += 100 + (GET_ABL(TARGET, "技巧") + GET_ABL(TARGET, "爱抚") + TALENT:灵巧的指尖 * 50)
+TFLAG:经过时间 += 2
+
+;反应后（Ｓ/Ｎ/Ｈ）（快Ｃ、快Ｂ、接触、情爱、性行动、不洁）
+@ACTION_APPLY2_10
+
+;────────────────────────────────────
+;011,胸爱抚/吸乳头/乳的揉み合い
+;────────────────────────────────────
+;反应前（Ｓ/Ｎ/Ｈ）（快Ｂ、接触、情爱、性行动、疼痛、不洁）
+@ACTION_APPLY_11
+;脱衣的处理
+;穿墙但あ时3/4で无视
+IF !TALENT:穿墙 || !RAND:4
+	;压抑/羞涩/着衣PLAY喜欢素質但ない场合
+	IF !TALENT:压抑 && !TALENT:羞涩 && !TALENT:着衣PLAY喜欢
+		;解放素質、调教者欲望、调教等级に应じて成功率上升
+		IF TALENT:解放 * 2 + GET_ABL(TARGET, "欲望") / 10 + GET_TRAINLV(TARGET) / 5 > 1 + RAND:3
+			;上＋下外套强制脱衣
+			TFLAG:强制脱衣 = 4
+		;1/3的确率で上半身外套强制脱衣
+		ELSEIF !RAND:3
+			TFLAG:强制脱衣 = 1
+		ENDIF
+	ENDIF
+ENDIF
+;调教者配饰存在时、吸乳头派生で是なく、
+;1/3的确率か调教对象的胸但爱液/阴茎脏污以外的脏污被持つ
+;场合、配件自主脱衣
+;※手套など被脱いで素用手爱抚做ため配件自主脱衣被发生
+SIF TEQUIP:配饰 && TFLAG:ACT派生 != 1 && (!RAND:3 || STAIN:MASTER:胸 > 3)
+	TFLAG:自主脱衣 = 6
+;通常的胸爱抚时
+IF TFLAG:ACT派生 == 0
+	;爱抚修正値、灵巧的指尖素質に应じて快ＢSOURCE上升
+	SOURCE:MASTER:快Ｂ = 75 + ACT_FROM(TARGET, 4) * (2 + TALENT:灵巧的指尖) / 3
+	;必要那么ば媚药被使用
+	CALL LOVEPOTION_USE
+	;调教等级に应じて接触SOURCE増加
+	SOURCE:MASTER:接触 = 100 + GET_TRAINLV(TARGET) * 5
+	;接触SOURCE、调教者奉仕精神に应じて情爱SOURCE増加
+	SOURCE:MASTER:情爱 = SOURCE:MASTER:接触 / 2 + GET_ABL(TARGET, "奉仕精神") * 5
+	;快ＢSOURCEに应じて性行动SOURCE増加
+	SOURCE:MASTER:性行动 = 100 + SOURCE:MASTER:快Ｂ / 10
+	;调教者的手に爱液/阴茎/母乳脏污但存在做和不洁SOURCE小増加
+	SIF STAIN:手 & (1 + 2 + 16)
+		SOURCE:MASTER:不洁 += 80
+	;调教者的手に精液/肛门脏污但存在做和不洁SOURCE中増加
+	SIF STAIN:手 & (4 + 8)
+		SOURCE:MASTER:不洁 += 160
+	;调教者的手に血/粘液脏污但存在做和不洁SOURCE大増加
+	SIF STAIN:手 & (32 + 64)
+		SOURCE:MASTER:不洁 += 500
+	;脏污但相互に移る
+	STAIN:MASTER:胸 |= STAIN:手
+	STAIN:手 |= STAIN:MASTER:胸
+	;调教者技巧、爱抚、灵巧的指尖素質に应じて勃起度上升
+	TCVAR:MASTER:这回合的勃起 += 80 + (GET_ABL(TARGET, "技巧") + GET_ABL(TARGET, "爱抚") + TALENT:灵巧的指尖 * 50) / 3
+;吸乳头时
+ELSEIF TFLAG:ACT派生 == 1
+	;爱抚修正値、舌使素質に应じて快ＢSOURCE上升
+	SOURCE:MASTER:快Ｂ = 150 + ACT_FROM(TARGET, 4) * (3 + TALENT:舌使) / 3
+	;必要那么ば媚药被使用
+	CALL LOVEPOTION_USE
+	;猫舌素質时快ＢSOURCE上升
+	SIF TALENT:猫舌
+		SOURCE:MASTER:快Ｂ *= 12 / 10
+	;调教等级に应じて接触SOURCE増加
+	SOURCE:MASTER:接触 = 75 + GET_TRAINLV(TARGET) * 10
+	;接触SOURCE、调教者奉仕精神に应じて情爱SOURCE増加
+	SOURCE:MASTER:情爱 = SOURCE:MASTER:接触 / 2 + GET_ABL(TARGET, "奉仕精神") * 5
+	;快ＢSOURCEに应じて性行动SOURCE増加
+	SOURCE:MASTER:性行动 = 50 + SOURCE:MASTER:快Ｂ / 10
+	;调教者的口に爱液/阴茎/母乳脏污但存在做和不洁SOURCE小増加
+	SIF STAIN:口 & (1 + 2 + 16)
+		SOURCE:MASTER:不洁 += 100
+	;调教者的口に精液/肛门脏污但存在做和不洁SOURCE中増加
+	SIF STAIN:口 & (4 + 8)
+		SOURCE:MASTER:不洁 += 200
+	;调教者的口に血/粘液脏污但存在做和不洁SOURCE大増加
+	SIF STAIN:口 & (32 + 64)
+		SOURCE:MASTER:不洁 += 600
+	;脏污但相互に移る
+	STAIN:MASTER:胸 |= STAIN:口
+	STAIN:口 |= STAIN:MASTER:胸
+	;调教者技巧、爱抚、舌使、猫舌素質に应じて勃起度上升
+	TCVAR:MASTER:这回合的勃起 += 80 + (GET_ABL(TARGET, "技巧") + GET_ABL(TARGET, "爱抚") + TALENT:舌使 * 50 + TALENT:猫舌 * 50) / 3
+;其他时
+ELSE
+	;调教对象的反应によって要求に应じない可能性但あり增加から
+	;ここ是调教者但调教对象的胸部揉む直到处理し、调教对象的动き是COM的方で处理し增加。
+	;こ的类的行动是全部こ的ように处理し增加。
+	
+	;上半身全部自主脱衣
+	TFLAG:自主脱衣 = 4
+	;爱抚修正値、灵巧的指尖素質に应じて快ＢSOURCE上升
+	SOURCE:MASTER:快Ｂ = ACT_FROM(TARGET, 4) * (2 + TALENT:灵巧的指尖) / 2
+	;调教者、调教对象调教等级に应じて接触SOURCE増加
+	SOURCE:MASTER:接触 = 50 + GET_TRAINLV(TARGET) * 5 + CFLAG:MASTER:调教等级 * 5
+	;必要那么ば媚药被使用
+	CALL LOVEPOTION_USE
+	;调教对象好感、调教者奉仕精神に应じて情爱SOURCE増加
+	SOURCE:MASTER:情爱 = 50 + CFLAG:M好感 / 50 + GET_ABL(TARGET, "奉仕精神") * 5
+	;快ＢSOURCEに应じて性行动SOURCE増加
+	SOURCE:MASTER:性行动 = 50 + SOURCE:MASTER:快Ｂ / 8
+	;调教者的手に爱液/阴茎/母乳脏污但存在做和不洁SOURCE小増加
+	SIF STAIN:手 & (1 + 2 + 16)
+		SOURCE:MASTER:不洁 += 85
+	;调教者的手に精液/肛门脏污但存在做和不洁SOURCE中増加
+	SIF STAIN:手 & (4 + 8)
+		SOURCE:MASTER:不洁 += 180
+	;调教者的手に血/粘液脏污但存在做和不洁SOURCE大増加
+	SIF STAIN:手 & (32 + 64)
+		SOURCE:MASTER:不洁 += 550
+	;脏污但相互に移る
+	STAIN:MASTER:胸 |= STAIN:手
+	STAIN:手 |= STAIN:MASTER:胸
+	;调教者、调教对象自慰被中断
+	TEQUIP:自慰中 = 0
+	;调教者技巧、爱抚、灵巧的指尖素質に应じて勃起度上升
+	TCVAR:MASTER:这回合的勃起 += 80 + (GET_ABL(TARGET, "技巧") + GET_ABL(TARGET, "爱抚") + TALENT:灵巧的指尖 * 50) / 3
+ENDIF
+;顔面骑乘系解除
+CALL FACESITTING_SET(0)
+TFLAG:经过时间 += 2
+
+;反应后（接触、情爱、性行动、达成、快ｂ）
+@ACTION_APPLY2_11
+;乳的揉み合い派生时
+IF TFLAG:ACT派生 == 2
+	;实行した
+	IF IS_COMGRONAME("消极的服从/淡然的服从/积极的服从/接受")
+		;调教对象调教等级に应じて接触SOURCE増加
+		SOURCE:MASTER:接触 += 70 + CFLAG:MASTER:调教等级 * 3
+		;调教对象好感、奉仕精神に应じて情爱SOURCE増加
+		SOURCE:MASTER:情爱 += 20 + CFLAG:M好感 / 40 + GET_ABL(MASTER, "奉仕精神") * 5
+		;爱抚修正、调教对象灵巧的指尖素質に应じて修正値上升
+		LOCAL = 35 + ACT_TO(TARGET, 4) * (3 + TALENT:MASTER:灵巧的指尖) / 5
+		;修正値に应じて性行动、达成、快ｂSOURCE増加
+		SOURCE:MASTER:性行动 += 50 + LOCAL / 8
+		SOURCE:MASTER:达成 += LOCAL / 4
+		SOURCE:快Ｂ += LOCAL
+		;脏污但相互に移る
+		STAIN:MASTER:手 |= STAIN:胸
+		STAIN:胸 |= STAIN:MASTER:手
+	;其他的场合
+	ELSE
+		;反抗先行时、REACT分类に要求に应じない被设置
+		SIF PALAM:MASTER:害羞 <= PALAM:MASTER:反抗
+			CALL SET_COMGRO("拒绝")
+	ENDIF
+ENDIF
+
+;────────────────────────────────────
+;012,舔阴/进行口交
+;────────────────────────────────────
+;反应前（Ｓ/Ｎ/Ｈ）（快Ｃ、接触、情爱、性行动、疼痛、不洁）
+@ACTION_APPLY_12
+;爱抚修正値、舌使に应じて快ＣSOURCE上升
+SOURCE:MASTER:快Ｃ = 200 + ACT_FROM(TARGET, 1) * (3 + TALENT:舌使) / 3
+;脱衣的处理
+;穿墙但あ时3/4で无视
+IF !TALENT:穿墙 || !RAND:4
+	;压抑/羞涩/着衣PLAY喜欢素質但ない场合
+	IF !TALENT:压抑 && !TALENT:羞涩 && !TALENT:着衣PLAY喜欢
+		;解放素質、调教者欲望、调教等级に应じて成功率上升
+		IF TALENT:解放 * 2 + GET_ABL(TARGET, "欲望") / 10 + GET_TRAINLV(TARGET) / 5 > 1 + RAND:3
+			;下半身全部强制脱衣
+			TFLAG:强制脱衣 = 5
+		;1/3的确率で下半身外套强制脱衣
+		ELSEIF !RAND:3
+			TFLAG:强制脱衣 = 2
+		ENDIF
+	ENDIF
+ENDIF
+;必要那么ば媚药被使用
+CALL LOVEPOTION_USE
+;润滑上升(口交で増加修正、Ｗ口交で修正倍増)
+PALAM:MASTER:润滑 += 20 + TFLAG:ACT派生 * 20
+;猫舌素質时快ＣSOURCE上升
+SIF TALENT:猫舌
+	SOURCE:MASTER:快Ｃ *= 12 / 10
+;调教等级に应じて接触SOURCE増加
+SOURCE:MASTER:接触 = 150 + GET_TRAINLV(TARGET) * 5
+;接触SOURCE、调教者奉仕精神に应じて情爱SOURCE増加
+SOURCE:MASTER:情爱 = SOURCE:MASTER:接触 / 2 + GET_ABL(TARGET, "奉仕精神") * 5
+;快ＣSOURCEに应じて性行动SOURCE増加
+SOURCE:MASTER:性行动 = 80 + SOURCE:MASTER:快Ｃ / 10
+;调教者的口に爱液/阴茎/母乳脏污但存在做和不洁SOURCE小増加
+SIF STAIN:口 & (1 + 2 + 16)
+	SOURCE:MASTER:不洁 += 60
+;调教者的口に精液/肛门脏污但存在做和不洁SOURCE中増加
+SIF STAIN:口 & (4 + 8)
+	SOURCE:MASTER:不洁 += 120
+;调教者的口に血/粘液脏污但存在做和不洁SOURCE大増加
+SIF STAIN:口 & (32 + 64)
+	SOURCE:MASTER:不洁 += 360
+;脏污但相互に移る
+IF TFLAG:ACT派生 >= 1
+	STAIN:MASTER:阴茎 |= STAIN:口
+	STAIN:口 |= STAIN:MASTER:阴茎
+ELSE
+	STAIN:MASTER:小穴 |= STAIN:口
+	STAIN:口 |= STAIN:MASTER:小穴
+ENDIF
+;调教对象自慰被中断
+TEQUIP:自慰中 &= ~1
+;调教者技巧、爱抚、舌使、猫舌素質に应じて勃起度上升
+TCVAR:MASTER:这回合的勃起 += 150 + (GET_ABL(TARGET, "技巧") + GET_ABL(TARGET, "爱抚") + TALENT:舌使 * 50 + TALENT:猫舌 * 50)
+TFLAG:经过时间 += 2
+
+;反应后（Ｓ/Ｎ/Ｈ）（快Ｃ、接触、情爱、性行动、疼痛、不洁）
+@ACTION_APPLY2_12
+
+;────────────────────────────────────
+;013,肛门爱抚
+;────────────────────────────────────
+;反应前（Ｎ/Ｈ）[罰]（快Ａ、接触、性行动、疼痛、不洁、逃脱）
+@ACTION_APPLY_13
+;爱抚修正値、灵巧的指尖素質に应じて、快ＡSOURCE増加
+SOURCE:MASTER:快Ａ = 60 + ACT_FROM(TARGET, 3) * (2 + TALENT:灵巧的指尖) / 2
+;前列腺責めに派生していれば快Ａ増加
+SIF TFLAG:ACT派生 == 1
+	TIMES SOURCE:MASTER:快Ａ, 2.50
+;肛门震动棒出し入れに派生していれば道具强化、爱抚修正値、道具使素質に应じて快ＡSOURCE増加
+SIF TFLAG:ACT派生 == 2
+	SOURCE:MASTER:快Ａ += 40 + ITEM:9 * 100 + ACT_FROM(TARGET, 12) * (TALENT:道具使 + 3) / 3
+;脱衣的处理
+;穿墙但あ时3/4で无视
+IF !TALENT:穿墙 || !RAND:4
+	;压抑/羞涩/着衣PLAY喜欢素質但ない场合
+	IF !TALENT:压抑 && !TALENT:羞涩 && !TALENT:着衣PLAY喜欢
+		;解放素質、调教者欲望、调教等级に应じて成功率上升
+		IF TALENT:解放 * 2 + GET_ABL(TARGET, "欲望") / 10 + GET_TRAINLV(TARGET) / 5 > 1 + RAND:3
+			;下半身全部强制脱衣
+			TFLAG:强制脱衣 = 5
+		ELSE
+			;最低でも下半身外套强制脱衣直到試行
+			TFLAG:强制脱衣 = 2
+		ENDIF
+	ENDIF
+ENDIF
+;调教者配饰存在时、2/3的确率か调教对象的胸但肛门脏污以外的脏污被持つ
+;场合、配件自主脱衣
+;※手套など被脱いで素用手爱抚做ため配件自主脱衣被发生
+SIF TEQUIP:配饰 && (RAND:3 || STAIN:MASTER:肛门 > 8)
+	TFLAG:自主脱衣 = 6
+;必要那么ば润滑液、媚药被使用
+CALL LOTION_USE
+CALL LOVEPOTION_USE
+;润滑不足时、快ＡSOURCEに減少修正、疼痛SOURCE増加
+CALL SHORTAGE_LUBRICATION("500/M快Ａ,T,50/M疼痛,A,500")
+;Ａ経験不足时、快ＡSOURCEに減少修正、疼痛、逃脱SOURCE増加
+IF EXP:MASTER:Ａ経験 < 1
+	TIMES SOURCE:MASTER:快Ａ , 0.60
+	SOURCE:MASTER:疼痛 += 600
+	SOURCE:MASTER:逃脱 += 1200
+ELSEIF EXP:MASTER:Ａ経験 < 6
+	TIMES SOURCE:MASTER:快Ａ , 0.75
+	SOURCE:MASTER:疼痛 += 200
+	SOURCE:MASTER:逃脱 += 700 - EXP:MASTER:Ａ経験 * 100
+ELSEIF EXP:MASTER:Ａ経験 < 11
+	TIMES SOURCE:MASTER:快Ａ , 0.90
+	SOURCE:MASTER:疼痛 += 100
+	SOURCE:MASTER:逃脱 += 100 - EXP:MASTER:Ａ経験 * 10
+ELSEIF EXP:MASTER:Ａ経験 < 21
+	SOURCE:MASTER:逃脱 += 5
+ENDIF
+;调教等级に应じて接触SOURCE増加
+SOURCE:MASTER:接触 = 80 + GET_TRAINLV(TARGET) * 5
+;快ＡSOURCEに应じて性行动SOURCE増加
+SOURCE:MASTER:性行动 = 80 + SOURCE:MASTER:快Ａ / 10
+;调教者的手に爱液/阴茎/母乳脏污但存在做和不洁SOURCE小増加
+SIF STAIN:手 & (1 + 2 + 16)
+	SOURCE:MASTER:不洁 += 10
+;调教者的手に精液/肛门脏污但存在做和不洁SOURCE中増加
+SIF STAIN:手 & (4 + 8)
+	SOURCE:MASTER:不洁 += 30
+;调教者的手に血/粘液脏污但存在做和不洁SOURCE大増加
+SIF STAIN:手 & (32 + 64)
+	SOURCE:MASTER:不洁 += 100
+;脏污但相互に移る
+STAIN:MASTER:肛门 |= STAIN:手
+STAIN:手 |= STAIN:MASTER:肛门
+;扶她是Ａで前列腺刺激
+SIF TALENT:MASTER:扶她
+	TCVAR:MASTER:前列腺刺激 += 1
+;前列腺責めに派生していればさらに前列腺刺激但つく
+SIF TFLAG:ACT派生 == 1
+	TCVAR:MASTER:前列腺刺激 += 1
+;调教对象Ａ感觉、受虐气质、调教者技巧に应じて勃起度上升
+TCVAR:MASTER:这回合的勃起 += 100 + (GET_ABL(MASTER, "Ａ感觉") + GET_ABL(MASTER, "受虐气质") * GET_ABL(TARGET, "技巧") / 50)
+TFLAG:经过时间 += 2
+
+;反应后（Ｎ/Ｈ）[罰]（快Ａ、接触、性行动、疼痛、不洁、逃脱）
+@ACTION_APPLY2_13
+
+;────────────────────────────────────
+;014,舔肛门
+;────────────────────────────────────
+;反应前（Ｎ/Ｈ）[罰]（快Ａ、接触、性行动、疼痛、不洁、逃脱）
+@ACTION_APPLY_14
+;爱抚修正値、舌使素質に应じて、快ＡSOURCE増加
+SOURCE:MASTER:快Ａ = 60 + ACT_FROM(TARGET, 3) * (3 + TALENT:舌使) / 3
+;脱衣的处理
+;穿墙但あ时3/4で无视
+IF !TALENT:穿墙 || !RAND:4
+	;压抑/羞涩/着衣PLAY喜欢素質但ない场合
+	IF !TALENT:压抑 && !TALENT:羞涩 && !TALENT:着衣PLAY喜欢
+		;解放素質、调教者欲望、调教等级に应じて成功率上升
+		IF TALENT:解放 * 2 + GET_ABL(TARGET, "欲望") / 10 + GET_TRAINLV(TARGET) / 5 > 1 + RAND:3
+			;下半身全部强制脱衣
+			TFLAG:强制脱衣 = 5
+		ELSE
+			;最低でも下半身外套强制脱衣直到試行
+			TFLAG:强制脱衣 = 2
+		ENDIF
+	ENDIF
+ENDIF
+;必要那么ば媚药被使用
+CALL LOVEPOTION_USE
+;润滑上升
+PALAM:MASTER:润滑 += 20
+;猫舌素質时快ＡSOURCE上升
+SIF TALENT:猫舌
+	SOURCE:MASTER:快Ａ *= 12 / 10
+;Ａ経験不足时、快ＡSOURCEに減少修正、逃脱SOURCE増加
+IF EXP:MASTER:Ａ経験 < 1
+	TIMES SOURCE:MASTER:快Ａ , 0.80
+	SOURCE:MASTER:逃脱 += 1000
+ELSEIF EXP:MASTER:Ａ経験 < 6
+	TIMES SOURCE:MASTER:快Ａ , 0.85
+	SOURCE:MASTER:逃脱 += 500 - EXP:MASTER:Ａ経験 * 50
+ELSEIF EXP:MASTER:Ａ経験 < 11
+	TIMES SOURCE:MASTER:快Ａ , 0.95
+	SOURCE:MASTER:逃脱 += 150 - EXP:MASTER:Ａ経験 * 12
+ELSEIF EXP:MASTER:Ａ経験 < 21
+	SOURCE:MASTER:逃脱 += 10
+ENDIF
+;调教等级に应じて接触SOURCE増加
+SOURCE:MASTER:接触 = 120 + GET_TRAINLV(TARGET) * 5
+;快ＡSOURCEに应じて性行动SOURCE増加
+SOURCE:MASTER:性行动 = 80 + SOURCE:MASTER:快Ａ / 10
+;调教者的口に爱液/阴茎/母乳脏污但存在做和不洁SOURCE小増加
+SIF STAIN:口 & (1 + 2 + 16)
+	SOURCE:MASTER:不洁 += 10
+;调教者的口に精液/肛门脏污但存在做和不洁SOURCE中増加
+SIF STAIN:口 & (4 + 8)
+	SOURCE:MASTER:不洁 += 30
+;调教者的口に血/粘液脏污但存在做和不洁SOURCE大増加
+SIF STAIN:口 & (32 + 64)
+	SOURCE:MASTER:不洁 += 100
+;脏污但相互に移る
+STAIN:MASTER:肛门 |= STAIN:口
+STAIN:口 |= STAIN:MASTER:肛门
+;调教对象Ａ感觉に应じて勃起度上升
+TCVAR:MASTER:这回合的勃起 += 80 + GET_ABL(MASTER, "Ａ感觉")
+;顔面骑乘系解除
+CALL FACESITTING_SET(0)
+TFLAG:经过时间 += 2
+
+;反应后（Ｎ/Ｈ）[罰]（快Ａ、接触、性行动、疼痛、不洁、逃脱）
+@ACTION_APPLY2_14
+;现在处理无
+
+;────────────────────────────────────
+;015,接吻
+;────────────────────────────────────
+;反应前（Ｓ/Ｎ）（接触、情爱、性行动、疼痛、不洁）
+@ACTION_APPLY_15
+;调教等级に应じて接触SOURCE増加
+SOURCE:MASTER:接触 = 150 + GET_TRAINLV(TARGET) * 5
+;调教对象好感、调教者爱抚、技巧、舌使素質、奉仕精神に应じて情爱SOURCE増加
+SOURCE:MASTER:情爱 = 100 + CFLAG:M好感 / 50 + GET_ABL(TARGET, "爱抚") * (GET_ABL(TARGET, "技巧") / 10 + TALENT:舌使 * 2) + GET_ABL(TARGET, "奉仕精神") * 5
+;1/3的确率で配件强制脱衣
+SIF !RAND:3
+	TFLAG:强制脱衣 = 6
+;必要那么ば媚药被使用
+CALL LOVEPOTION_USE
+;情爱SOURCEに应じて性行动SOURCE増加
+SOURCE:MASTER:性行动 = 50 + SOURCE:MASTER:情爱 / 15
+;调教者的口に爱液/阴茎/母乳脏污但存在做和不洁SOURCE小増加
+SIF STAIN:口 & (1 + 2 + 16)
+	SOURCE:MASTER:不洁 += 180
+;调教者的口に精液/肛门脏污但存在做和不洁SOURCE中増加
+SIF STAIN:口 & (4 + 8)
+	SOURCE:MASTER:不洁 += 350
+;调教者的口に血/粘液脏污但存在做和不洁SOURCE大増加
+SIF STAIN:口 & (32 + 64)
+	SOURCE:MASTER:不洁 += 700
+;脏污但相互に移る
+STAIN:MASTER:口 |= STAIN:口
+STAIN:口 |= STAIN:MASTER:口
+;顔面骑乘系解除
+CALL FACESITTING_SET(0)
+;调教者技巧、爱抚、舌使、猫舌素質に应じて勃起度上升
+TCVAR:MASTER:这回合的勃起 += 50 + (GET_ABL(TARGET, "技巧") + GET_ABL(TARGET, "爱抚") + TALENT:舌使 * 50 + TALENT:猫舌 * 50) / 2
+TFLAG:经过时间 += 1
+
+;反应后（Ｓ/Ｎ）（接触、情爱、性行动、疼痛、不洁）
+@ACTION_APPLY2_15
+;现在处理无
+
+;────────────────────────────────────
+;016,貝あわせ/素股做
+;────────────────────────────────────
+;反应前（Ｓ/Ｎ）（快Ｃ、接触、情爱、性行动、不洁、快ｃ）
+@ACTION_APPLY_16
+;爱抚修正値に应じて、快Ｃ/快ｃSOURCE増加、さらに易湿、不易湿素質により増減
+SOURCE:MASTER:快Ｃ = 80 + ACT_FROM(TARGET, 1) * (3 + TALENT:易湿 - TALENT:不易湿) * (2*TALENT:腰使 + 1) / 3
+SOURCE:快Ｃ = 30 + ACT_TO(TARGET, 1) * (3 + TALENT:易湿 - TALENT:不易湿) * (2*TALENT:MASTER:腰使 + 1) / 3
+;脱衣的处理
+;穿墙但あ时3/4で无视
+IF !TALENT:穿墙 || !RAND:4
+	;压抑/羞涩/着衣PLAY喜欢素質但ない场合
+	IF !TALENT:压抑 && !TALENT:羞涩 && !TALENT:着衣PLAY喜欢
+		;解放素質、调教者欲望、调教等级に应じて成功率上升
+		IF TALENT:解放 * 2 + GET_ABL(TARGET, "欲望") / 10 + GET_TRAINLV(TARGET) / 5 > 1 + RAND:3
+			;下半身全部强制脱衣
+			TFLAG:强制脱衣 = 5
+		ELSE
+			;最低でも下半身外套强制脱衣直到試行
+			TFLAG:强制脱衣 = 2
+		ENDIF
+	ENDIF
+ENDIF
+;下半身全部自主脱衣
+TFLAG:自主脱衣 = 5
+;必要那么ば润滑液、媚药被使用
+CALL LOTION_USE
+CALL LOVEPOTION_USE
+;润滑不足时、快Ｃ/快ｃSOURCEに減少修正
+CALL SHORTAGE_LUBRICATION("500/M快Ｃ,T,75/T快Ｃ,T,75")
+;调教等级に应じて接触SOURCE増加、素股派生时減少
+SOURCE:MASTER:接触 = 200 + GET_TRAINLV(TARGET) * 5 - TFLAG:ACT派生 * 50
+;接触SOURCE、调教对象奉仕精神に应じて情爱SOURCE増加
+SOURCE:MASTER:情爱 = SOURCE:MASTER:接触 / 2 + GET_ABL(TARGET, "奉仕精神") * 5
+;快ＣSOURCEに应じて性行动SOURCE増加
+SOURCE:MASTER:性行动 = 80 + SOURCE:MASTER:快Ｃ / 10
+;调教者的小穴に爱液/阴茎/母乳脏污但存在做和不洁SOURCE小増加
+SIF STAIN:小穴 & (1 + 2 + 16)
+	SOURCE:MASTER:不洁 += 50
+;调教者的小穴に精液/肛门脏污但存在做和不洁SOURCE中増加
+SIF STAIN:小穴 & (4 + 8)
+	SOURCE:MASTER:不洁 += 100
+;调教者的小穴に血/粘液脏污但存在做和不洁SOURCE大増加
+SIF STAIN:小穴 & (32 + 64)
+	SOURCE:MASTER:不洁 += 300
+;脏污但相互に移る
+IF TFLAG:ACT派生 == 1
+	STAIN:MASTER:阴茎 |= STAIN:小穴
+	STAIN:小穴 |= STAIN:MASTER:阴茎
+ELSE
+	STAIN:MASTER:小穴 |= STAIN:小穴
+	STAIN:小穴 |= STAIN:MASTER:小穴
+ENDIF
+;调教者、调教对象自慰被中断
+TEQUIP:自慰中 = 0
+;顔面骑乘系解除
+CALL FACESITTING_SET(0)
+;调教者技巧、爱抚に应じて勃起度上升
+TCVAR:MASTER:这回合的勃起 += 150 + (GET_ABL(TARGET, "技巧") + GET_ABL(TARGET, "爱抚") )
+TFLAG:经过时间 += 3
+
+;反应后（Ｓ/Ｎ）（快Ｃ、接触、情爱、性行动、不洁、快ｃ）
+@ACTION_APPLY2_16
+;现在处理无
+
+;────────────────────────────────────
+;017,进行乳交
+;────────────────────────────────────
+;反应前（Ｓ/Ｎ）（快Ｃ、接触、情爱、疼痛、性行动、不洁、快ｂ）
+@ACTION_APPLY_17
+;爱抚修正値に应じて快ＣSOURCE増加、さらに巨乳、貧乳素質により増減
+SOURCE:MASTER:快Ｃ = 70 + ACT_FROM(TARGET, 1) * (4 + TALENT:巨乳 - TALENT:貧乳) / 4
+;爱抚修正値に应じて快ｂSOURCE増加
+SOURCE:快Ｂ = 20 + ACT_TO(TARGET, 4) * (TALENT:MASTER:腰使 + 1) / 2
+;脱衣的处理
+;穿墙但あ时3/4で无视
+IF !TALENT:穿墙 || !RAND:4
+	;压抑/羞涩/着衣PLAY喜欢素質但ない场合
+	IF !TALENT:压抑 && !TALENT:羞涩 && !TALENT:着衣PLAY喜欢
+		;解放素質、调教者欲望、调教等级に应じて成功率上升
+		IF TALENT:解放 * 2 + GET_ABL(TARGET, "欲望") / 10 + GET_TRAINLV(TARGET) / 5 > 1 + RAND:3
+			;下半身全部强制脱衣
+			TFLAG:强制脱衣 = 5
+			;调教者欲望、调教等级に应じて成功率上升
+			;配饰－直到强制脱衣に发展
+			SIF GET_ABL(TARGET, "欲望") / 10 + GET_TRAINLV(TARGET) > 4 + RAND:5
+				TFLAG:强制脱衣 = 7
+		ELSE
+			;最低でも下半身外套强制脱衣直到試行
+			TFLAG:强制脱衣 = 2
+		ENDIF
+	ENDIF
+ENDIF
+;上半身全部自主脱衣
+TFLAG:自主脱衣 = 4
+;必要那么ば润滑液、媚药被使用
+CALL LOVEPOTION_USE
+CALL LOTION_USE
+;润滑不足时、快ＣSOURCEに減少修正
+CALL SHORTAGE_LUBRICATION("500/M快Ｃ,T,75")
+;貧乳素質时、快ＣSOURCEに減少修正
+SIF TALENT:貧乳
+	TIMES SOURCE:MASTER:快Ｃ , 0.80
+;猫舌素質时快ＣSOURCE上升
+SIF TALENT:猫舌
+	SOURCE:MASTER:快Ｃ *= 11 / 10
+;调教等级に应じて接触SOURCE増加
+SOURCE:MASTER:接触 = 250 + GET_TRAINLV(TARGET) * 5
+;接触SOURCE、调教对象奉仕精神に应じて情爱SOURCE増加
+SOURCE:MASTER:情爱 = SOURCE:MASTER:接触 / 2 + GET_ABL(TARGET, "奉仕精神") * 5
+;快ＣSOURCEに应じて性行动SOURCE増加
+SOURCE:MASTER:性行动 = 40 + SOURCE:MASTER:快Ｃ / 10
+;调教者的口に爱液/阴茎/母乳脏污但存在做和不洁SOURCE小増加
+SIF STAIN:口 & (1 + 2 + 16)
+	SOURCE:MASTER:不洁 += 20
+;调教者的口に精液/肛门脏污但存在做和不洁SOURCE中増加
+SIF STAIN:口 & (4 + 8)
+	SOURCE:MASTER:不洁 += 50
+;调教者的口に血/粘液脏污但存在做和不洁SOURCE大増加
+SIF STAIN:口 & (32 + 64)
+	SOURCE:MASTER:不洁 += 150
+;调教者的胸に爱液/阴茎/母乳脏污但存在做和不洁SOURCE小増加
+SIF STAIN:胸 & (1 + 2 + 16)
+	SOURCE:MASTER:不洁 += 50
+;调教者的胸に精液/肛门脏污但存在做和不洁SOURCE中増加
+SIF STAIN:胸 & (4 + 8)
+	SOURCE:MASTER:不洁 += 100
+;调教者的胸に血/粘液脏污但存在做和不洁SOURCE大増加
+SIF STAIN:胸 & (32 + 64)
+	SOURCE:MASTER:不洁 += 300
+;脏污但相互に移る
+STAIN:MASTER:阴茎 |= STAIN:口
+STAIN:MASTER:阴茎 |= STAIN:胸
+STAIN:口 |= STAIN:MASTER:阴茎
+STAIN:胸 |= STAIN:MASTER:阴茎
+;调教者、调教对象自慰被中断
+TEQUIP:自慰中 = 0
+;调教者技巧、爱抚に应じて勃起度上升、巨乳、貧乳、淫乳素質によって増減
+TCVAR:MASTER:这回合的勃起 += 150 + (GET_ABL(TARGET, "技巧") + GET_ABL(TARGET, "爱抚") + TALENT:巨乳 * 50 - TALENT:貧乳 * 50 + TALENT:淫乳 * 50)
+TFLAG:经过时间 += 3
+
+;反应后（Ｓ/Ｎ）（快Ｃ、接触、情爱、疼痛、性行动、不洁、快ｂ）
+@ACTION_APPLY2_17
+
+;────────────────────────────────────
+;018,进行足交
+;────────────────────────────────────
+;反应前（Ｓ/Ｎ/Ｈ）[罰]（快Ｃ、接触、情爱、性行动、不洁、逃脱）
+@ACTION_APPLY_18
+;爱抚修正値、美脚素質に应じて快ＣSOURCE増加
+SOURCE:MASTER:快Ｃ = 40 + ACT_FROM(TARGET, 1) * (3 + TALENT:美脚) / 3
+;调教等级に应じて接触SOURCE増加
+SOURCE:MASTER:接触 = 60 + GET_TRAINLV(TARGET) * 10
+;接触SOURCE、调教对象奉仕精神に应じて情爱SOURCE増加
+SOURCE:MASTER:情爱 = SOURCE:MASTER:接触 / 2 + GET_ABL(TARGET, "奉仕精神") * 5
+;快ＣSOURCEに应じて性行动SOURCE増加
+SOURCE:MASTER:性行动 = SOURCE:MASTER:快Ｃ / 10
+;虐待狂素質但存在做和、快ＣSOURCEに应じて疼痛SOURCE増加
+SIF TALENT:虐待狂
+	SOURCE:MASTER:疼痛 = SOURCE:MASTER:快Ｃ / 4
+;逃脱SOURCE増加、调教等级に应じて軽減
+SOURCE:MASTER:逃脱 = 200 - GET_TRAINLV(TARGET) * 10
+;逃脱SOURCE但负的値被和らないよう调整
+SOURCE:MASTER:逃脱 = SOURCE:MASTER:逃脱 < 0 ? 0 # SOURCE:MASTER:逃脱
+;脱衣的处理
+;穿墙但あ时3/4で无视
+IF !TALENT:穿墙 || !RAND:4
+	;压抑/羞涩/着衣PLAY喜欢素質但ない场合、下半身外套强制脱衣
+	SIF !TALENT:压抑 && !TALENT:羞涩 && !TALENT:着衣PLAY喜欢
+		TFLAG:强制脱衣 = 2
+ENDIF
+;调教者袜子着用中、调教对象阴茎に阴茎脏污以外的脏污但存在做和、
+;配件自主脱衣
+SIF TEQUIP:袜子 && STAIN:MASTER:阴茎 > 2
+	TFLAG:自主脱衣 = 6
+;调教者的足に爱液/阴茎/母乳脏污但存在做和不洁SOURCE小増加
+SIF STAIN:足 & (1 + 2 + 16)
+	SOURCE:MASTER:不洁 += 35
+;调教者的足に精液/肛门脏污但存在做和不洁SOURCE中増加
+SIF STAIN:足 & (4 + 8)
+	SOURCE:MASTER:不洁 += 80
+;调教者的足に血/粘液脏污但存在做和不洁SOURCE大増加
+SIF STAIN:足 & (32 + 64)
+	SOURCE:MASTER:不洁 += 200
+;润滑不足时、快ＣSOURCEに減少修正
+CALL SHORTAGE_LUBRICATION("500/M快Ｃ,T,75")
+;脏污但相互に移る
+STAIN:MASTER:阴茎 |= STAIN:足
+STAIN:足 |= STAIN:MASTER:阴茎
+;顔面骑乘是顔面骑乘肛门へ移行
+IF TEQUIP:顔面骑乘
+	CALL FACESITTING_SET(2)
+ENDIF
+;调教者、调教对象自慰被中断
+TEQUIP:自慰中 = 0
+;调教者技巧、爱抚に应じて勃起度上升
+TCVAR:MASTER:这回合的勃起 += 100 + (GET_ABL(TARGET, "技巧") + GET_ABL(TARGET, "爱抚"))
+TFLAG:经过时间 += 2
+
+;反应后（Ｓ/Ｎ/Ｈ）[罰]（快Ｃ、接触、情爱、性行动、不洁、逃脱）
+@ACTION_APPLY2_18
+;现在处理无
+
+;────────────────────────────────────
+;019,指插入
+;────────────────────────────────────
+;反应前（Ｎ/Ｈ）[罰]（快Ｖ、接触、性行动、疼痛、情爱、不洁）
+@ACTION_APPLY_19
+;爱抚修正値、灵巧的指尖素質に应じて、快ＶSOURCE増加
+SOURCE:MASTER:快Ｖ = 90 + ACT_FROM(TARGET, 3) * (2 + TALENT:灵巧的指尖) / 2
+;Ｇスポット責めに派生していれば快Ｖ増加
+SIF TFLAG:ACT派生 == 1
+	TIMES SOURCE:MASTER:快Ｖ, 2.50
+;震动棒出し入れに派生していれば道具强化、爱抚修正値、道具使素質に应じて快ＶSOURCE増加
+SIF TFLAG:ACT派生 == 2
+	SOURCE:MASTER:快Ｖ += 50 + ITEM:9 * 100 + ACT_FROM(TARGET, 12) * (TALENT:道具使 + 3) / 3
+;脱衣的处理
+;穿墙但あ时3/4で无视
+IF !TALENT:穿墙 || !RAND:4
+	;着衣PLAY喜欢素質但ある场合
+	IF TALENT:着衣PLAY喜欢
+		;调教等级、解放素質に应じて成功率上升し、内衣只强制脱衣
+		SIF GET_TRAINLV(TARGET) + TALENT:解放 * 3 > 2 + RAND:3
+			TFLAG:强制脱衣 = 9
+	;压抑/羞涩素質但ない场合
+	ELSEIF !TALENT:压抑 && !TALENT:羞涩
+		;下半身全部强制脱衣
+		TFLAG:强制脱衣 = 5
+	ENDIF
+	;调教对象下半身外套但裙子でなく、下半身全部强制脱衣不是场合、下半身外套强制脱衣
+	SIF TEQUIP:MASTER:下半身外套 > 1 && TFLAG:强制脱衣 != 5
+		TFLAG:强制脱衣 = 2
+ENDIF
+;调教者配饰存在时、2/3的确率か调教对象的Ｖ但爱液脏污以外的脏污被持つ
+;场合、配件自主脱衣
+;※手套など被脱いで素用手爱抚做ため配件自主脱衣被发生
+SIF TEQUIP:配饰 && (RAND:3 || STAIN:MASTER:小穴-1)
+	TFLAG:自主脱衣 = 6
+;必要那么ば润滑液、媚药被使用
+CALL LOTION_USE
+CALL LOVEPOTION_USE
+;润滑不足时、快ＶSOURCEに減少修正、疼痛SOURCE増加
+CALL SHORTAGE_LUBRICATION("500/M快Ｖ,T,50/M疼痛,A,500")
+;Ｖ経験不足时、快ＶSOURCEに減少修正、疼痛、逃脱SOURCE増加
+IF EXP:MASTER:Ｖ経験 < 1
+	TIMES SOURCE:MASTER:快Ｖ , 0.60
+	SOURCE:MASTER:疼痛 += 600
+	SOURCE:MASTER:逃脱 += 1200
+ELSEIF EXP:MASTER:Ｖ経験 < 6
+	TIMES SOURCE:MASTER:快Ｖ , 0.75
+	SOURCE:MASTER:疼痛 += 200
+	SOURCE:MASTER:逃脱 += 700 - EXP:MASTER:Ａ経験 * 100
+ELSEIF EXP:MASTER:Ｖ経験 < 11
+	TIMES SOURCE:MASTER:快Ｖ , 0.90
+	SOURCE:MASTER:疼痛 += 100
+	SOURCE:MASTER:逃脱 += 100 - EXP:MASTER:Ａ経験 * 10
+ELSEIF EXP:MASTER:Ｖ経験 < 21
+	SOURCE:MASTER:逃脱 += 5
+ENDIF
+;处女时、さらに快Ｖに減少修正
+SIF TALENT:MASTER:处女
+	TIMES SOURCE:MASTER:快Ｖ , 0.80
+
+;调教等级に应じて接触SOURCE増加
+SOURCE:MASTER:接触 = 80 + GET_TRAINLV(TARGET) * 5
+;快ＶSOURCEに应じて性行动SOURCE増加
+SOURCE:MASTER:性行动 = 80 + SOURCE:MASTER:快Ｖ / 10
+;调教者的手に阴茎/母乳脏污但存在做和不洁SOURCE小増加
+SIF STAIN:手 & (2 + 16)
+	SOURCE:MASTER:不洁 += 10
+;调教者的手に精液/肛门脏污但存在做和不洁SOURCE中増加
+SIF STAIN:手 & (4 + 8)
+	SOURCE:MASTER:不洁 += 30
+;调教者的手に血/粘液脏污但存在做和不洁SOURCE大増加
+SIF STAIN:手 & (32 + 64)
+	SOURCE:MASTER:不洁 += 100
+;脏污但相互に移る
+STAIN:MASTER:小穴 |= STAIN:手
+STAIN:手 |= STAIN:MASTER:小穴
+TCVAR:MASTER:前列腺刺激 += 1
+;Ｇスポット責めに派生していればさらに前列腺刺激但つく
+SIF TFLAG:ACT派生 == 1
+	TCVAR:MASTER:前列腺刺激 += 1
+;调教对象Ｖ感觉、调教者技巧に应じて勃起度上升
+TCVAR:MASTER:这回合的勃起 += 100 + (GET_ABL(MASTER, "Ｖ感觉") * GET_ABL(TARGET, "技巧") / 20)
+TFLAG:经过时间 += 2
+
+;反应后（Ｎ/Ｈ）[罰]（快Ａ、接触、性行动、疼痛、不洁、逃脱）
+@ACTION_APPLY2_19
+
+;────────────────────────────────────
+;027,推倒
+;────────────────────────────────────
+;反应前（Ｓ/Ｎ）（快Ｂ、中毒充足）
+@ACTION_APPLY_27
+;推倒
+IF TEQUIP:推到中 == 0
+	TFLAG:推到经过 = TFLAG:经过时间
+	TEQUIP:推到中 = 1
+;推到终了
+ELSE
+	TFLAG:推到经过 = TFLAG:经过时间
+	TEQUIP:推到中 = 0
+ENDIF
+;调教者、调教对象自慰被中断
+TEQUIP:自慰中 = 0
+;调教对象欲望に应じて勃起度上升
+TCVAR:MASTER:这回合的勃起 += 100 + GET_ABL(MASTER, "欲望") * 3
+TFLAG:经过时间 += 1
+
+;反应后（Ｓ/Ｎ）（快Ｂ、中毒充足）
+@ACTION_APPLY2_27
+;现在处理无
+
+

@@ -1,0 +1,134 @@
+﻿;────────────────────────────────────
+;指令选择后的TFLAG设置
+;────────────────────────────────────
+@EVENTCOM
+#PRI
+;强制终了侍奉際にSHOW_USERCOM内でBEGINできない的でここに持ってきて终わらせる
+SIF SELECTCOM == 999
+	BEGIN AFTERTRAIN
+DRAWLINE
+;TFLAG:0-39初期化
+FOR LOCAL, 0, 40
+	TFLAG:LOCAL = 0
+NEXT
+
+
+;────────────────────────────────────
+;调教终了时的回復
+;────────────────────────────────────
+@BASE_RECOVERY
+#DIM 残存体力
+;CHARA全員被顺番に回復
+FOR LOCAL, 0, CHARANUM
+	;残存体力被记忆
+	残存体力 = BASE:LOCAL:体力
+	
+	;体力回復
+	BASE:LOCAL:体力 += (400 + TIME * 100 + MAXBASE:LOCAL:体力 / 5) * (4 + TIME + TALENT:LOCAL:回复快 - TALENT:LOCAL:回复慢 + TALENT:LOCAL:不死 * 2) * 3 / (10 + CFLAG:LOCAL:疲惫)
+	;体力但上限被突破不做よう调整
+	SIF BASE:LOCAL:体力 > MAXBASE:LOCAL:体力
+		BASE:LOCAL:体力 = MAXBASE:LOCAL:体力
+	
+	;精液ゲージ回復
+	SIF MAXBASE:LOCAL:射精 > 0
+		BASE:LOCAL:射精 += MAXBASE:LOCAL:射精 * (50 + TIME * 20 + TALENT:LOCAL:精力绝伦 * 10 - TALENT:LOCAL:精力薄弱 * 10) / (100 + CFLAG:LOCAL:疲惫 * 10)
+	;精液ゲージ但上限被突破不做よう调整
+	SIF BASE:LOCAL:射精 > MAXBASE:LOCAL:射精
+		BASE:LOCAL:射精 = MAXBASE:LOCAL:射精
+	
+	;喷乳ゲージ回復
+	SIF MAXBASE:LOCAL:母乳 > 0
+		BASE:LOCAL:母乳 += (1200 + TIME * 400 + CFLAG:LOCAL:调教等级 * 80) * (3 + TIME + TALENT:LOCAL:回复快 - TALENT:LOCAL:回复慢) * (3 + ABL:LOCAL:顺从) / (7 + CFLAG:LOCAL:疲惫)
+	;喷乳ゲージ但上限被突破不做よう调整
+	SIF BASE:LOCAL:母乳 > MAXBASE:LOCAL:母乳
+		BASE:LOCAL:母乳 = MAXBASE:LOCAL:母乳
+	
+	;理性回復(上限直到)
+	BASE:LOCAL:理性 = MAXBASE:LOCAL:理性
+	
+	;兴趣的回復(上限直到)、焦躁/满足的设置
+	BASE:LOCAL:兴趣 = MAXBASE:LOCAL:兴趣
+	BASE:LOCAL:焦躁 = 0
+	BASE:LOCAL:满足 = 0
+	
+	;罪恶感軽減
+	IF CFLAG:LOCAL:罪恶感 > 0
+		;固定値軽減
+		CFLAG:LOCAL:罪恶感 -= 3
+		;定位によって割合で軽減
+		CFLAG:LOCAL:罪恶感 = CFLAG:LOCAL:罪恶感 * (200 + CFLAG:LOCAL:定位) / 500
+		;定位によって減算
+		CFLAG:LOCAL:罪恶感 += LIMIT(CFLAG:LOCAL:定位 / 9 - 9, -14, 0)
+		;定位但-75未满那么消滅
+		SIF CFLAG:LOCAL:定位 < -75
+			CFLAG:LOCAL:罪恶感 = 0
+		;罪恶感是0未满に那么ない
+		SIF CFLAG:LOCAL:罪恶感 < 0
+			CFLAG:LOCAL:罪恶感 = 0
+	ENDIF
+	
+	;气力回復
+	BASE:LOCAL:气力 += (240 + TIME * 60 + 残存体力 + MAXBASE:LOCAL:气力 / 5) * (4 + TIME * 2 + TALENT:LOCAL:回复快 - TALENT:LOCAL:回复慢 + TALENT:LOCAL:不死) * (3 + TALENT:LOCAL:精力绝伦 - TALENT:LOCAL:精力薄弱) / (10 + CFLAG:LOCAL:疲惫)
+	;气力但上限被突破不做よう调整
+	SIF BASE:LOCAL:气力 > MAXBASE:LOCAL:气力
+		BASE:LOCAL:气力 = MAXBASE:LOCAL:气力
+	
+	;疲惫标志的軽減
+	;疲惫但20超過であれば固定値軽減
+	SIF CFLAG:LOCAL:疲惫 > 20
+		CFLAG:LOCAL:疲惫 -= 5
+	;时间经过によって軽減
+	CFLAG:LOCAL:疲惫 -= 1 + CFLAG:LOCAL:疲惫 / 3 + TIME
+	;体力但全快に近ければさらに軽減
+	SIF BASE:LOCAL:体力 > MAXBASE:LOCAL:体力 * 4 / 5
+		CFLAG:LOCAL:疲惫 -= 1
+	;气力但全快に近ければさらに軽減
+	SIF BASE:LOCAL:气力 > MAXBASE:LOCAL:气力 * 4 / 5
+		CFLAG:LOCAL:疲惫 -= 1
+	;疲惫标志是0未满に那么ない
+	SIF CFLAG:LOCAL:疲惫 < 0
+		CFLAG:LOCAL:疲惫 = 0
+NEXT
+;调教者但治疗素質持っている场合
+IF TARGET > -1 && TALENT:治疗
+	;调教对象体力、气力被割合回復
+	TIMES BASE:MASTER:体力, 1.2
+	TIMES BASE:MASTER:气力, 1.2
+	;体力、气力但上限被突破不做よう调整
+	SIF BASE:MASTER:体力 > MAXBASE:MASTER:体力
+		BASE:MASTER:体力 = MAXBASE:MASTER:体力
+	SIF BASE:MASTER:气力 > MAXBASE:MASTER:气力
+		BASE:MASTER:气力 = MAXBASE:MASTER:气力
+ENDIF
+
+;日时的更新
+;午前那么午后に、午后那么次的日に做
+;日时更新处理但２部位あった的但気变成了的で関数にま和めた
+;それにしても酷い関数名だぜ…英語和かわかんないよね
+@NEXTTIME
+IF TIME++
+	;总日数/日/年/季节/昼夜的更新
+	DAY++
+	FLAG:日数 = DAY % 120
+	FLAG:年数 = DAY / 120
+	FLAG:季节 = FLAG:年数 / 30
+	TIME = 0
+	PRINTW 一天结束了・・・
+
+	;30日目以降那么エンディング条件被参照做(剧本模式但できたら剧本时に变更做かも)
+	IF DAY >= 30 && !FLAG:END达成
+		CALL ENDING
+		SIF RESULT > 0
+			FLAG:END达成 = 1
+	ENDIF
+	
+ELSE
+	PRINTW 夜深了・・・
+ENDIF
+CALL DAY_EFFECT
+
+;────────────────────────────────────
+;NEWDAY被呼び出し
+;────────────────────────────────────
+@EVENTSHOP
+#PRI

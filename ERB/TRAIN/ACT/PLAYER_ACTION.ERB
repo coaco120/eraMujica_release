@@ -1,0 +1,274 @@
+﻿;────────────────────────────────────
+;调教者的行动被选择
+;────────────────────────────────────
+@PLAYER_ACT
+#DIM LCOUNT, 1
+TFLAG:回合方针 = 0
+TFLAG:ACT分类 = 0
+
+;まず是本次的方针被決定
+;(调教强度に对做方针)
+CALL ACT_COURSE
+;调教方针预定的处理
+IF TFLAG:方针预定
+	TFLAG:回合方针 = TFLAG:方针预定
+	TFLAG:方针预定 = 0
+	SIF FLAG:DEBUG
+		CALL PRINT_DIALOG(@"根据预定方针将方针变更为%POLICY("今")%", 2, 2, 2)
+ENDIF
+
+;ACT分类未決定被代入
+TFLAG:ACT分类 = -1
+
+;休息でなければ续いて本次的调教类別被決定
+IF TFLAG:回合方针 != 1
+	;ACT单独修正値被调整
+	CALL ACT_M_RESEARCH
+	;调教种別被決定
+	CALL ACT_MENU
+ELSE
+	TFLAG:ACT分类 = 9
+ENDIF
+
+;调教菜单別处理
+;ACT未決定被代入
+TFLAG:ACT = -1
+
+;调教预定菜单的处理
+IF TFLAG:ACT预定分类 >= 0
+	;预定被採用
+	TFLAG:ACT分类 = TFLAG:ACT预定分类
+	;实行可否判定
+	CALLFORM ACT_M{TFLAG:ACT分类}
+	IF FLAG:DEBUG
+		IF TFLAG:ACT == -1
+			CALL PRINT_DIALOG(@"根据预定菜单将菜单强制变更为%MENU(TFLAG:ACT预定分类)%，无法执行", 2, 2, 2)
+		ELSE
+			CALL PRINT_DIALOG(@"根据预定菜单将菜单变更为%MENU(TFLAG:ACT预定分类)%", 2, 2, 2)
+		ENDIF
+	ENDIF
+	;预定被解除
+	TFLAG:ACT预定分类 = -1
+ENDIF
+
+;ACT未決定那么
+WHILE TFLAG:ACT == -1
+	;ACT分类被指定做(指定済み那么飛ばす)
+	SIF TFLAG:ACT分类 == -1
+		CALL ACT_MENU_RESULT(1)
+	;それでも指定できなければ『询问今天的心情』ACTに決定
+	IF TFLAG:ACT分类 == -1
+		TFLAG:ACT = 0
+		TFLAG:ACT分类 = 0
+		SIF FLAG:DEBUG
+			PRINTL (可采用ACT, ACT分类不存在的情况下，采用『询问今天的心情』ACT)
+	;实行可否判定
+	ELSE
+		CALLFORM ACT_M{TFLAG:ACT分类}
+	ENDIF
+WEND
+
+;预定行动的处理
+IF TCVAR:预定行动 >= 0
+	TFLAG:ACT = TCVAR:预定行动
+	TCVAR:预定行动 = -1
+	SIF FLAG:DEBUG
+		CALL PRINT_DIALOG(@"根据预定行动将行动变更为%STR:(TFLAG:ACT)%", 2, 2, 2)
+	;变更后的ACT和、ACT分类但違う场合
+	IF TFLAG:ACT分类 != GET_ACTM(TFLAG:ACT)
+		TFLAG:ACT分类 = GET_ACTM(TFLAG:ACT)
+		SIF FLAG:DEBUG
+			CALL PRINT_DIALOG(@"伴随于此，菜单变更为%MENU(TFLAG:ACT分类)%", 2, 2, 2)
+	ENDIF
+ENDIF
+
+;────────────────────────────────────
+;ACT单独修正値调整
+;────────────────────────────────────
+@ACT_M_RESEARCH
+#DIM LCOUNT, 1
+
+;DEBUG显示被关にしてACT_M被行い、修正値被計算
+FLAG:DEBUG显示关 = 1
+FOR LCOUNT, 0, 11
+	CALLFORM ACT_M{LCOUNT}(1)
+NEXT
+;DEBUG显示被开に戻す
+FLAG:DEBUG显示关 = 0
+;DEBUG时、修正値显示
+[SKIPSTART]
+IF FLAG:DEBUG
+	;LOCAL初期化
+	LOCAL = 0
+	LOCAL:1 = GETCOLOR()
+	;全修正値に对し
+	FOR LCOUNT, 0, 200
+		;对应ACT但存在すれば
+		IF STR:LCOUNT != ""
+			;字符数カウント
+			LOCAL += 10
+			;一行被突破做和改行
+			IF LOCAL >= WIDTH()
+				PRINTL 
+				LOCAL = 0
+			ENDIF
+			;修正値取得
+			LOCAL:2 = CFLAG:(400 + LCOUNT)
+			;修正値的显示上下限に収め、色被变える
+			IF LOCAL:2 < -99
+				LOCAL:2 = -99
+				SETCOLOR 0xC07070
+			ELSEIF LOCAL:2 > 999
+				LOCAL:2 = 999
+				SETCOLOR 0x66FFFF
+			ENDIF
+			;修正値显示
+			PRINTFORM %GET_ACTABBNAME(LCOUNT), 4%({LOCAL:2, 3}) 
+			;字符色设置
+			SETCOLOR LOCAL:1
+		ENDIF
+	NEXT
+	PRINTW 
+ENDIF
+[SKIPEND]
+;RESULT保持
+RETURN RESULT
+
+;修正値加減算处理
+@ACT_M_RES_CALC(ARG, ARG:1)
+;现在値但0那么そ的まま採用
+IF CFLAG:(400 + ARG) == 0
+	CFLAG:(400 + ARG) = ARG:1
+;现在値和加減算値的正负但逆那么そ的まま加減算
+ELSEIF (CFLAG:(400 + ARG) > 0) == (ARG:1 < 0)
+	CFLAG:(400 + ARG) += ARG:1
+;现在値和加減算値的正负但同じ那么徐々に加減算量被0に近づける
+ELSE
+	CFLAG:(400 + ARG) += (ARG:1 * LIMIT(ARG:1 * 100 / CFLAG:(400 + ARG), 0, 100)) / 100
+ENDIF
+;RESULT保持
+RETURN RESULT
+
+;系列別修正値取得関数
+;ARG、また是ARGSに系列被指定
+@ACT_M_RES_MENU(ARG = -1, ARGS)
+#DIM LCOUNT
+;系列番号被取得
+IF ARG == -1
+	LOCAL = MENUNUM(ARGS)
+ELSE
+	LOCAL = ARG
+ENDIF
+;系列存在被确认
+SIF MENU(LOCAL) == ""
+	RETURN -999
+;所属ACT全部に对し单独修正値被計算して、最大的物被返す
+CALL ACT_M_RES_FETCH(ACTM_NUM(LOCAL, 0))
+LOCAL:1 = RESULT
+FOR LCOUNT, 1, ACTM_NUM(LOCAL, -1)
+	CALL ACT_M_RES_FETCH(ACTM_NUM(LOCAL, LCOUNT))
+	LOCAL:1 = MAX(LOCAL:1, RESULT)
+NEXT
+;修正値被返す
+RETURN LOCAL:1
+
+;单独修正値取得関数
+@ACT_M_RES_FETCH(ARG = -1, ARGS)
+;系列番号被取得
+IF ARG == -1
+	LOCAL = GET_ACTNUM(ARGS)
+ELSE
+	LOCAL = ARG
+ENDIF
+;ACT存在被确认
+SIF GET_ACTNAME(LOCAL) == "" || GET_ACTNAME(LOCAL) == "ＮＯＮＥ"
+	RETURN -999
+;实行不可时、修正値被-999固定
+CALLFORM ACT_ABLE{LOCAL}
+SIF !RESULT
+	RETURN -999
+;修正値被初期化
+LOCAL:1 = 0
+;短期修正値取得・加算
+LOCAL:1 += CFLAG:(400 + LOCAL)
+;长期修正値取得・加算
+LOCAL:1 += ABCBSI(ARG * 60)
+;修正値被返す
+RETURN LOCAL:1
+
+;────────────────────────────────────
+;ACT长期修正値调整
+;────────────────────────────────────
+;ARG = 0:调教前(初期化) 1:调教后(算入)
+@ACT_M_RESEARCH_L(ARG)
+#LOCALSIZE 200
+#DIM LCOUNT
+#DIM LTEMP, 200
+
+;调教前
+IF ARG == 0
+	;ACT实行回数被保存
+	FOR LCOUNT, 0, 200
+		LOCAL:LCOUNT = FLAG:(1000 + LCOUNT)
+	NEXT
+;调教后
+ELSE
+	FOR LCOUNT, 0, 200
+		;ACT实行回数増分的平方根的正负被逆転し、ACT长期修正値变动値和做
+		LTEMP:LCOUNT =  LOCAL:LCOUNT - FLAG:(1000 + LCOUNT)
+		;素質によって加算方向に奖励
+		;(※长く行われなかったACT被有利に做ため)
+		LTEMP:LCOUNT += 4 + TALENT:好奇心 - TALENT:无关心 + TALENT:急躁 - TALENT:慎重
+	NEXT
+	;调教对象反应根据兴趣修正被加算
+	CALL KYOMI_ADD(1)
+	FOR LCOUNT, 0, 200
+		LTEMP:LCOUNT += RESULT:LCOUNT
+	NEXT
+	;实際的加算处理(値但大きくなりすぎないよう调整)
+	FOR LCOUNT, 0, 200
+		;符号但違えば修正値但大きいほど变动但加速
+		IF SIGN(CFLAG:(600 + LCOUNT)) != SIGN(LTEMP:LCOUNT)
+			CFLAG:(600 + LCOUNT) += LTEMP:LCOUNT * MAX(ABS(CFLAG:(600 + LCOUNT)), 50) / 50
+		;符号但同じ那么修正値但大きいほど变动但減速(变动时+-1被保証)
+		ELSEIF LTEMP:LCOUNT != 0
+			CFLAG:(600 + LCOUNT) += SIGN(LTEMP:LCOUNT) * MAX(ABS(LTEMP:LCOUNT) * 50 / MAX(ABS(CFLAG:(600 + LCOUNT)), 50), 1)
+		ENDIF
+	NEXT
+	;DEBUG时、修正値显示(ただし自动模式的简易表意时除く)
+	IF FLAG:DEBUG && !(FLAG:自动模式 > 0 && FLAG:自动模式显示设定 == 1)
+		;LOCAL初期化
+		LOCAL = 0
+		LOCAL:1 = GETCOLOR()
+		;全修正値に对し
+		FOR LCOUNT, 0, 200
+			;对应ACT但存在すれば
+			IF STR:LCOUNT != ""
+				;字符数カウント
+				LOCAL += 10
+				;一行被突破做和改行
+				IF LOCAL >= WIDTH()
+					PRINTL 
+					LOCAL = 0
+				ENDIF
+				;修正値取得
+				LOCAL:2 = CFLAG:(600 + LCOUNT)
+				;修正値的显示上下限に収め、色被变える
+				IF LOCAL:2 < -99
+					LOCAL:2 = -99
+					SETCOLOR 0xC07070
+				ELSEIF LOCAL:2 > 999
+					LOCAL:2 = 999
+					SETCOLOR 0x66FFFF
+				ENDIF
+				;修正値显示
+				PRINTFORM %GET_ACTABBNAME(LCOUNT), 4%({LOCAL:2, 3}) 
+				;字符色设置
+				SETCOLOR LOCAL:1
+			ENDIF
+		NEXT
+		PRINTW 
+	ENDIF
+ENDIF
+RETURN RESULT
+

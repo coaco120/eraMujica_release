@@ -1,0 +1,157 @@
+﻿;==================================================
+;
+;	通用関数置き场＠参照編
+;		参照に用い、特定的数値や名称など被返すも的
+;		あるい是、状況に应じた接頭語など被返すも的
+;
+;		口上向け的も的もあったりなかったり。
+;
+;==================================================
+
+;==================================================
+;
+;	屈服实绩的参照
+;	(ピン点数過ぎる的でそ的うちStr.csvなど的字符串处理系但あつまるかも)
+;
+;==================================================
+;屈服实绩相关関数的基本方针是割和ノーガード
+;繰り返し呼ばれる的で处理速度优先(謎
+;新規作成@revkoishi(14/05/28)
+;-------------------------------------------------
+;関数的概要
+;・GET_SURRENDER_LV   …屈服实绩Lv取得関数
+;・GET_SURRENDER_NUM  …屈服实绩番号取得関数
+;・GET_SURRENDER_POINT…屈服实绩点数取得関数
+;・GET_SURRENDER_STR_M…屈服实绩文言取得関数(调教对象视角)
+;・GET_SURRENDER_STR_T…屈服实绩文言取得関数(调教者视角)
+;・IS_SURRENDER_ENABLE…屈服实绩显示可否判定関数
+;・SURRENDER_LV2POINT …屈服实绩Lv→点数变换関数
+;-------------------------------------------------
+
+;-------------------------------------------------
+;関数名:GET_SURRENDER_LV
+;概　要:屈服实绩Lv取得関数
+;引　数:ARG:0…屈服实绩番号(0～127)
+;　　　 ARG:1…[省略可]登录番号。省略した场合是TARGET
+;戻り値:屈服实绩Lv(1～5)。未定義や不正な场合是0但返る
+;備　考:式中関数
+;-------------------------------------------------
+@GET_SURRENDER_LV(ARG:0, ARG:1 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+SWAP TARGET, ARG:1
+LOCAL:0 = TOINT(CHARATU(STRFORM(STR:(1300 + ARG:0)), 0))
+SWAP TARGET, ARG:1
+RETURNF LOCAL:0
+
+
+;-------------------------------------------------
+;関数名:GET_SURRENDER_NUM
+;概　要:屈服实绩番号取得関数
+;引　数:ARGS:0…屈服实绩的略称字符串(Strname.csvで定義)
+;戻り値:屈服实绩番号(0～127)。未定義や不正な场合是-1301但返る
+;備　考:式中関数
+;-------------------------------------------------
+@GET_SURRENDER_NUM(ARGS:0)
+#FUNCTION
+RETURNF GETNUM(STR, ARGS:0) - 1300
+
+
+;-------------------------------------------------
+;関数名:GET_SURRENDER_POINT
+;概　要:屈服实绩点数取得関数
+;引　数:ARG:0…屈服实绩番号(0～127)
+;　　　 ARG:1…[省略可]登录番号。省略した场合是TARGET
+;戻り値:屈服实绩Lvに应じた点数(1～10)。未定義や不正な场合是0但返る
+;備　考:式中関数
+;-------------------------------------------------
+@GET_SURRENDER_POINT(ARG:0, ARG:1 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+SWAP TARGET, ARG:1
+LOCAL:0 = SURRENDER_LV2POINT(TOINT(CHARATU(STRFORM(STR:(1300 + ARG:0)), 0)))
+SWAP TARGET, ARG:1
+RETURNF LOCAL:0
+
+
+;-------------------------------------------------
+;関数名:GET_SURRENDER_STR_M
+;概　要:屈服实绩文言取得関数(调教对象视角)
+;引　数:ARG:0…屈服实绩番号(0～127)
+;　　　 ARG:1…[省略可]登录番号。省略した场合是TARGET
+;戻り値:屈服实绩文言(调教对象视角)
+;備　考:式中関数
+;-------------------------------------------------
+@GET_SURRENDER_STR_M(ARG:0, ARG:1 = -2)
+#FUNCTIONS
+#LOCALSSIZE 3
+VARSET LOCALS
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+SWAP TARGET, ARG:1
+SPLIT STRFORM(STR:(1300 + ARG:0)), "___", LOCALS, LOCAL:0
+SWAP TARGET, ARG:1
+RETURNF LOCALS:2
+
+
+;-------------------------------------------------
+;関数名:GET_SURRENDER_STR_T
+;概　要:屈服实绩文言取得関数(调教者视角)
+;引　数:ARG:0…屈服实绩番号(0～127)
+;　　　 ARG:1…[省略可]登录番号。省略した场合是TARGET
+;戻り値:屈服实绩文言
+;備　考:式中関数
+;-------------------------------------------------
+@GET_SURRENDER_STR_T(ARG:0, ARG:1 = -2)
+#FUNCTIONS
+#LOCALSSIZE 3
+VARSET LOCALS
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+SWAP TARGET, ARG:1
+SPLIT STRFORM(STR:(1300 + ARG:0)), "___", LOCALS, LOCAL:0
+SWAP TARGET, ARG:1
+RETURNF LOCALS:1
+
+
+;-------------------------------------------------
+;関数名:IS_SURRENDER_ENABLE
+;概　要:屈服实绩有效判定関数
+;引　数:ARG:0…屈服实绩番号(0～127)
+;　　　 ARG:1…[省略可]登录番号。省略した场合是TARGET
+;戻り値:有效/无效被表す真伪値(0か1)。有效的场合是1(真)、无效的场合是0(伪)但返る
+;備　考:式中関数
+;関数名变更。他所でも使えるように@revkoishi(14/06/01)
+;-------------------------------------------------
+@IS_SURRENDER_ENABLE(ARG:0, ARG:1 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+LOCAL:0 = 0
+SELECTCASE CHARATU(STRFORM(STR:(1300 + ARG:0)), 1)
+	CASE "A"	;ALL(♂♀双)
+		LOCAL:0 = 1
+	CASE "F"	;FEMALE(♀)
+		LOCAL:0 = TALENT:MASTER:扶她 !| TALENT:MASTER:男人
+	CASE "M"	;MALE(♂)
+		LOCAL:0 = TALENT:MASTER:男人
+	CASE "P"	;PENIS(♂双)
+		LOCAL:0 = TALENT:MASTER:扶她 || TALENT:MASTER:男人
+	CASE "S"	;SINGLE(♂♀)
+		LOCAL:0 = !TALENT:MASTER:扶她
+	CASE "T"	;TWIN(双)
+		LOCAL:0 = TALENT:MASTER:扶她
+	CASE "V"	;VAGINA(♀双)
+		LOCAL:0 = !TALENT:MASTER:男人
+ENDSELECT
+RETURNF LOCAL:0
+
+
+;-------------------------------------------------
+;関数名:SURRENDER_LV2POINT
+;概　要:屈服实绩Lv→点数变换関数
+;引　数:ARG:0…屈服实绩Lv(1～5)
+;戻り値:屈服实绩点数(1～10)。Lv0的场合是0但返る
+;備　考:式中関数
+;-------------------------------------------------
+@SURRENDER_LV2POINT(ARG:0)
+#DIM CONST POINT = 0, 1, 2, 3, 5, 10
+#FUNCTION
+RETURNF POINT:(ARG:0)

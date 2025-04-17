@@ -1,0 +1,159 @@
+﻿;────────────────────────────────────
+;露出的ソース（欲望、害羞、不快、抑郁、气力、兴趣）
+;────────────────────────────────────
+@CALC_SOURCE20
+
+;羞涩和无耻是ここで处理
+SIF TALENT:MASTER:羞涩
+	TIMES SOURCE:MASTER:露出 , 1.50
+SIF TALENT:MASTER:无耻
+	TIMES SOURCE:MASTER:露出 , 0.75
+
+;性知识不足、もしく是幼稚那么裸になる意味和かよくわからないから
+SIF EXP:性知识 < 10 || TALENT:MASTER:幼稚
+	TIMES SOURCE:MASTER:露出 , 0.80
+
+;欲望、露出癖和调教度合い被见る
+CUP:MASTER:欲望 += SOURCE:MASTER:露出 * (10 + GET_ABL(MASTER, "露出癖") * 2 + CFLAG:MASTER:调教等级 * 10) / 250
+
+;害羞、PALAM:MASTER:害羞被みる
+CUP:MASTER:害羞 += SOURCE:MASTER:露出 * LINE_CALC(PALAM:MASTER:害羞, "0→100,10000→0") / 100
+
+;性格被判定、果断那么不快、弱気那么抑郁但上但り增加
+LOCAL = TALENT:MASTER:刚毅 * 2 - TALENT:MASTER:胆怯 * 2 + TALENT:MASTER:自大 - TALENT:MASTER:成熟 + TALENT:MASTER:自尊心高 * 2 - TALENT:MASTER:自尊心低 * 2 + TALENT:MASTER:疯狂 * 3 - TALENT:MASTER:抖Ｍ * 3
+
+;反应によって修正
+;保持心情舒畅
+SIF IS_NOWCOMNAME("保持心情舒畅")
+	TIMES LOCAL , 0.20
+;忍受快感
+SIF IS_NOWCOMNAME("忍受快感")
+	TIMES LOCAL , 0.30
+;积极的执行
+SIF IS_NOWCOMNAME("积极的执行")
+	TIMES LOCAL , 0.40
+;充满爱意的执行
+SIF IS_NOWCOMNAME("充满爱意的执行")
+	TIMES LOCAL , 0.10
+;开始自慰
+SIF IS_NOWCOMNAME("开始自慰")
+	TIMES LOCAL , 0.25
+
+;顺从和露出癖被见る
+IF LOCAL > 0
+	CUP:MASTER:不快 += SOURCE:MASTER:露出 * (400 - GET_ABL(MASTER, "顺从") * 4) * (200 - GET_ABL(MASTER, "露出癖") * 2) / 20000
+ELSE
+	CUP:MASTER:抑郁 += SOURCE:MASTER:露出 * (200 - GET_ABL(MASTER, "顺从") * 2) * (400 - GET_ABL(MASTER, "露出癖") * 4) / 20000
+ENDIF
+
+;露出SOURCEから修正値被作る
+LOCAL = LINE_CALC(SOURCE:MASTER:露出, "0→0,2500→50,LIMIT/0～50")
+
+;气力
+DOWNBASE:MASTER:气力 += LOCAL * 2
+
+;兴趣
+BASE:兴趣 += LOCAL * (3 + TALENT:好奇心 - TALENT:无关心) / 2
+
+;────────────────────────────────────
+;不洁的ソース（不快、抑郁、气力）
+;────────────────────────────────────
+@CALC_SOURCE21
+
+;相关素質的处理
+SIF TALENT:MASTER:脏污无視
+	TIMES SOURCE:MASTER:不洁 , 0.30
+SIF TALENT:MASTER:污臭钝感
+	TIMES SOURCE:MASTER:不洁 , 0.60
+SIF TALENT:MASTER:污臭敏感
+	TIMES SOURCE:MASTER:不洁 , 1.35
+
+;性格被判定、果断那么不快但多く、弱気那么抑郁も上但り增加
+LOCAL = TALENT:MASTER:刚毅 * 2 - TALENT:MASTER:胆怯 * 2 + TALENT:MASTER:自大 - TALENT:MASTER:成熟 + TALENT:MASTER:自尊心高 * 2 - TALENT:MASTER:自尊心低 * 2 + TALENT:MASTER:疯狂 * 3 - TALENT:MASTER:抖Ｍ * 3
+
+;顺从和调教度合い被见る
+IF LOCAL > 0 && CFLAG:MASTER:调教等级 < 30
+	CUP:MASTER:不快 += SOURCE:MASTER:露出 * (400 - GET_ABL(MASTER, "顺从") * 4) * (30 - CFLAG:MASTER:调教等级) / 6000
+ELSE
+	CUP:MASTER:不快 += SOURCE:MASTER:露出 * (400 - GET_ABL(MASTER, "顺从") * 4) * (30 - CFLAG:MASTER:调教等级) / 12000
+	CUP:MASTER:抑郁 += SOURCE:MASTER:露出 * (200 - GET_ABL(MASTER, "顺从") * 2) * (60 - CFLAG:MASTER:调教等级 * 2) / 6000
+ENDIF
+
+;气力
+DOWNBASE:MASTER:气力 += SOURCE:MASTER:不洁 / 20
+
+;────────────────────────────────────
+;逃脱的ソース（反抗ソース、恐怖ソース、气力、兴趣）
+;────────────────────────────────────
+@CALC_SOURCE22
+
+;好奇心和感情丰富是ここで处理
+SIF TALENT:MASTER:好奇心
+	TIMES SOURCE:MASTER:逃脱 , 0.50
+SIF TALENT:MASTER:感情丰富
+	TIMES SOURCE:MASTER:逃脱 , 1.75
+
+;顺从、欲望和调教度合い被见る
+SIF CFLAG:MASTER:调教等级 < 30
+	LOCAL = SOURCE:MASTER:逃脱 * (400 - GET_ABL(MASTER, "顺从") * 4) * (30 - CFLAG:MASTER:调教等级) / 10000 + EXP:MASTER:异常経験 * 10
+;发狂系对应で是なかった场合、修正値軽減
+SIF TFLAG:REACT分类 < 6
+	TIMES LOCAL , 0.60
+;反抗SOURCE増加
+SIF LOCAL > 0
+	SOURCE:MASTER:反抗 += LOCAL
+
+;调教对象调教等级但低场合、恐怖SOURCE増加
+SIF CFLAG:MASTER:调教等级 < 30
+	SOURCE:MASTER:恐怖 += SOURCE:MASTER:逃脱 * (400 - GET_ABL(MASTER, "欲望") * 4) * (30 - CFLAG:MASTER:调教等级) / 10000 + EXP:MASTER:异常経験 * 10
+
+;气力
+DOWNBASE:MASTER:气力 += SOURCE:MASTER:逃脱 / 30
+
+;兴趣
+BASE:兴趣 += SOURCE:MASTER:逃脱 / 50 + 1
+
+;────────────────────────────────────
+;中毒充足的ソース（欲望、恭顺、理性、好感度）
+;────────────────────────────────────
+@CALC_SOURCE23
+
+;欲望被みる
+CUP:MASTER:欲望 += SOURCE:MASTER:中毒充足 * (10 + GET_ABL(MASTER, "欲望")) / 60
+CUP:MASTER:恭顺 += SOURCE:MASTER:中毒充足 * (10 + GET_ABL(MASTER, "欲望")) / 60
+
+;理性
+DOWNBASE:MASTER:理性 += SOURCE:MASTER:中毒充足 / 50 + 1
+
+;好感度变动
+TFLAG:好感度上升 += LINE_CALC(SOURCE:MASTER:中毒充足, "0→0,5000→25,LIMIT/0～25")
+
+;────────────────────────────────────
+;心理创伤的ソース（反抗ソース、恐怖ソース、屈服、不快、抑郁、气力、好感度）
+;────────────────────────────────────
+@CALC_SOURCE24
+
+;心理创伤刻印、顺从和调教度合い被见る
+SIF MARK:MASTER:心理创伤 < 10
+	SOURCE:MASTER:反抗 += SOURCE:MASTER:心理创伤 * (400 - GET_ABL(MASTER, "顺从") * 4) * (10 - MARK:MASTER:痛苦刻印) / 10000
+
+;调教对象调教等级但低场合、恐怖SOURCE増加
+SIF CFLAG:MASTER:调教等级 < 30
+	SOURCE:MASTER:恐怖 += SOURCE:MASTER:心理创伤 * (400 - GET_ABL(MASTER, "顺从") * 4) * (30 - CFLAG:MASTER:调教等级) / 10000
+
+;屈服、胆怯和刚毅被见る
+CUP:MASTER:屈服 += SOURCE:MASTER:心理创伤 * (2 + TALENT:MASTER:胆怯 - TALENT:MASTER:反抗的) / 3
+
+;性格被判定、果断那么不快、弱気那么抑郁但上但り增加
+LOCAL = TALENT:MASTER:刚毅 * 2 - TALENT:MASTER:胆怯 * 2 + TALENT:MASTER:自大 - TALENT:MASTER:成熟 + TALENT:MASTER:自尊心高 * 2 - TALENT:MASTER:自尊心低 * 2 + TALENT:MASTER:疯狂 * 3 - TALENT:MASTER:抖Ｍ * 3
+;顺从和受虐气质被见る
+IF LOCAL > 0
+	CUP:MASTER:不快 += SOURCE:MASTER:心理创伤 * (400 - GET_ABL(MASTER, "顺从") * 4) * (200 - GET_ABL(MASTER, "受虐气质") * 2) / 20000
+ELSE
+	CUP:MASTER:抑郁 += SOURCE:MASTER:心理创伤 * (200 - GET_ABL(MASTER, "顺从") * 2) * (400 - GET_ABL(MASTER, "受虐气质") * 4) / 20000
+ENDIF
+
+;气力、好感度变动
+DOWNBASE:MASTER:气力 += LINE_CALC(SOURCE:MASTER:心理创伤, "0→0,5000→150,LIMIT/0～300")
+TFLAG:好感度上升 -= LINE_CALC(SOURCE:MASTER:心理创伤, "0→0,5000→25,LIMIT/0～25")
+

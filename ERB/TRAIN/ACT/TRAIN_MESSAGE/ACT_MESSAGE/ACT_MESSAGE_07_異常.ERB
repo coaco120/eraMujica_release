@@ -1,0 +1,85 @@
+﻿;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+
+;		异常系メッセージ
+
+;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+
+;────────────────────────────────────
+;070,拳交
+;────────────────────────────────────
+@TRAIN_MESSAGE_70
+PRINTFORML %CALLNAME:TARGET%开始用拳头侵入%CALLNAME:MASTER%的阴道…
+
+;────────────────────────────────────
+;071,肛门拳交
+;────────────────────────────────────
+@TRAIN_MESSAGE_71
+PRINTFORML %CALLNAME:TARGET%开始用拳头侵入%CALLNAME:MASTER%的肛门…
+
+;────────────────────────────────────
+;072,两穴拳交
+;────────────────────────────────────
+@TRAIN_MESSAGE_72
+PRINTFORML %CALLNAME:TARGET%开始用拳头侵入%CALLNAME:MASTER%的阴道和肛门…
+
+;────────────────────────────────────
+;073,放置PLAY
+;────────────────────────────────────
+;★反应前★
+@TRAIN_MESSAGE_73
+PRINTFORML %CALLNAME:TARGET%把%CALLNAME:MASTER%放置在一边…
+
+;☆反应后☆
+@TRAIN_MESSAGE2_73
+PRINTFORML %CALLNAME:TARGET%继续对%CALLNAME:MASTER%置之不理，什么也不做…
+;REACTION_MESSAGE被处理做和整合性に问题但出る為、RESULT 1被返して完結侍奉@/L
+SIF IS_NOWCOMNAME("随心所欲")
+	RETURN 1
+
+;────────────────────────────────────
+;074,公共肉便器PLAY
+;────────────────────────────────────
+;★反应前★
+@TRAIN_MESSAGE_74
+PRINTFORML %CALLNAME:TARGET%在被绑在外面的%CALLNAME:MASTER%的肚子上用魔术写上了「↓公共便所」、
+PRINTFORML 放在那里后独自回去了…
+
+;☆反应后☆
+@TRAIN_MESSAGE2_74
+PRINTL
+IF TFLAG:ACT派生 == 1                   ;ACT派生但捆绑被解いて一緒に调教部屋へ帰った(哀求)
+	PRINTFORML 接受了%CALLNAME:MASTER%的哀求，%CALLNAME:TARGET%解开了%CALLNAME:MASTER%的拘束后一起回到了调教室…
+ELSE               ;放置但行わ受到
+	PRINTFORML %CALLNAME:TARGET%把%CALLNAME:MASTER%放在野外一个人回去了…
+	IF TFLAG:ACT派生 == 0                ;ACT派生但最后直到人是来なかった(无事)
+		PRINTFORML 虽然%CALLNAME:MASTER%已经完全混乱了，但到最后都没有人来
+		PRINTFORML 终于被%CALLNAME:TARGET%回收后，%CALLNAME:MASTER%松了一口气…
+	ELSE            ;发见さ受到
+		PRINTFORML 过了一会儿，被路过的人发现了。
+		IF TFLAG:ACT派生 == 2           ;ACT派生但心も体もボロボロ(陵辱)
+			PRINTFORML 不难想象那之后%CALLNAME:MASTER%的命运会是如何…
+			PRINTFORML 被%CALLNAME:TARGET%回收的%CALLNAME:MASTER%身心俱疲…
+		ELSE                            ;ACT派生但まだ物足りない大人子(興奮)
+			PRINTFORML 人们聚集在一起，%CALLNAME:MASTER%渐渐兴奋起来享受起这种状况
+			PRINTFORML 被%CALLNAME:TARGET%回收的%CALLNAME:MASTER%看起来还没有彻底满足…
+		ENDIF
+	ENDIF
+ENDIF
+PRINTL
+
+;────────────────────────────────────
+;075,穿上假阴茎
+;────────────────────────────────────
+;★反应前★
+@TRAIN_MESSAGE_75
+IF TFLAG:ACT派生 == 0         ;装着
+	IF TALENT:处女
+		PRINTFORML %CALLNAME:TARGET%取出了%TARGET_DESCRIPTION("一面")%发光的双头假阴茎、
+		PRINTFORML 一边因为破瓜的痛苦而皱起眉头，一边在%CALLNAME:MASTER%面前抓住了那个…
+	ELSE
+		PRINTFORML %CALLNAME:TARGET%穿上了%TARGET_DESCRIPTION("保持")%发着黑光的双头假阴茎、
+		PRINTFORML 它的尖端被%CALLNAME:MASTER%看到了…
+	ENDIF
+ELSE                          ;解除
+	PRINTFORML %CALLNAME:TARGET%把身上的假阴茎取下来了…
+ENDIF

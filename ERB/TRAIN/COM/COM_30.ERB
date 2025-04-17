@@ -1,0 +1,248 @@
+﻿;────────────────────────────────────
+;030,忍受疼痛（疼痛、捆绑、反抗、恐怖）
+;────────────────────────────────────
+@COM30
+;疼痛、捆绑SOURCE減少
+TIMES SOURCE:MASTER:疼痛 , 0.85
+TIMES SOURCE:MASTER:捆绑 , 0.95
+;反抗SOURCE増加
+SOURCE:MASTER:反抗 += 10 + SOURCE:MASTER:疼痛 * (MARK:反抗刻印 + 1) / 20 - SOURCE:MASTER:捆绑
+SIF SOURCE:MASTER:反抗 < 0
+	SOURCE:MASTER:反抗 = 0
+;恐怖SOURCE増加
+SOURCE:MASTER:恐怖 += SOURCE:MASTER:疼痛 * (MARK:MASTER:心理创伤 + 10) * (11 - MARK:MASTER:痛苦刻印) * (11 - MARK:反抗刻印) / 1000
+;COM分类
+CALL SET_COMGRO("消极的服从")
+;COM印象
+CALL SET_COMIMP("好印象小")
+
+;REACTION_MESSAGEで是快SOURCEで分岐しており、COM侧的修正漏れ和思わ受到的で和りあえず@/L
+;COMIMP/COMGRO是そ的ま直到良さそうな気もした的で保留
+IF SOURCE:MASTER:快Ｃ + SOURCE:MASTER:快Ｖ + SOURCE:MASTER:快Ａ + SOURCE:MASTER:快Ｂ > 10
+	;派生：痛いけど心情舒畅！
+	TFLAG:REACT派生 = 1
+ELSE
+	;派生：疼痛被忍耐
+	TFLAG:REACT派生 = 0
+ENDIF
+RETURN 1
+
+
+;────────────────────────────────────
+;031,发出悲鸣（屈从、达成、恐怖）
+;────────────────────────────────────
+@COM31
+;屈从、达成、恐怖SOURCE増加
+SOURCE:MASTER:屈从 += 200 + SOURCE:MASTER:疼痛 * (CFLAG:MASTER:调教等级 + 1) * (MARK:屈服刻印 + 10) / 100
+SOURCE:MASTER:达成 += (SOURCE:MASTER:疼痛 / 3 + SOURCE:MASTER:屈从 / 2) * (3 + TALENT:虐待狂 + TALENT:坏心眼 - TALENT:好心眼) / 5
+SOURCE:MASTER:恐怖 += 200 + SOURCE:MASTER:疼痛 * (200 - GET_ABL(MASTER, "受虐气质")) * (MARK:MASTER:心理创伤 + 10) / 2000
+;COM分类
+CALL SET_COMGRO("消极的服从")
+;COM印象
+CALL SET_COMIMP("0から遠ざかる")
+IF SOURCE:MASTER:疼痛 > 500 || SOURCE:MASTER:疼痛 > PALAM:MASTER:恐怖 * 2
+	;派生：疼痛根据悲鳴
+	TFLAG:REACT派生 = 0
+ELSE
+	;派生：恐怖根据悲鳴
+	TFLAG:REACT派生 = 1
+ENDIF
+RETURN 1
+
+
+;────────────────────────────────────
+;032,发狂（疼痛、捆绑、达成逆、反抗、恐怖、发狂、惩罚点数）
+;────────────────────────────────────
+@COM32
+;绳捆绑中是痛い
+IF TEQUIP:绳 && !IS_NOWACTNAME("绳")
+	SOURCE:MASTER:疼痛 += (TEQUIP:绳 + 1) * 200
+	TIMES SOURCE:MASTER:捆绑 , 1.50
+ENDIF
+;反抗SOURCE増加
+SOURCE:MASTER:反抗 += 250 + (13 + MARK:反抗刻印 * 2 - MARK:屈服刻印 + TALENT:MASTER:反抗的 * 5 - TALENT:MASTER:成熟 * 3) * 20
+;达成SOURCE減少
+SOURCE:MASTER:达成 -= SOURCE:MASTER:反抗 / 2
+;发狂成功的判定
+LOCAL = CFLAG:MASTER:反抗强度 * 2 + BASE:MASTER:体力 / 200 + BASE:MASTER:气力 / 100 + MARK:反抗刻印 + PALAM:MASTER:反抗 / 1000 - MARK:MASTER:心理创伤 - GET_ABL(MASTER, "顺从") / 10 + TALENT:MASTER:反抗的 * 5 - TALENT:MASTER:坦率 * 5 + TALENT:MASTER:高大 * 5 - TALENT:MASTER:矮小 * 5
+LOCAL:1 = BASE:体力 / 250 + BASE:气力 / 150 + GET_TRAINLV(TARGET) + TALENT:高大 * 5 - TALENT:矮小 * 5 + PALAM:MASTER:痛苦 / 1500 - RAND:5
+SIF !IS_NOWACTNAME("绳")
+	LOCAL:1 += (TEQUIP:绳) * 5
+;助手的人数和体格
+SIF ASSI:1 > 0
+	LOCAL:1 += 6 + TALENT:(ASSI:1):高大 * 3 - TALENT:(ASSI:1):矮小 * 3
+SIF ASSI:2 > 0
+	LOCAL:1 += 6 + TALENT:(ASSI:2):高大 * 3 - TALENT:(ASSI:2):矮小 * 3
+;ACT修正値
+IF IS_NOWACTNAME("用口爱抚")
+	LOCAL:2 = 2
+ELSEIF IS_NOWACTNAME("接吻")
+	LOCAL:2 = 5
+ELSEIF IS_NOWACTNAME("进行乳交")
+	LOCAL:2 = 3
+ELSEIF IS_NOWACTNAME("进行足交")
+	LOCAL:2 = 0
+ELSEIF IS_NOWACTNAME("肛门震动棒/肛门拉珠")
+	LOCAL:2 = 12
+ELSEIF IS_NOWACTNAME("深喉")
+	LOCAL:2 = 14
+ELSEIF IS_NOWACTNAME("打屁股")
+	LOCAL:2 = 9
+ELSEIF IS_NOWACTNAME("鞭")
+	LOCAL:2 = 12
+ELSEIF IS_NOWACTNAME("针")
+	LOCAL:2 = 7
+ELSEIF IS_NOWACTNAME("绳")
+	LOCAL:2 = 8
+ELSEIF IS_NOWACTNAME("眼罩")
+	LOCAL:2 = 9
+ELSEIF IS_NOWACTNAME("进行治疗")
+	LOCAL:2 = -10
+ELSEIF IS_NOWACTNAME("正常位") || TEQUIP:性交中 == 1
+	LOCAL:2 = 12
+ELSEIF IS_NOWACTNAME("后背位") || TEQUIP:性交中 == 2
+	LOCAL:2 = 18
+ELSEIF IS_NOWACTNAME("骑乘位") || TEQUIP:性交中 == 3
+	LOCAL:2 = 7
+ELSEIF IS_NOWACTNAME("对面座位") || TEQUIP:性交中 == 4
+	LOCAL:2 = 15
+ELSEIF IS_NOWACTNAME("背面座位") || TEQUIP:性交中 == 5
+	LOCAL:2 = 16
+ELSEIF IS_NOWACTNAME("肛交") || TEQUIP:性交中 == 6
+	LOCAL:2 = 20
+ELSEIF IS_NOWACTNAME("正常位侍奉") || TEQUIP:性交奉仕中 == 1
+	LOCAL:2 = 10
+ELSEIF IS_NOWACTNAME("后背位侍奉") || TEQUIP:性交奉仕中 == 2
+	LOCAL:2 = 10
+ELSEIF IS_NOWACTNAME("逆强奸") || TEQUIP:性交奉仕中 == 3
+	LOCAL:2 = 12
+ELSEIF IS_NOWACTNAME("对面座位侍奉") || TEQUIP:性交奉仕中 == 4
+	LOCAL:2 = 12
+ELSEIF IS_NOWACTNAME("背面座位侍奉") || TEQUIP:性交奉仕中 == 5
+	LOCAL:2 = 12
+ELSEIF IS_NOWACTNAME("肛交侍奉") || TEQUIP:性交奉仕中 == 6
+	LOCAL:2 = 22
+ELSE
+	LOCAL:2 = 10
+ENDIF
+SIF ASSI > 0
+	LOCAL:2 += GET_TRAINLV(ASSI) / 2 + 3
+;ＳＰ行动
+SIF TFLAG:ＳＰ行动 > 199
+	LOCAL:2 += 10
+;发狂成否判定		逆强奸是抵抗できなくてよいらしい的で、发狂但通らないように变更@/L
+IF LOCAL > LOCAL:1 + LOCAL:2 && TEQUIP:三角木马 == 0 && !IS_NOWACTNAME("逆强奸")
+	;COM分类
+	CALL SET_COMGRO("发狂")
+	;反抗SOURCE増加
+	TIMES SOURCE:MASTER:反抗 , 2.50
+	;道具装着失敗
+	SIF IS_NOWACTNAME("震动棒")
+		TEQUIP:震动棒 = 0
+	SIF IS_NOWACTNAME("肛门震动棒")
+		TEQUIP:肛门震动棒 = 0
+	SIF IS_NOWACTNAME("肛门拉珠")
+		TEQUIP:肛门拉珠 = 0
+	IF IS_NOWACTNAME("Ｃ道具爱抚")
+		TEQUIP:阴蒂夹 = 0
+		TEQUIP:飞机杯 = 0
+	ENDIF
+	SIF IS_NOWACTNAME("乳头夹")
+		TEQUIP:乳头夹 = 0
+	SIF IS_NOWACTNAME("绳")
+		TEQUIP:绳 = 0
+	SIF IS_NOWACTNAME("眼罩")
+		TEQUIP:眼罩 = 0
+	SIF IS_NOWACTNAME("口球")
+		TEQUIP:口球 = 0
+	;体力、气力減少
+	DOWNBASE:体力 += 15 * (6 + MARK:反抗刻印 + TALENT:MASTER:高大 * 5 - TALENT:MASTER:矮小 * 5)
+	DOWNBASE:气力 += 20 * (8 + CFLAG:MASTER:反抗强度 + TALENT:MASTER:反抗的 * 3 + TALENT:MASTER:自大 * 3 - TALENT:MASTER:坦率 * 3 - TALENT:MASTER:成熟 * 3)
+	;派生：发狂成功
+	TFLAG:REACT派生 = 0
+ELSE
+	;COM分类
+	CALL SET_COMGRO("消极的服从")
+	;反抗SOURCE減少
+	TIMES SOURCE:MASTER:反抗 , 0.10
+	IF TEQUIP:绳 && !IS_NOWACTNAME("绳")
+		;派生：绳捆绑根据发狂失敗
+		TFLAG:REACT派生 = 1
+	ELSE
+		;派生：制止根据发狂失敗
+		TFLAG:REACT派生 = 2
+		;体力、气力減少
+		DOWNBASE:体力 += 10 * (6 + MARK:反抗刻印 + TALENT:MASTER:高大 * 5 - TALENT:MASTER:矮小 * 5)
+		DOWNBASE:气力 += 15 * (8 + CFLAG:MASTER:反抗强度 + TALENT:MASTER:反抗的 * 3 + TALENT:MASTER:自大 * 3 - TALENT:MASTER:坦率 * 3 - TALENT:MASTER:成熟 * 3)
+	ENDIF
+ENDIF
+;COM印象
+CALL SET_COMIMP("恶印象大")
+;惩罚点数加算
+TFLAG:惩罚点数 += IS_COMGRONAME("发狂")? 8 # 2 + BASE:兴趣 / 200 + BASE:焦躁 / 150 + RAND:5
+RETURN 1
+
+
+;────────────────────────────────────
+;033,害怕（屈从、恐怖、哀求、惩罚点数）
+;────────────────────────────────────
+@COM33
+;屈从、恐怖SOURCE増加
+SOURCE:MASTER:屈从 += 200 + MARK:屈服刻印 * MARK:MASTER:心理创伤 * 10
+SOURCE:MASTER:恐怖 += SOURCE:MASTER:疼痛 / 3 + SOURCE:MASTER:捆绑 / 5 + SOURCE:MASTER:逃脱 / 4 + SOURCE:MASTER:心理创伤 / 3
+;意见被出すなんていい度胸だね！和か言い一边惩罚になり增加
+LOCAL = BASE:焦躁 / 80 - BASE:理性 / 100 - CFLAG:定位 / 10 + PALAM:MASTER:反抗 / 1000 + TALENT:虐待狂 * 5 + TALENT:坏心眼 * 5 - TALENT:好心眼 * 5 - MARK:MASTER:心理创伤 / 2
+SIF IS_POLICY("今", "异常")
+	LOCAL += RAND:7
+;結局返答但ない的で、主动但納得できる形に弄り增加@/L
+IF LOCAL > 0 && !IS_NOWACTNAME("公共肉便器PLAY")
+	;惩罚点数加算
+	TFLAG:惩罚点数 += LOCAL
+	;派生：怯えに对做焦躁
+	TFLAG:REACT派生 = 1
+	;COM印象
+	CALL SET_COMIMP("0から遠ざかる")
+ELSE
+	;COM分类
+	CALL SET_COMGRO("请求宽恕")
+	;派生：「ふーん」
+	TFLAG:REACT派生 = 0
+	;COM印象
+	CALL SET_COMIMP("0接近")
+ENDIF
+RETURN 1
+
+
+;────────────────────────────────────
+;各行动的反抗難易度、现在未使用
+;────────────────────────────────────
+;@COUNTER_CHECK
+[SKIPSTART]
+LOCAL:2 = 0
+SIF IS_NOWACTNAME("用手爱抚/用口爱抚")
+	LOCAL:2 += 2
+SIF IS_NOWACTNAME("肛门爱抚/舔肛门")
+	LOCAL:2 += 3
+SIF IS_NOWACTNAME("接吻")
+	LOCAL:2 += 2
+SIF IS_NOWACTNAME("摩擦性器/进行足交")
+	LOCAL:2 -= 1
+SIF IS_NOWACTNAME("肛门震动棒/肛门拉珠")
+	LOCAL:2 += 2
+SIF TEQUIP:性交中 == 1 || TEQUIP:性交中 == 4
+	LOCAL:2 += 2
+SIF TEQUIP:性交中 == 2 || TEQUIP:性交中 == 6
+	LOCAL:2 += 5
+SIF TEQUIP:性交中 == 3 || TEQUIP:性交中 == 5
+	LOCAL:2 -= 3
+SIF TEQUIP:性交奉仕中 == 3
+	LOCAL:2 += 1
+SIF TEQUIP:性交奉仕中 && TEQUIP:性交奉仕中 != 3
+	LOCAL:2 += 5
+SIF TFLAG:ACT分类 == 6 && !IS_NOWACTNAME("深喉/辱骂/灌肠套装")
+	LOCAL:2 += 5
+SIF IS_NOWACTNAME("深喉")
+	LOCAL:2 += 4
+SIF IS_POLICY("今", "异常")
+	LOCAL:2 += 1
+[SKIPEND]

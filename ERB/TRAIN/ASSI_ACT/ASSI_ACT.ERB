@@ -1,0 +1,438 @@
+﻿;------------------------------------------------------------------------
+;EDIT	001		kap			2011/10/14		コンビネーション活动ション的決定处理被变更
+;EDIT	002		revkoishi	2014/06/07		不拔出标志被折る处理被追加
+;------------------------------------------------------------------------
+;-----------EDIT 001 START--------------
+;基本的に表记被变更し、
+;---------------------------------------
+@ASSI_ACT, ARG
+TCVAR:ARG:助手方针 = 0
+TCVAR:ARG:助手ACT派生 = 0
+
+CALL ASSIACT_SELECT, ARG
+
+;ＳＰ活动ション的チェック
+SIF GET_SP_ASSIACTNUM(ARG) >= 0
+	TCVAR:ARG:助手ACT = GET_SP_ASSIACTNUM(ARG)
+
+;连续实行的确率低下的ためにここで记录しておく
+TCVAR:ARG:上次助手爱抚部位 = TCVAR:ARG:助手方针
+
+;特殊指令派生チェック
+SIF GET_SP_ASSIACTNUM(ARG) >= 0
+	TCVAR:ARG:助手ACT = GET_SP_ASSIACTNUM(ARG)
+
+;テスト用记述。いつでも消していいよ
+;TCVAR:ARG:助手ACT = GET_ASSIACTNUM("拍摄写真")
+
+;────────────────────────────────────
+;014,待机做（ソース无）
+;────────────────────────────────────
+SIF NOWASSIACTNAME(ARG) == "待机"
+	PRINTFORML %CALLNAME:TARGET%让%CALLNAME:ARG%在身边待机…
+
+;---------------------------------------
+@ASSIACT_SELECT, ARG
+#DIM Ｃ爱抚
+#DIM Ｂ爱抚
+#DIM Ａ爱抚
+#DIM Ｖ爱抚
+#DIM Ｍ爱抚
+;-----------EDIT 001 START--------------
+;行动決定的うち优先度但もっ和も高的で变更
+;また、预定行动被通さずこ的场で直接戻り値被弄る
+;---------------------------------------
+;优先されるも的被先に处理
+;---------------------------------------
+;药品使用和强制脱衣的手伝う是优先
+;脱衣
+IF TFLAG:强制脱衣 > 0 && ARG == ASSI:1
+	TCVAR:ARG:助手方针 = GET_ASSIMENUNUM("其他")
+	TCVAR:ARG:助手ACT = GET_ASSIACTNUM("脱衣")
+	RETURN 1
+ENDIF
+;药品
+IF TFLAG:媚药等使用 > 0 && ARG == ASSI:1
+	TCVAR:ARG:助手方针 = GET_ASSIMENUNUM("其他")
+	TCVAR:ARG:助手ACT = GET_ASSIACTNUM("药品")
+	RETURN 1
+ENDIF
+;公衆PLAY・放置PLAY是强制待机
+IF IS_NOWACTNAME("公共肉便器PLAY/放置PLAY")
+	TCVAR:ARG:助手方针 = GET_ASSIMENUNUM("其他")
+	TCVAR:ARG:助手ACT = GET_ASSIACTNUM("待机")
+	RETURN 1
+ENDIF
+;休息中是待机
+IF IS_POLICY("今", "休息")
+	TCVAR:ARG:助手方针 = GET_ASSIMENUNUM("其他")
+	TCVAR:ARG:助手ACT = GET_ASSIACTNUM("待机")
+	RETURN 1
+ENDIF
+;插入中(逆强奸中)是他的行动被和らないように
+IF TFLAG:插入助手中 == ARG
+	TFLAG:助手连续交合 = 1
+	TCVAR:ARG:助手方针 = GET_ASSIMENUNUM("Ｖ爱抚")
+	TCVAR:ARG:助手ACT = GET_ASSIACTNUM("逆强奸")
+	RETURN 1
+ENDIF
+;-----------EDIT 001 END  --------------
+
+;-----------EDIT 001 START-----------------
+;コンビネーション的決定被变换関数に置き换える
+;-------------------------------------------
+;コンビネーション是暫定で发动率50%
+IF (RAND:2 == 0 || TFLAG:コンビネーション预定) && ARG == ASSI:1
+	IF GET_COMBIACTNUM(TFLAG:ACT) >= 0
+		;助手但处女だ和谷间强渡是できない
+		IF GET_COMBIACTNUM(TFLAG:ACT) != 311 || !TALENT:ASSI:处女
+			;主人的行动被上書き
+			TFLAG:ACT = GET_COMBIACTNUM(TFLAG:ACT)
+			;-----------EDIT 002 START-----------------
+			;不拔出标志被折る处理被追加@revkoishi(14/06/07)
+			;------------------------------------------
+			TFLAG:不拔出 = IS_NOWACTNAME("Ｗ逆强奸/谷间强渡") ? 0 # TFLAG:不拔出
+			;-----------EDIT 002 END  -----------------
+			;助手に是-1被いれておく
+			TCVAR:ARG:助手ACT = -1
+			TCVAR:ARG:助手方针 = GET_ASSIMENUNUM("コンビネーション")
+			RETURN 1
+		ENDIF
+	ENDIF
+ENDIF
+;-----------EDIT 001 END  -----------------
+
+
+;-----------EDIT 001 START-----------------
+;基本的に处理内容是变わらない但
+;旧来是优先度的低顺に处理して、还有から数値被上書きしていた的被
+;优先度但高顺に处理して、确定で打ち切るように变更した
+;-------------------------------------------
+;施虐
+IF MENU(TFLAG:ACT分类) == "施虐"
+	TCVAR:ARG:助手方针 = GET_ASSIMENUNUM("施虐")
+	CALL ASSI_ACTM8, ARG
+	RETURN 1
+ENDIF
+
+;MASTER自慰中
+IF MENU(TFLAG:ACT分类) == "羞耻"
+	TCVAR:ARG:助手方针 = GET_ASSIMENUNUM("羞耻")
+	CALL ASSI_ACTM7, ARG
+	RETURN 1
+ENDIF
+
+;たまに是言葉責め做ように
+IF RAND:10 == 0
+	IF GROUPMATCH(MENU(TFLAG:ACT分类), "爱抚", "道具", "性交", "奉仕", "性奉")
+		TCVAR:ARG:助手方针 = GET_ASSIMENUNUM("羞耻")
+		CALL ASSI_ACTM7, ARG
+	ENDIF
+	RETURN 1
+ENDIF
+
+;助手的行动选择
+;C責め
+Ｃ爱抚 = (10 + ABL:MASTER:Ｃ感觉) * (RAND:100 + 1)
+;A責め
+Ａ爱抚 = (10 + ABL:MASTER:Ａ感觉) * (RAND:100 + 1)
+;B責め
+Ｂ爱抚 = (10 + ABL:MASTER:Ｂ感觉) * (RAND:100 + 1)
+;V責め
+Ｖ爱抚 = (10 + ABL:MASTER:Ｖ感觉) * (RAND:100 + 1)
+;M責め
+Ｍ爱抚 = (10 + (TALENT:ARG:舌使 - TALENT:ARG:猫舌) * 3) * (RAND:100 + 1)
+SIF TCVAR:MASTER:高潮
+	Ｃ爱抚 *= 2
+;同じ部位被连续して責めないように
+SELECTCASE TCVAR:ARG:上次助手爱抚部位
+	CASE 2
+		Ｃ爱抚 /= 2
+	CASE 3
+		Ａ爱抚 /= 2
+	CASE 4
+		Ｂ爱抚 /= 2
+	CASE 5
+		Ｖ爱抚 /= 2
+	CASE 6
+		Ｍ爱抚 /= 2
+ENDSELECT
+;实行判定
+SIF !ASSI_ACTABLE("Ｃ爱抚", ARG)
+	Ｃ爱抚 = 0
+SIF !ASSI_ACTABLE("Ａ爱抚", ARG)
+	Ａ爱抚 = 0
+SIF !ASSI_ACTABLE("Ｂ爱抚", ARG)
+	Ｂ爱抚 = 0
+SIF !ASSI_ACTABLE("Ｖ爱抚", ARG)
+	Ｖ爱抚 = 0
+SIF !ASSI_ACTABLE("Ｍ爱抚", ARG)
+	Ｍ爱抚 = 0
+SELECTCASE MAX(Ｃ爱抚, Ｂ爱抚, Ａ爱抚, Ｖ爱抚, Ｍ爱抚)
+	;空き场所但ない
+	CASE IS <= 0
+		TCVAR:ARG:助手方针 = GET_ASSIMENUNUM("羞耻")
+		CALL ASSI_ACTM7, ARG
+	CASE Ｃ爱抚
+		TCVAR:ARG:助手方针 = GET_ASSIMENUNUM("Ｃ爱抚")
+		CALL ASSI_ACTM2, ARG
+	CASE Ａ爱抚
+		TCVAR:ARG:助手方针 = GET_ASSIMENUNUM("Ａ爱抚")
+		CALL ASSI_ACTM3, ARG
+	CASE Ｂ爱抚
+		TCVAR:ARG:助手方针 = GET_ASSIMENUNUM("Ｂ爱抚")
+		CALL ASSI_ACTM4, ARG
+	CASE Ｖ爱抚
+		TCVAR:ARG:助手方针 = GET_ASSIMENUNUM("Ｖ爱抚")
+		CALL ASSI_ACTM5, ARG
+	CASE Ｍ爱抚
+		TCVAR:ARG:助手方针 = GET_ASSIMENUNUM("Ｍ爱抚")
+		CALL ASSI_ACTM6, ARG
+ENDSELECT
+;-----------EDIT 001 END  -----------------
+
+;以下是細かい设定
+;-----------EDIT 001 START--------------
+;以下的関数群是基本的に表记被变更し、ACTABLEに实行判定被移した的みだ但
+;例外的に猫舌是实行确率但プラスされていた的被マイナスに变更
+;なお、AI的判断但大雑把和いうか、おそらく暫定处理的ママ放置になってるんで
+;もっ和細かく組むべきかもしれない
+;---------------------------------------
+;C責め
+@ASSI_ACTM2, ARG
+#DIM 用手
+#DIM 舌で
+#DIM 素股
+#DIM 乳交
+#DIM 足交
+#DIM Ｃ道具
+#DIM 逆强奸
+;A 用手 B 舌で C 素股 D 乳交 E 足交 F 跳蛋、飞机杯 G 性交
+用手 = (10 + ABL:ARG:爱抚 + TALENT:ARG:灵巧的指尖 * 5) * (RAND:100 + 1)
+舌で = (10 + ABL:ARG:爱抚 + (TALENT:ARG:舌使 - TALENT:ARG:猫舌 - TALENT:ARG:污臭敏感) * 5) * (RAND:100 + 1)
+素股 = (10 + ABL:ARG:爱抚) * (RAND:100 + 1)
+乳交 = (10 + ABL:ARG:爱抚 + (TALENT:ARG:巨乳 - TALENT:ARG:貧乳 + TALENT:ARG:淫乳 - TALENT:ARG:污臭敏感) * 5) * (RAND:100 + 1)
+足交 = (10 + ABL:ARG:爱抚 + TALENT:ARG:虐待狂 * 5) * (RAND:100 + 1)
+Ｃ道具 = (10 + ABL:ARG:爱抚 + TALENT:ARG:道具使 * 5) * (RAND:100 + 1)
+逆强奸 = (10 + ABL:ARG:性交 + TALENT:ARG:淫壶 * 5) * (RAND:100 + 1)
+
+;实行判定
+SIF !ASSI_ACTABLE("用手爱抚", ARG)
+	用手 = 0
+SIF !ASSI_ACTABLE("用口爱抚", ARG)
+	舌で = 0
+SIF !ASSI_ACTABLE("素股", ARG)
+	素股 = 0
+SIF !ASSI_ACTABLE("进行乳交", ARG)
+	乳交 = 0
+SIF !ASSI_ACTABLE("进行足交", ARG)
+	足交 = 0
+SIF !ASSI_ACTABLE("Ｃ道具", ARG)
+	Ｃ道具 = 0
+SIF !ASSI_ACTABLE("逆强奸", ARG)
+	逆强奸 = 0
+SELECTCASE MAX(用手, 舌で, 素股, 乳交, 足交, Ｃ道具, 逆强奸)
+	;实行可能的も的但ない场合是羞耻に飛ばす
+	CASE 0
+		CALL ASSI_ACTM7, ARG
+	CASE 用手
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("用手爱抚")
+	CASE 舌で
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("用口爱抚")
+	CASE 素股
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("素股")
+	CASE 乳交
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("进行乳交")
+	CASE 足交
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("进行足交")
+	CASE Ｃ道具
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("Ｃ道具")
+	CASE 逆强奸
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("逆强奸")
+ENDSELECT
+
+;A責め
+@ASSI_ACTM3, ARG
+#DIM 肛门爱抚
+#DIM 舔肛门
+#DIM 肛门跳蛋
+#DIM 肛门震动棒
+;A 用手 B 舌で C 跳蛋 D 肛门震动棒
+肛门爱抚 = (10 + ABL:ARG:爱抚 + TALENT:ARG:灵巧的指尖 * 5) * (RAND:100 + 1)
+舔肛门 = (10 + ABL:ARG:爱抚 + (TALENT:ARG:舌使 - TALENT:ARG:猫舌 - TALENT:ARG:污臭敏感) * 5) * (RAND:100 + 1)
+肛门跳蛋 = (10 + ABL:ARG:道具 + TALENT:ARG:道具使 * 5) * (RAND:100 + 1)
+肛门震动棒 = (10 + ABL:ARG:道具 + TALENT:ARG:道具使 * 5) * (RAND:100 + 1)
+;实行判定
+SIF !ASSI_ACTABLE("肛门爱抚", ARG)
+	肛门爱抚 = 0
+SIF !ASSI_ACTABLE("舔肛门", ARG)
+	舔肛门 = 0
+SIF !ASSI_ACTABLE("肛门跳蛋", ARG)
+	肛门跳蛋 = 0
+SIF !ASSI_ACTABLE("肛门震动棒", ARG)
+	肛门震动棒 = 0
+	
+SELECTCASE MAX(肛门爱抚, 舔肛门, 肛门跳蛋, 肛门震动棒)
+	;实行可能的も的但ない场合是羞耻に飛ばす
+	CASE 0
+		CALL ASSI_ACTM7, ARG
+	CASE 肛门爱抚
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("肛门爱抚")
+	CASE 舔肛门
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("舔肛门")
+	CASE 肛门跳蛋
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("肛门跳蛋")
+	CASE 肛门震动棒
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("肛门震动棒")
+ENDSELECT
+
+@ASSI_ACTM4, ARG
+#DIM 胸爱抚
+#DIM 舔乳头
+#DIM 玩弄乳头
+;A 用手 B 舌で C 跳蛋
+胸爱抚 = (10 + ABL:ARG:爱抚 + TALENT:ARG:灵巧的指尖 * 5) * (RAND:100 + 1)
+舔乳头 = (10 + ABL:ARG:爱抚 + (TALENT:ARG:舌使 - TALENT:ARG:猫舌 ) * 5) * (RAND:100 + 1)
+玩弄乳头 = (10 + ABL:ARG:道具 + TALENT:ARG:道具使 * 5) * (RAND:100 + 1)
+
+SIF !ASSI_ACTABLE("胸爱抚", ARG)
+	胸爱抚 = 0
+SIF !ASSI_ACTABLE("舔乳头", ARG)
+	舔乳头 = 0
+SIF !ASSI_ACTABLE("玩弄乳头", ARG)
+	玩弄乳头 = 0
+	
+SELECTCASE MAX(胸爱抚, 舔乳头, 玩弄乳头)
+	;实行可能的も的但ない场合是羞耻に飛ばす
+	CASE 0
+		CALL ASSI_ACTM7, ARG
+	CASE 胸爱抚
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("胸爱抚")
+	CASE 舔乳头
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("舔乳头")
+	CASE 玩弄乳头
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("玩弄乳头")
+ENDSELECT
+
+@ASSI_ACTM5, ARG
+;A 用手 B 震动棒 C 性交
+#DIM 手指插入
+#DIM 震动棒
+#DIM 性交
+手指插入 = (10 + ABL:ARG:爱抚 + TALENT:ARG:灵巧的指尖 * 5) * (RAND:100 + 1)
+震动棒 = (10 + ABL:ARG:道具 + TALENT:ARG:道具使 * 5) * (RAND:100 + 1)
+性交 = (10 + ABL:ARG:"性交" + TALENT:ARG:淫壶 * 5) * (RAND:100 + 1)
+SIF !ASSI_ACTABLE("手指插入", ARG)
+	手指插入 = 0
+SIF !ASSI_ACTABLE("震动棒", ARG)
+	震动棒 = 0
+SIF !ASSI_ACTABLE("性交", ARG)
+	性交 = 0
+	
+SELECTCASE MAX(手指插入, 震动棒, 性交)
+	;实行可能的も的但ない场合是羞耻に飛ばす
+	CASE 0
+		CALL ASSI_ACTM7, ARG
+	CASE 手指插入
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("手指插入")
+	CASE 震动棒
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("震动棒")
+	CASE 性交
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("性交")
+ENDSELECT
+
+@ASSI_ACTM6, ARG
+;A 接吻 B 顔面骑乘 C 舔足侍奉
+#DIM 接吻
+#DIM 顔面骑乘
+#DIM 舔足侍奉
+接吻 = (5 + ABL:ARG:爱抚 + (TALENT:ARG:舌使 - TALENT:ARG:猫舌) * 5) * (RAND:100 + 1)
+顔面骑乘 = (5 + ABL:ARG:奉仕精神 + TALENT:ARG:虐待狂 * 5) * (RAND:100 + 1)
+舔足侍奉 = (10 + ABL:ARG:奉仕 + TALENT:ARG:虐待狂 * 5) * (RAND:100 + 1)
+
+
+SIF !ASSI_ACTABLE("接吻", ARG)
+	接吻 = 0
+SIF !ASSI_ACTABLE("顔面骑乘", ARG)
+	顔面骑乘 = 0
+SIF !ASSI_ACTABLE("舔足侍奉", ARG)
+	舔足侍奉 = 0
+	
+SELECTCASE MAX(接吻, 顔面骑乘, 舔足侍奉)
+	;实行可能的も的但ない场合是羞耻に飛ばす
+	CASE 0
+		CALL ASSI_ACTM7, ARG
+	CASE 接吻
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("接吻")
+	CASE 顔面骑乘
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("顔面骑乘")
+	CASE 舔足侍奉
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("舔足侍奉")
+ENDSELECT
+
+@ASSI_ACTM7, ARG
+#DIM 卖弄自慰
+#DIM 辱骂
+#DIM 拍摄写真
+#DIM 与调教者接吻
+#DIM 展露痴态
+;A 卖弄自慰 B 辱骂 C 写真被撮る D 与调教者接吻 E 展露痴态
+卖弄自慰 = (10 + ABL:ARG:自慰中毒 + TALENT:ARG:渴望关注 * 5) * (RAND:100 + 1)
+辱骂 = (10 + ABL:ARG:会话 + TALENT:ARG:虐待狂 * 5) * (RAND:100 + 1)
+拍摄写真 = (10 + ABL:ARG:羞耻 ) * (RAND:100 + 1)
+与调教者接吻 = (10 + ABL:ARG:百合气质 + ABL:ARG:自慰中毒 ) * (RAND:100 + 1)
+展露痴态 = (10 + ABL:ARG:羞耻 + TALENT:ARG:好奇心 * 5) * (RAND:100 + 1)
+
+
+;实行判定
+SIF !ASSI_ACTABLE("卖弄自慰", ARG)
+	卖弄自慰 = 0
+SIF !ASSI_ACTABLE("辱骂", ARG)
+	辱骂 = 0
+SIF !ASSI_ACTABLE("拍摄写真", ARG)
+	拍摄写真 = 0
+SIF !ASSI_ACTABLE("与调教者接吻", ARG)
+	与调教者接吻 = 0
+SIF !ASSI_ACTABLE("展露痴态", ARG)
+	展露痴态 = 0
+SELECTCASE MAX(卖弄自慰, 辱骂, 拍摄写真, 与调教者接吻, 展露痴态)
+	;实行可能的も的但ない场合是羞耻に飛ばす
+	CASE 卖弄自慰
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("卖弄自慰")
+	CASE 辱骂
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("辱骂")
+	CASE 拍摄写真
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("拍摄写真")
+	CASE 与调教者接吻
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("与调教者接吻")
+	CASE 展露痴态
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("展露痴态")
+ENDSELECT
+
+@ASSI_ACTM8, ARG
+#DIM 把头踩在脚下
+#DIM 舔足侍奉
+#DIM 辱骂
+;A 把头踩在脚下 B 舔足侍奉 C 辱骂
+把头踩在脚下 = (10 + ABL:ARG:施虐 ) * (RAND:100 + 1)
+舔足侍奉 = (10 + ABL:ARG:奉仕 ) * (RAND:100 + 1)
+辱骂 = (10 + ABL:ARG:会话) * (RAND:100 + 1)
+SIF !ASSI_ACTABLE("把头踩在脚下", ARG)
+	把头踩在脚下 = 0
+SIF !ASSI_ACTABLE("舔足侍奉", ARG)
+	舔足侍奉 = 0
+SIF !ASSI_ACTABLE("辱骂", ARG)
+	辱骂 = 0
+
+SELECTCASE MAX(把头踩在脚下, 舔足侍奉, 辱骂)
+	;实行可能的も的但ない场合是羞耻に飛ばす
+	CASE 0
+		CALL ASSI_ACTM7, ARG
+	CASE 把头踩在脚下
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("把头踩在脚下")
+	CASE 舔足侍奉
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("舔足侍奉")
+	CASE 辱骂
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("辱骂")
+ENDSELECT
+

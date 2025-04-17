@@ -1,0 +1,616 @@
+﻿
+;※调教者的ABLUP处理是存在不做参数但あるため和ころどころ妥協している
+
+;────────────────────────────────────
+;能力上升处理
+;────────────────────────────────────
+;-------------------------------------------------
+;顺从ABL
+;-------------------------------------------------
+@ABLUP_0M
+#DIM 屈服難易度
+#DIM 屈服EXP
+#DIM 屈服修正
+#DIM 屈服达成
+#DIM 恐怖難易度
+#DIM 恐怖EXP
+#DIM 恐怖修正
+#DIM 恐怖达成
+
+;顺从、屈服ルート
+;屈服難易度设定
+屈服難易度 = POWER(2, ABL:MASTER:顺从) * (100 - TALENT:MASTER:自尊心低 * 20 + TALENT:MASTER:自尊心高 * 20)
+;屈服EXP取得
+屈服EXP = EXP:MASTER:屈服経験
+;屈服刻印但不足してい时EXP修正被减少(1Lvにつき1/2)
+LOCAL = (MARK:屈服刻印 >= 10) ? 0 # (ABL:MASTER:顺从 * 2 - 1 - MARK:屈服刻印)
+屈服修正 = POWER(2, LOCAL < 0 ? 0 # LOCAL)
+;屈服达成判定
+LOCAL = CUP:MASTER:屈服 + CUP:MASTER:恭顺
+屈服达成 = (LOCAL / 2 + 屈服EXP * 20 / 屈服修正) > (屈服難易度 * ABLUP_DIFFICULTY(0))
+
+;恐怖ルート
+;恐怖難易度设定
+恐怖難易度 = POWER(2, ABL:MASTER:顺从) * (100 - TALENT:MASTER:胆怯 * 20 + TALENT:MASTER:刚毅 * 20)
+;恐怖EXP取得
+恐怖EXP = EXP:MASTER:恐怖経験
+;心理创伤但不足してい时EXP修正被减少(1Lvにつき1/2)
+LOCAL = (MARK:心理创伤 >= 10) ? 0 # (ABL:MASTER:顺从 * 2 - 1 - MARK:心理创伤)
+恐怖修正 = POWER(2, LOCAL < 0 ? 0 # LOCAL)
+;恐怖达成判定
+恐怖达成 = (CUP:MASTER:恐怖 + 恐怖EXP * 20 / 恐怖修正) > (恐怖難易度 * ABLUP_DIFFICULTY(0))
+
+;屈服系・恐怖系で条件被满たせばABLUP
+SIF 屈服达成 || 恐怖达成
+	CALL ABLUP_RISE(MASTER, 0)
+
+
+;-------------------------------------------------
+;欲望ABL
+;-------------------------------------------------
+@ABLUP_1M
+CALL ABLUP_1(MASTER)
+@ABLUP_1T
+CALL ABLUP_1(TARGET)
+
+@ABLUP_1(ARG)
+#DIM 欲望難易度
+#DIM 欲望EXP
+#DIM 欲望修正
+
+;欲望難易度设定
+欲望難易度 = POWER(2, ABL:ARG:欲望) * (100 - TALENT:ARG:承认快感 * 20 + TALENT:ARG:否定快感 * 20)
+;欲望EXP取得(高度なEXPほど修正値但大きい)
+欲望EXP = EXP:ARG:Ｃ経験 + EXP:ARG:Ｂ経験 + EXP:ARG:性知识
+欲望EXP += EXP:ARG:Ｖ経験 * 2 + EXP:ARG:Ａ経験 * 2 + EXP:ARG:绝顶経験 * 2 + EXP:ARG:射精経験 * 2
+欲望EXP += EXP:ARG:自慰経験 * 3 + EXP:ARG:喷乳経験 * 4 + EXP:ARG:异常経験 * 4 + EXP:ARG:Ｖ扩张経験 * 5 + EXP:ARG:Ａ扩张経験 * 5
+;调教对象
+IF ARG == MASTER
+	;快乐刻印但不足してい时EXP修正被减少(1Lvにつき1/2)
+	LOCAL = (MARK:快乐刻印 >= 10) ? 0 # (ABL:ARG:欲望 * 2 - 1 - MARK:快乐刻印)
+;调教者(妥協)
+ELSE
+	;调教等级但不足してい时EXP修正被减少(1Lvにつき1/2)
+	LOCAL = (CFLAG:MASTER:调教等级 >= 10) ? 0 # (ABL:ARG:欲望 * 2 - 1 - CFLAG:MASTER:调教等级)
+ENDIF
+欲望修正 = POWER(2, LOCAL < 0 ? 0 # LOCAL)
+
+;欲望达成判定
+;调教对象
+IF ARG == MASTER
+	SIF (CUP:ARG:欲望 + 欲望EXP * 10 / 欲望修正) > (欲望難易度 * ABLUP_DIFFICULTY(1))
+		CALL ABLUP_RISE(MASTER, 1)
+;调教者(妥協)
+ELSE
+	SIF (CUP:ARG:快Ｃ + CUP:ARG:快Ｖ + CUP:ARG:快Ａ + CUP:ARG:快Ｂ + 欲望EXP * 10 / 欲望修正) > (欲望難易度 * ABLUP_DIFFICULTY(1))
+		CALL ABLUP_RISE(TARGET, 1)
+ENDIF
+
+
+;-------------------------------------------------
+;技巧ABL
+;-------------------------------------------------
+@ABLUP_2M
+CALL ABLUP_2(MASTER)
+@ABLUP_2T
+CALL ABLUP_2(TARGET)
+
+@ABLUP_2(ARG)
+#DIM 技巧難易度
+#DIM 技巧EXP
+#DIM 技巧修正
+#DIM 相手
+
+;奉仕相手被代入
+IF ARG == MASTER
+	相手 = TARGET
+ELSE
+	相手 = MASTER
+ENDIF
+
+;技巧難易度设定
+技巧難易度 = POWER(2, ABL:ARG:技巧) * (100 - TALENT:ARG:习得快 * 20 + TALENT:ARG:习得慢 * 20)
+;技巧EXP取得
+技巧EXP = EXP:ARG:性知识 + EXP:ARG:口淫経験 * 2 + EXP:ARG:手淫経験 * 2 + EXP:ARG:性交経験 * 2 + EXP:ARG:高潮経験 * 4
+;调教等级但不足してい时EXP修正被减少(1Lvにつき1/2)
+LOCAL = (CFLAG:ARG:调教等级 >= 10) ? 0 # (ABL:ARG:技巧 * 2 - 1 - CFLAG:ARG:调教等级)
+技巧修正 = POWER(2, LOCAL < 0 ? 0 # LOCAL)
+
+;技巧达成判定
+LOCAL = CUP:相手:快Ｃ + CUP:相手:快Ｖ + CUP:相手:快Ａ + CUP:相手:快Ｂ
+SIF (LOCAL / 3 + 技巧EXP * 10 / 技巧修正) > (技巧難易度 * ABLUP_DIFFICULTY(2))
+	CALL ABLUP_RISE(ARG, 2)
+
+
+;-------------------------------------------------
+;Ｘ感觉ABL
+;-------------------------------------------------
+@ABLUP_3M
+CALL ABLUP_SENSITIVITY(MASTER, 3)
+@ABLUP_4M
+CALL ABLUP_SENSITIVITY(MASTER, 4)
+@ABLUP_5M
+CALL ABLUP_SENSITIVITY(MASTER, 5)
+@ABLUP_6M
+CALL ABLUP_SENSITIVITY(MASTER, 6)
+@ABLUP_3T
+CALL ABLUP_SENSITIVITY(TARGET, 3)
+@ABLUP_4T
+CALL ABLUP_SENSITIVITY(TARGET, 4)
+@ABLUP_5T
+CALL ABLUP_SENSITIVITY(TARGET, 5)
+@ABLUP_6T
+CALL ABLUP_SENSITIVITY(TARGET, 6)
+
+@ABLUP_SENSITIVITY(对象, ARG)
+#DIM 部位
+#DIM 感觉難易度
+#DIM 感觉EXP
+#DIM 感觉修正
+#DIM 对象
+
+部位 = ARG - 3
+SPLIT "Ｃ/Ｖ/Ａ/Ｂ", "/", LOCALS
+
+;感觉難易度设定
+感觉難易度 = POWER(2, ABL:对象:@"%LOCALS:部位%感觉") * (100 - TALENT:对象:@"%LOCALS:部位%敏感" * 20 + TALENT:对象:@"%LOCALS:部位%钝感" * 20)
+;感觉EXP取得
+感觉EXP = EXP:对象:@"%LOCALS:部位%経験" * 2 + EXP:对象:绝顶経験
+SIF LOCALS:部位 == "Ｃ"
+	感觉EXP += EXP:对象:绝顶経験
+SIF LOCALS:部位 == "Ｖ"
+	感觉EXP += EXP:对象:Ｖ扩张経験 * 4 + EXP:对象:性交経験 * 2
+SIF LOCALS:部位 == "Ａ"
+	感觉EXP += EXP:对象:Ａ扩张経験 * 4 + EXP:对象:性交経験 + EXP:对象:异常経験
+SIF LOCALS:部位 == "Ｂ"
+	感觉EXP += EXP:对象:喷乳経験 * 3
+;调教对象
+IF ARG == MASTER
+	;快乐刻印但不足してい时EXP修正被减少(1Lvにつき1/2)
+	LOCAL = (MARK:快乐刻印 >= 10) ? 0 # (ABL:对象:@"%LOCALS:部位%感觉" * 2 - 1 - MARK:快乐刻印)
+;调教者(妥協)
+ELSE
+	;欲望ABL但不足してい时EXP修正被减少(1Lvにつき1/2)
+	LOCAL = (ABL:对象:欲望 >= 10) ? 0 # (ABL:对象:@"%LOCALS:部位%感觉" * 2 - 1 - ABL:对象:欲望)
+ENDIF
+感觉修正 = POWER(2, LOCAL < 0 ? 0 # LOCAL)
+
+;感觉达成判定
+SIF (CUP:对象:@"快%LOCALS:部位%" + 感觉EXP * 10 / 感觉修正) > (感觉難易度 * ABLUP_DIFFICULTY(ARG) * 4)
+	CALL ABLUP_RISE(对象, ARG)
+
+
+;-------------------------------------------------
+;奉仕精神ABL
+;-------------------------------------------------
+@ABLUP_7M
+CALL ABLUP_7(MASTER)
+@ABLUP_7T
+CALL ABLUP_7(TARGET)
+
+@ABLUP_7(ARG)
+#DIM 奉仕精神難易度
+#DIM 奉仕精神EXP
+#DIM 奉仕精神修正
+
+;奉仕精神難易度设定
+奉仕精神難易度 = POWER(2, ABL:ARG:奉仕精神) * (100 - TALENT:ARG:献身的 * 20 + TALENT:ARG:被动 * 20)
+;奉仕精神EXP取得
+奉仕精神EXP = EXP:ARG:口淫経験 + EXP:ARG:手淫経験 + EXP:ARG:奉仕快乐経験 * 4
+;调教等级但不足してい时EXP修正被减少(1Lvにつき1/2)
+LOCAL = (CFLAG:ARG:调教等级 >= 10) ? 0 # (ABL:ARG:奉仕精神 * 2 - 1 - CFLAG:ARG:调教等级)
+奉仕精神修正 = POWER(2, LOCAL < 0 ? 0 # LOCAL)
+
+;奉仕精神达成判定
+;调教对象
+IF ARG == MASTER
+	SIF (CUP:ARG:恭顺 + 奉仕精神EXP * 10 / 奉仕精神修正) > (奉仕精神難易度 * ABLUP_DIFFICULTY(7))
+		CALL ABLUP_RISE(MASTER, 7)
+;调教者(妥協)
+ELSE
+	SIF (SOURCE:MASTER:达成 / 3 + 奉仕精神EXP * 10 / 奉仕精神修正) > (奉仕精神難易度 * ABLUP_DIFFICULTY(7))
+		CALL ABLUP_RISE(TARGET, 7)
+ENDIF
+
+
+;-------------------------------------------------
+;露出癖ABL
+;-------------------------------------------------
+@ABLUP_8M
+CALL ABLUP_8(MASTER)
+@ABLUP_8T
+;TARGETに是露出癖ABL上升但ない(妥協)
+
+@ABLUP_8(ARG)
+#DIM 露出癖難易度
+#DIM 露出癖EXP
+
+;露出癖難易度设定
+露出癖難易度 = POWER(2, ABL:ARG:露出癖) * (100 - TALENT:ARG:解放 * 20 + TALENT:ARG:压抑 * 20)
+;露出癖EXP取得
+露出癖EXP = EXP:ARG:露出経験 * 3 + EXP:ARG:绝顶経験
+
+;露出癖达成判定
+SIF (CUP:ARG:害羞 + 露出癖EXP * 10) > (露出癖難易度 * ABLUP_DIFFICULTY(8))
+	CALL ABLUP_RISE(ARG, 8)
+
+
+;-------------------------------------------------
+;百合气质ABL
+;-------------------------------------------------
+@ABLUP_9M
+CALL ABLUP_9(MASTER)
+@ABLUP_9T
+CALL ABLUP_9(TARGET)
+
+@ABLUP_9(ARG)
+#DIM 百合气质難易度
+#DIM 百合气质EXP
+
+;百合气质難易度设定
+百合气质難易度 = POWER(2, ABL:ARG:百合气质) * (100 - TALENT:ARG:双性恋 * 20)
+;百合气质EXP取得
+百合气质EXP = EXP:ARG:百合経験
+
+;百合气质达成判定
+SIF (SOURCE:ARG:情爱 + SOURCE:ARG:乐趣 + 百合气质EXP * 20) > (百合气质難易度 * ABLUP_DIFFICULTY(9))
+	CALL ABLUP_RISE(ARG, 9)
+
+
+;-------------------------------------------------
+;ＢＬ气质ABL
+;-------------------------------------------------
+@ABLUP_10M
+CALL ABLUP_10(MASTER)
+@ABLUP_10T
+CALL ABLUP_10(TARGET)
+
+@ABLUP_10(ARG)
+#DIM ＢＬ气质難易度
+#DIM ＢＬ气质EXP
+
+;ＢＬ气质難易度设定
+ＢＬ气质難易度 = POWER(2, ABL:ARG:ＢＬ气质) * (100 - TALENT:ARG:双性恋 * 20)
+;ＢＬ气质EXP取得
+ＢＬ气质EXP = EXP:ARG:ＢＬ経験
+
+;ＢＬ气质达成判定
+SIF (SOURCE:ARG:情爱 + SOURCE:ARG:乐趣 + ＢＬ气质EXP * 20) > (ＢＬ气质難易度 * ABLUP_DIFFICULTY(10))
+	CALL ABLUP_RISE(ARG, 10)
+
+
+;-------------------------------------------------
+;受虐气质ABL
+;-------------------------------------------------
+@ABLUP_11M
+#DIM 受虐气质難易度
+#DIM 受虐气质EXP
+
+;受虐气质難易度设定
+受虐气质難易度 = POWER(2, ABL:MASTER:受虐气质) * (100 - TALENT:MASTER:倒错的 * 20)
+;受虐气质EXP取得
+受虐气质EXP = EXP:MASTER:痛苦快乐経験 * 4 + EXP:MASTER:紧缚経験 * 2 + EXP:MASTER:异常経験
+
+;受虐气质达成判定
+SIF (CUP:MASTER:痛苦 + CUP:MASTER:不快 - CUP:MASTER:抑郁 + 受虐气质EXP * 5) > (受虐气质難易度 * ABLUP_DIFFICULTY(11))
+	CALL ABLUP_RISE(MASTER, 11)
+
+
+;-------------------------------------------------
+;自慰中毒ABL
+;-------------------------------------------------
+@ABLUP_12M
+#DIM 自慰中毒難易度
+#DIM 自慰中毒EXP
+#DIM 自慰中毒修正
+
+;自慰中毒難易度设定
+自慰中毒難易度 = POWER(2, ABL:MASTER:自慰中毒) * (100 - TALENT:MASTER:自慰し容易 * 20)
+;自慰中毒EXP取得
+自慰中毒EXP = EXP:MASTER:自慰経験 + EXP:MASTER:调教自慰経験
+;调教等级但不足してい时EXP修正被减少(1Lvにつき1/2)
+LOCAL = ((ABL:MASTER:欲望 + ABL:MASTER:露出癖) >= 20) ? 0 # (ABL:MASTER:自慰中毒 * 2 - 1 - (ABL:MASTER:欲望 + ABL:MASTER:露出癖))
+自慰中毒修正 = POWER(2, LOCAL < 0 ? 0 # LOCAL)
+
+;自慰中毒达成判定
+SIF (CUP:MASTER:快Ｃ + CUP:MASTER:快Ｖ + CUP:MASTER:快Ａ + CUP:MASTER:快Ｂ + 自慰中毒EXP * 10 / 自慰中毒修正) > (自慰中毒難易度 * ABLUP_DIFFICULTY(12))
+	CALL ABLUP_RISE(MASTER, 12)
+
+
+;-------------------------------------------------
+;精液中毒ABL
+;-------------------------------------------------
+@ABLUP_13M
+CALL ABLUP_13(MASTER)
+@ABLUP_13T
+CALL ABLUP_13(TARGET)
+
+@ABLUP_13(ARG)
+#DIM 精液中毒難易度
+#DIM 精液中毒EXP
+#DIM 精液中毒修正
+
+;精液中毒難易度设定
+精液中毒難易度 = POWER(2, ABL:ARG:精液中毒) * 100
+;精液中毒EXP取得
+精液中毒EXP = EXP:ARG:精液経験
+;欲望ABL但不足してい时EXP修正被减少(1Lvにつき1/2)
+LOCAL = (ABL:ARG:欲望 >= 10) ? 0 # (ABL:ARG:精液中毒 - 1 - ABL:ARG:欲望)
+精液中毒修正 = POWER(2, LOCAL < 0 ? 0 # LOCAL)
+
+;精液中毒达成判定
+SIF (精液中毒EXP * 40 / 精液中毒修正) > (精液中毒難易度 * ABLUP_DIFFICULTY(13))
+	CALL ABLUP_RISE(ARG, 13)
+
+
+;-------------------------------------------------
+;百合中毒ABL
+;-------------------------------------------------
+@ABLUP_14M
+CALL ABLUP_14(MASTER)
+@ABLUP_14T
+CALL ABLUP_14(TARGET)
+
+@ABLUP_14(ARG)
+#DIM 百合中毒難易度
+#DIM 百合中毒EXP
+#DIM 百合中毒修正
+
+;百合中毒難易度设定
+百合中毒難易度 = POWER(2, ABL:ARG:百合中毒) * (100 - TALENT:ARG:双性恋 * 20)
+;百合中毒EXP取得
+百合中毒EXP = EXP:ARG:百合経験
+;调教等级但不足してい时EXP修正被减少(1Lvにつき1/2)
+LOCAL = (ABL:ARG:百合气质 >= 10) ? 0 # (ABL:ARG:百合中毒 - 1 - ABL:ARG:百合气质)
+百合中毒修正 = POWER(2, LOCAL < 0 ? 0 # LOCAL)
+
+;百合中毒达成判定
+;调教对象
+IF ARG == MASTER
+	SIF (CFLAG:M好感 / 2 + 百合中毒EXP * 20 / 百合中毒修正) > (百合中毒難易度 * ABLUP_DIFFICULTY(14))
+		CALL ABLUP_RISE(MASTER, 14)
+;调教者
+ELSE
+	SIF (CFLAG:好感 / 2 + 百合中毒EXP * 20 / 百合中毒修正) > (百合中毒難易度 * ABLUP_DIFFICULTY(14))
+		CALL ABLUP_RISE(TARGET, 14)
+ENDIF
+
+
+;-------------------------------------------------
+;痛苦中毒ABL
+;-------------------------------------------------
+@ABLUP_15M
+#DIM 痛苦中毒難易度
+#DIM 痛苦中毒EXP
+#DIM 痛苦中毒修正
+
+;痛苦中毒難易度设定
+痛苦中毒難易度 = POWER(2, ABL:MASTER:痛苦中毒) * (100 - TALENT:MASTER:抖Ｍ * 20)
+;痛苦中毒EXP取得
+痛苦中毒EXP = EXP:MASTER:痛苦快乐経験 * 2 + EXP:MASTER:异常経験
+;调教等级但不足してい时EXP修正被减少(1Lvにつき1/2)
+LOCAL = ((ABL:MASTER:欲望 + ABL:MASTER:受虐气质) >= 20) ? 0 # (ABL:MASTER:痛苦中毒 * 2 - 1 - (ABL:MASTER:欲望 + ABL:MASTER:受虐气质))
+痛苦中毒修正 = POWER(2, LOCAL < 0 ? 0 # LOCAL)
+
+;痛苦中毒达成判定
+SIF (CUP:MASTER:痛苦 + 痛苦中毒EXP * 10 / 痛苦中毒修正) > (痛苦中毒難易度 * ABLUP_DIFFICULTY(15))
+	CALL ABLUP_RISE(MASTER, 15)
+
+
+;-------------------------------------------------
+;捆绑中毒ABL
+;-------------------------------------------------
+@ABLUP_16M
+#DIM 捆绑中毒難易度
+#DIM 捆绑中毒EXP
+#DIM 捆绑中毒修正
+
+;捆绑中毒難易度设定
+捆绑中毒難易度 = POWER(2, ABL:MASTER:捆绑中毒) * (100 - TALENT:MASTER:抖Ｍ * 20)
+;捆绑中毒EXP取得
+捆绑中毒EXP = EXP:MASTER:紧缚経験 * 2 + EXP:MASTER:异常経験
+;调教等级但不足してい时EXP修正被减少(1Lvにつき1/2)
+LOCAL = ((ABL:MASTER:顺从 + ABL:MASTER:受虐气质) >= 20) ? 0 # (ABL:MASTER:捆绑中毒 * 2 - 1 - (ABL:MASTER:顺从 + ABL:MASTER:受虐气质))
+捆绑中毒修正 = POWER(2, LOCAL < 0 ? 0 # LOCAL)
+
+;捆绑中毒达成判定
+SIF (CUP:MASTER:不快 + 捆绑中毒EXP * 10 / 捆绑中毒修正) > (捆绑中毒難易度 * ABLUP_DIFFICULTY(16))
+	CALL ABLUP_RISE(MASTER, 16)
+
+
+;────────────────────────────────────
+;调教能力的上升
+;────────────────────────────────────
+;-------------------------------------------------
+;会话ABL
+;-------------------------------------------------
+@ABLUP_20T
+#DIM 会话難易度
+#DIM 会话EXP
+#DIM 会话修正
+
+;会话難易度设定
+会话難易度 = POWER(2, ABL:会话) * (100 - TALENT:习得快 * 20 + TALENT:习得慢 * 20)
+;会话EXP取得
+会话EXP = EXP:会话経験
+;调教等级但不足してい时EXP修正被减少(1Lvにつき1/2)
+LOCAL = (CFLAG:调教等级 >= 20) ? 0 # (ABL:会话 * 2 - 1 - CFLAG:调教等级)
+会话修正 = POWER(2, LOCAL < 0 ? 0 # LOCAL)
+
+;会话达成判定
+LOCAL = CUP:MASTER:屈服 + CUP:MASTER:恭顺 * 2 + CUP:MASTER:恐怖 - CUP:MASTER:反抗
+SIF (LOCAL / 2 + 会话EXP * 20 / 会话修正) > (会话難易度 * ABLUP_DIFFICULTY(20))
+	CALL ABLUP_RISE(TARGET, 20)
+
+
+;-------------------------------------------------
+;爱抚ABL
+;-------------------------------------------------
+@ABLUP_21T
+#DIM 爱抚難易度
+#DIM 爱抚EXP
+#DIM 爱抚修正
+
+;爱抚難易度设定
+爱抚難易度 = POWER(2, ABL:爱抚) * (100 - TALENT:习得快 * 20 + TALENT:习得慢 * 20)
+;爱抚EXP取得
+爱抚EXP = EXP:手淫経験
+;调教等级但不足してい时EXP修正被减少(1Lvにつき1/2)
+LOCAL = (CFLAG:调教等级 >= 20) ? 0 # (ABL:爱抚 * 2 - 1 - CFLAG:调教等级)
+爱抚修正 = POWER(2, LOCAL < 0 ? 0 # LOCAL)
+
+;爱抚达成判定
+LOCAL = CUP:MASTER:快Ｃ + CUP:MASTER:快Ｖ + CUP:MASTER:快Ａ + CUP:MASTER:快Ｂ - CUP:MASTER:抑郁
+SIF (LOCAL / 3 + 爱抚EXP * 20 / 爱抚修正) > (爱抚難易度 * ABLUP_DIFFICULTY(21))
+	CALL ABLUP_RISE(TARGET, 21)
+
+
+;-------------------------------------------------
+;道具ABL
+;-------------------------------------------------
+@ABLUP_22T
+#DIM 道具難易度
+#DIM 道具EXP
+#DIM 道具修正
+
+;道具難易度设定
+道具難易度 = POWER(2, ABL:道具) * (100 - TALENT:习得快 * 20 + TALENT:习得慢 * 20)
+;道具EXP取得
+道具EXP = EXP:道具使用経験
+;调教等级但不足してい时EXP修正被减少(1Lvにつき1/2)
+LOCAL = (CFLAG:调教等级 >= 20) ? 0 # (ABL:道具 * 2 - 1 - CFLAG:调教等级)
+道具修正 = POWER(2, LOCAL < 0 ? 0 # LOCAL)
+
+;道具达成判定
+SIF (CUP:MASTER:快Ｃ + CUP:MASTER:快Ｖ + CUP:MASTER:快Ａ + CUP:MASTER:快Ｂ - CUP:MASTER:不快 + 道具EXP * 20 / 道具修正) > (道具難易度 * ABLUP_DIFFICULTY(22))
+	CALL ABLUP_RISE(TARGET, 22)
+
+
+;-------------------------------------------------
+;性交ABL
+;-------------------------------------------------
+@ABLUP_23T
+#DIM 性交難易度
+#DIM 性交EXP
+#DIM 性交修正
+
+;性交難易度设定
+性交難易度 = POWER(2, ABL:性交) * (100 - TALENT:习得快 * 20 + TALENT:习得慢 * 20)
+;性交EXP取得
+性交EXP = EXP:性交経験
+;调教等级但不足してい时EXP修正被减少(1Lvにつき1/2)
+LOCAL = (CFLAG:调教等级 >= 20) ? 0 # (ABL:性交 * 2 - 1 - CFLAG:调教等级)
+性交修正 = POWER(2, LOCAL < 0 ? 0 # LOCAL)
+
+;性交达成判定
+LOCAL = CUP:MASTER:快Ｃ + CUP:MASTER:快Ｖ + CUP:MASTER:快Ａ + CUP:MASTER:欲望 + CUP:MASTER:恭顺 - CUP:MASTER:恐怖 - CUP:MASTER:抑郁
+SIF (LOCAL / 3 + 性交EXP * 20 / 性交修正) > (性交難易度 * ABLUP_DIFFICULTY(23))
+	CALL ABLUP_RISE(TARGET, 23)
+
+
+;-------------------------------------------------
+;羞耻ABL
+;『恥ずかし但らせる能力』
+;-------------------------------------------------
+@ABLUP_24T
+#DIM 羞耻難易度
+#DIM 羞耻EXP
+#DIM 羞耻修正
+
+;羞耻難易度设定
+羞耻難易度 = POWER(2, ABL:羞耻) * (100 - TALENT:习得快 * 20 + TALENT:习得慢 * 20)
+;羞耻EXP取得
+羞耻EXP = EXP:MASTER:露出経験 + EXP:MASTER:恥辱快乐経験 * 2
+;调教等级但不足してい时EXP修正被减少(1Lvにつき1/2)
+LOCAL = (CFLAG:调教等级 >= 20) ? 0 # (ABL:羞耻 * 2 - 1 - CFLAG:调教等级)
+羞耻修正 = POWER(2, LOCAL < 0 ? 0 # LOCAL)
+
+;羞耻达成判定
+SIF (CUP:MASTER:欲望 + CUP:MASTER:害羞 - CUP:MASTER:抑郁 + 羞耻EXP * 20 / 羞耻修正) > (羞耻難易度 * ABLUP_DIFFICULTY(24))
+	CALL ABLUP_RISE(TARGET, 24)
+
+
+;-------------------------------------------------
+;奉仕ABL
+;『奉仕侍奉能力』
+;-------------------------------------------------
+@ABLUP_25T
+#DIM 奉仕難易度
+#DIM 奉仕EXP
+#DIM 奉仕修正
+
+;奉仕難易度设定
+奉仕難易度 = POWER(2, ABL:奉仕) * (100 - TALENT:习得快 * 20 + TALENT:习得慢 * 20)
+;奉仕EXP取得
+奉仕EXP = EXP:MASTER:口淫経験 + EXP:MASTER:手淫経験 + EXP:MASTER:奉仕快乐経験 * 2 + EXP:MASTER:高潮経験 * 3 + EXP:MASTER:爱情経験 * 4
+;调教等级但不足してい时EXP修正被减少(1Lvにつき1/2)
+LOCAL = (CFLAG:调教等级 >= 20) ? 0 # (ABL:奉仕 * 2 - 1 - CFLAG:调教等级)
+奉仕修正 = POWER(2, LOCAL < 0 ? 0 # LOCAL)
+
+;奉仕达成判定
+SIF (CUP:MASTER:屈服 + CUP:MASTER:恭顺 - CUP:MASTER:反抗 + 奉仕EXP * 10 / 奉仕修正) > (奉仕難易度 * ABLUP_DIFFICULTY(25))
+	CALL ABLUP_RISE(TARGET, 25)
+
+
+;-------------------------------------------------
+;施虐ABL
+;-------------------------------------------------
+@ABLUP_26T
+#DIM 施虐難易度
+#DIM 施虐EXP
+#DIM 施虐修正
+
+;施虐難易度设定
+施虐難易度 = POWER(2, ABL:施虐) * (100 - TALENT:习得快 * 20 + TALENT:习得慢 * 20)
+;施虐EXP取得
+施虐EXP = EXP:MASTER:紧缚経験 + EXP:MASTER:痛苦快乐経験 * 2 + EXP:MASTER:Ｖ扩张経験 * 4 + EXP:MASTER:Ａ扩张経験 * 4
+;调教等级但不足してい时EXP修正被减少(1Lvにつき1/2)
+LOCAL = (CFLAG:调教等级 >= 20) ? 0 # (ABL:施虐 * 2 - 1 - CFLAG:调教等级)
+施虐修正 = POWER(2, LOCAL < 0 ? 0 # LOCAL)
+
+;施虐达成判定
+SIF (CUP:MASTER:痛苦 + CUP:MASTER:不快 - CUP:MASTER:反抗 + 施虐EXP * 10 / 施虐修正) > (施虐難易度 * ABLUP_DIFFICULTY(26))
+	CALL ABLUP_RISE(TARGET, 26)
+
+
+;-------------------------------------------------
+;异常ABL
+;-------------------------------------------------
+@ABLUP_27T
+#DIM 异常難易度
+#DIM 异常EXP
+#DIM 异常修正
+
+;异常難易度设定
+异常難易度 = POWER(2, ABL:异常) * (100 - TALENT:习得快 * 20 + TALENT:习得慢 * 20)
+;异常EXP取得
+异常EXP = EXP:MASTER:异常経験
+;调教等级但不足してい时EXP修正被减少(1Lvにつき1/2)
+LOCAL = (CFLAG:调教等级 >= 20) ? 0 # (ABL:异常 * 2 - 1 - CFLAG:调教等级)
+异常修正 = POWER(2, LOCAL < 0 ? 0 # LOCAL)
+
+;异常达成判定
+SIF (SOURCE:MASTER:逃脱 + 异常EXP * 20 / 异常修正) > (异常難易度 * ABLUP_DIFFICULTY(27))
+	CALL ABLUP_RISE(TARGET, 27)
+
+
+;-------------------------------------------------
+;奴役ABL
+;-------------------------------------------------
+@ABLUP_28T
+;奴役ABL是上升不做(暫定)
+
+
+@ABLUP_RISE(对象, ARG)
+#DIM 对象
+ABL:对象:ARG++
+IF 对象 == MASTER
+	CALL KOJO_EVENT(23, ARG)
+ELSEIF 对象 == TARGET
+	CALL KOJO_EVENT(24, ARG)
+ENDIF
+PRINTFORMW %CALLNAME:对象%的%ABLNAME:ARG%\@ 20 <= ARG && ARG <= 29 ? 技能 # \@但\@ ABL:对象:ARG > 9 ? {ABL:对象:ARG} # %TOFULL(TOSTR(ABL:对象:ARG))% \@变成了
+
+@ABLUP_DIFFICULTY(ARG)
+#FUNCTION
+RETURNF 6

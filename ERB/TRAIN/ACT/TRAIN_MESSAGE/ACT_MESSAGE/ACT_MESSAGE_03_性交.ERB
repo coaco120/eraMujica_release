@@ -1,0 +1,654 @@
+﻿;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+
+;		性交系メッセージ
+
+;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+
+;────────────────────────────────────
+;030,正常位
+;────────────────────────────────────
+;★反应前★
+@TRAIN_MESSAGE_30
+SELECTCASE TFLAG:ACT派生
+	CASE 1                    ;ACT派生但连续(正常位から)
+		PRINTFORML %CALLNAME:TARGET%在没有拔出%CALLNAME:MASTER%阴道内的\@ TEQUIP:调教者假阴茎 ? 假阴茎 # 阴茎 \@的情况下，继续开始动起腰来…
+	CASE 2                    ;ACT派生但体位变更(Ｖ性交から)
+		PRINTFORML %CALLNAME:TARGET%保持插入将体位变为正常位…
+	CASE 3
+		PRINTFORML %CALLNAME:TARGET%将插进去的\@ TEQUIP:调教者假阴茎 ? 假阴茎 # 阴茎 \@从肛门中拔出，同时使体位变为正常位…
+	CASE 4, 5                 ;ACT派生但Ｖ性交奉仕/Ａ性交奉仕から
+		PRINTFORML %CALLNAME:TARGET%将插在自己身上的\@ TEQUIP:假阴茎 ? 假阴茎 # 阴茎 \@拔了出来，反过来以正常位插入了%CALLNAME:MASTER%…
+	CASEELSE                  ;ACT派生但通常
+		PRINTFORM %CALLNAME:TARGET%是
+		IF PANTSCHECK(1, 1)             ;下半身服装但要押し退け
+			IF TALENT:穿墙 && PENIS(TARGET)     ;调教者に穿墙素質但あり、调教者に阴茎但存在做
+				PRINTFORML 用穿过布料的阴茎
+			ELSE                                  ;其他
+				SIF LOWERJACKET(1) == 1                     ;下半身外套但要押し退け
+					PRINTFORML 将%OUTER_B(MASTER, 0, 1)%的下摆翻到肚子上、
+				SIF LOWERUNDER(1) == 1                      ;下半身内衣但要押し退け
+					PRINTFORML 错开了%INNER_B(MASTER)%露出了
+			ENDIF
+		ENDIF
+		PRINTFORML 想要贯穿%CALLNAME:MASTER%的秘裂…
+ENDSELECT
+
+;☆反应后☆
+@TRAIN_MESSAGE2_30
+SELECTCASE COMGRONAME(TFLAG:REACT分类)
+	CASE "接受"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%完全沉浸在被%CALLNAME%侵犯的快乐中、
+				PRINTFORML 每次被攻击都会发出娇滴滴的娇声…
+			CASE "无理的ない行动"
+				PRINTFORML 每次当%CALLNAME%扭腰的时候%CALLNAME:MASTER%都会被给予深深的快乐、
+				PRINTFORML 从头到脚完全沉浸在性交的乐趣中…
+			CASE "无理被した行动"
+				PRINTFORML %CALLNAME:MASTER%的理性努力抵抗着%CALLNAME%的侵犯、
+				PRINTFORML 一旦意识到来自阴道的快乐，声音就会变得越来越甜美…
+		ENDSELECT
+		RETURN 2
+	CASE "积极的服从", "淡然的服从"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML 不服输的%CALLNAME:MASTER%与%CALLNAME%脚缠在一起抬起腰来、
+				PRINTFORML %CALLNAME%收紧了括约肌，迎接着突入…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME:MASTER%在%CALLNAME:TARGET%的命令下努力摆动着腰部…
+			CASE "无理被した行动"
+				IF COMCOR_POSI()                  ;实是感受いい
+					PRINTFORML %CALLNAME:MASTER%一边拼命忍耐着快乐，一边配合着%CALLNAME%的命令扭动着腰部
+					PRINTFORML 为了提供更好的感受，将腰抬了起来…
+				ELSE                              ;实是嫌
+					PRINTFORML %CALLNAME:MASTER%忍受着被贯穿的屈辱，为了反过来夺取主导权
+					PRINTFORML 过激地动着腰部…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+	CASE "请求宽恕"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%一边被%CALLNAME%侵犯、
+				PRINTFORML 恳求着原谅…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME:MASTER%每次被%CALLNAME:TARGET%突入时都会请求着原谅、
+				PRINTFORML 溃散的声音染上了娇艳的气息…
+			CASE "无理被した行动"
+				IF COMCOR_POSI()                  ;实是感受いい
+					PRINTFORML %CALLNAME:MASTER%勉强忍受着要命的快感，一个劲的恳求着原谅
+					PRINTFORML 妖娆的起伏着腰部，不肯离开%CALLNAME%…
+				ELSE                              ;实是嫌
+					PRINTFORML %CALLNAME:MASTER%一边紧紧闭着眼睛咬牙忍受着被侵犯的屈辱和快感、
+					PRINTFORML 厌倦了，一遍遍的恳求原谅…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+	CASE "消极的服从"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%一边被%CALLNAME%侵犯、
+				PRINTFORML 浑身颤抖的强行忍耐着不漏出声音…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME:MASTER%每次被%CALLNAME:TARGET%突刺到喉咙时都会发出悲鸣、
+				PRINTFORML 终于忍不住开始漏出娇艳的声响…
+			CASE "无理被した行动"
+				IF COMCOR_POSI()                  ;实是感受いい
+					PRINTFORML %CALLNAME:MASTER%拼命忍住快感，面脸通红的背过身去
+					PRINTFORML 妖娆的起伏着腰部，不肯离开%CALLNAME%…
+				ELSE                              ;实是嫌
+					PRINTFORML %CALLNAME:MASTER%一边紧紧闭着眼睛咬牙忍受着被侵犯的屈辱和快感、
+					PRINTFORML 不停地微微喘息着…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+ENDSELECT
+
+;────────────────────────────────────
+;031,后背位
+;────────────────────────────────────
+;★反应前★
+@TRAIN_MESSAGE_31
+SELECTCASE TFLAG:ACT派生
+	CASE 1                    ;ACT派生但连续(后背位から)
+		PRINTFORML %CALLNAME:TARGET%在没有拔出%CALLNAME:MASTER%阴道内的\@ TEQUIP:调教者假阴茎 ? 假阴茎 # 阴茎 \@的情况下，继续开始动起腰来…
+	CASE 2                    ;ACT派生但体位变更(Ｖ性交から)
+		PRINTFORML %CALLNAME:TARGET%保持着插入的状态把体位改变为后背位…
+	CASE 3                    ;ACT派生但Ａ性交から
+		PRINTFORML %CALLNAME:TARGET%把插进去的\@ TEQUIP:调教者假阴茎 ? 假阴茎 # 阴茎 \@从肛门里拔出来，将姿势变成了后背位…
+	CASE 4, 5                 ;ACT派生但Ｖ性交奉仕/Ａ性交奉仕から
+		PRINTFORML %CALLNAME:TARGET%将插在自己身上的\@ TEQUIP:假阴茎 ? 假阴茎 # 阴茎 \@拔出后，反过来以后位插入了%CALLNAME:MASTER%…
+	CASEELSE                  ;ACT派生但通常
+		PRINTFORM %CALLNAME:TARGET%从后面开始
+		IF PANTSCHECK(1, 1)             ;下半身服装但要押し退け
+			IF TALENT:穿墙 && PENIS(TARGET)     ;调教者に穿墙素質但あり、调教者に阴茎但存在做
+				PRINTFORML 用穿过布料的阴茎
+			ELSE                                  ;其他
+				SIF LOWERJACKET(1) == 1                     ;下半身外套但要押し退け
+					PRINTFORML %OUTER_B(MASTER, 0, 1)%的下摆被翻起直到敏感的背部、
+				SIF LOWERUNDER(1) == 1                      ;下半身内衣但要押し退け
+					PRINTFORML 错开了%INNER_B(MASTER)%露出了
+			ENDIF
+		ENDIF
+		PRINTFORML 试图一直突刺到%CALLNAME:MASTER%的秘裂的最深处…
+ENDSELECT
+
+;☆反应后☆
+@TRAIN_MESSAGE2_31
+;REACT分类根据派生
+SELECTCASE COMGRONAME(TFLAG:REACT分类)
+	CASE "接受"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%用动物交尾似的姿势被%CALLNAME%过激侵犯、
+				PRINTFORML 在房间里响起了让人欲罢不能的甜美叫声…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME%抬着腰强行向上突弄着，让%CALLNAME:MASTER%发出一阵阵叫喊、
+				PRINTFORML 由于过度的快感而全身痉挛…
+			CASE "无理被した行动"
+				PRINTFORML 当%CALLNAME%开始像野兽一样侵犯%CALLNAME:MASTER%时、
+				PRINTFORML 想要抵抗而紧绷着的手臂，因快感而无精打采地垂了下来…
+		ENDSELECT
+		RETURN 2
+	CASE "积极的服从", "淡然的服从"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%使用手臂和腰部的力量，响应着%CALLNAME%突击的指令
+				PRINTFORML 巧妙地将腰迎了过去…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME:MASTER%发出娇声，更加强烈地寻求起来…
+			CASE "无理被した行动"
+				;实是感受いい
+				IF COMCOR_POSI()                  ;实是感受いい
+					PRINTFORML %CALLNAME:MASTER%几乎要被快感击垮了、
+					PRINTFORML 向着%CALLNAME%伸出屁股，让其随心所欲的进行侵犯…
+				;实是嫌
+				ELSE                              ;实是嫌
+					PRINTFORML %CALLNAME:MASTER%对动物交尾似的性交感到屈辱、
+					PRINTFORML 向着%CALLNAME%伸出屁股，让其随心所欲的进行侵犯…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+	CASE "请求宽恕"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%被%CALLNAME%从背后进行了侵犯、
+				PRINTFORML 恳求着原谅…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME:MASTER%每次被%CALLNAME:TARGET%突入时都会请求着原谅、
+				PRINTFORML 溃散的声音染上了娇艳的气息…
+			CASE "无理被した行动"
+				IF COMCOR_POSI()                  ;实是感受いい
+					PRINTFORML %CALLNAME:MASTER%勉强忍受着要命的快感，一个劲的恳求着原谅
+					PRINTFORML 将腰高高地举起来，保持着献给%CALLNAME%的姿势…
+				ELSE                              ;实是嫌
+					PRINTFORML %CALLNAME:MASTER%把脸埋进了胳膊里、
+					PRINTFORML 已经说过讨厌这样了…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+	CASE "消极的服从"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%被%CALLNAME%从背后进行了侵犯、
+				PRINTFORML 浑身颤抖的强行忍耐着不漏出声音…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME:TARGET%抓住%CALLNAME:MASTER%的腰过激的扭动着腰部进行拍打…
+			CASE "无理被した行动"
+				IF COMCOR_POSI()                  ;实是感受いい
+					PRINTFORML %CALLNAME:MASTER%拼命地忍耐快感，颤抖着脸朝下趴在地上
+					PRINTFORML 将腰高高地举起来，保持着献给%CALLNAME%的姿势…
+				ELSE                              ;实是嫌
+					PRINTFORML %CALLNAME:MASTER%将脸埋进了胳膊里忍耐着、
+					PRINTFORML 对着没有抵抗的好孩子%CALLNAME%过激地举起腰摆动起来…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+ENDSELECT
+
+;────────────────────────────────────
+;032,骑乘位
+;────────────────────────────────────
+;★反应前★
+@TRAIN_MESSAGE_32
+SELECTCASE TFLAG:ACT派生
+	CASE 1                    ;ACT派生但连续(骑乘位から)
+		PRINTFORML %CALLNAME:TARGET%在没有拔出%CALLNAME:MASTER%阴道内的\@ TEQUIP:调教者假阴茎 ? 假阴茎 # 阴茎 \@的情况下，继续开始动起腰来…
+	CASE 2                    ;ACT派生但体位变更(Ｖ性交から)
+		PRINTFORML %CALLNAME:TARGET%保持着插入将姿势变为了骑乘位…
+	CASE 3                    ;ACT派生但Ａ性交から
+		PRINTFORML %CALLNAME:TARGET%把插进去的\@ TEQUIP:调教者假阴茎 ? 假阴茎 # 阴茎 \@从肛门里拔了出来，将体位变成了骑乘位…
+	CASE 4, 5                 ;ACT派生但Ｖ性交奉仕/Ａ性交奉仕から
+		PRINTFORML %CALLNAME:TARGET%将插入自己身上的\@ TEQUIP:假阴茎 ? 假阴茎 # 阴茎 \@拔了出来，反过来骑位插入了%CALLNAME:MASTER%…
+	CASEELSE                  ;ACT派生但通常
+		PRINTFORML %CALLNAME:TARGET%跨到了%CALLNAME:MASTER%的身上
+		IF PANTSCHECK(1, 1)             ;下半身服装但要押し退け
+			IF TALENT:穿墙 && PENIS(TARGET)     ;调教者に穿墙素質但あり、调教者に阴茎但存在做
+				PRINTFORM 不管是什么衣服
+			ELSE                                  ;其他
+				SIF LOWERJACKET(1) == 1                     ;下半身外套但要押し退け
+					PRINTFORM 嘴里叼着%OUTER_B(MASTER, 0, 1)%的下摆
+				SIF LOWERUNDER(1) == 1                      ;下半身内衣但要押し退け
+					PRINTFORM 错开%INNER_B(MASTER)%
+			ENDIF
+		ELSE                            ;其他
+			PRINTFORM 慢慢地
+		ENDIF
+		PRINTFORML 命令坐下…
+ENDSELECT
+
+;☆反应后☆
+@TRAIN_MESSAGE2_32
+SELECTCASE COMGRONAME(TFLAG:REACT分类)
+	CASE "发狂", "逃跑"
+		IF V_SEX()                ;肛交以外的性交中
+			PRINTFORML 当%CALLNAME:MASTER%自己在上面的时候，不再插入\@ TEQUIP:假阴茎 ? 假阴茎 # 阴茎 \@
+			PRINTFORML 从%CALLNAME%上下来了…
+		ELSE                            ;其他
+			PRINTFORML %CALLNAME:MASTER%没有理睬%CALLNAME:TARGET%的命令…
+		ENDIF
+		RETURN 1
+	CASE "拒绝"
+		IF V_SEX()                ;肛交以外的性交中
+			PRINTFORML 虽然%CALLNAME:MASTER%在上面，但是因为讨厌不再插入\@ TEQUIP:假阴茎 ? 假阴茎 # 阴茎 \@
+			PRINTFORML 从%CALLNAME%上下来了…
+		ELSE                            ;其他
+			PRINTFORML %CALLNAME:MASTER%因为讨厌没有回应%CALLNAME:TARGET%的要求。%CALLNAME:TARGET%对此好像很不满…
+		ENDIF
+		RETURN 1
+	CASE "接受"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%跨到%CALLNAME%身上，双手撑在身前扭动着腰部、
+				PRINTFORML 随着欲望贪图着快感…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME:MASTER%背脊后仰前后摇晃着腰、
+				PRINTFORML 反复摩擦着阴道内敏感的部分发出娇声…
+			CASE "无理被した行动"
+				PRINTFORML %CALLNAME%轻轻地摇晃着腰，%CALLNAME:MASTER%的什么开关仿佛被打开了
+				PRINTFORML 扭动着腰，自己沉溺在性交的快感中…
+		ENDSELECT
+		RETURN 2
+	CASE "积极的服从", "淡然的服从"
+		IF IS_NOWCOMNAME("接吻")
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行动"
+					PRINTFORML %CALLNAME:MASTER%像是要倒下般前倾着上半身，紧紧抱住%CALLNAME:TARGET%
+					PRINTFORML 一边掠夺似的亲吻着，一边用力地摆动着腰…
+				CASE "无理的ない行动"
+					PRINTFORML %CALLNAME:MASTER%被%CALLNAME%压在身下，一边接吻着
+					PRINTFORML 在梦中摆动着腰部，像小猫一样撒娇地叫了起来…
+				CASE "无理被した行动"
+					PRINTFORML %CALLNAME:MASTER%被%CALLNAME%压在身下后，很客气地亲吻着
+					PRINTFORML 拼命地摆动着腰侍奉…
+			ENDSELECT
+		ELSE
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行动"
+					PRINTFORML %CALLNAME:MASTER%反过来侵犯了%CALLNAME%、
+					PRINTFORML 按住上半身巧妙地摆动着腰，想要给予快乐…
+				CASE "无理的ない行动"
+					PRINTFORML %CALLNAME:MASTER%拼命上下摆动着腰部，让%CALLNAME%感觉舒服起来了…
+				CASE "无理被した行动"
+					IF COMCOR_POSI()                  ;实是まんざらでもない
+						PRINTFORML %CALLNAME:MASTER%为了不被强烈的快乐和欲望吞噬而拼命保护着自己、
+						PRINTFORML 为了侵犯%CALLNAME%而摆动着腰部…
+					ELSE                              ;实是嫌
+						PRINTFORML %CALLNAME:MASTER%对被强迫侍奉感到抗拒的同时、
+						PRINTFORML %CALLNAME%被拼命地扭动着腰部的侍奉伺候的舒舒服服…
+					ENDIF
+			ENDSELECT
+		ENDIF
+		RETURN 2
+	CASE "请求宽恕"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%跨在%CALLNAME%身上自己插入了\@ TEQUIP:假阴茎 ? 假阴茎 # 阴茎 \@、
+				PRINTFORML 满足到动弹不得，一直被%CALLNAME%反复向上突刺…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME:MASTER%蜷缩在%CALLNAME:TARGET%上、
+				PRINTFORML 只是被%CALLNAME%从下面侵犯而已…
+			CASE "无理被した行动"
+				IF COMCOR_POSI()                  ;实是まんざらでもない
+					PRINTFORML %CALLNAME:MASTER%由于不好意思自己动而请求原谅、
+					PRINTFORML 腰部为了追求快乐自然的行动着…
+				ELSE                              ;实是嫌
+					PRINTFORML %CALLNAME:MASTER%好不容易自己插入了\@ TEQUIP:假阴茎 ? 假阴茎 # 阴茎 \@、
+					PRINTFORML 无法跟上%CALLNAME%的动作，只是不停地祈求着原谅…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+	CASE "消极的服从"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%羞耻得感觉全身就像烧起来了似的、
+				PRINTFORML 摆动着腰部对%CALLNAME%进行侍奉…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME:MASTER%一副毫无兴致的样子只是一味地摇摆着腰…
+			CASE "无理被した行动"
+				IF COMCOR_POSI()                  ;实是感受いい
+					PRINTFORML %CALLNAME:MASTER%因为害羞而移开了视线、
+					PRINTFORML 腰部为了追求快乐自然的行动着…
+				ELSE                              ;实是嫌
+					PRINTFORML %CALLNAME:MASTER%好不容易自己插入了\@ TEQUIP:假阴茎 ? 假阴茎 # 阴茎 \@、
+					PRINTFORML 腰部只是机械的动着，%CALLNAME%对此有些不满…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+ENDSELECT
+
+;────────────────────────────────────
+;033,对面座位
+;────────────────────────────────────
+;★反应前★
+@TRAIN_MESSAGE_33
+;派生によって分岐
+SELECTCASE TFLAG:ACT派生
+	CASE 1                    ;ACT派生但连续(对面座位から)
+		PRINTFORML %CALLNAME:TARGET%和%CALLNAME:MASTER%舌头纠缠在一起亲吻着的同时再次开始摇晃起腰部…
+	CASE 2                    ;ACT派生但体位变更(Ｖ性交から)
+		PRINTFORML %CALLNAME:TARGET%保持着插入的同时将体位变成了对面座位…
+	CASE 3                    ;ACT派生但Ａ性交から
+		PRINTFORML %CALLNAME:TARGET%把插进去的\@ TEQUIP:调教者假阴茎 ? 假阴茎 # 阴茎 \@从肛门里拔了出来，将体位变成了对面座位…
+	CASE 4, 5                 ;ACT派生但Ｖ性交奉仕/Ａ性交奉仕から
+		PRINTFORML %CALLNAME:TARGET%是插到自己身上的\@ TEQUIP:假阴茎 ? 假阴茎 # 阴茎 \@之后，反而以对面座位插入了%CALLNAME:MASTER%…
+	CASEELSE                  ;ACT派生但通常
+		PRINTFORML %CALLNAME:TARGET%把%CALLNAME:MASTER%的身体抱了起来
+		IF PANTSCHECK(1, 1)             ;下半身服装但要押し退け
+			IF TALENT:穿墙 && PENIS(TARGET)     ;调教者に穿墙素質但あり、调教者に阴茎但存在做
+				PRINTFORM 穿着的衣服
+			ELSE                                  ;其他
+				SIF LOWERJACKET(1) == 1                     ;下半身外套但要押し退け
+					PRINTFORM 卷起%OUTER_B(MASTER, 0, 1)%的下摆、
+				SIF LOWERUNDER(1) == 1                      ;下半身内衣但要押し退け
+					PRINTFORM %INNER_B(MASTER)%被ずらし、
+			ENDIF
+		ENDIF
+		SIF LOWERJACKET(1) != 1 || LOWERUNDER(1) != 1       ;下半身上内衣但押し退け不要か邪魔
+			PRINTFORM 慢慢地
+		PRINTFORML 一边放下秘裂想要插入里面…
+ENDSELECT
+
+;☆反应后☆
+@TRAIN_MESSAGE2_33
+SELECTCASE COMGRONAME(TFLAG:REACT分类)
+	CASE "接受"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%把腰压在%CALLNAME%身上深深的插入引得背脊一阵发抖…
+				PRINTFORML 就好像交换着爱一样在背上摆动着手臂，想要回应接吻…
+			CASE "无理的ない行动"
+				PRINTFORML 为了回应%CALLNAME%的拥抱，%CALLNAME:MASTER%使劲地磨蹭着腰部
+				PRINTFORML 一边接吻一边尽情地享受着性交的快乐…
+			CASE "无理被した行动"
+				PRINTFORML 保持着连接被%CALLNAME%紧紧抱住，夺走了嘴唇、
+				PRINTFORML %CALLNAME:MASTER%的意识在快感和幸福感中融化…
+		ENDSELECT
+		RETURN 2
+	CASE "积极的服从", "淡然的服从"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%在贯穿的同时自己将上半身紧紧贴了上去
+				{
+				PRINTFORML %CALLNAME%的\@ IS_NOWCOMNAME("接吻") 
+				? 将手臂环绕脖子抱住，热情地接吻
+				# 一边感受着(对方的)呼吸，一边将身体交託给逐渐高涨的快感 \@
+				}
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME:MASTER%根据%CALLNAME%的要求自己摇晃着屁股\@ !IS_NOWCOMNAME("接吻") ? 一边 # \@、
+				{
+				PRINTFORML \@ IS_NOWCOMNAME("接吻") 
+				? 在梦中接吻，同时沉醉在快乐中
+				# 更加露骨地表露慾望，乞求着想要被贪婪地索取 \@
+				}
+			CASE "无理被した行动"
+				IF COMCOR_POSI()                  ;实是感受いい
+					PRINTFORML %CALLNAME:MASTER%为了逃避快乐\@ IS_NOWCOMNAME("接吻") ? 吸吮着%CALLNAME%的嘴唇， # 一边垂下眼睛 \@
+					{
+					PRINTFORML \@ IS_NOWCOMNAME("接吻") ? 抱きつき一边 # 背筋被弓なりに反らして \@体重被かけ、\@ 
+					TEQUIP:调教者假阴茎 ? 假阴茎 # 阴茎 \@被深く銜えこんだ…
+					}
+				ELSE                              ;实是嫌
+					PRINTFORML %CALLNAME:MASTER%虽然对恋人拥抱般的性交有所抵抗、
+					PRINTFORML 为了让%CALLNAME%高兴，自己主动\@ IS_NOWCOMNAME("接吻") ?追求着嘴唇 # 积极的行动 \@展露了出来…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+	CASE "请求宽恕"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%被%CALLNAME%如同爱人似的拥抱着被侵犯…
+				PRINTFORML 请求原谅的话语，也被强行贴在一起的嘴唇堵住了…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME:MASTER%由于被抱住夺走了嘴唇而僵硬了起来、
+				PRINTFORML %CALLNAME%上下摇晃着身体，过激的蹂躏了…
+			CASE "无理被した行动"
+				IF COMCOR_POSI()                  ;实是感受いい
+					PRINTFORML %CALLNAME:MASTER%对相拥的姿势感到害羞，身体想要离开、
+					PRINTFORML 被%CALLNAME%夺走嘴唇的话，就失去抵抗的力气了…
+				ELSE                              ;实是嫌
+					PRINTFORML %CALLNAME:MASTER%被%CALLNAME%紧紧抱住贯穿了、
+					PRINTFORML 紧闭的嘴唇被强行夺走了…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+	CASE "消极的服从"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%被%CALLNAME%如同爱人地被拥抱着又被侵犯…
+				PRINTFORML 虽然没有抵抗，但是缩着肩膀颤抖着…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME:TARGET%抓住一脸讨厌的%CALLNAME:MASTER%的脑袋一边强吻一边摇晃着腰…
+			CASE "无理被した行动"
+				IF COMCOR_POSI()                  ;实是感受いい
+					PRINTFORML %CALLNAME:MASTER%和%CALLNAME%连接在一起、
+					PRINTFORML 被%CALLNAME%夺走嘴唇的话，就失去抵抗的力气了…
+				ELSE                              ;实是嫌
+					PRINTFORML %CALLNAME:MASTER%被%CALLNAME%紧紧抱住彻底贯穿了、
+					PRINTFORML 紧闭的嘴唇被强行夺走了…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+ENDSELECT
+
+;────────────────────────────────────
+;034,背面座位
+;────────────────────────────────────
+;★反应前★
+@TRAIN_MESSAGE_34
+SELECTCASE TFLAG:ACT派生
+	CASE 1                    ;ACT派生但连续(背面座位から)
+		PRINTFORML %CALLNAME:TARGET%从背后抱住%CALLNAME:MASTER%，再次开始摇晃身体…
+	CASE 2                    ;ACT派生但体位变更(Ｖ性交から)
+		PRINTFORML %CALLNAME:TARGET%在保持着插入的状态下将体位变成了背面座位…
+	CASE 3                    ;ACT派生但Ａ性交から
+		PRINTFORML %CALLNAME:TARGET%将插进去的\@ TEQUIP:调教者假阴茎 ? 假阴茎 # 阴茎 \@从肛门中了拔出来，将体位变成了背面座位…
+	CASE 4, 5                 ;ACT派生但Ｖ性交奉仕/Ａ性交奉仕から
+		PRINTFORML %CALLNAME:TARGET%将插在自己身上的\@ TEQUIP:假阴茎 ? 假阴茎 # 阴茎 \@拔下后，反过来以背面座位插入了%CALLNAME:MASTER%…
+	CASEELSE                  ;ACT派生但通常
+		PRINTFORML %CALLNAME:TARGET%把%CALLNAME:MASTER%的身体抱了起来
+		IF PANTSCHECK(1, 1)             ;下半身服装但要押し退け
+			IF TALENT:穿墙 && PENIS(TARGET)     ;调教者に穿墙素質但あり、调教者に阴茎但存在做
+				PRINTFORM 藏在了布料里
+			ELSE                                  ;其他
+				SIF LOWERJACKET(1) == 1                     ;下半身外套但要押し退け
+					PRINTFORM 卷起%OUTER_B(MASTER, 0, 1)%的下摆、
+				SIF LOWERUNDER(1) == 1                      ;下半身内衣但要押し退け
+					PRINTFORM %INNER_B(MASTER)%被ずらし、
+			ENDIF
+		ENDIF
+		SIF LOWERJACKET(1) == 1 && LOWERUNDER(1) == 1       ;下半身上内衣但押し退け不要か邪魔
+			PRINTFORM 慢慢地
+		PRINTFORML 用等待着秘裂的东西慢慢地贯穿…
+ENDSELECT
+
+;☆反应后☆
+@TRAIN_MESSAGE2_34
+SELECTCASE COMGRONAME(TFLAG:REACT分类)
+	CASE "接受"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%在%CALLNAME%的怀抱中苦闷的扭动着身体、
+				PRINTFORML 用甜美的声音央求玩弄乳头和\@ PENIS(MASTER) ? 阴茎 # 阴蒂 \@…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME%贯穿了%CALLNAME:MASTER%的同时把手放在股间和胸部一点一点地进行着爱抚
+				PRINTFORML 由于三个地方涌上来的欢乐而荡漾出娇声…
+			CASE "无理被した行动"
+				PRINTFORML 像孩子一样被%CALLNAME%拥抱着，一边被侵犯一边被爱抚性感带、
+				PRINTFORML %CALLNAME:MASTER%的意识被快感所填满…
+		ENDSELECT
+		RETURN 2
+	CASE "积极的服从", "淡然的服从"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%保持着被贯穿的姿态牵起了%CALLNAME%的手、
+				PRINTFORML 贴在自己的乳房和大腿之间，像涂抹似的邀请起来…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME:MASTER%用手抓住膝盖将身体向前倒，自己看着结合的部位
+				PRINTFORML 摇晃着屁股为%CALLNAME%进行侍奉…
+			CASE "无理被した行动"
+				IF COMCOR_POSI()                  ;实是感受いい
+					PRINTFORML %CALLNAME:MASTER%从上面按住%CALLNAME%连在一起不断爱抚着的手、
+					PRINTFORML 为了掩饰快感而用力上下摆动着腰…
+				ELSE                              ;实是嫌
+					PRINTFORML %CALLNAME:MASTER%对浅浅的交合和拘束的姿势感到困惑、
+					PRINTFORML 为了向%CALLNAME%献媚而扭着腰进行回应…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+	CASE "请求宽恕"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%被%CALLNAME%抱着肚子，像孩子一样被侵犯了…
+				PRINTFORML 在这期间手指在股间和胸部爬来爬去，舒服的连话都说不出来…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME%从下面保持着贯穿%CALLNAME:MASTER%的姿势，执拗地爱抚着乳头和股间
+				PRINTFORML 交替着发出快感的悲鸣和哀求的声音…
+			CASE "无理被した行动"
+				IF COMCOR_POSI()                  ;实是感受いい
+					PRINTFORML 爱抚着一直保持着勃起的%CALLNAME:MASTER%的乳头和\@ PENIS(MASTER) ? 阴茎 # 阴蒂 \@、
+					PRINTFORML 发出可爱的声音，无力地将后背交给了%CALLNAME%…
+				ELSE                              ;实是嫌
+					PRINTFORML %CALLNAME:MASTER%被贯穿的同时依然拼命地请求帮助、
+					PRINTFORML %CALLNAME%用痒痒的爱抚和腰的律动使之安静了下来…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+	CASE "消极的服从"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%被%CALLNAME%抱着肚子，像孩子一样被侵犯了…
+				PRINTFORML 在此期间手指也在股间和胸部来回游动，不允许抵抗…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME:TARGET%从后面紧紧抱住%CALLNAME:MASTER%、
+				PRINTFORML 一边爱抚性感带一边像向上撞击一样摆动着腰…
+			CASE "无理被した行动"
+				IF COMCOR_POSI()                  ;实是感受いい
+					PRINTFORML %CALLNAME:MASTER%自己看着和%CALLNAME%结合的部位、
+					PRINTFORML 因害羞和快感而颤抖…
+				ELSE                              ;实是嫌
+					PRINTFORML %CALLNAME:MASTER%被很浅地插入去阴道的同时忍耐着不发出声音、
+					PRINTFORML %CALLNAME%像是嘲弄般用双手开始爱抚起乳头以及\@ PENIS(MASTER) ? 阴茎 # 阴蒂 \@…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+ENDSELECT
+
+;────────────────────────────────────
+;035,肛交
+;────────────────────────────────────
+;★反应前★
+@TRAIN_MESSAGE_35
+SELECTCASE TFLAG:ACT派生
+	CASE 1                    ;ACT派生但连续(肛交から)
+		PRINTFORML %CALLNAME:TARGET%用\@ TEQUIP:调教者假阴茎 ? 假阴茎 # 阴茎 \@就这样插入了%CALLNAME:MASTER%的肛门最深处，再次开始活动起腰部…
+	CASE 3                    ;ACT派生但Ｖ性交から
+		PRINTFORML %CALLNAME:TARGET%将插进去的\@ TEQUIP:调教者假阴茎 ? 假阴茎 # 阴茎 \@拔出，贯穿了%CALLNAME:MASTER%的肛门…
+	CASE 4, 5                 ;ACT派生但Ｖ性交奉仕/Ａ性交奉仕から
+		PRINTFORML %CALLNAME:TARGET%把插在自己身上的\@ TEQUIP:假阴茎 ? 假阴茎 # 阴茎 \@拔了出来，反过来插入了%CALLNAME:MASTER%的肛门…
+	CASEELSE                  ;ACT派生但通常
+		SELECTCASE ABL:MASTER:Ａ感觉
+			CASE IS > 3                 ;A开发済
+				PRINTFORML %CALLNAME:MASTER%被完全开发过的肛门将%CALLNAME:TARGET%的\@ TEQUIP:调教者假阴茎 ? 穿在身上的假阴茎 # 自身的阴茎 \@完全容纳了进去、
+				PRINTFORML \@ TALENT:穿墙 && PANTSCHECK(1, 1) ? 布地被すり抜け、 # \@一気に根元直到插入した…
+			CASE IS > 1                 ;A开发途中
+				PRINTFORML %CALLNAME:MASTER%的肛门将%CALLNAME:TARGET%的\@ TEQUIP:调教者假阴茎 ? 穿在身上的假阴茎 # 自身的阴茎 \@完全容纳了进去、
+				PRINTFORML \@ TALENT:穿墙 && PANTSCHECK(1, 1) ? 布地被すり抜け、 # \@一気に根元直到插入した…
+			CASEELSE                    ;A未开发
+				PRINTFORML %CALLNAME:MASTER%紧闭的肛门将%CALLNAME:TARGET%的\@ TEQUIP:调教者假阴茎 ? 穿在身上的假阴茎 # 自身的阴茎 \@完全容纳了进去、
+				PRINTFORML \@ TALENT:穿墙 && PANTSCHECK(1, 1) ? 布地被すり抜け、 # \@强烈な抵抗被も的和もせず根元直到刺し貫いた…
+		ENDSELECT
+ENDSELECT
+
+;☆反应后☆
+@TRAIN_MESSAGE2_35
+SELECTCASE COMGRONAME(TFLAG:REACT分类)
+	CASE "接受"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%完全接受了被%CALLNAME%侵犯肛门的快感、
+				PRINTFORML 用几乎白痴般的声音，一边咿咿呀呀的叫着一边浑身颤抖…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME%深深地贯穿了%CALLNAME:MASTER%的肛门开始动起腰来、
+				PRINTFORML 被异样的快感袭击的%CALLNAME:MASTER%发出了没出息的声音…
+			CASE "无理被した行动"
+				PRINTFORML 每次进行前后侍奉时%CALLNAME%的腰部都会在肠道内来回摩擦、
+				PRINTFORML %CALLNAME:MASTER%流着口水不断地吐露出屈服的喘息声…
+		ENDSELECT
+		RETURN 2
+	CASE "积极的服从", "淡然的服从"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%为了让%CALLNAME%更容易继续行动、
+				PRINTFORML 突出臀部，用力献出自己柔软的肠壁以便排便…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME:MASTER%为了让心情平静下来在深呼吸后抬起了腰、
+				PRINTFORML 把自己的不净之穴按照%CALLNAME%的喜欢进行了使用…
+			CASE "无理被した行动"
+				IF COMCOR_POSI()                  ;实是感受いい
+					PRINTFORML %CALLNAME:MASTER%因为肛门带来的独特快感四肢颤抖、
+					PRINTFORML 为了让%CALLNAME%更容易使用而一直保持着撅起屁股的姿势…
+				ELSE                              ;实是嫌
+					PRINTFORML %CALLNAME:MASTER%虽然蔑视追求异常行为的%CALLNAME%、
+					PRINTFORML 按照自己的喜欢凌辱了尻穴…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+	CASE "请求宽恕"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%害怕被人侵犯肛门、
+				PRINTFORML %CALLNAME%不理会的强行抓住了屁股…
+			CASE "无理的ない行动"
+				PRINTFORML 被%CALLNAME%贯穿屁股，不断地向着内部突刺
+				PRINTFORML %CALLNAME:MASTER%道歉请求原谅…
+			CASE "无理被した行动"
+				IF COMCOR_POSI()                  ;实是感受いい
+					PRINTFORML 虽然%CALLNAME:MASTER%害怕肛门被侵犯的感觉、
+					PRINTFORML 每次%CALLNAME%动腰的时候就变成了诉说快感的声音…
+				ELSE                              ;实是嫌
+					PRINTFORML 被%CALLNAME%侵犯肛门的同时，被异物感和屈辱打垮、
+					PRINTFORML %CALLNAME:MASTER%放弃了，继续请求着原谅…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+	CASE "消极的服从"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%听说会被侵犯肛门\@ IS_NOWCOMNAME("讨厌") ? 虽然感到很讨厌 # 虽然看到了反抗的迹象\@、
+				PRINTFORML %CALLNAME%抓住了她的屁股\@ IS_NOWCOMNAME("讨厌") ? 的抵抗 # 、违抗的事 \@没能做到…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME:TARGET%无视了\@ IS_NOWCOMNAME("发出悲鸣") ? 叫苦不迭 # 无精打采的样子的 \@%CALLNAME:MASTER%不管不顾地摆着腰…
+			CASE "无理被した行动"
+				IF COMCOR_POSI()                  ;实是感受いい
+					PRINTFORML %CALLNAME:MASTER%拼命否定着由排泄器官性交所带来的快乐、
+					PRINTFORML %CALLNAME%动起了腰\@ TALENT:MASTER:男人 ? 每次都发出屈服于快感的凄惨呻吟 # 于是，那声音开始奏起甜美的旋律 \@…
+					;PRINTFORML 肛門被犯されて感じてしまうこ和に%CALLNAME:MASTER%是恥ずかし但った但、
+					;PRINTFORML 每次%CALLNAME%动腰的时候就变成了诉说快感的声音…
+				ELSE                              ;实是嫌
+					PRINTFORML 被%CALLNAME%侵犯肛门的同时，被异物感和屈辱打垮、
+					PRINTFORML %CALLNAME:MASTER%咬紧牙关忍耐着…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+ENDSELECT

@@ -1,0 +1,256 @@
+﻿;追加处理及びサブ事件
+
+@EVENTTURNEND
+#PRI
+#DIM 自动模式カウント
+IF FLAG:自动模式 > 0 && FLAG:自动模式显示设定 == 1
+	SKIPDISP 1
+ENDIF
+;最初に回復处理被入れる
+CALL BASE_RECOVERY
+
+;ムラムラ标志
+FOR LOCAL, 0, CHARANUM
+	CFLAG:LOCAL:起兴 += 1
+NEXT
+
+;妊娠处理
+FOR LOCAL, 1, CHARANUM
+	CALL PREGNACY_CHECK(LOCAL)
+NEXT
+
+FOR LOCAL, 1, CHARANUM
+	CALL MASTER_PREGNACY_CHECK(LOCAL)
+NEXT
+SIF CFLAG:MASTER:妊娠
+	CFLAG:MASTER:妊娠 ++
+CALL MASTER_PREGNACY
+
+;现行版的挙动被见た限りだ和CFLAG:TARGET:好感 > 3000で是敷居但低すぎる感じな的で > 5000に。CFLAG:M好感 > 2000も追加
+;さらにCFLAG:TARGET:定位 < 0被条件から外してみる@/L
+SIF TARGET > 0 && !CFLAG:TARGET:奴隶项圈封印 && CFLAG:TARGET:好感 > 5000 && CFLAG:M好感 > 2000 && TALENT:虐待狂 && !ITEM:奴隶项圈
+	CALL SLAVE_COLLAR
+
+;日常(非调教时)事件
+CALL DAILY_LIFE
+
+;────────────────────────────────────
+;药剤的クールダウン
+;────────────────────────────────────
+IF TARGET > 0
+	;润滑液
+	FLAG:润滑兴奋 -= FLAG:润滑兴奋 / (5 - TALENT:调合知识 * 3) + GET_TRAINLV(TARGET) * (1 + ABL:技巧) / 3
+	SIF FLAG:润滑兴奋 < 0
+		FLAG:润滑兴奋 = 0
+	;媚药
+	FLAG:媚药兴奋 -= FLAG:媚药兴奋 / (5 - TALENT:调合知识 * 3) + GET_TRAINLV(TARGET) * (1 + ABL:欲望) / 3
+	SIF FLAG:媚药兴奋 < 0
+		FLAG:媚药兴奋 = 0
+	;营养剤
+	FLAG:营养兴奋 -= FLAG:营养兴奋 / (6 - TALENT:调合知识 * 3) + GET_TRAINLV(TARGET) * (2 + TALENT:治疗) / 2
+	SIF FLAG:营养兴奋 < 0
+		FLAG:营养兴奋 = 0
+	;治疗
+	FLAG:治疗兴奋 -= (BASE:体力 / 100) * (5 + GET_TRAINLV(TARGET)) / (10 - TALENT:治疗 * 3)
+	SIF FLAG:治疗兴奋 < 0
+		FLAG:治疗兴奋 = 0
+ENDIF
+;────────────────────────────────────
+;いろいろ
+;────────────────────────────────────
+;CALL EVENTCHECK_M
+;FLAG:0 = 0
+
+;日时更新
+CALL NEXTTIME
+IF FLAG:自动模式 > 0
+	SKIPDISP 0
+	自动模式カウント++
+	IF FLAG:自动模式 == 自动模式カウント
+		自动模式カウント = 0
+		BEGIN SHOP
+	ELSE
+		BEGIN TRAIN
+	ENDIF
+ELSE
+	BEGIN SHOP
+ENDIF
+
+
+@PREGNACY_CHECK(ARG)
+CFLAG:ARG:小穴精 = CFLAG:ARG:小穴精 * MIN(CFLAG:ARG:M好感 + CFLAG:ARG:好感 , 9000) / 10000
+SIF TALENT:ARG:妊娠 || CFLAG:ARG:妊娠
+	CFLAG:ARG:小穴精 = 0
+
+SIF CFLAG:ARG:小穴精 > 10000 && !CFLAG:ARG:妊娠
+	CFLAG:ARG:妊娠 = 1
+SIF CFLAG:ARG:妊娠
+	CFLAG:ARG:妊娠 ++
+IF CFLAG:ARG:妊娠 == 5
+		DRAWLINE
+		PRINTFORMW %CALLNAME:ARG%的肚子稍微鼓了起来
+		PRINTFORMW 好像是怀上了%CALLNAME:MASTER%的孩子
+		PRINTFORMW %CALLNAME:ARG%意外感到有些幸福…
+		CALL KOJO_EVENT(8, 0)
+		TALENT:ARG:妊娠 = 1
+		TALENT:ARG:母乳体質 = 1
+		MAXBASE:ARG:母乳 = 10000
+ENDIF
+IF TALENT:ARG:妊娠
+	IF CFLAG:ARG:妊娠 == 15
+		DRAWLINE
+		PRINTFORMW %CALLNAME:ARG%的肚子变大了很多
+		PRINTFORMW 孩子好像快要出生了
+		PRINTFORMW %CALLNAME:ARG%感到有些紧张…
+		PRINTFORMW 直到%CALLNAME:MASTER%说会爱这个孩子
+		CALL KOJO_EVENT(8, 1)
+	ELSEIF  CFLAG:ARG:妊娠 >= 16 + RAND:3
+			LOCAL = 0
+			DRAWLINE
+			CALL KOJO_EVENT(8, 2)
+			PRINTFORMW %CALLNAME:ARG%进行了分娩，似乎是生出来了。
+			PRINTFORMW ………
+			PRINTFORMW ……
+			PRINTFORMW …
+			PRINTFORMW 
+			PRINTFORM %CALLNAME:ARG%受到了%CALLNAME:MASTER%
+			PRINTFORM 的鼓励
+		IF RAND:2 == 0
+			PRINTFORM 像母亲一样可爱的女孩
+			CFLAG:ARG:女儿 ++
+			CFLAG:MASTER:女儿 ++
+			LOCAL = 0
+		ELSE
+			PRINTFORM 像%CALLNAME:ARG%一样健康的女孩
+			CFLAG:ARG:女儿 ++
+			CFLAG:MASTER:女儿 ++
+			LOCAL = 0
+		ENDIF
+		CFLAG:ARG:已育 ++
+		CFLAG:MASTER:已育 ++
+		TALENT:ARG:妊娠 = 0
+		TALENT:ARG:母性 = 1
+		CFLAG:ARG:妊娠 = 0
+		PRINTFORMW 顺利分娩了。
+		CALL KOJO_EVENT(8, 3 + LOCAL)
+		PRINTFORMW 怀抱着婴儿的%CALLNAME:ARG%，向着自己的孩子和%CALLNAME:MASTER%微笑着。
+	ENDIF
+ENDIF
+
+IF !FLAG:妊娠
+	TALENT:ARG:妊娠 = 0
+	TALENT:ARG:母乳体質 = 0
+	CFLAG:ARG:小穴精 = 0
+	CFLAG:ARG:妊娠 = 0
+ENDIF
+
+;已育标志是両方的妊娠机能关标志但ある场合的み削除
+IF !FLAG:妊娠 && FLAG:奴隶妊娠 == 0
+	CFLAG:ARG:已育 = 0
+	CFLAG:MASTER:已育 = 0
+	CFLAG:ARG:儿子 = 0
+	CFLAG:MASTER:儿子 = 0
+	CFLAG:ARG:女儿 = 0
+	CFLAG:MASTER:女儿 = 0
+ENDIF
+
+;主人的妊娠チェック
+@MASTER_PREGNACY_CHECK(ARG)
+SIF !FLAG:奴隶妊娠
+	RETURN 0
+;配置で爱情によって妊娠率变动被選んでいる场合
+IF FLAG:奴隶妊娠 == 1
+	CFLAG:ARG:M小穴精 = CFLAG:ARG:M小穴精 * MIN(CFLAG:ARG:M好感 + CFLAG:ARG:好感 , 9000) / 10000
+;配置によって爱情に関係なく妊娠被選んでいる场合
+ELSEIF FLAG:奴隶妊娠 == 2
+	CFLAG:ARG:M小穴精 = CFLAG:ARG:M小穴精 * 7 / 10
+ENDIF
+
+SIF TALENT:MASTER:妊娠 || CFLAG:MASTER:妊娠
+	CFLAG:ARG:M小穴精 = 0
+
+IF RAND:(1 + CFLAG:ARG:M小穴精 / 10) > RAND:10000 && !CFLAG:MASTER:妊娠
+	;妊娠标志
+	CFLAG:MASTER:妊娠 = 1
+	;父親的角色的通し番号被保存
+	CFLAG:MASTER:46 = CFLAG:ARG:91
+ENDIF
+
+@MASTER_PREGNACY
+;父親不明的関係で、调教者但奴隶（主人公）被妊娠させた场合的口上是まだ書けません。
+;KOJO_EVENT(9)被枠和して用意しておき增加。
+IF CFLAG:MASTER:妊娠 == 5
+	DRAWLINE
+	PRINTFORMW %CALLNAME:MASTER%的肚子稍微鼓了起来
+	;こ的时点数父親不明
+	PRINTFORMW 好像是怀孕了
+	TALENT:MASTER:妊娠 = 1
+	TALENT:MASTER:母乳体質 = 1
+	MAXBASE:MASTER:母乳 = 10000
+ENDIF
+IF TALENT:MASTER:妊娠
+	IF CFLAG:MASTER:妊娠 == 15
+		DRAWLINE
+		PRINTFORMW %CALLNAME:MASTER%的肚子变大了很多
+		PRINTFORMW 孩子好像快要出生了
+	ELSEIF CFLAG:MASTER:妊娠 >= 16 + RAND:3
+			;父親検索
+			LOCAL:1 = 0
+			FOR LOCAL,1,CHARANUM
+				IF CFLAG:MASTER:46 == CFLAG:LOCAL:91
+					LOCAL:1 = LOCAL
+					BREAK
+				ENDIF
+			NEXT
+			LOCAL = 0
+			DRAWLINE
+			PRINTFORMW %CALLNAME:MASTER%的腹部感到了剧烈的疼痛
+			PRINTFORMW 终于生下了后代
+			PRINTFORMW ………
+			PRINTFORMW ……
+			PRINTFORMW …
+			PRINTFORMW
+			PRINTFORM %CALLNAME:MASTER%是
+			IF RAND:2 == 0
+				PRINTFORM 可爱的女孩
+				SIF LOCAL:1 > 0
+					CFLAG:(LOCAL:1):女儿 ++
+				CFLAG:MASTER:女儿 ++
+				LOCAL = 0
+			ELSE
+				PRINTFORM 健康的女孩
+				SIF LOCAL:1 > 0
+					CFLAG:(LOCAL:1):儿子 ++
+				CFLAG:MASTER:儿子 ++
+				LOCAL = 1
+			ENDIF
+			PRINTFORMW 被无事分娩しました
+			SIF LOCAL:1
+				PRINTFORML 出生的后代总觉得有点像%CALLNAME:(LOCAL:1)%…
+			LOCAL:2 = TARGET
+			TARGET = LOCAL:1
+			TARGET = LOCAL:2
+			SIF LOCAL:1 > 0
+				CFLAG:(LOCAL:1):已育 ++
+			CFLAG:MASTER:已育 ++
+			TALENT:MASTER:妊娠 = 0
+			TALENT:MASTER:母性 = 1
+			CFLAG:MASTER:妊娠 = 0
+	ENDIF
+ENDIF
+
+IF FLAG:奴隶妊娠 == 0
+	TALENT:MASTER:妊娠 = 0
+	TALENT:MASTER:母乳体質 = 0
+	CFLAG:MASTER:M小穴精 = 0
+	CFLAG:MASTER:妊娠 = 0
+ENDIF
+
+@SLAVE_COLLAR
+DRAWLINE
+CALL KOJO_EVENT(7)
+CALL VOIDLINE_IF(RESULT)
+PRINTFORML %CALLNAME:MASTER%因为激烈的调教性而筋疲力尽
+PRINTFORML %CALLNAME:TARGET%为其戴上了证明是自己奴隶的项圈…
+PRINTFORMW 得到了【奴隶项圈】。
+ITEM:奴隶项圈 = 1

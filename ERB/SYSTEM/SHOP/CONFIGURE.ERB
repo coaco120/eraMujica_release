@@ -1,0 +1,353 @@
+﻿;状況に関わらず读心能力但变更可能だった的被修正。他、微调整和修正@revkoishi(14/05/26)
+@CONFIGURE
+#DIMS CONST CONF_FUNC = "ANIMATION_EFFECT", "AI_FREEDOM", "PAD"
+#DIM LINE
+#DIM KOJO_CONF, 21
+LOCAL:1 = RESULT
+LOCAL:2 = CURRENTREDRAW()
+LINE = LINECOUNT
+;口上的配置设定被参照
+VARSET RESULT, -1
+TRYCALLFORM KOJO_SETUP_K{NO:TARGET}
+ARRAYCOPY "RESULT", "KOJO_CONF"
+REDRAW 0
+DO
+	CLEARLINE LINECOUNT - LINE
+	PRINTL [ 0] 设定终了
+	SIF KOJO_CONF:0 > 0					;推荐设定但ある
+		PRINTL [ 1] 当前调教者口上推荐的配置设定
+	IF FLAG:DEBUG || KOJO_CONF:1 > 0	;口上侧但读心能力开にしているか、DEBUG模式である
+		PRINTFORM %"[ 2] 读心能力的程度(DEBUG・口上限定机能)", 50, LEFT%
+		PRINTFORML %SIGNS(TALENT:MASTER:读心能力 - 1, "不知道对方的感受", "多少能了解想法", "能完全看透内心"), 30, RIGHT%
+	ENDIF
+	PRINTFORML %"[ 3] 根据性格和体质等来对素質进行分类", 50, LEFT%%\@ FLAG:素質显示方法 ? 分类 # 登录番号顺 \@, 30, RIGHT%
+	PRINTFORML %"[ 4] 日常生活的描写", 50, LEFT%%\@ FLAG:日常 ?ON # OFF \@, 30, RIGHT%
+	PRINTFORML %"[ 5] 调教者的妊娠机能", 50, LEFT%%\@ FLAG:妊娠 ? ON # OFF \@, 30, RIGHT%
+	PRINTFORM %"[ 6] 调教对象的妊娠机能", 50, LEFT%
+	PRINTFORML %SIGNS(FLAG:奴隶妊娠 - 1, "无法妊娠", "越有爱情越容易妊娠", "妊娠与爱情无关"), 30, RIGHT%
+	PRINTL [ 7] 视觉动画效果的显示设定
+	IF FLAG:模式 == 1
+		PRINTFORM %"[ 8] AI自由度设定(SANDBOX用)", 50, LEFT%
+		PRINTFORML %SIGNS(FLAG:AI自由度 ? FLAG:AI自由度 / 15 # -1, "OFF", "一部ON", "ON"), 30, RIGHT%
+	ENDIF
+	PRINTFORML %"[ 9] 调教中的界面", 50, LEFT%%\@ FLAG:调教UI手柄化 ? 手柄 # 普通 \@, 30, RIGHT%
+	DO
+		INPUT
+		LOCAL:0 = !INRANGE(RESULT, 0, 9)								;范围チェック
+		LOCAL:0 |= (RESULT == 1 && KOJO_CONF:0 <= 0)					;推荐设定但无い
+		LOCAL:0 |= (RESULT == 2 && (FLAG:DEBUG !| KOJO_CONF:1 > 0))	;DEBUG模式でも读心能力开でもない
+		LOCAL:0 |= (RESULT == 8 && FLAG:模式 != 1)					;SANDBOX模式不是
+		IF LOCAL:0
+			CLEARLINE 1
+			REUSELASTLINE 输入值超出范围
+		ENDIF
+	LOOP LOCAL:0
+	LOCAL:0 = RESULT
+	SELECTCASE LOCAL:0
+		CASE 1
+			CALL KOJO_CONFIG_SET(TARGET)
+			IF ANIME_CONFIG("USER2")	;昼夜的エフェクト被リ加载
+				SETBGCOLOR TIME ? 0x00001E # 0x140A00
+			ELSE
+				RESETBGCOLOR
+			ENDIF
+		CASE 2
+			PRINTFORML 进行读心能力程度的设定\n[ 0] 不知道对方的感受\n[ 1] 能了解内心欲望的程度\n[ 2] 能读懂内心
+			CALL INPUT_RANGE(0, 2)
+			TALENT:MASTER:读心能力 = RESULT
+		CASE 3
+			PRINTFORMW 素質\@ FLAG:素質显示方法 ? 返回显示登录番号 # 性格和体质等、根据种类进行整理显示 \@增加
+			FLAG:素質显示方法 ^= 1
+		CASE 4
+			FLAG:日常 ^= 1
+		CASE 5
+			FLAG:妊娠 ^= 1
+		CASE 6
+			PRINTFORML 进行调教对象能否妊娠的设定\n[ 0] 无法妊娠\n[ 1] 越有爱情越容易妊娠\n[ 2] 奴隶不需要爱情！妊娠与爱情无关
+			CALL INPUT_RANGE(0, 2)
+			FLAG:奴隶妊娠 = RESULT
+		CASE 7 TO 9
+			CALLFORM CONFIG_%CONF_FUNC:(LOCAL:0 - 7)%
+	ENDSELECT
+LOOP LOCAL:0
+REDRAW LOCAL:2
+RETURN LOCAL:1
+
+
+;@CONFIG_MASTER_PREGNACY	调教对象的妊娠设定	@CONFIGUREに統合@revkoishi(14/05/26)
+;@CONFIG_MINDREADING		@CONFIGUREに統合@revkoishi(14/05/26)
+;@CONFIG_SHOW_TALENT		@CONFIGUREに統合@revkoishi(14/05/22)
+
+
+;微调整@revkoishi(14/05/22)
+@CONFIG_RENAME_MASTER
+LOCAL:0 = RESULT
+PRINTFORML 当前的名字：%CALLNAME:MASTER%\n要进行名字的变更吗？\n[ 0] 是\n[ 1] 否
+CALL INPUT_RANGE
+IF !RESULT
+	PRINTL 请输入新的名字
+	INPUTS
+	CALLNAME:MASTER '= RESULTS
+	PRINTFORMW 把名字改为了%CALLNAME:MASTER%
+ENDIF
+RETURN LOCAL:0
+
+
+;动画效果的设定
+;REDRAW但变わっ保持戻らない的被修正@revkoishi(14/05/19)
+@CONFIG_ANIMATION_EFFECT
+{
+#DIMS CONST CONF = "", "CHARA_CUTIN", "BGM_CUTIN", "USER1", "USER3", "USER2", "FULLCUTIN", "FLASH",
+                   "QUAKE", "SCROLLTEXT", "FADE"
+}
+{
+#DIMS CONST TEXT = "", "角色登场カットイン", "ＢＧＭカットイン", "BASE・PALAMバー的动画ーション",
+                   "脱衣・着衣时、姿势变更时的动画ーション", "昼・夜で的背景色变化", "全画面カットイン",
+                   "射精时等的画面フラッシュ效果", "画面振动效果", "字符的スライド动画效果",
+                   "字符的フェードイン・アウト效果"
+}
+LOCAL:1 = RESULT
+LOCAL:2 = CURRENTREDRAW()
+REDRAW 2
+DO
+	CALL SAVELINE
+	LOADGLOBAL	;念的ため设定被リ加载
+	CALLF ANIME_CONFIG("SET", GLOBAL)
+	PRINTL 进行各种视觉效果的显示设定。复选框设为OFF时将显示为非显示或省略显示
+	PRINTL ※该项目的设定在保存的数据之间共享
+	PRINTFORML \n   [ 0] 返回
+	FOR LOCAL:0, 1, VARSIZE("CONF")
+		PRINTFORML %UNICODE(ANIME_CONFIG(CONF:(LOCAL:0)) ? 0x2611 # 0x2610)% [{LOCAL:0, 2}] %TEXT:(LOCAL:0)%
+	NEXT
+	CALL INPUT_RANGE(0, 10)
+	LOCAL:0 = RESULT
+	IF LOCAL:0
+		CALLF ANIME_CONFIG(CONF:(LOCAL:0), 2)
+		GLOBAL = ANIME_CONFIG("SAVE")
+		SAVEGLOBAL
+		IF ANIME_CONFIG("USER2")	;昼夜的エフェクト被リ加载
+			SETBGCOLOR TIME ? 0x00001E # 0x140A00
+		ELSE
+			RESETBGCOLOR
+		ENDIF
+		CALL RETURNLINE
+	ENDIF
+LOOP LOCAL:0
+REDRAW LOCAL:2
+RETURN LOCAL:1
+
+
+;微调整@revkoishi(14/05/22)
+@CONFIG_AI_FREEDOM
+#DIMS CONST TEXT = "调教者追加(未实装)", "技巧上升", "知识・技能取得", "道具錬成"
+#DIM LINE
+LINE = LINECOUNT
+LOCAL:1 = RESULT
+DO
+	CLEARLINE LINECOUNT - LINE
+	PRINTFORML 进行AI自由度的设定\n   [ 0] 返回
+	FOR LOCAL:0, 0, VARSIZE("TEXT")
+	{
+		CALL FPRINTL(@"%UNICODE(GETBIT(FLAG:AI自由度, LOCAL:0) ? 0x2611 # 0x2610)% [{LOCAL:0 + 1, 2}] %TEXT:(LOCAL:0)%", 
+                     GETBIT(FLAG:AI自由度, LOCAL:0) ? 0x70C070 # 0x969696)
+	}
+	NEXT
+	PRINTFORML    [ 8] 全部ON\n   [ 9] 全部OFF
+	DO
+		INPUT
+		LOCAL:0 = !GROUPMATCH(RESULT, 0, 1, 2, 3, 4, 8, 9)
+		IF LOCAL:0
+			CLEARLINE 1
+			REUSELASTLINE 范围外的入力値です
+		ENDIF
+	LOOP LOCAL:0
+	LOCAL:0 = RESULT
+	SELECTCASE LOCAL:0
+		CASE 1 TO 7
+			INVERTBIT FLAG:AI自由度, LOCAL:0 - 1
+		CASE 8, 9
+			FLAG:AI自由度 = LOCAL:0 == 8 ? 15 # 0
+	ENDSELECT
+LOOP LOCAL:0
+RETURN LOCAL:1
+
+
+;関数名变更、微调整@revkoishi(14/05/26)
+@KOJO_CONFIG_SET(ARG:0)
+#DIMS CONST CONF = "CHARA_CUTIN", "BGM_CUTIN", "USER1", "USER3", "USER2", "FULLCUTIN", "FLASH", "QUAKE", "SCROLLTEXT", "FADE"
+LOCAL:1 = RESULT
+;口上的配置设定被参照
+VARSET RESULT, -1
+TRYCALLFORM KOJO_SETUP_K{NO:ARG}
+IF RESULT:0 > 0
+	CALL PRINT_DIALOG(@"适用设定推荐的口上配置？", 1, 1, 0)
+	CALL PRINT_DIALOG(@"（适用后也可以从商店菜单进行变更）", 0, 1, 1)
+	CALL PRINT_CHOICE(, "是", 1, "否", 2, )
+	IF RESULT == 1
+		TALENT:MASTER:读心能力 = RESULT:1  >= 0 ? RESULT:1  # TALENT:MASTER:读心能力	;主人公的读心能力(0=读めない、1=空気但、2=心但)
+		FLAG:素質显示方法      = RESULT:2  >= 0 ? RESULT:2  # FLAG:素質显示方法			;素質的显示分类(0=番号顺、1=系統別)
+		FLAG:日常              = RESULT:3  >= 0 ? RESULT:3  # FLAG:日常					;日常事件(0=关、1=开)
+		FLAG:妊娠              = RESULT:4  >= 0 ? RESULT:4  # FLAG:妊娠					;调教者的妊娠判定(0=关、1=开)
+		FLAG:奴隶妊娠          = RESULT:5  >= 0 ? RESULT:5  # FLAG:奴隶妊娠				;调教对象的妊娠判定(0=关、1=爱()但あるほど妊娠し容易、2=普通に开)
+		FLAG:AI自由度          = RESULT:6  >= 0 ? RESULT:6  # FLAG:AI自由度				;AI自由度（SANDBOX用）(0=余計なこ和不做、1=人員追加、2=技巧上升、4=技能取得、8=道具錬成、15=全部被自动で行う)
+		FLAG:口上              = RESULT:10 >= 0 ? RESULT:10 # FLAG:口上					;口上显示设定(0=显示不做、1=显示做)
+		;动画设定(0=关、1=开)
+		;11.角色登场カットイン/12.ＢＧＭカットイン/13.PALAM獲得动画/14.脱衣动画/15.昼夜的背景色变化/
+		;16.全画面カットイン/17.フラッシュ效果/18.振动效果/19.字符的スライド/20.字符的フェードイン・アウト
+		FOR LOCAL:0, 11, 21
+			SIF RESULT:(LOCAL:0) >= 0
+				CALLF ANIME_CONFIG(CONF:(LOCAL:0 - 11), RESULT:(LOCAL:0))
+		NEXT
+		GLOBAL = ANIME_CONFIG("SAVE")
+		SAVEGLOBAL
+	ENDIF
+	PRINTFORMW 变更配置设定\@ RESULT == 1 ? した # せん \@
+ELSE
+	PRINTW 没有推荐的口上配置设定
+ENDIF
+RETURN LOCAL:1
+
+
+;Enter被新たに割り当てるこ和但出来なかった的で修正。他、微调整@revkoishi(14/05/26)
+@CONFIG_PAD
+#DIM LINE
+LOCAL:1 = RESULT
+LOCAL:2 = GETCOLOR()
+LINE = LINECOUNT
+DO
+	CLEARLINE LINECOUNT - LINE
+	SIF GROUPMATCH("", KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT) == 4
+		CALL SET_KEY_DEFAULT
+	DRAWLINE
+	PRINTL 手柄模式设定
+	DRAWLINE
+	PRINTFORML   [ 0] \@FLAG:调教UI手柄化 ? ＯＮ # ＯＦＦ \@
+	DRAWLINE
+	PRINTL 按键设定
+	PRINTL <>内的字符是实际按键。使用游戏手柄时请将显示在<>内的字符分配给每个键
+	PRINTL 即使使用键盘操作，也可以自由指定按键使用
+	PRINTL ※如果<>内为空（仅显示<>），则分配给Enter键
+	PRINTL 
+	CALL HTMLPRINTL("  " + HTMLBUTTON(@"[ 1] L&lt;%KEY_L%&gt;", "1") + " " * 35 + HTMLBUTTON(@"[ 2] R&lt;%KEY_R%&gt;", "2") + "<BR><BR>")
+	CALL HTMLPRINTL(" " * 12 + HTMLBUTTON(@"[ 3] ↑&lt;%KEY_UP%&gt;", "3") + " " * 33 + HTMLBUTTON(@"[ 7] &lt;%KEY_X%&gt;", "7"))
+{
+	CALL HTMLPRINTL("  " + HTMLBUTTON(@"[ 4] ←&lt;%KEY_LEFT%&gt;", "4") + " " * 10 + HTMLBUTTON(@"[ 5] →&lt;%KEY_RIGHT%&gt;", "5") + 
+                    " " * 14 + HTMLBUTTON(@"[ 8] &lt;%KEY_Y%&gt;", "8") + " " * 10 + HTMLBUTTON(@"[ 9] &lt;%KEY_A%&gt;", "9"))
+}
+	CALL HTMLPRINTL(" " * 12 + HTMLBUTTON(@"[ 6] ↓&lt;%KEY_DOWN%&gt;", "6") + " " * 33 + HTMLBUTTON(@"[10] &lt;%KEY_B%&gt;", "10"))
+	DRAWLINE
+	PRINTL 显示模式(在画面上作为按键显示的模式)
+	FOR LOCAL:0, 0, 3
+		SETCOLOR FLAG:调教UI手柄显示模式 == LOCAL:0 ? 0x7070C0 # LOCAL:2
+		PRINTBUTTON @"[{LOCAL:0 + 11}] %AUTO_SPLIT("直接显示_ＳＦＣ风_ＰＳ风　", "_", LOCAL:0)%", LOCAL:0 + 11
+		SETCOLOR LOCAL:2
+		PRINTFORML (%AUTO_SPLIT("和实际操作的按钮相同_使用ＡＢＸＹ_使用◯×□△", "_", LOCAL:0)%)
+	NEXT
+	DRAWLINE
+	PRINTL [99] 返回
+	DO
+		INPUT
+		LOCAL:0 = INRANGE(RESULT, 0, 13) !| RESULT == 99
+		IF LOCAL:0
+			CLEARLINE 1
+			REUSELASTLINE 输入值超出范围
+		ENDIF
+	LOOP LOCAL:0
+	LOCAL:0 = RESULT
+	SELECTCASE LOCAL:0
+		CASE 0
+			INVERTBIT FLAG:调教UI手柄化, 0
+		CASE 1 TO 10
+			PRINTL 请按下设定键
+			ONEINPUTS
+			SELECTCASE RESULT
+				CASE 1
+					KEY_L = %RESULTS%
+				CASE 2
+					KEY_R = %RESULTS%
+				CASE 3
+					KEY_UP    = %RESULTS%
+				CASE 4
+					KEY_LEFT  = %RESULTS%
+				CASE 5
+					KEY_RIGHT = %RESULTS%
+				CASE 6
+					KEY_DOWN  = %RESULTS%
+				CASE 7
+					KEY_X = %RESULTS%
+				CASE 8
+					KEY_Y = %RESULTS%
+				CASE 9
+					KEY_A = %RESULTS%
+				CASE 10
+					KEY_B = %RESULTS%
+			ENDSELECT
+			IF FLAG:调教UI手柄显示模式 == 0
+				KEYMARK_UP    = %KEY_UP%
+				KEYMARK_DOWN  = %KEY_DOWN%
+				KEYMARK_LEFT  = %KEY_LEFT%
+				KEYMARK_RIGHT = %KEY_RIGHT%
+				KEYMARK_A = %KEY_A%
+				KEYMARK_B = %KEY_B%
+				KEYMARK_X = %KEY_X%
+				KEYMARK_Y = %KEY_Y%
+				KEYMARK_L = %KEY_L%
+				KEYMARK_R = %KEY_R%
+			ENDIF
+		CASE 11
+			FLAG:调教UI手柄显示模式 = 0
+			KEYMARK_UP    = %KEY_UP%
+			KEYMARK_DOWN  = %KEY_DOWN%
+			KEYMARK_LEFT  = %KEY_LEFT%
+			KEYMARK_RIGHT = %KEY_RIGHT%
+			KEYMARK_A = %KEY_A%
+			KEYMARK_B = %KEY_B%
+			KEYMARK_X = %KEY_X%
+			KEYMARK_Y = %KEY_Y%
+			KEYMARK_L = %KEY_L%
+			KEYMARK_R = %KEY_R%
+		CASE 12
+			FLAG:调教UI手柄显示模式 = 1
+			KEYMARK_A = A
+			KEYMARK_B = B
+			KEYMARK_X = X
+			KEYMARK_Y = Y
+			KEYMARK_L = L
+			KEYMARK_R = R
+		CASE 13
+			FLAG:调教UI手柄显示模式 = 2
+			KEYMARK_A = ◯
+			KEYMARK_B = ×
+			KEYMARK_X = △
+			KEYMARK_Y = □
+			KEYMARK_L = Ｌ
+			KEYMARK_R = Ｒ
+	ENDSELECT
+LOOP LOCAL:0 != 99
+RETURN LOCAL:1
+
+
+;微调整@revkoishi(14/05/22)
+@SET_KEY_DEFAULT
+KEY_UP = 8
+KEY_DOWN = 2
+KEY_LEFT = 4
+KEY_RIGHT = 6
+KEY_A = 
+KEY_B = 9
+KEY_X = 1
+KEY_Y = 3
+KEY_L = +
+KEY_R = -
+
+KEYMARK_UP = 8
+KEYMARK_DOWN = 2
+KEYMARK_LEFT = 4
+KEYMARK_RIGHT = 6
+KEYMARK_A = En
+KEYMARK_B = 9
+KEYMARK_X = 1
+KEYMARK_Y = 3
+KEYMARK_L = +
+KEYMARK_R = -
+RETURN RESULT

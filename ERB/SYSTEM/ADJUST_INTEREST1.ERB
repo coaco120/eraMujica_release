@@ -1,0 +1,1058 @@
+﻿
+;eratohoR#私家改变 0004.6.1 用　兴趣修正パッチ より改变后導入
+
+;调教者的選んだ指令に对して、奴隶的指令で兴趣但増えたり減ったり
+;使用标志 … CFLAG:400 ～ CFLAG:520 水平(CFLAG:(400 + TFLAG:ACT)
+;ARG = 0:書き込み 1:读み出し(初期化)
+@KYOMI_ADD(ARG)
+#LOCALSIZE 200
+#DIM LCOUNT
+#DIM LTEMP
+
+IF ARG == 1
+	;ACT长期修正値に加算
+	FOR LCOUNT, 0, 200
+		RESULT:LCOUNT += ABSQSI(LOCAL:LCOUNT)
+	NEXT
+	;LOCAL初期化
+	VARSET LOCAL
+	;RESULT保持
+	RETURN RESULT
+ENDIF
+
+;ACT范围外(ACT非实行时に呼ば受到等)的场合脱出
+SIF GET_NORMALACTNUM(TFLAG:ACT) < 0 || VARSIZE("LOCAL") <= GET_NORMALACTNUM(TFLAG:ACT)
+	RETURN 0
+
+;最终的に加算做兴趣値
+LTEMP = 0
+
+;发狂那么常に兴趣-2
+SIF IS_COMGRONAME("发狂/逃跑/拒绝")
+	LTEMP -= CFLAG:MASTER:调教等级 < 10 ? 2 # 4
+
+;讨厌那么常に兴趣-1 // 发狂扱い的时弹くように
+SIF IS_NOWCOMNAME("讨厌") && IS_COMGRONAME("消极的服从")
+	LTEMP -= CFLAG:MASTER:调教等级 < 10 ? 1 # 2
+
+;调教者的自尊心但高场合、爱抚/性交系で貶され时ムキになる
+{
+SIF TALENT:自尊心高 && IS_NOWCOMNAME("骂笨手笨脚") 
+&& (MENUMATCH(TFLAG:ACT, "爱抚") || MENUMATCH(TFLAG:ACT, "性交"))
+}
+	LTEMP += 2
+
+;特定状況で的效果up
+{
+SIF IS_NOWCOMNAME("充满爱意的执行") && 
+(MENUMATCH(TFLAG:ACT, "奉仕") || MENUMATCH(TFLAG:ACT, "性奉") || IS_NOWACTNAME("骑乘位"))
+}
+	LTEMP += 3
+
+;虐待狂是奴隶的悲鳴被喜ぶ
+SIF TALENT:虐待狂 && IS_NOWCOMNAME("发出悲鸣")
+	LTEMP += 2
+
+
+;///////////
+;ACT毎的修正
+;///////////
+SELECTCASE GET_ACTNAME(TFLAG:ACT)
+	;ACT分类/会话系
+	;==============
+	CASE "询问今天的心情"
+		SELECTCASE TFLAG:ACT派生
+			CASE 0 ;                                       歯切れ恶く質問に答えた
+				LTEMP -= 1
+			CASE 1 ;                               派生但勇気被出して强く当たった
+				LTEMP -= 2
+			CASE 2 ;                             皮肉「今的心情是、和聞かれても」
+				LTEMP -= 1
+			CASE 3 ;                                 是っきり和今的感受被告げた
+				LTEMP += 3
+			CASE 4 ;                                           まあまあ恶く是ない
+				LTEMP += 1
+			CASE 5 ;                                         心情舒畅こ和し想要
+				LTEMP += 2
+		ENDSELECT
+	CASE "询问对自己的感觉"
+		SELECTCASE TFLAG:ACT派生
+			CASE 0 ;                                 嫌いじゃない…かも知れない…
+				LTEMP += 1
+			CASE 1 ;                                     そんなこ和あるわけない！
+				LTEMP -= 2
+			CASE 2 ;               皮肉「困るねぇ…喜欢じゃない和いったら怒る？」
+				LTEMP -= 1
+			CASE 3 ;       もう酷いこ和しなければ、もっ和喜欢になれるかもしれない
+				LTEMP += 1
+			CASE 4 ;                                       是っきり和喜欢和告げた
+			 	LTEMP += 3
+			CASE 5 ;           もっ和すごいこ和してくれば、もっ和喜欢になれるかも
+				LTEMP += 2
+		ENDSELECT
+	CASE "谈论性的话题"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "消极的服从"
+				LTEMP -= 1
+			CASE "淡然的服从"
+				LTEMP += 2
+			CASE "积极的服从"
+				LTEMP += 3
+			CASE "接受"
+				LTEMP += 1
+			CASE "请求宽恕"
+				LTEMP -= 1
+		ENDSELECT
+	CASE "温柔的安慰"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "消极的服从"
+				LTEMP -= 1
+			CASE "淡然的服从"
+				LTEMP += 2
+			CASE "积极的服从"
+				LTEMP += 3
+			CASE "接受"
+				LTEMP += 1
+			CASE "请求宽恕"
+				LTEMP -= 1
+		ENDSELECT
+	CASE "严厉的威胁"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "消极的服从"
+				LTEMP += 2
+			CASE "淡然的服从"
+				LTEMP -= 1
+			CASE "积极的服从"
+				LTEMP -= 2
+			CASE "接受"
+				LTEMP += 1
+			CASE "请求宽恕"
+				LTEMP += 3
+		ENDSELECT
+	CASE "请求变更服装"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "消极的服从", "接受"
+				LTEMP += 1
+			CASE "积极的服从", "淡然的服从"
+				LTEMP += 2
+			CASEELSE
+				LTEMP -= PALAM:MASTER:害羞 > PALAM:MASTER:反抗 ? 1 # 2
+		ENDSELECT
+	CASE "征求同意"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "消极的服从" ;                              小さい声で了承
+				LTEMP += 1
+			CASE "淡然的服从" ;                            喜欢にすればいい
+				LTEMP += 1
+			CASE "积极的服从" ;                        初めて被捧げてもいい
+				LTEMP += 3
+			CASE "接受" ;感受よくしてくれる那么初めて被あげてもいい
+				LTEMP += 2
+			CASEELSE          ;                                  合意不做
+				LTEMP -= 2
+		ENDSELECT
+	CASE "宣称要进行惩罚"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "消极的服从"
+				LTEMP += 2
+			CASE "淡然的服从"
+				LTEMP -= 1
+			CASE "积极的服从"
+				LTEMP -= 2
+			CASE "接受"
+				LTEMP += 1
+			CASE "请求宽恕"
+				LTEMP += 3
+		ENDSELECT
+	CASE "大喊大叫"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "消极的服从"
+				LTEMP += 2
+			CASE "淡然的服从"
+				LTEMP -= 1
+			CASE "积极的服从"
+				LTEMP -= 2
+			CASE "接受"
+				LTEMP += 1
+			CASE "请求宽恕"
+				LTEMP += 3
+		ENDSELECT
+	CASE "令人毛骨悚然的笑"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "消极的服从"
+				LTEMP += 2
+			CASE "淡然的服从"
+				LTEMP -= 1
+			CASE "积极的服从"
+				LTEMP -= 2
+			CASE "接受"
+				LTEMP += 1
+			CASE "请求宽恕"
+				LTEMP += 3
+		ENDSELECT
+
+	;ACT分类/爱抚系
+	;==============
+	CASE "用手爱抚"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "消极的服从"
+				LTEMP -= 1
+			CASE "淡然的服从"
+				LTEMP += 1
+			CASE "积极的服从"
+				LTEMP += 2
+			CASE "接受"
+				LTEMP += 3
+			CASE "请求宽恕"
+				LTEMP -= 2
+		ENDSELECT
+	CASE "胸爱抚"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "消极的服从"
+				LTEMP -= 1
+			CASE "淡然的服从"
+				LTEMP += 1
+			CASE "积极的服从"
+				LTEMP += 2
+			CASE "接受"
+				LTEMP += 3
+			CASE "请求宽恕"
+				LTEMP -= 2
+		ENDSELECT
+	CASE "用口爱抚"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "消极的服从"
+				LTEMP -= 1
+			CASE "淡然的服从"
+				LTEMP += 1
+			CASE "积极的服从"
+				LTEMP += 2
+			CASE "接受"
+				LTEMP += 3
+			CASE "请求宽恕"
+				LTEMP -= 2
+		ENDSELECT
+	CASE "肛门爱抚"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "消极的服从"
+				LTEMP -= 1
+			CASE "淡然的服从"
+				LTEMP += 1
+			CASE "积极的服从"
+				LTEMP += 2
+			CASE "接受"
+				LTEMP += 3
+			CASE "请求宽恕"
+				LTEMP -= 2
+		ENDSELECT
+	CASE "舔肛门"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "消极的服从"
+				LTEMP -= 1
+			CASE "淡然的服从"
+				LTEMP += 1
+			CASE "积极的服从"
+				LTEMP += 2
+			CASE "接受"
+				LTEMP += 3
+			CASE "请求宽恕"
+				LTEMP -= 2
+		ENDSELECT
+	CASE "接吻"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "消极的服从"
+				LTEMP -= 1
+			CASE "淡然的服从"
+				LTEMP += 1
+			CASE "积极的服从"
+				LTEMP += 3
+			CASE "接受"
+				LTEMP += 2
+			CASE "请求宽恕"
+				LTEMP -= 3
+		ENDSELECT
+	CASE "摩擦性器"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "消极的服从"
+				LTEMP -= 1
+			CASE "淡然的服从"
+				LTEMP += 1
+			CASE "积极的服从"
+				LTEMP += 2
+			CASE "接受"
+				LTEMP += 3
+			CASE "请求宽恕"
+				LTEMP -= 2
+		ENDSELECT
+	CASE "进行乳交"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "消极的服从"
+				LTEMP -= 1
+			CASE "淡然的服从"
+				LTEMP += 1
+			CASE "积极的服从"
+				LTEMP += 2
+			CASE "接受"
+				LTEMP += 3
+			CASE "请求宽恕"
+				LTEMP -= 2
+		ENDSELECT
+	CASE "进行足交"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "消极的服从"
+				LTEMP -= 1
+			CASE "淡然的服从"
+				LTEMP += 1
+			CASE "积极的服从"
+				LTEMP += 2
+			CASE "接受"
+				LTEMP += 3
+			CASE "请求宽恕"
+				IF TALENT:虐待狂 || TALENT:坏心眼
+					LTEMP += 2
+				ELSE
+					LTEMP -= 2
+				ENDIF
+		ENDSELECT
+	CASE "指插入"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "消极的服从"
+				LTEMP -= 1
+			CASE "淡然的服从"
+				LTEMP += 1
+			CASE "积极的服从"
+				LTEMP += 2
+			CASE "接受"
+				LTEMP += 3
+			CASE "请求宽恕"
+				LTEMP -= 2
+		ENDSELECT
+
+	;ACT分类/道具系
+	;==============
+	CASE "跳蛋"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "消极的服从"
+				LTEMP -= 1
+			CASE "淡然的服从"
+				LTEMP += 1
+			CASE "积极的服从"
+				LTEMP += 2
+			CASE "接受"
+				LTEMP += 3
+			CASE "请求宽恕"
+				LTEMP -= 2
+		ENDSELECT
+	CASE "震动棒"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "消极的服从"
+				LTEMP -= 1
+			CASE "淡然的服从"
+				LTEMP += 1
+			CASE "积极的服从"
+				LTEMP += 2
+			CASE "接受"
+				LTEMP += 3
+			CASE "请求宽恕"
+				LTEMP -= 2
+		ENDSELECT
+	CASE "肛门震动棒"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "消极的服从"
+				LTEMP -= 1
+			CASE "淡然的服从"
+				LTEMP += 1
+			CASE "积极的服从"
+				LTEMP += 2
+			CASE "接受"
+				LTEMP += 3
+			CASE "请求宽恕"
+				LTEMP -= 2
+		ENDSELECT
+	CASE "肛门拉珠"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "消极的服从"
+				LTEMP -= 1
+			CASE "淡然的服从"
+				LTEMP += 1
+			CASE "积极的服从"
+				LTEMP += 2
+			CASE "接受"
+				LTEMP += 3
+			CASE "请求宽恕"
+				LTEMP -= 2
+		ENDSELECT
+	CASE "Ｃ道具爱抚"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "消极的服从"
+				LTEMP -= 1
+			CASE "淡然的服从"
+				LTEMP += 1
+			CASE "积极的服从"
+				LTEMP += 2
+			CASE "接受"
+				LTEMP += 3
+			CASE "请求宽恕"
+				LTEMP -= 2
+		ENDSELECT
+	CASE "乳头夹"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "消极的服从"
+				LTEMP -= 1
+			CASE "淡然的服从"
+				LTEMP += 1
+			CASE "积极的服从"
+				LTEMP += 2
+			CASE "接受"
+				LTEMP += 3
+			CASE "请求宽恕"
+				LTEMP -= 2
+		ENDSELECT
+	CASE "假阴茎"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "消极的服从"
+				LTEMP -= 1
+			CASE "淡然的服从"
+				LTEMP += 1
+			CASE "积极的服从"
+				LTEMP += 2
+			CASE "接受"
+				LTEMP += 3
+			CASE "请求宽恕"
+				LTEMP -= 2
+		ENDSELECT
+
+	;ACT分类/爱抚系
+	;==============
+	CASE "推倒"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "消极的服从"                  ;      顔被背け黙り込んだ
+				LTEMP -= 1
+			CASE "积极的服从", "淡然的服从"    ;      抵抗せず身被任せた
+				LTEMP += 2
+			CASE "接受"                  ;          抵抗しなかった
+				LTEMP += 1
+			CASE "请求宽恕"                  ;押さえつけられ怯えている
+				LTEMP -= 2
+		ENDSELECT
+
+	;ACT分类/性交系
+	;==============
+	CASE "正常位"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "消极的服从"
+				LTEMP -= 1
+			CASE "淡然的服从"
+				LTEMP += 1
+			CASE "积极的服从", "淡然的服从"
+				LTEMP += 1
+			CASE "接受"
+				SIF IS_NOWCOMNAME("摆动腰部")
+					LTEMP += 2
+				SIF IS_NOWCOMNAME("射进里面！")
+					LTEMP += 3
+				SIF IS_NOWCOMNAME("不要中出！")
+					LTEMP += 1
+				;最低限+2是加算される
+				LTEMP += 1
+			CASE "请求宽恕"
+				IF TALENT:虐待狂
+					LTEMP += 3
+				ELSE
+					LTEMP -= 2
+				ENDIF
+		ENDSELECT
+	CASE "后背位"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "消极的服从"
+				LTEMP -= 1
+			CASE "积极的服从", "淡然的服从"
+				LTEMP += 1
+			CASE "接受"
+				SIF IS_NOWCOMNAME("摆动腰部")
+					LTEMP += 2
+				SIF IS_NOWCOMNAME("射进里面！")
+					LTEMP += 3
+				SIF IS_NOWCOMNAME("不要中出！")
+					LTEMP += 1
+				;最低限+2是保証
+				LTEMP += 1
+			CASE "请求宽恕"
+				IF TALENT:虐待狂
+					LTEMP += 4
+				ELSE
+					LTEMP -= 2
+				ENDIF
+		ENDSELECT
+	CASE "骑乘位"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "消极的服从"
+				LTEMP -= 1
+			CASE "积极的服从", "淡然的服从"
+				LTEMP += 2
+			CASE "接受"
+				SIF IS_NOWCOMNAME("射进里面！")
+					LTEMP += 3
+				SIF IS_NOWCOMNAME("不要中出！")
+					LTEMP += 1
+				;最低限+2是加算される
+				LTEMP += 1
+			CASE "请求宽恕"
+				IF TALENT:虐待狂
+					LTEMP += 3
+				ELSE
+					LTEMP -= 2
+				ENDIF
+		ENDSELECT
+	CASE "对面座位"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "消极的服从"
+				LTEMP -= 1
+			CASE "积极的服从", "淡然的服从"
+				LTEMP += 1
+			CASE "接受"
+				SIF IS_NOWCOMNAME("摆动腰部")
+					LTEMP += 2
+				SIF IS_NOWCOMNAME("射进里面！")
+					LTEMP += 3
+				SIF IS_NOWCOMNAME("不要中出！")
+					LTEMP += 1
+				;最低限+2是加算される
+				LTEMP += 1
+			CASE "请求宽恕"
+				IF TALENT:虐待狂
+					LTEMP += 3
+				ELSE
+					LTEMP -= 2
+				ENDIF
+		ENDSELECT
+	CASE "背面座位"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "消极的服从"
+				LTEMP -= 1
+			CASE "积极的服从", "淡然的服从"
+				LTEMP += 1
+			CASE "接受"
+				SIF IS_NOWCOMNAME("摆动腰部")
+					LTEMP += 2
+				SIF IS_NOWCOMNAME("射进里面！")
+					LTEMP += 3
+				SIF IS_NOWCOMNAME("不要中出！")
+					LTEMP += 1
+				;最低限+2是加算される
+				LTEMP += 1
+			CASE "请求宽恕"
+				IF TALENT:虐待狂
+					LTEMP += 3
+				ELSE
+					LTEMP -= 2
+				ENDIF
+		ENDSELECT
+	CASE "肛交"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "消极的服从"
+				LTEMP -= 1
+			CASE "积极的服从", "淡然的服从"
+				LTEMP += TALENT:倒错的 ? 2 # 1
+			CASE "接受"
+				SIF IS_NOWCOMNAME("摆动腰部")
+					LTEMP += TALENT:倒错的 ? 3 # 2
+				SIF IS_NOWCOMNAME("射进里面！")
+					LTEMP += TALENT:倒错的 ? 4 # 3
+				SIF IS_NOWCOMNAME("不要中出！")
+					LTEMP += TALENT:倒错的 ? 2 # 1
+				;最低限+2是加算される
+				LTEMP += 1
+			CASE "请求宽恕"
+				IF TALENT:虐待狂
+					LTEMP += 3
+				ELSE
+					LTEMP -= 2
+				ENDIF
+		ENDSELECT
+
+	;ACT分类/羞耻系
+	;==============
+	CASE "自慰"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "积极的服从", "接受"
+				LTEMP += 2
+			CASE "淡然的服从"
+				LTEMP += 1
+			CASE "消极的服从"
+				SIF IS_NOWCOMNAME("感到害羞")
+					LTEMP += 3
+				LTEMP -= 1
+			;反应但拒绝
+			CASEELSE
+				IF TALENT:坏心眼
+					LTEMP += 1
+				ELSE
+					LTEMP -= 2
+				ENDIF
+		ENDSELECT
+	CASE "打开小穴"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "接受"
+				LTEMP += 1
+			CASE "积极的服从", "淡然的服从"
+				LTEMP += 2
+			CASE "消极的服从"
+				SIF IS_NOWCOMNAME("感到害羞")
+					LTEMP += 3
+				LTEMP -= 1
+			CASE "请求宽恕"
+				IF TALENT:坏心眼
+					LTEMP += 1
+				ELSE
+					LTEMP -= 2
+				ENDIF
+		ENDSELECT
+	CASE "展示自慰"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "接受", "积极的服从"
+				LTEMP += 2
+			CASE "淡然的服从"
+				LTEMP += 1
+			CASE "消极的服从"
+				SIF IS_NOWCOMNAME("感到害羞")
+					LTEMP += 3
+				LTEMP -= 1
+			CASE "请求宽恕"
+				IF TALENT:坏心眼
+					LTEMP += 1
+				ELSE
+					LTEMP -= 2
+				ENDIF
+		ENDSELECT
+	CASE "羞耻PLAY"
+		SIF IS_NOWCOMNAME("感到害羞")
+			LTEMP += 2
+	CASE "野外PLAY"
+		SIF IS_NOWCOMNAME("感到害羞")
+			LTEMP += 2
+	CASE "放尿"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "接受"
+				LTEMP += 1
+			CASE "淡然的服从", "积极的服从"
+				LTEMP += 2
+			CASE "消极的服从"
+				SIF IS_NOWCOMNAME("感到害羞")
+					LTEMP += 3
+				LTEMP -= 1
+			;反应但拒绝
+			CASEELSE
+				LTEMP -= 2
+		ENDSELECT
+
+	;ACT分类/奉仕系
+	;==============
+	CASE "强制手爱抚"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "积极的服从", "淡然的服从"
+				LTEMP += 2
+			CASE "请求宽恕"
+				LTEMP -= 2
+			CASE "消极的服从"
+				LTEMP -= 1
+			CASE "发狂", "拒绝", "逃跑"
+				LTEMP -= IS_COMIMPNAME("恶印象大") ? 3 # 1
+		ENDSELECT
+	CASE "强制口爱抚"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "积极的服从", "淡然的服从"
+				LTEMP += 2
+			CASE "请求宽恕", "消极的服从"
+				LTEMP += 1
+			CASE "发狂", "拒绝", "逃跑"
+				LTEMP -= IS_COMIMPNAME("恶印象大") ? 3 # 1
+		ENDSELECT
+	CASE "乳交"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "积极的服从", "淡然的服从"
+				LTEMP += 2
+			CASE "请求宽恕", "消极的服从"
+				LTEMP += 1
+			CASE "发狂", "拒绝", "逃跑"
+				LTEMP -= IS_COMIMPNAME("恶印象大") ? 3 # 1
+		ENDSELECT
+	CASE "素股"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "积极的服从", "淡然的服从"
+				LTEMP += 2
+			CASE "请求宽恕", "消极的服从"
+				LTEMP += 1
+			CASE "发狂", "拒绝", "逃跑"
+				LTEMP -= IS_COMIMPNAME("恶印象大") ? 3 # 1
+		ENDSELECT
+	CASE "强制舔足"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "积极的服从", "淡然的服从"
+				;调教者但虐待狂/自尊心高的场合是+1
+				SIF TALENT:虐待狂 || TALENT:自尊心高
+					LTEMP += 1
+				LTEMP += 2
+			CASE "请求宽恕", "消极的服从"
+				LTEMP -= 1
+			CASE "发狂", "拒绝", "逃跑"
+				LTEMP -= IS_COMIMPNAME("恶印象大") ? 3 # 1
+		ENDSELECT
+	CASE "深喉"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "积极的服从", "淡然的服从"
+				LTEMP += 2
+			CASE "请求宽恕", "消极的服从"
+				LTEMP += TALENT:虐待狂 ? 2 # 1
+			CASE "接受"
+				LTEMP += 1
+		ENDSELECT
+	CASE "强制胸爱抚"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "积极的服从", "淡然的服从"
+				LTEMP += 2
+			CASE "请求宽恕", "消极的服从"
+				LTEMP += 1
+			CASE "发狂", "拒绝", "逃跑"
+				LTEMP -= 2
+		ENDSELECT
+
+	;ACT分类/施虐系
+	;==============
+	CASE "打屁股"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "积极的服从", "淡然的服从"
+				LTEMP += 1
+			CASE "接受"
+				LTEMP += 2
+			CASE "请求宽恕", "消极的服从"
+				SIF TALENT:虐待狂
+					LTEMP += 2
+				SIF IS_NOWCOMNAME("发出悲鸣") || (IS_NOWCOMNAME("忍受疼痛") && TFLAG:REACT派生)
+					LTEMP += 1
+				LTEMP -= 1
+		ENDSELECT
+	CASE "鞭"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "积极的服从", "淡然的服从"
+				LTEMP += 1
+			CASE "接受"
+				LTEMP += 2
+			CASE "请求宽恕", "消极的服从"
+				SIF TALENT:虐待狂
+					LTEMP += 2
+				SIF IS_NOWCOMNAME("发出悲鸣") || (IS_NOWCOMNAME("忍受疼痛") && TFLAG:REACT派生)
+					LTEMP += 1
+				LTEMP -= 1
+		ENDSELECT
+	CASE "针"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "积极的服从", "淡然的服从"
+				LTEMP += 1
+			CASE "接受"
+				LTEMP += 2
+			CASE "请求宽恕", "消极的服从"
+				SIF TALENT:虐待狂
+					LTEMP += 2
+				SIF IS_NOWCOMNAME("发出悲鸣") || (IS_NOWCOMNAME("忍受疼痛") && TFLAG:REACT派生)
+					LTEMP += 1
+				LTEMP -= 1
+		ENDSELECT
+	CASE "绳"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "积极的服从", "淡然的服从"
+				LTEMP += 1
+			CASE "接受"
+				LTEMP += 2
+			CASE "请求宽恕", "消极的服从"
+				SIF TALENT:虐待狂
+					LTEMP += 2
+				{
+				SIF IS_NOWCOMNAME("感到害羞") || IS_NOWCOMNAME("发出悲鸣") 
+				|| (IS_NOWCOMNAME("忍受疼痛") && TFLAG:REACT派生)
+				}
+					LTEMP += 1
+				LTEMP -= 1
+		ENDSELECT
+	CASE "眼罩"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "积极的服从", "淡然的服从"
+				LTEMP += 1
+			CASE "接受"
+				LTEMP += 2
+			CASE "请求宽恕", "消极的服从"
+				SIF TALENT:虐待狂
+					LTEMP += 2
+				{
+				SIF IS_NOWCOMNAME("感到害羞") || IS_NOWCOMNAME("发出悲鸣") 
+				|| (IS_NOWCOMNAME("忍受疼痛") && TFLAG:REACT派生)
+				}
+					LTEMP += 1
+				LTEMP -= 1
+		ENDSELECT
+	CASE "口球"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "积极的服从", "淡然的服从"
+				LTEMP += 1
+			CASE "接受"
+				LTEMP += 2
+			CASE "请求宽恕", "消极的服从"
+				SIF TALENT:虐待狂
+					LTEMP += 2
+				{
+				SIF IS_NOWCOMNAME("感到害羞") || IS_NOWCOMNAME("发出悲鸣") 
+				|| (IS_NOWCOMNAME("忍受疼痛") && TFLAG:REACT派生)
+				}
+					LTEMP += 1
+				LTEMP -= 1
+		ENDSELECT
+	CASE "辱骂"
+		SIF IS_COMGRONAME("积极的服从/淡然的服从/接受")
+			LTEMP += 1
+		SIF IS_COMGRONAME("请求宽恕/消极的服从")
+			LTEMP -= 1
+		SIF IS_NOWCOMNAME("保持沉默")
+			LTEMP -= 1
+		SIF IS_NOWCOMNAME("害怕")
+			LTEMP -= 1
+		SIF IS_NOWCOMNAME("发出悲鸣")
+			LTEMP += 2
+		SIF IS_NOWCOMNAME("请求宽恕")
+			LTEMP += TALENT:虐待狂 || TALENT:坏心眼 ? 2 # 0
+	CASE "三角木马"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "积极的服从", "淡然的服从"
+				LTEMP += 1
+			CASE "接受"
+				LTEMP += 2
+			CASE "请求宽恕", "消极的服从"
+				SIF TALENT:虐待狂
+					LTEMP += 2
+				SIF IS_NOWCOMNAME("发出悲鸣") || (IS_NOWCOMNAME("忍受疼痛") && TFLAG:REACT派生)
+					LTEMP += 1
+				LTEMP -= 1
+		ENDSELECT
+	CASE "灌肠套装"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "积极的服从", "淡然的服从"
+				LTEMP += 1
+			CASE "接受"
+				LTEMP += 2
+			CASE "请求宽恕", "消极的服从"
+				SIF TALENT:虐待狂
+					LTEMP += 2
+				SIF IS_NOWCOMNAME("发出悲鸣") || (IS_NOWCOMNAME("忍受疼痛") && TFLAG:REACT派生)
+					LTEMP += 1
+				LTEMP -= 1
+		ENDSELECT
+
+	;ACT分类/异常系
+	;==============
+	CASE "拳交"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "接受"
+				LTEMP += 2
+			CASE "积极的服从", "淡然的服从"
+				LTEMP += 1
+			CASE "请求宽恕", "消极的服从"
+				LTEMP -= 1
+		ENDSELECT
+	CASE "肛门拳交"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "接受"
+				LTEMP += 2
+			CASE "积极的服从", "淡然的服从"
+				LTEMP += 1
+			CASE "请求宽恕", "消极的服从"
+				LTEMP -= 1
+		ENDSELECT
+	CASE "两穴拳交"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "接受"
+				LTEMP += 2
+			CASE "积极的服从", "淡然的服从"
+				LTEMP += 1
+			CASE "请求宽恕", "消极的服从"
+				LTEMP -= 1
+		ENDSELECT
+	CASE "放置PLAY"
+		SIF IS_NOWCOMNAME("保持沉默")
+			LTEMP -= 1
+		SIF IS_NOWCOMNAME("弱弱地回应")
+			LTEMP -= 1
+		SIF IS_NOWCOMNAME("冷淡地回应")
+			LTEMP -= 2
+		SIF IS_NOWCOMNAME("友善的回应")
+			LTEMP += 2
+		SIF IS_NOWCOMNAME("强势的回应")
+			LTEMP -= 2
+		SIF IS_NOWCOMNAME("更加强硬")
+			LTEMP += 2
+		SIF IS_NOWCOMNAME("请求宽恕")
+			LTEMP -= 1
+		SIF IS_NOWCOMNAME("保持心情舒畅")
+			LTEMP += 1
+		SIF IS_NOWCOMNAME("发出悲鸣")
+			LTEMP += 2
+		SIF IS_NOWCOMNAME("害怕")
+			LTEMP -= 2
+	CASE "公共肉便器PLAY"
+		IF TFLAG:ACT派生 == 1
+			LTEMP -= 2
+		ELSE
+			IF !TFLAG:ACT派生
+				LTEMP += 1
+			ELSE
+				LTEMP += TFLAG:ACT派生 == 2 ? 1 # 2
+			ENDIF
+		ENDIF
+	CASE "穿上假阴茎"
+		SIF IS_NOWCOMNAME("更加强硬")
+			LTEMP += 2
+		SIF IS_NOWCOMNAME("请求宽恕")
+			LTEMP -= 1
+		SIF IS_NOWCOMNAME("保持心情舒畅")
+			LTEMP += 1
+		SIF IS_NOWCOMNAME("发出悲鸣")
+			LTEMP += 2
+		SIF IS_NOWCOMNAME("害怕")
+			LTEMP -= 2
+
+	;ACT分类/休息系
+	;==============
+	CASE "稍作休息"
+		SIF IS_NOWCOMNAME("保持沉默")
+			LTEMP -= 1
+		SIF IS_NOWCOMNAME("弱弱地回应")
+			LTEMP -= 1
+		SIF IS_NOWCOMNAME("冷淡地回应")
+			LTEMP -= 2
+		SIF IS_NOWCOMNAME("友善的回应")
+			LTEMP += 2
+		SIF IS_NOWCOMNAME("强势的回应")
+			LTEMP -= 2
+		SIF IS_NOWCOMNAME("更加强硬")
+			LTEMP += 2
+		SIF IS_NOWCOMNAME("请求宽恕")
+			LTEMP -= 1
+		SIF IS_NOWCOMNAME("保持心情舒畅")
+			LTEMP += 1
+		SIF IS_NOWCOMNAME("发出悲鸣")
+			LTEMP += 2
+		SIF IS_NOWCOMNAME("害怕")
+			LTEMP -= 2
+	CASE "喝营养剂"
+		SIF IS_NOWCOMNAME("保持沉默")
+			LTEMP -= 1
+		SIF IS_NOWCOMNAME("弱弱地回应")
+			LTEMP -= 1
+		SIF IS_NOWCOMNAME("冷淡地回应")
+			LTEMP -= 2
+		SIF IS_NOWCOMNAME("友善的回应")
+			LTEMP += 2
+		SIF IS_NOWCOMNAME("强势的回应")
+			LTEMP -= 2
+		SIF IS_NOWCOMNAME("更加强硬")
+			LTEMP += 2
+		SIF IS_NOWCOMNAME("请求宽恕")
+			LTEMP -= 1
+		SIF IS_NOWCOMNAME("保持心情舒畅")
+			LTEMP += 1
+		SIF IS_NOWCOMNAME("发出悲鸣")
+			LTEMP += 2
+		SIF IS_NOWCOMNAME("害怕")
+			LTEMP -= 2
+	CASE "进行治疗"
+		SIF IS_NOWCOMNAME("保持沉默")
+			LTEMP -= 1
+		SIF IS_NOWCOMNAME("弱弱地回应")
+			LTEMP -= 1
+		SIF IS_NOWCOMNAME("冷淡地回应")
+			LTEMP -= 2
+		SIF IS_NOWCOMNAME("友善的回应")
+			LTEMP += 2
+		SIF IS_NOWCOMNAME("强势的回应")
+			LTEMP -= 2
+		SIF IS_NOWCOMNAME("更加强硬")
+			LTEMP += 2
+		SIF IS_NOWCOMNAME("请求宽恕")
+			LTEMP -= 1
+		SIF IS_NOWCOMNAME("保持心情舒畅")
+			LTEMP += 1
+		SIF IS_NOWCOMNAME("发出悲鸣")
+			LTEMP += 2
+		SIF IS_NOWCOMNAME("害怕")
+			LTEMP -= 2
+
+	;ACT分类/性交奉仕系
+	;==================
+	CASE "正常位侍奉"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "接受"
+				LTEMP += 2
+			CASE "积极的服从", "淡然的服从"
+				LTEMP += 3
+			CASE "请求宽恕"
+				LTEMP -= 1
+			CASE "消极的服从"
+				LTEMP += 1
+		ENDSELECT
+	CASE "后背位侍奉"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "接受"
+				LTEMP += 2
+			CASE "积极的服从", "淡然的服从"
+				LTEMP += 3
+			CASE "请求宽恕"
+				LTEMP -= 1
+			CASE "消极的服从"
+				LTEMP += 1
+		ENDSELECT
+	CASE "对面座位侍奉"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "接受"
+				LTEMP += 2
+			CASE "积极的服从", "淡然的服从"
+				LTEMP += 3
+			CASE "请求宽恕"
+				LTEMP -= 1
+			CASE "消极的服从"
+				LTEMP += 1
+		ENDSELECT
+	CASE "背面座位侍奉"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "接受"
+				LTEMP += 2
+			CASE "积极的服从", "淡然的服从"
+				LTEMP += 3
+			CASE "请求宽恕"
+				LTEMP -= 1
+			CASE "消极的服从"
+				LTEMP += 1
+		ENDSELECT
+	CASE "肛交侍奉"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "接受"
+				LTEMP += 2
+			CASE "积极的服从", "淡然的服从"
+				LTEMP += 3
+			CASE "请求宽恕"
+				LTEMP -= 1
+			CASE "消极的服从"
+				LTEMP += 1
+		ENDSELECT
+	CASE "逆强奸"
+		SELECTCASE COMGRONAME(TFLAG:REACT分类)
+			CASE "接受"
+				LTEMP += 3
+			CASE "积极的服从", "淡然的服从"
+				LTEMP += 2
+			CASE "请求宽恕"
+				LTEMP -= 1
+			CASE "消极的服从"
+				LTEMP += 1
+		ENDSELECT
+ENDSELECT
+
+;兴趣的加算
+LOCAL:GET_NORMALACTNUM(TFLAG:ACT) += LTEMP

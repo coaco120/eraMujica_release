@@ -1,0 +1,597 @@
+﻿;────────────────────────────────────
+;调教方针的判定 (休息1/温和2/普通3/强硬4/异常5)
+;────────────────────────────────────
+@ACT_COURSE
+#LOCALSSIZE 10
+#DIMS 方针种
+
+方针种 = 休息/温和/普通/强硬/异常
+
+;变数被初期化
+CALL SET_CRI_VAR, 方针种
+
+LOCALS = ACT_COURCE
+
+CALL CHA_CRI_VAR, @"本日的方针(%POLICY("今日")%)"
+CALLFORM %LOCALS%_OF_TODAY
+
+CALL CHA_CRI_VAR, "调教者的素質"
+CALLFORM %LOCALS%_TALENT_T
+
+CALL CHA_CRI_VAR, "调教者的能力"
+CALLFORM %LOCALS%_ABL_T
+
+CALL CHA_CRI_VAR, "调教对象的能力"
+CALLFORM %LOCALS%_ABL_M
+
+CALL CHA_CRI_VAR, "调教者的定位"
+CALLFORM %LOCALS%_ALI
+
+CALL CHA_CRI_VAR, "调教者的罪恶感"
+CALLFORM %LOCALS%_SIN
+
+CALL CHA_CRI_VAR, @"调教者的状态(%CONDITION(TCVAR:状态变化)%)"
+CALLFORM %LOCALS%_CONDITION_T
+
+CALL CHA_CRI_VAR, "调教对象的疲労"
+CALLFORM %LOCALS%_TIRED
+
+CALL CHA_CRI_VAR, "调教者的体力"
+CALLFORM %LOCALS%_PHYSICAL_T
+
+CALL CHA_CRI_VAR, "调教者的气力"
+CALLFORM %LOCALS%_MENTAL_T
+
+CALL CHA_CRI_VAR, "调教者的理性"
+CALLFORM %LOCALS%_REASON_T
+
+CALL CHA_CRI_VAR, "调教者的兴趣"
+CALLFORM %LOCALS%_INTEREST_T
+
+CALL CHA_CRI_VAR, "调教者的恐怖"
+CALLFORM %LOCALS%_TERROR_T
+
+CALL CHA_CRI_VAR, "调教者的反感"
+CALLFORM %LOCALS%_ANGER_T
+
+CALL CHA_CRI_VAR, "勃起度(需要强制勃起模式)"
+CALLFORM %LOCALS%_ERECTION_M
+
+CALL CHA_CRI_VAR, "上次指令"
+CALLFORM %LOCALS%_PREVCOM
+
+CALL CHA_CRI_VAR, "TEQUIP"
+CALLFORM %LOCALS%_TEQUIP
+
+CALL CHA_CRI_VAR, "惩罚"
+CALLFORM %LOCALS%_OSHIOKI
+
+CALL CHA_CRI_VAR, "兴奋値"
+CALLFORM %LOCALS%_HEAT(方针种)
+
+CALL CHA_CRI_VAR, "状況根据方针制限"
+CALLFORM %LOCALS%_PLAYNOW
+
+;SANDBOX限定处理
+CALL CHA_CRI_VAR, "暫定处理"
+;SANDBOX限定处理
+SIF FLAG:模式 == 1
+	CALL ADD_CRI_VAR("休息", -99)
+
+;──────────────────────────────
+;最终判定、引き分ける时的优先顺是普通3＞下降2＞上升4＞异常5＞休息1
+;──────────────────────────────
+SPLIT 方针种, "/", LOCALS
+CALL DEF_CRI_VAR("最大优先指定-普通/温和/强硬/异常/休息")
+LOCAL = GET_CRI_VAR("決定")
+IF LOCAL == -1
+	PRINTW 调教方针计数器异常
+	TFLAG:回合方针 = 3
+ELSE
+	TFLAG:回合方针 = FINDELEMENT(LOCALS, RESULTS, , , 1) + 1
+ENDIF
+CALL ANA_CRI_VAR()
+
+;-------------------------------------------
+;本日的方针
+;0=平时どおり/1=A开发/2=惩罚/3=强硬/4=调情/5=异常/6=野外/7=异常/8=休息
+;TFLAG:今日的方针で管理されている
+;ここで影响做的是４方针的みな的で注意
+;-------------------------------------------
+@ACT_COURCE_OF_TODAY
+;今日的方针
+SELECTCASE POLICY("今日")
+	CASE "肛门"
+		CALL ADD_CRI_VAR("温和"  , -5)
+	CASE "强硬"
+		CALL ADD_CRI_VAR("温和"  , -5)
+		CALL ADD_CRI_VAR("普通", -2)
+		CALL ADD_CRI_VAR("强硬"  ,  5)
+		CALL ADD_CRI_VAR("异常"    ,  5)
+	CASE "调情"
+		CALL ADD_CRI_VAR("温和"  , 10)
+	CASE "异常"
+		CALL ADD_CRI_VAR("强硬"  ,  0, 20)
+		CALL ADD_CRI_VAR("异常"    ,  0, 20)
+ENDSELECT
+
+;-------------------------------------------
+;调教者的性格修正
+;ARG但省略さ受到场合是TARGET被参照做
+;和いうか特にこだわり但なければTARGET以外被见るこ和是ない和思い增加但一应
+;-------------------------------------------
+@ACT_COURCE_TALENT_T, ARG = -1
+#LOCALSIZE 1
+
+LOCAL = ARG == -1 ? TARGET # ARG
+
+;休息的修正値
+;============
+SIF TALENT:LOCAL:胆怯               ;10,        胆怯
+	CALL ADD_CRI_VAR("休息",  0, 3)
+SIF TALENT:LOCAL:反抗的             ;11,      反抗的
+	CALL ADD_CRI_VAR("休息", -1)
+SIF TALENT:LOCAL:刚毅               ;12,        刚毅
+	CALL ADD_CRI_VAR("休息", -1)
+SIF TALENT:LOCAL:成熟           ;14,    成熟
+	CALL ADD_CRI_VAR("休息",  2)
+SIF TALENT:LOCAL:自大             ;16,      自大
+	CALL ADD_CRI_VAR("休息", -2)
+SIF TALENT:LOCAL:缺乏感情         ;24,  缺乏感情
+	CALL ADD_CRI_VAR("休息", -1)
+SIF TALENT:LOCAL:渴望关注       ;29,渴望关注
+	CALL ADD_CRI_VAR("休息", -2)
+SIF TALENT:LOCAL:慎重               ;84,        慎重
+	CALL ADD_CRI_VAR("休息",  2)
+SIF TALENT:LOCAL:急躁               ;85,        急躁
+	CALL ADD_CRI_VAR("休息", -2)
+SIF TALENT:LOCAL:好心眼         ;87,  好心眼
+	CALL ADD_CRI_VAR("休息",  2)
+SIF TALENT:LOCAL:幼稚               ;88,        幼稚
+	CALL ADD_CRI_VAR("休息", -1)
+
+
+;温和的修正値
+;==============
+SIF TALENT:LOCAL:妊娠                  ; 2,        妊娠
+	CALL ADD_CRI_VAR("温和",  6)
+SIF TALENT:LOCAL:胆怯                  ;10,        胆怯
+	CALL ADD_CRI_VAR("温和",  0,  5)
+SIF TALENT:LOCAL:刚毅                  ;12,        刚毅
+	CALL ADD_CRI_VAR("温和",  0, -4)
+SIF TALENT:LOCAL:成熟              ;14,    成熟
+	CALL ADD_CRI_VAR("温和",  0,  5)
+SIF TALENT:LOCAL:自大                ;16,      自大
+	CALL ADD_CRI_VAR("温和", -1)
+SIF TALENT:LOCAL:自制的                ;20,      自制的
+	CALL ADD_CRI_VAR("温和",  2)
+SIF TALENT:LOCAL:冲动的                ;21,      冲动的
+	CALL ADD_CRI_VAR("温和",  0, -5)
+SIF TALENT:LOCAL:不越过底线          ;28,不越过底线
+	CALL ADD_CRI_VAR("温和",  2)
+SIF TALENT:LOCAL:清楚                  ;37,        清楚
+	CALL ADD_CRI_VAR("温和",  2)
+SIF TALENT:LOCAL:虐待狂                  ;83,        虐待狂
+	CALL ADD_CRI_VAR("温和", -1, -5)
+SIF TALENT:LOCAL:慎重                  ;84,        慎重
+	CALL ADD_CRI_VAR("温和",  1)
+SIF TALENT:LOCAL:坏心眼                ;86,      坏心眼
+	CALL ADD_CRI_VAR("温和", -2)
+SIF TALENT:LOCAL:好心眼            ;87,  好心眼
+	CALL ADD_CRI_VAR("温和",  2)
+
+
+;普通的修正値
+;================
+SIF TALENT:LOCAL:妊娠                   ; 2,        妊娠
+	CALL ADD_CRI_VAR("普通", 0,  3)
+SIF TALENT:LOCAL:自制的                 ;20,      自制的
+	CALL ADD_CRI_VAR("普通", 1)
+SIF TALENT:LOCAL:缺乏感情             ;24  ,缺乏感情
+	CALL ADD_CRI_VAR("普通", 1)
+SIF TALENT:LOCAL:感情丰富               ;25,    感情丰富
+	CALL ADD_CRI_VAR("普通", 0,  1)
+SIF TALENT:LOCAL:不越过底线           ;28,不越过底线
+	CALL ADD_CRI_VAR("普通", 1)
+SIF TALENT:LOCAL:解放                   ;33,        解放
+	CALL ADD_CRI_VAR("普通", 0,  5)
+SIF TALENT:LOCAL:清楚                   ;37,        清楚
+	CALL ADD_CRI_VAR("普通", 1)
+SIF TALENT:LOCAL:虐待狂                   ;83,        虐待狂
+	CALL ADD_CRI_VAR("普通", 0, -2)
+SIF TALENT:LOCAL:急躁                   ;85,        急躁
+	CALL ADD_CRI_VAR("普通", 0,  3)
+SIF TALENT:LOCAL:好心眼             ;87,  好心眼
+	CALL ADD_CRI_VAR("普通", 1)
+
+
+;强硬的修正値
+;==============
+SIF TALENT:LOCAL:妊娠                  ; 2,        妊娠
+	CALL ADD_CRI_VAR("强硬", -4)
+SIF TALENT:LOCAL:胆怯                  ;10,        胆怯
+	CALL ADD_CRI_VAR("强硬", -1)
+SIF TALENT:LOCAL:刚毅                  ;12,        刚毅
+	CALL ADD_CRI_VAR("强硬",  1)
+SIF TALENT:LOCAL:成熟              ;14,    成熟
+	CALL ADD_CRI_VAR("强硬",  0, -3)
+SIF TALENT:LOCAL:自大                ;16,      自大
+	CALL ADD_CRI_VAR("强硬",  0,  6)
+SIF TALENT:LOCAL:自制的                ;20,      自制的
+	CALL ADD_CRI_VAR("强硬",  -1)
+SIF TALENT:LOCAL:冲动的                ;21,      冲动的
+	CALL ADD_CRI_VAR("强硬", IS_CONDITION(TARGET, "愤怒") ? 5 # 0, 7)
+SIF TALENT:LOCAL:感情丰富              ;25,    感情丰富
+	CALL ADD_CRI_VAR("强硬",  0,  4)
+SIF TALENT:LOCAL:渴望关注          ;29,渴望关注
+	CALL ADD_CRI_VAR("强硬",  0,  4)
+SIF TALENT:LOCAL:压抑                  ;32,        压抑
+	CALL ADD_CRI_VAR("强硬", -2)
+SIF TALENT:LOCAL:解放                  ;33,        解放
+	CALL ADD_CRI_VAR("强硬",  0,  4)
+SIF TALENT:LOCAL:虐待狂                  ;83,        虐待狂
+	CALL ADD_CRI_VAR("强硬",  5)
+SIF TALENT:LOCAL:急躁                  ;85,        急躁
+	CALL ADD_CRI_VAR("强硬",  0,  5)
+SIF TALENT:LOCAL:坏心眼                ;86,      坏心眼
+	CALL ADD_CRI_VAR("强硬",  2)
+SIF TALENT:LOCAL:好心眼            ;87,  好心眼
+	CALL ADD_CRI_VAR("强硬", -2)
+
+
+;异常的修正値
+;============
+SIF TALENT:LOCAL:妊娠                ; 2,        妊娠
+	CALL ADD_CRI_VAR("异常", -5)
+SIF TALENT:LOCAL:胆怯                ;10,        胆怯
+	CALL ADD_CRI_VAR("异常",  0, -4)
+SIF TALENT:LOCAL:成熟            ;14,    成熟
+	CALL ADD_CRI_VAR("异常", -2)
+SIF TALENT:LOCAL:自大              ;16,      自大
+	CALL ADD_CRI_VAR("异常",  0,  2)
+SIF TALENT:LOCAL:自制的              ;20,      自制的
+	CALL ADD_CRI_VAR("异常", -2)
+SIF TALENT:LOCAL:冲动的              ;21,      冲动的
+	CALL ADD_CRI_VAR("异常",  0, IS_CONDITION(LOCAL, "愤怒") ? 8 + 9 # 9)
+SIF TALENT:LOCAL:缺乏感情          ;24,  缺乏感情
+	CALL ADD_CRI_VAR("异常", -1)
+SIF TALENT:LOCAL:感情丰富            ;25,    感情丰富
+	CALL ADD_CRI_VAR("异常",  0,  3)
+SIF TALENT:LOCAL:不越过底线        ;28,不越过底线
+	CALL ADD_CRI_VAR("异常", -3)
+SIF TALENT:LOCAL:渴望关注        ;29,渴望关注
+	CALL ADD_CRI_VAR("异常",  0,  3)
+SIF TALENT:LOCAL:压抑                ;32,        压抑
+	CALL ADD_CRI_VAR("异常", -3)
+SIF TALENT:LOCAL:解放                ;33,        解放
+	CALL ADD_CRI_VAR("异常",  0,  3)
+SIF TALENT:LOCAL:虐待狂                ;83,        虐待狂
+	CALL ADD_CRI_VAR("异常",  2)
+SIF TALENT:LOCAL:慎重                ;84,        慎重
+	CALL ADD_CRI_VAR("异常", -2)
+SIF TALENT:LOCAL:好心眼          ;87,  好心眼
+	CALL ADD_CRI_VAR("异常", -3)
+SIF TALENT:LOCAL:疯狂                ;89,        疯狂
+	CALL ADD_CRI_VAR("异常",  5, 10)
+
+
+;-------------------------------------------
+;调教者的ABL修正
+;ARG但省略さ受到场合是TARGET被参照做
+;和いうか特にこだわり但なければTARGET以外被见るこ和是ない和思い增加但一应
+;-------------------------------------------
+@ACT_COURCE_ABL_T, ARG = -1
+#LOCALSIZE 1
+
+LOCAL = ARG == -1 ? TARGET # ARG
+;欲望
+CALL ADD_CRI_VAR("休息", -ABL:LOCAL:欲望)
+
+;奉仕精神
+CALL ADD_CRI_VAR("温和"  , LINE_CALC(ABL:LOCAL:奉仕精神, "0→0,5→2,LIMIT/0～2"))
+CALL ADD_CRI_VAR("普通", LINE_CALC(ABL:LOCAL:奉仕精神, "0→0,5→4,LIMIT/0～4"))
+
+;施虐
+CALL ADD_CRI_VAR("普通", LINE_CALC(ABL:LOCAL:施虐, "0→0,5→-2,LIMIT/-2～0"))
+CALL ADD_CRI_VAR("强硬"  , LINE_CALC(ABL:LOCAL:施虐, "0→0,5→4,LIMIT/0～4"))
+
+;异常
+CALL ADD_CRI_VAR("强硬", LINE_CALC(ABL:LOCAL:异常, "0→0,5→2,LIMIT/0～2"))
+CALL ADD_CRI_VAR("异常"  , LINE_CALC(ABL:LOCAL:异常, "0→0,5→4,LIMIT/0～4"))
+
+;-------------------------------------------
+;调教对象的ABL修正
+;ARG但省略さ受到场合是MASTER被参照做
+;和いうか特にこだわり但なければMASTER以外被见るこ和是ない和思い增加但一应
+;-------------------------------------------
+@ACT_COURCE_ABL_M, ARG = -1
+#LOCALSIZE 1
+
+LOCAL = ARG == -1 ? TARGET # MASTER
+;调教Lv(ABL和似たようなも的だしここで处理)
+CALL ADD_CRI_VAR("温和"  , LINE_CALC(CFLAG:LOCAL:调教等级, "0→2,9→-1,LIMIT/-1～2"))
+CALL ADD_CRI_VAR("普通", LINE_CALC(CFLAG:LOCAL:调教等级, "0→1,9→-1,LIMIT/-1～1"))
+CALL ADD_CRI_VAR("强硬"  , LINE_CALC(CFLAG:LOCAL:调教等级, "0→-2,9→2,LIMIT/-2～2"))
+
+;-------------------------------------------
+;调教者的ALI修正
+;ARG但省略さ受到场合是TARGET被参照做
+;和いうか特にこだわり但なければTARGET以外被见るこ和是ない和思い增加但一应
+;-------------------------------------------
+@ACT_COURCE_ALI, ARG = -1
+#LOCALSIZE 1
+
+LOCAL = ARG == -1 ? TARGET # ARG
+CALL ADD_CRI_VAR("温和"  , LINE_CALC(CFLAG:LOCAL:定位, "-50→-5,0→0,50→5,LIMIT/-5～5"))
+CALL ADD_CRI_VAR("普通", LINE_CALC(CFLAG:LOCAL:定位, "-50→0,0→3,50→0,LIMIT/0～3"))
+CALL ADD_CRI_VAR("强硬"  , LINE_CALC(CFLAG:LOCAL:定位, "-50→6,0→0,50→-3,LIMIT/-3～6"))
+CALL ADD_CRI_VAR("异常",  0, LINE_CALC(CFLAG:LOCAL:定位, "-50→9,0→0,50→-5,LIMIT/-5～9"))
+
+;-------------------------------------------
+;调教者的罪恶感修正
+;ARG但省略さ受到场合是TARGET被参照做
+;和いうか特にこだわり但なければTARGET以外被见るこ和是ない和思い增加但一应
+;-------------------------------------------
+@ACT_COURCE_SIN, ARG = -1
+#LOCALSIZE 1
+
+LOCAL = ARG == -1 ? TARGET # ARG
+CALL ADD_CRI_VAR("强硬", LINE_CALC(CFLAG:LOCAL:罪恶感, "0→0,100→-5,LIMIT/-5～0"))
+CALL ADD_CRI_VAR("异常"  , LINE_CALC(CFLAG:LOCAL:罪恶感, "0→0,100→-3,LIMIT/-3～0"), LINE_CALC(CFLAG:LOCAL:罪恶感, "0→0,100→-5,LIMIT/-5～0"))
+
+;-------------------------------------------
+;调教者的状态修正
+;ARG但省略さ受到场合是TARGET被参照做
+;和いうか特にこだわり但なければTARGET以外被见るこ和是ない和思い增加但一应
+;
+;;调教者的状态(0=通常/1=疲惫/2=衰弱/3=无气力/4=朦胧/5=情欲/6=愤怒/7=无聊/8=郁闷)
+;-------------------------------------------
+@ACT_COURCE_CONDITION_T, ARG = -1
+#LOCALSIZE 1
+
+LOCAL = ARG == -1 ? TARGET # ARG
+SELECTCASE GET_CONDITION(LOCAL)
+	CASE "疲惫", "衰弱"
+		;TCVAR:状态变化是1的时疲惫、2的时衰弱、つまり、疲惫是+2、衰弱是+4
+		;TFLAG:调教者疲惫度是调教者的疲惫标志
+		CALL ADD_CRI_VAR("休息"    ,  TFLAG:调教者疲惫度 + 5 + TCVAR:状态变化 * 2)
+		CALL ADD_CRI_VAR("温和"  , -TFLAG:调教者疲惫度)
+		CALL ADD_CRI_VAR("普通", -TFLAG:调教者疲惫度)
+		CALL ADD_CRI_VAR("强硬"  , -TFLAG:调教者疲惫度)
+		CALL ADD_CRI_VAR("异常"    , -TFLAG:调教者疲惫度)
+		CALL ADD_CRI_VAR("温和"  , -TFLAG:调教者疲惫度)
+	CASE "无气力"
+		CALL ADD_CRI_VAR("温和"  , -1)
+		CALL ADD_CRI_VAR("普通", -1)
+		CALL ADD_CRI_VAR("强硬"  , -2)
+		CALL ADD_CRI_VAR("异常"    , -2)
+	CASE "朦胧"
+		CALL ADD_CRI_VAR("休息"    ,  6)
+		CALL ADD_CRI_VAR("温和"  ,  0, 10)
+		CALL ADD_CRI_VAR("普通",  0, 10)
+		CALL ADD_CRI_VAR("强硬"  ,  0, 10)
+		CALL ADD_CRI_VAR("异常"    ,  0, 10)
+	CASE "情欲"
+		CALL ADD_CRI_VAR("温和"  ,  4)
+		CALL ADD_CRI_VAR("普通",  4)
+	CASE "愤怒"
+		CALL ADD_CRI_VAR("休息"    , -3)
+		CALL ADD_CRI_VAR("温和"  , -4)
+		CALL ADD_CRI_VAR("普通", -2)
+		CALL ADD_CRI_VAR("强硬"  ,  4)
+		CALL ADD_CRI_VAR("异常"    ,  2)
+	CASE "无聊"
+		CALL ADD_CRI_VAR("休息"    ,  4)
+		CALL ADD_CRI_VAR("温和"  , -3)
+		CALL ADD_CRI_VAR("普通", -3)
+		CALL ADD_CRI_VAR("强硬"  , -3)
+		CALL ADD_CRI_VAR("异常"    ,  3)
+	CASE "郁闷"
+		CALL ADD_CRI_VAR("异常"    ,  4, 10)
+ENDSELECT
+
+;-------------------------------------------
+;调教对象但疲れている场合的修正
+;ARG但省略さ受到场合是TARGET被参照做
+;疲れている的是调教对象である但それに对做态度被決める的是
+;あく直到调教者である的で注意
+;
+;ここ的RAND是切りだす的但厄介な的で固定に混ぜてしまう
+;-------------------------------------------
+@ACT_COURCE_TIRED, ARG = -1
+#LOCALSIZE 2
+
+LOCAL = ARG == -1 ? TARGET # ARG
+;疲れ但0那么帰る
+SIF !TFLAG:疲惫度
+	RETURN 0
+LOCAL:1 = TFLAG:疲惫度 * 2
+;调教者但反抗的/坏心眼/威压感/难以接近
+SIF TALENT:LOCAL:反抗的 || TALENT:LOCAL:坏心眼 || TALENT:LOCAL:威压感 || TALENT:LOCAL:难以接近
+	TIMES LOCAL:1, 0.80
+;调教者但坦率/献身的/好心眼
+SIF TALENT:LOCAL:坦率 || TALENT:LOCAL:献身的 || TALENT:LOCAL:好心眼
+	TIMES LOCAL:1, 1.20
+;调教对象的状态但衰弱
+SIF IS_CONDITION(MASTER, "疲惫")
+	TIMES LOCAL:1, 1.20
+;调教者但疯狂/调教者的状态但郁闷
+SIF TALENT:LOCAL:疯狂 || IS_CONDITION(TARGET, "郁闷")
+	LOCAL:1 -= RAND:6
+LOCAL:1 += MAX(LOCAL:1, 0)
+CALL ADD_CRI_VAR("休息", LOCAL:1)
+
+;-------------------------------------------
+;以下、BASE及びPALAM根据修正
+;これら是单独で见ていく
+;-------------------------------------------
+
+;-------------------------------------------
+;调教者的体力修正
+;ARG但省略さ受到场合是TARGET被参照做
+;和いうか特にこだわり但なければTARGET以外被见るこ和是ない和思い增加但一应
+;-------------------------------------------
+@ACT_COURCE_PHYSICAL_T, ARG = -1
+#LOCALSIZE 1
+
+LOCAL = ARG == -1 ? TARGET # ARG
+CALL ADD_CRI_VAR("休息", LINE_CALC(BASE:LOCAL:体力, "0→3,1500→-1,LIMIT/-1～3"))
+CALL MUL_CRI_VAR("休息", LINE_CALC(BASE:LOCAL:体力, "0→120,1500→80,LIMIT/80～120"))
+
+;-------------------------------------------
+;调教者的气力修正
+;-------------------------------------------
+@ACT_COURCE_MENTAL_T, ARG = -1
+#LOCALSIZE 1
+
+LOCAL = ARG == -1 ? TARGET # ARG
+CALL ADD_CRI_VAR("温和"  , LINE_CALC(BASE:LOCAL:气力, "0→-2,500→0,LIMIT/-2～0"))
+CALL ADD_CRI_VAR("普通", LINE_CALC(BASE:LOCAL:气力, "0→-2,750→0,LIMIT/-2～0"))
+CALL ADD_CRI_VAR("强硬"  , LINE_CALC(BASE:LOCAL:气力, "0→-3,750→0,LIMIT/-3～0"))
+CALL ADD_CRI_VAR("异常"    , LINE_CALC(BASE:LOCAL:气力, "0→-3,1000→0,LIMIT/-3～0"))
+IF BASE:LOCAL:气力 > 750
+	CALL ADD_CRI_VAR("休息", -2)
+	CALL MUL_CRI_VAR("休息", 80)
+ENDIF
+
+;-------------------------------------------
+;调教者的理性修正
+;-------------------------------------------
+@ACT_COURCE_REASON_T, ARG = -1
+#LOCALSIZE 1
+
+LOCAL = ARG == -1 ? TARGET # ARG
+CALL ADD_CRI_VAR("温和"  , LINE_CALC(BASE:LOCAL:理性, "0→-2,600→0,LIMIT/-2～0"))
+CALL ADD_CRI_VAR("普通", LINE_CALC(BASE:LOCAL:理性, "0→-2,600→0,LIMIT/-2～0"))
+CALL ADD_CRI_VAR("强硬"  , LINE_CALC(BASE:LOCAL:理性, "0→-1,300→0,LIMIT/-1～0"))
+CALL ADD_CRI_VAR("异常"    , LINE_CALC(BASE:LOCAL:理性, "0→4,800→-2,LIMIT/-2～4"))
+
+;-------------------------------------------
+;调教者的兴趣修正
+;-------------------------------------------
+@ACT_COURCE_INTEREST_T, ARG = -1
+#LOCALSIZE 1
+
+LOCAL = ARG == -1 ? TARGET # ARG
+CALL ADD_CRI_VAR("温和"  , LINE_CALC(BASE:LOCAL:兴趣, "0→-3,900→1,LIMIT/-3～1"))
+CALL ADD_CRI_VAR("普通", LINE_CALC(BASE:LOCAL:兴趣, "0→-3,900→1,LIMIT/-3～1"))
+CALL ADD_CRI_VAR("强硬"  , LINE_CALC(BASE:LOCAL:兴趣, "0→-3,900→1,LIMIT/-3～1"))
+CALL ADD_CRI_VAR("异常"    , LINE_CALC(BASE:LOCAL:兴趣, "0→-3,900→1,LIMIT/-3～1"))
+
+;-------------------------------------------
+;调教者的恐怖修正
+;-------------------------------------------
+@ACT_COURCE_TERROR_T, ARG = -1
+#LOCALSIZE 1
+
+LOCAL = ARG == -1 ? TARGET # ARG
+CALL ADD_CRI_VAR("温和", LINE_CALC(PALAM:LOCAL:恐怖, "3000→0,7500→3,LIMIT/0～3"))
+CALL ADD_CRI_VAR("强硬", LINE_CALC(PALAM:LOCAL:恐怖, "4500→0,7500→-2,LIMIT/-2～0"))
+CALL ADD_CRI_VAR("异常"  , LINE_CALC(PALAM:LOCAL:恐怖, "4500→0,7500→-2,LIMIT/-2～0"))
+
+;-------------------------------------------
+;调教者的反感修正
+;-------------------------------------------
+@ACT_COURCE_ANGER_T, ARG = -1
+#LOCALSIZE 1
+
+LOCAL = ARG == -1 ? TARGET # ARG
+CALL ADD_CRI_VAR("强硬", LINE_CALC(PALAM:LOCAL:反抗, "3000→0,7500→3,LIMIT/0～3"))
+CALL ADD_CRI_VAR("异常"  , LINE_CALC(PALAM:LOCAL:反抗, "4500→0,7500→2,LIMIT/0～2"))
+
+;-------------------------------------------
+;勃起度(需要强制勃起模式)根据修正
+;-------------------------------------------
+@ACT_COURCE_ERECTION_M
+
+SIF !TCVAR:MASTER:需要强制勃起
+	RETURN 0
+CALL ADD_CRI_VAR("温和", LINE_CALC(TCVAR:MASTER:勃起度, "0→-50,1000→0,LIMIT/-50～0"))
+
+;--------------------------------------------
+;上次的指令根据修正
+;--------------------------------------------
+@ACT_COURCE_PREVCOM, ARG
+#LOCALSIZE 1
+
+LOCAL = ARG == -1 ? TARGET # ARG
+;もっ和强硬にお願いした
+IF IS_PREVCOMNAME("更加强硬")
+	CALL ADD_CRI_VAR("温和"  , -5)
+	CALL ADD_CRI_VAR("普通", -3)
+	CALL ADD_CRI_VAR("强硬"  ,  5)
+	CALL ADD_CRI_VAR("异常"    ,  3)
+ENDIF
+
+;許し被乞ったかつ、调教者的状态但郁闷以外
+IF IS_PREVCOMNAME("请求宽恕") && !IS_CONDITION(TARGET, "郁闷")
+	CALL ADD_CRI_VAR("休息"    ,  5, (TALENT:虐待狂 || TALENT:坏心眼) ? -5 # 0)
+	CALL ADD_CRI_VAR("温和"  ,  5)
+	CALL ADD_CRI_VAR("普通",  0, (TALENT:虐待狂 || TALENT:坏心眼) ? 2 # 0)
+	CALL ADD_CRI_VAR("强硬"  , -5, (TALENT:虐待狂 || TALENT:坏心眼) ? 5 # 0)
+	CALL ADD_CRI_VAR("异常"    , -5)
+ENDIF
+
+;感受よくしてかつ、调教者的状态但愤怒/无聊/郁闷以外
+SIF IS_PREVCOMNAME("保持心情舒畅") && IS_CONDITION(TARGET, "通常/疲惫/衰弱/无气力/朦胧/情欲")
+	CALL ADD_CRI_VAR("温和", 3)
+
+;害怕かつ、调教者的状态但郁闷以外
+IF IS_PREVCOMNAME("害怕") && !IS_CONDITION(TARGET, "郁闷")
+	CALL ADD_CRI_VAR("休息"    ,  5, (TALENT:虐待狂 || TALENT:坏心眼) ? -5 # 0)
+	CALL ADD_CRI_VAR("温和"  ,  5)
+	CALL ADD_CRI_VAR("普通",  0, (TALENT:虐待狂 || TALENT:坏心眼) ? 2 # 0)
+	CALL ADD_CRI_VAR("强硬"  , -5, (TALENT:虐待狂 || TALENT:坏心眼) ? 5 # 0)
+	CALL ADD_CRI_VAR("异常"    , -5)
+ENDIF
+
+;--------------------------------------------
+;TEQUIP根据修正
+;これ是ターゲット以外みれない是ずな的でターゲットに
+;--------------------------------------------
+@ACT_COURCE_TEQUIP
+
+;口球
+SIF TEQUIP:口球
+	CALL ADD_CRI_VAR("休息", -5)
+;大镜
+SIF TEQUIP:大镜
+	CALL ADD_CRI_VAR("普通", 1)
+;野外
+SIF TEQUIP:野外PLAY
+	CALL ADD_CRI_VAR("异常", 0, 6)
+	
+;--------------------------------------------
+;惩罚根据修正
+;--------------------------------------------
+@ACT_COURCE_OSHIOKI
+
+IF TFLAG:惩罚标志
+	CALL ADD_CRI_VAR("休息", -99)
+	CALL ADD_CRI_VAR("强硬", 4)
+ENDIF
+
+;--------------------------------------------
+;兴奋値根据修正
+;--------------------------------------------
+@ACT_COURCE_HEAT(ARGS)
+#LOCALSSIZE 10
+#DIM LCOUNT
+
+SPLIT ARGS, "/", LOCALS
+FOR LCOUNT, 0, RESULT
+	CALL ADD_CRI_VAR(LOCALS:LCOUNT, -TFLAG:(@"%LOCALS:LCOUNT%方针的兴奋"))
+NEXT
+
+;--------------------------------------------
+;状況根据方针制限
+;--------------------------------------------
+@ACT_COURCE_PLAYNOW
+
+IF TEQUIP:性交中 || TEQUIP:性交奉仕中 || IS_CONDITION(TARGET, "情欲")
+	CALL ADD_CRI_VAR("休息", -99)
+	CALL ADD_CRI_VAR("异常", -99)
+ENDIF
+IF TCVAR:MASTER:焦虑度
+	CALL ADD_CRI_VAR("休息", -99)
+ENDIF

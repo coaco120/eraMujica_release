@@ -1,0 +1,244 @@
+﻿;────────────────────────────────────
+;090,稍作休息
+;────────────────────────────────────
+;反应前（Ｒ）
+@ACTION_APPLY_90
+;捆绑系被一括解除
+TEQUIP:绳 = 0
+TEQUIP:眼罩 = 0
+TEQUIP:口球 = 0
+TEQUIP:三角木马 = 0
+;顔面骑乘系解除
+CALL FACESITTING_SET(0)
+;调教者、调教对象自慰被中断
+TEQUIP:自慰中 = 0
+;助手插入系解除
+TFLAG:插入助手中 = 0
+TFLAG:助手连续交合 = 0
+;脏污初期化
+CALL STAIN_RESET
+TFLAG:经过时间 += 7
+
+;反应后（露出、逃脱、达成、体力、气力、射精、喷乳、尿意）
+@ACTION_APPLY2_90
+;调教者调教等级、回复快、回复慢素質に应じて调教者的体力、气力回復量増減
+LOCAL:3 = 300 + (10 + GET_TRAINLV(TARGET) + TALENT:回复快 * 5 - TALENT:回复慢 * 5) * 10
+LOCAL:4 = 300 + (6 + GET_TRAINLV(TARGET) + TALENT:回复快 * 5 - TALENT:回复慢 * 5) * 20
+BASE:体力 += LOCAL:3
+BASE:气力 += LOCAL:4
+;调教者疲惫度減少
+TFLAG:调教者疲惫度 -= 2
+;反应但开始自慰だった场合
+IF IS_NOWCOMNAME("开始自慰")
+	;ACT派生に勝手に自慰被し始めた被设置
+	TFLAG:ACT派生 = 2
+	;REACT分类に要求に应じない被设置		@COM50.开始自慰的改变に伴い注释アウト@/L
+	;CALL SET_COMGRO("拒绝")
+;持续系道具装着中だった场合
+ELSEIF TEQUIP:震动棒 || TEQUIP:肛门震动棒 || TEQUIP:肛门拉珠 || TEQUIP:灌肠器＋肛塞 || TEQUIP:乳头夹
+	;道具それぞれ的使用中に应じて修正値用意
+	LOCAL = TEQUIP:震动棒 * 3 + TEQUIP:肛门震动棒 * 3 + TEQUIP:肛门拉珠 + TEQUIP:灌肠器＋肛塞 * 4 + TEQUIP:乳头夹 * 2
+	;调教对象调教等级、回复快、回复慢素質、道具別修正値に应じて调教对象的体力、气力回復量増減
+	LOCAL:1 = 150 + (10 + CFLAG:MASTER:调教等级 + TALENT:MASTER:回复快 * 5 - TALENT:MASTER:回复慢 * 5) * 10 - 20 * LOCAL
+	LOCAL:2 = 150 + (6 + CFLAG:MASTER:调教等级 + TALENT:MASTER:回复快 * 5 - TALENT:MASTER:回复慢 * 5) * 20 - 5 * LOCAL
+	BASE:MASTER:体力 += LOCAL:1
+	BASE:MASTER:气力 += LOCAL:2
+	;ACT派生に道具的せいであまり休めなかった被设置
+	TFLAG:ACT派生 = 1
+;其他的场合
+ELSE
+	;调教对象调教等级、回复快、回复慢素質に应じて调教对象的体力、气力回復量増減
+	LOCAL:1 = 300 + (10 + CFLAG:MASTER:调教等级 + TALENT:MASTER:回复快 * 5 - TALENT:MASTER:回复慢 * 5) * 10
+	LOCAL:2 = 300 + (6 + CFLAG:MASTER:调教等级 + TALENT:MASTER:回复快 * 5 - TALENT:MASTER:回复慢 * 5) * 20
+	BASE:MASTER:体力 += LOCAL:1
+	BASE:MASTER:气力 += LOCAL:2
+	;调教对象疲惫度減少
+	TFLAG:疲惫度 -= 1
+	;ACT派生に普通に休んだ被设置
+	TFLAG:ACT派生 = 0
+ENDIF
+;变数保持处理
+FOR LOCAL, 1, 5
+	CALLF ACTION_APPLY2_90V(-LOCAL, LOCAL:LOCAL)
+NEXT
+
+;变数保持関数
+@ACTION_APPLY2_90V(ARG, ARG:1)
+#FUNCTION
+;ARG但负であればLOCAL:(-ARG)にARG:1被保持し
+;正であればLOCAL:ARG被返す
+;
+;例:(-1, 200) LOCAL:1に200被保持
+;   ( 1)      LOCAL:1的200被返す
+
+;ARG但0的时处理做も的是无い
+IF ARG == 0
+;ARG但负那么値被保持
+ELSEIF ARG < 0
+	LOCAL:(-ARG) = ARG:1
+;ARG但正那么値被返す
+ELSE
+	RETURNF LOCAL:ARG
+ENDIF
+RETURNF 0
+
+;────────────────────────────────────
+;091,喝营养剂
+;────────────────────────────────────
+;反应前（Ｒ）（逃脱）
+@ACTION_APPLY_91
+;必要那么ば媚药被使用
+CALL LOVEPOTION_USE
+;邪魔になるも的被一括解除
+TEQUIP:口球 = 0
+TEQUIP:三角木马 = 0
+;顔面骑乘系解除
+CALL FACESITTING_SET(0)
+;逃脱SOURCE増加、调教对象调教等级、顺从によって減少
+SOURCE:MASTER:逃脱 = 200 - CFLAG:MASTER:调教等级 * 10 - GET_ABL(MASTER, "顺从") * 2
+;逃脱SOURCE但负的値被和らないよう调整
+SOURCE:MASTER:逃脱 = SOURCE:MASTER:逃脱 < 0 ? 0 # SOURCE:MASTER:逃脱
+;调教者、调教对象自慰被中断
+TEQUIP:自慰中 = 0
+;助手插入系解除
+TFLAG:插入助手中 = 0
+TFLAG:助手连续交合 = 0
+TFLAG:经过时间 += 2
+
+;反应后（露出、逃脱、达成、体力、气力、射精、喷乳、尿意）
+@ACTION_APPLY2_91
+;反应但拒绝执行だった场合
+IF IS_NOWCOMNAME("拒绝执行")
+	;调教者疲惫度減少
+	TFLAG:调教者疲惫度 -= 1
+	;ACT派生に营养剤被捨てた被设置
+	TFLAG:ACT派生 = 1
+	;REACT分类に要求に应じない被设置
+	CALL SET_COMGRO("拒绝")
+;其他的场合
+ELSE
+	;逃脱SOURCE増加
+	SOURCE:MASTER:逃脱 += 250
+	;调教者调合知识、禁忌的知识、调教对象药毒耐性素質、调教者调教等级に应じて调教对象的体力、气力回復量増減
+	LOCAL:1 = 20 * (2 + TALENT:调合知识 + TALENT:禁忌的知识 - TALENT:MASTER:药毒耐性) * (10 + GET_TRAINLV(TARGET))
+	LOCAL:2 = 10 * (2 + TALENT:调合知识 + TALENT:禁忌的知识 - TALENT:MASTER:药毒耐性) * (15 + GET_TRAINLV(TARGET))
+	BASE:MASTER:体力 += LOCAL:1
+	BASE:MASTER:气力 += LOCAL:2
+	;调教对象尿意増加
+	BASE:MASTER:尿意 += 300 + RAND:7 * 50
+	;调教者、调教对象疲惫度減少
+	TFLAG:调教者疲惫度 -= 2
+	TFLAG:疲惫度 -= 2
+	;ACT派生に营养剤被飲んだ被设置
+	TFLAG:ACT派生 = 0
+	;营养剤的兴奋値上升(兴奋値但残っていた场合上升量増加)
+	FLAG:营养兴奋 += FLAG:营养兴奋 > 0 ? 8 # 5
+ENDIF
+;变数保持处理
+FOR LOCAL, 1, 3
+	CALLF ACTION_APPLY2_91V(-LOCAL, LOCAL:LOCAL)
+NEXT
+
+;变数保持関数
+@ACTION_APPLY2_91V(ARG, ARG:1)
+#FUNCTION
+;ARG但负であればLOCAL:(-ARG)にARG:1被保持し
+;正であればLOCAL:ARG被返す
+;
+;例:(-1, 200) LOCAL:1に200被保持
+;   ( 1)      LOCAL:1的200被返す
+
+;ARG但0的时处理做も的是无い
+IF ARG == 0
+;ARG但负那么値被保持
+ELSEIF ARG < 0
+	LOCAL:(-ARG) = ARG:1
+;ARG但正那么値被返す
+ELSE
+	RETURNF LOCAL:ARG
+ENDIF
+RETURNF 0
+
+;────────────────────────────────────
+;092,进行治疗
+;────────────────────────────────────
+;反应前（Ｒ）（接触）
+@ACTION_APPLY_92
+;必要那么ば媚药被使用
+CALL LOVEPOTION_USE
+;三角木马解除
+TEQUIP:三角木马 = 0
+;顔面骑乘系解除
+CALL FACESITTING_SET(0)
+;调教者调教等级に应じて接触SOURCE増加
+SOURCE:MASTER:接触 = 100 + GET_TRAINLV(TARGET) * 10
+;调教者、调教对象自慰被中断
+TEQUIP:自慰中 = 0
+;助手插入系解除
+TFLAG:插入助手中 = 0
+TFLAG:助手连续交合 = 0
+TFLAG:经过时间 += 5
+[SKIPSTART]
+これら的TEQUIP被COM移除道具で解除做和发狂扱いになる的是不自然和考える
+
+;其他TEQUIP被解除
+TEQUIP:眼罩 = 0
+TEQUIP:灌肠器＋肛塞 = 0
+TEQUIP:肛门震动棒 = 0
+TEQUIP:震动棒 = 0
+TEQUIP:飞机杯 = 0
+TEQUIP:阴蒂夹 = 0
+TEQUIP:口球 = 0
+TEQUIP:假阴茎 = 0
+TEQUIP:肛门拉珠 = 0
+[SKIPEND]
+;反应后（露出、逃脱、达成、体力、气力、射精、喷乳、尿意）
+@ACTION_APPLY2_92
+;REACT分类但发狂だった场合キャンセル
+IF IS_COMGRONAME("发狂")
+	;ACT派生に发狂ため治疗できなかった被设置
+	TFLAG:ACT派生 = 1
+ELSE
+	;恐怖刻印取得被中断（？）
+	TFLAG:恐怖刻印取得 = 0
+	;调教对象技巧、调教者调教等级によって修正値被用意
+	LOCAL:1 = 25 * (5 + ABL:MASTER:技巧) * (10 + GET_TRAINLV(TARGET))
+	LOCAL:2 = LOCAL:1 * 2 / 3
+	;修正値に应じて露出、达成SOURCE増加
+	SOURCE:MASTER:露出 += 100 + LOCAL:1 / (1 + RAND:4)
+	SOURCE:MASTER:达成 += LOCAL:1 / 10
+	;修正値に应じて调教对象体力、气力回復
+	BASE:MASTER:体力 += LOCAL:1
+	BASE:MASTER:气力 += LOCAL:2
+	;调教者、调教对象疲惫度減少
+	TFLAG:调教者疲惫度 -= 1
+	TFLAG:疲惫度 -= 3
+	;ACT派生に体的隅々直到撫で回して治疗した被设置
+	TFLAG:ACT派生 = 0
+	;治疗的兴奋値上升(兴奋値但残っていた场合上升量増加)
+	FLAG:治疗兴奋 += FLAG:治疗兴奋 > 0 ? 8 # 5
+ENDIF
+;变数保持处理
+FOR LOCAL, 1, 3
+	CALLF ACTION_APPLY2_92V(-LOCAL, LOCAL:LOCAL)
+NEXT
+
+;变数保持関数
+@ACTION_APPLY2_92V(ARG, ARG:1)
+#FUNCTION
+;ARG但负であればLOCAL:(-ARG)にARG:1被保持し
+;正であればLOCAL:ARG被返す
+;
+;例:(-1, 200) LOCAL:1に200被保持
+;   ( 1)      LOCAL:1的200被返す
+
+;ARG但0的时处理做も的是无い
+IF ARG == 0
+;ARG但负那么値被保持
+ELSEIF ARG < 0
+	LOCAL:(-ARG) = ARG:1
+;ARG但正那么値被返す
+ELSE
+	RETURNF LOCAL:ARG
+ENDIF
+RETURNF 0

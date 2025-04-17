@@ -1,0 +1,164 @@
+﻿
+;────────────────────────────────────
+;姿势变更 旁白
+;
+;调教者行动によって姿势但变更变成了场合ここで显示し增加。
+;口上で指定做こ和によって置换した文章被显示し呼ばれないように做べきかもしれないけど
+;今是まだできません。
+;────────────────────────────────────
+@POSE_CHANGE
+#LOCALSIZE 3
+VARSET LOCAL, -1
+;变化内容的チェック
+SIF TCVAR:MASTER:姿势 != TCVAR:MASTER:上回合的姿势
+	LOCAL = TCVAR:MASTER:姿势
+SIF TCVAR:MASTER:位置前后 != TCVAR:MASTER:上次的位置前后
+	LOCAL:1 = TCVAR:MASTER:位置前后
+SIF TCVAR:MASTER:位置上下 != TCVAR:MASTER:上次的位置上下
+	LOCAL:2 = TCVAR:MASTER:位置上下
+
+;何も变わっていない那么返回
+SIF LOCAL < 0 && LOCAL:1 < 0 && LOCAL:2 < 0
+	RETURN 0
+
+;口上呼び出し
+CALL KOJO_POSE(LOCAL, LOCAL:1, LOCAL:2)
+
+;スレへ的对应手段
+SIF MENU(GET_ACTM(TFLAG:ACT)) == "不明"
+	PRINTFORMW ＠＠＠发生错误。ACT编号{TFLAG:ACT}出错，请在帖子上报告＠＠＠
+
+;位置上下
+SELECTCASE LOCAL:2
+	;自由变成了
+	CASE 0
+		PRINTFORM %CALLNAME:TARGET%是\@ TCVAR:MASTER:上次的位置上下 == 1 ? 从%CALLNAME:MASTER%的上面下来 # 推开了坐在上面的%CALLNAME:MASTER% \@
+		IF LOCAL >= 0
+			PRINTFORML 时、
+			;姿势
+			SELECTCASE LOCAL
+				;自由
+				CASE 0
+					PRINTFORMW 让%CALLNAME:MASTER%摆出享受的姿势…
+				;仰面
+				CASE 1
+					PRINTFORMW %CALLNAME:MASTER%仰面躺下了…
+				;座り
+				CASE 2
+					PRINTFORMW %CALLNAME:MASTER%被要求坐在\@ TEQUIP:野外PLAY ? 地面 # 床 \@上…
+				;趴着
+				CASE 3
+					PRINTFORMW %CALLNAME:MASTER%被明确的要求匍匐着\@ TCVAR:MASTER:位置前后 == 2 ? 把屁股转过来 # \@…
+				;起立
+				CASE 4
+					PRINTFORMW %CALLNAME:MASTER%被要求站在\@ TEQUIP:野外PLAY ? 地面 # 床 \@上…
+				;跪着
+				CASE 10
+					PRINTFORMW %CALLNAME:MASTER%被要求跪在\@ TEQUIP:野外PLAY ? 地面 # 床 \@上…
+			ENDSELECT
+		ELSE
+			PRINTFORMW …
+		ENDIF
+	;上に乗った
+	CASE 1
+		PRINTFORML %CALLNAME:TARGET%是\@ TCVAR:MASTER:上次的位置上下 == 2 ? 和乘坐在上面的%CALLNAME:MASTER%互换了位置 # 压在了%CALLNAME:MASTER%上面 \@、互相叠在一起…
+	;上に乗せた
+	CASE 2
+		;正常位
+		IF IS_NOWACTNAME("正常位侍奉")
+			PRINTFORM %CALLNAME:TARGET%张开双腿，要求%CALLNAME:MASTER%从前面把身体压上来…
+		ELSE
+			PRINTFORM %CALLNAME:TARGET%对着%CALLNAME:MASTER%，要求跨到\@ TCVAR:MASTER:位置前后 == 3 ? 后背 # 身体 \@上面…
+		ENDIF
+	;上下变化无
+	CASEELSE
+		PRINTFORM %CALLNAME:TARGET%是
+		IF LOCAL >= 0
+			;姿势
+			SELECTCASE LOCAL
+				;仰面
+				CASE 1
+					;イった后
+					IF NOWEX:MASTER:Ｃ绝顶 || NOWEX:MASTER:Ｖ绝顶 || NOWEX:MASTER:Ａ绝顶 || NOWEX:MASTER:Ｂ绝顶 || NOWEX:MASTER:射精
+						PRINTFORM 、在绝顶的余韵中，腰部放松下来看着无力地躺着的%CALLNAME:MASTER%满足的放松了表情
+					ELSE
+						PRINTFORM 让%CALLNAME:MASTER%仰面躺了下来
+					ENDIF
+				;座り
+				CASE 2
+					;高潮、上次但仰面
+					IF TCVAR:MASTER:高潮 && TCVAR:MASTER:上回合的姿势 == 1
+						PRINTFORM 、为了寻求快感而起身，望着坐着扭腰的%CALLNAME:MASTER%脸上浮现出微笑
+					;イった后
+					ELSEIF NOWEX:MASTER:Ｃ绝顶 || NOWEX:MASTER:Ｖ绝顶 || NOWEX:MASTER:Ａ绝顶 || NOWEX:MASTER:Ｂ绝顶 || NOWEX:MASTER:射精
+						PRINTFORM 、在绝顶的余韵中，腰部放松下来看着坐在那里的%CALLNAME:MASTER%满足的放松了表情
+					ELSE
+						PRINTFORM 让%CALLNAME:MASTER%坐在\@ TEQUIP:野外PLAY ? 地面 # 床 \@上面
+					ENDIF
+				;趴着
+				CASE 3
+					PRINTFORM 让匍匐着的%CALLNAME:MASTER%\@ TCVAR:MASTER:位置前后 == 2 ? 把屁股转过来 # \@
+				;起立
+				CASE 4
+					PRINTFORM 让%CALLNAME:MASTER%站在\@ TEQUIP:野外PLAY ? 地面 # 床 \@上
+				;跪着
+				CASE 10
+					;高潮
+					IF TCVAR:MASTER:高潮
+						PRINTFORM 、望着跪在地上，为了寻求快感而抬起腰的%CALLNAME:MASTER%微笑起来
+					ELSE
+						PRINTFORM 让%CALLNAME:MASTER%跪在\@ TEQUIP:野外PLAY ? 地面 # 床 \@上
+					ENDIF
+				;自由
+				CASEELSE
+					PRINTFORM 让%CALLNAME:MASTER%摆出舒服的姿势
+			ENDSELECT
+			SIF LOCAL:1 >= 0
+				PRINTFORML 时、
+		ENDIF
+		IF LOCAL:1 >= 0
+			;位置前后
+			SELECTCASE LOCAL:1
+				CASE 0
+					SELECTCASE TCVAR:MASTER:位置上下
+						CASE 0
+							PRINTFORMW 放开身体，视线仿佛在舔舐着%CALLNAME:MASTER%的全身…
+						CASEELSE
+							PRINTFORMW 身体重叠着，视线仿佛在舔舐着%CALLNAME:MASTER%的全身…
+					ENDSELECT
+				CASE 1
+					SELECTCASE TCVAR:MASTER:位置上下
+						CASE 0
+							PRINTFORMW 回到%CALLNAME:MASTER%的正面、\@ RAND:2 ? 窥视着那双眼睛… # 意味深长的微笑起来… \@
+						CASE 1
+							PRINTFORMW 为了能看见%CALLNAME:MASTER%的脸而转过身，带着厌恶的笑容向下俯视…
+						CASE 2
+							PRINTFORMW 为了能看见%CALLNAME:MASTER%的脸而改变了方向…
+					ENDSELECT
+				CASE 2
+					SELECTCASE TCVAR:MASTER:位置上下
+						CASE 0, 1
+							IF MENU(GET_ACTM(TFLAG:ACT)) == "施虐"
+								PRINTFORMW 回到%CALLNAME:MASTER%的背后，露出了微妙的浅笑…
+							ELSEIF RAND:2
+								PRINTFORMW 回到了%CALLNAME:MASTER%的背后，\@ RAND:2 ? 隔着肩膀把脸贴在耳边… # 抱着肩膀贴了上去… \@
+							ELSE
+								PRINTFORMW 将%CALLNAME:MASTER%的身体前后翻转，开始将身体从背后靠了过去…
+							ENDIF
+						CASE 2
+							PRINTFORMW 转身跨过去改变了%CALLNAME:MASTER%的方向…
+					ENDSELECT
+				CASE 3
+					SELECTCASE TCVAR:MASTER:位置上下
+						CASE 0, 2
+							PRINTFORMW 背向%CALLNAME:MASTER%…
+						CASE 1
+							PRINTFORMW 背对着%CALLNAME:MASTER%的脸，转身跨过去改变了方向…
+					ENDSELECT
+			ENDSELECT
+		ELSE
+			PRINTFORMW …
+		ENDIF
+ENDSELECT
+PRINTL 
+CALL POSE_SHOW

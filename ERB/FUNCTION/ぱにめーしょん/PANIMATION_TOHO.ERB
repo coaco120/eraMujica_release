@@ -1,0 +1,482 @@
+﻿;≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡
+;字符串显示・动画ーション関数文件「ぱにめーしょん」0527版 同梱、東方Projectローカル関数文件
+;東方系バリアントで使えそうなビジュアル・雰囲気向上系的関数群です。東方系以外で是…どうだろう。あっても邪魔是しません但。
+;こちら是、ぱにめーしょん本体但ない和动作しません
+;≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡
+
+;-------------------------------------------------
+;東方Project风BGMカットイン関数@BGM_CUTIN
+;	字符串引数0：曲名
+;	字符串引数1：フォント（等幅じゃない和机能しません。省略したらDFKai-SB）
+;	引数0：省略做和頭に「♪（紅・文・DS・妖戦タイプ）」、正に做和「ＢＧＭ. （永・风以降タイプ）」、负に做和何もつけない
+;	引数1：スクロール速度（デフォルトだ和5）
+;	引数2：画面端直到入る字符数（デフォルトだ和117）
+;	引数3：1に做和消え方但サイドアウトに（デフォルトだ和フェードアウト）
+;
+;Windows標準フォントで是ないHG創英ﾌﾟﾚｾﾞﾝｽEB是望ましくない的で、独断和偏见でデフォ的フォント被DFKai-SBに变更@/L(14/09/28)
+;-------------------------------------------------
+@BGM_CUTIN(ARGS, ARG, ARGS:1 = "DFKai-SB", ARG:1 = 5, ARG:2 = 117, ARG:3)
+#LOCALSIZE 2
+#LOCALSSIZE 2
+IF ARG >= 0
+	LOCALS = %\@ ARG ? %"ＢＧＭ. "% # ♪ \@+ARGS%
+ELSE
+	LOCALS = %ARGS%
+ENDIF
+;色保存
+LOCAL:1 = GETCOLOR()
+RESETCOLOR
+ARGS = %" "*ARG:2+LOCALS%
+LOCALS:1 = %GETFONT()%
+SIF CHKFONT(ARGS:1)
+	SETFONT ARGS:1
+;显示开
+IF ANIME_CONFIG("BGM_CUTIN")
+	;スクロール速度但ウィンドウ幅に对し速すぎる场合、矯正做
+	ARG:1 = ARG:1 >= ARG:2 ? ARG:2-1 # ARG:1
+	REDRAW 0
+	LOCAL = 0
+	;サイドイン
+	FOR LOCAL, 0, STRLENS(LOCALS)+4, ARG:1
+		PRINTSINGLEFORM %SUBSTRING(ARGS , LOCAL)%
+		TWAIT 2, 0
+		CLEARLINE 1
+	NEXT
+	PRINTFORML %" "*(ARG:2-STRLENS(LOCALS)-4)+LOCALS%
+	TWAIT 800, 0
+	CLEARLINE 1
+
+	IF ARG:3 == 1
+		;サイドアウト
+		FOR LOCAL, 0, STRLENS(LOCALS)+4, ARG:1*2
+			PRINTSINGLEFORM %SUBSTRING(ARGS , STRLENS(LOCALS)+4-LOCAL)%
+			TWAIT 2 , 0
+			CLEARLINE 1
+		NEXT
+	ELSE
+		;BGM动画开だ和フェード被强制显示做
+		CALLF ANIME_CONFIG("ONCE")
+		;フェードアウト
+		CALL FADEOUT(8, " "*(ARG:2-STRLENS(LOCALS)-4)+LOCALS)
+		CLEARLINE 1
+	ENDIF
+	REDRAW 1
+;显示关
+ELSE
+	PRINTFORMW %" "*(ARG:2-STRLENS(LOCALS)-4)+LOCALS%
+ENDIF
+SETFONT LOCALS:1
+SETCOLOR LOCAL:1
+RETURN RESULT
+
+;-------------------------------------------------
+;東方Project风角色登场カットイン関数@CHARA_CUTIN
+;	字符串引数0：肩書き
+;	字符串引数1：名前
+;	字符串引数2：单词读み
+;	引数0：省略做和左、正だ和右寄りに显示。显示位置的逆からクロールイン做
+;	引数1：スクロール速度（デフォルトだ和30）
+;	引数2：画面端直到入る字符数（デフォルトだ和117）
+;			…バウンドいらんよね？
+;神霊廟风的中央揃えです。需要但あれば一行目左寄せ・三行目右寄せ的バージョンも作る？
+;-------------------------------------------------
+;外号的フォント被HG教科書体からDFKai-SBへ
+;单词读み的フォント被ＭＳ 明朝からGungsuhCheへ、それぞれ变更
+;HG教科書体的清除是Windows標準的フォントで是ない為。ＭＳ 明朝からGungsuhCheへ的变更是ついでに何か变えたかった、和いうこ和で
+;Win7であれば環境に依存不做是ず只ど、Win8/8.1で的検証但できていない的で、そこら辺是なん和もな和ころ@/L(2014/09/28)
+;-------------------------------------------------
+@CHARA_CUTIN(ARGS, ARGS:1, ARGS:2, ARG, ARG:1 = 30, ARG:2 = 117)
+#LOCALSIZE 11
+#LOCALSSIZE 11
+;フォント保存
+LOCALS:10 = %GETFONT()%
+;色保存
+LOCAL:10 = GETCOLOR()
+RESETCOLOR
+
+;まず、３つ的字符串被偶数に做
+ARGS   = %\@ STRLENS(ARGS)/2 ? %ARGS+" "% # %ARGS% \@%
+ARGS:1 = %\@ STRLENS(ARGS:1)/2 ? %ARGS:1+" "% # %ARGS:2% \@%
+ARGS:2 = %\@ STRLENS(ARGS:2)/2 ? %ARGS:2+" "% # %ARGS:2% \@%
+
+;一番长い字符串的字数被保存して、4被足す
+LOCAL:3 = MAX(STRLENS(ARGS), STRLENS(ARGS:1), STRLENS(ARGS:2))+4
+
+;字符串整理
+FOR LOCAL, 0, 3
+	LOCAL:1 = (LOCAL:3-STRLENS(ARGS:LOCAL))/2
+	;インデント但てらに頭和しっぽ被つけ增加
+	ARGS:LOCAL = %(" "*LOCAL:1)+ARGS:LOCAL+(" "*LOCAL:1)%
+	;原本被保存
+	LOCALS:LOCAL = %ARGS:LOCAL%
+	;スペース被付加
+	IF !ARG
+		LOCALS:LOCAL = %"  "+LOCALS:LOCAL%
+		ARGS:LOCAL = %(" "*ARG:2)+LOCALS:LOCAL%
+	ELSE
+		ARGS:LOCAL = %" "*(ARG:2 - 2 - STRLENS(ARGS:LOCAL))+ARGS:LOCAL%
+	ENDIF
+NEXT
+
+;罫線も用意不做和ね
+LOCALS:4 = %"-="*(LOCAL:3/2)%
+LOCALS:5 = %"=-"*(LOCAL:3/2)%
+;スペース被付加
+IF !ARG
+	LOCALS:4 = %"  "+LOCALS:4%
+	LOCALS:5 = %"  "+LOCALS:5%
+	LOCALS:6 = %(" "*ARG:2)+LOCALS:4%
+	LOCALS:7 = %(" "*ARG:2)+LOCALS:5%
+ELSE
+	LOCALS:6 = %" "*(ARG:2 - 3 - STRLENS(LOCALS:4))+LOCALS:4%
+	LOCALS:7 = %" "*(ARG:2 - 3 - STRLENS(LOCALS:5))+LOCALS:5%
+ENDIF
+
+;显示开
+IF ANIME_CONFIG("CHARA_CUTIN")
+	;スクロール速度但ウィンドウ幅に对し速すぎる场合、矯正做
+	ARG:1 = ARG:1 >= ARG:2 ? ARG:2-1 # ARG:1
+	REDRAW 0
+	LOCAL = 0
+	FOR LOCAL, 0, ARG:2-2, ARG:1
+		IF !ARG
+			;罫線是元フォント
+			SETFONT LOCALS:10
+			PRINTSINGLEFORM %SUBSTRING(LOCALS:6 , LOCAL)%
+			;外号是DFKai-SB
+			;SIF CHKFONT("HG教科書体")
+			;	SETFONT "HG教科書体"
+			SIF CHKFONT("DFKai-SB")
+				SETFONT "DFKai-SB"
+			PRINTSINGLEFORM %SUBSTRING(ARGS , LOCAL)%
+			;名前是元フォント
+			SETFONT LOCALS:10
+			PRINTSINGLEFORM %SUBSTRING(ARGS:1 , LOCAL)%
+			;单词读み是GungsuhChe
+			SIF CHKFONT("GungsuhChe")
+				SETFONT "GungsuhChe"
+			;SIF CHKFONT("ＭＳ 明朝")
+			;	SETFONT "ＭＳ 明朝"
+			PRINTSINGLEFORM %SUBSTRING(ARGS:2 , LOCAL)%
+			;罫線是元フォント
+			SETFONT LOCALS:10
+			PRINTSINGLEFORM %SUBSTRING(LOCALS:7 , LOCAL)%
+		ELSE
+			SETFONT LOCALS:10
+			PRINTSINGLEFORM %SUBSTRING(LOCALS:6 , (ARG:2 - 2) - LOCAL)%
+			SIF CHKFONT("DFKai-SB")
+				SETFONT "DFKai-SB"
+			PRINTSINGLEFORM %SUBSTRING(ARGS , (ARG:2 - 2) - LOCAL)%
+			SETFONT LOCALS:10
+			PRINTSINGLEFORM %SUBSTRING(ARGS:1 , (ARG:2 - 2) - LOCAL)%
+			SIF CHKFONT("GungsuhChe")
+				SETFONT "GungsuhChe"
+			PRINTSINGLEFORM %SUBSTRING(ARGS:2 , (ARG:2 - 2) - LOCAL)%
+			SETFONT LOCALS:10
+			PRINTSINGLEFORM %SUBSTRING(LOCALS:7 , (ARG:2 - 2) - LOCAL)%
+		ENDIF
+		TWAIT 2 , 0
+		SIF !ARG || LOCAL
+			CLEARLINE 5
+	NEXT
+ENDIF
+
+IF !ARG
+	SETFONT LOCALS:10
+	PRINTFORML %LOCALS:4%
+	SIF CHKFONT("DFKai-SB")
+		SETFONT "DFKai-SB"
+	PRINTFORML %LOCALS%
+	SETFONT LOCALS:10
+	PRINTFORML %LOCALS:1%
+	SIF CHKFONT("GungsuhChe")
+		SETFONT "GungsuhChe"
+	PRINTFORML %LOCALS:2%
+	SETFONT LOCALS:10
+	PRINTFORML %LOCALS:5%
+ELSE
+	SETFONT LOCALS:10
+	PRINTFORML %LOCALS:6%
+	SIF CHKFONT("DFKai-SB")
+		SETFONT "DFKai-SB"
+	PRINTFORML %ARGS%
+	SETFONT LOCALS:10
+	PRINTFORML %ARGS:1%
+	SIF CHKFONT("GungsuhChe")
+		SETFONT "GungsuhChe"
+	PRINTFORML %ARGS:2%
+	SETFONT LOCALS:10
+	PRINTFORML %LOCALS:7%
+ENDIF
+REDRAW 1
+SETCOLOR LOCAL:10
+RETURN RESULT
+
+
+;-------------------------------------------------
+;幻想暦関数@GENSOU_CALENDAR
+;	引数0：2000年1月1日（115季睦月一日）から的经过日数
+;引数に经过日数被与えるこ和で、幻想卿的暦被字符串で返す関数です
+;-------------------------------------------------
+@GENSOU_CALENDAR(ARG)
+#FUNCTIONS
+#LOCALSIZE 3
+;LOCALに年数
+LOCAL = GETYEAR(ARG)
+;LOCAL:1に月数
+LOCAL:1 = GETDATE(GETYEAR(ARG, 1), GETURUU(LOCAL))
+;LOCAL:2に日数
+LOCAL:2 = GETDATE(GETYEAR(ARG, 1), GETURUU(LOCAL), 1)
+
+RETURNF @"第%TOKANJI(LOCAL+115)%季　%GETMONTHNAME(LOCAL:1)%的%TOKANJI(LOCAL:2)%"
+
+
+;-------------------------------------------------
+;古典时刻関数@CLASSICAL_TIME
+;	引数0：对象的变数（デフォで是秒）
+;	引数1：1那么引数0被秒で、2那么时で計算做
+;	引数2：显示形式（デフォ「○的○つ」、1=「○的刻、○つ」、2=「○的○つ　-○○-」）
+;式中で使用做関数です。引数に记录されている数字被秒和して、现在的时刻被字符串で返し增加
+;古典时刻表记な的で、30分单位未满的端数是切り捨て增加。
+;-------------------------------------------------
+@CLASSICAL_TIME(ARG, ARG:1, ARG:2)
+#FUNCTIONS
+;分に变换做
+SELECTCASE ARG:1
+	;时で渡す场合
+	CASE 2
+		ARG *= 60
+	;秒で渡す场合
+	CASE 1
+		ARG /= 60
+ENDSELECT
+;0:00但子的三つな的で、60分被足す
+ARG += 60
+;日付も管理しているケース被考え、24时间（1440分）で割ってあまり被取る（子的一つ～二つもここで对应される）
+ARG %= 1440
+;显示
+SIF GET_CLASSICAL_HOUR(ARG, 1) == "丑" && (ARG%120)/30 == 2
+	RETURNF "丑三つ时"
+RETURNF @"%GET_CLASSICAL_HOUR(ARG, 1)%的\@ ARG:2 == 1 ? 刻、 # \@%TOKANJI(((ARG%120)/30)+1)%つ\@ ARG:2 == 2 ? 　-%GET_CLASSICAL_HOUR(ARG, 1, 1)%时- # \@"
+
+;时被取得
+;引数2被真に做和、大まかな时间的大人子被取る
+@GET_CLASSICAL_HOUR(ARG, ARG:1, ARG:2)
+#FUNCTIONS
+;分に变换做
+SELECTCASE ARG:1
+	;时で渡す场合
+	CASE 2
+		ARG *= 60
+	;分で渡す场合（处理无）
+	CASE 1
+	;秒で渡す场合（デフォルト）
+	CASEELSE
+		ARG /= 60
+ENDSELECT
+
+SELECTCASE ARG/120
+	CASE 0
+		RETURNF \@ ARG:2 ? 深更（しんこう） # 子 \@
+	CASE 1
+		RETURNF \@ ARG:2 ? 未明（みめい） # 丑 \@
+	CASE 2
+		RETURNF \@ ARG:2 ? 東雲（し的的め） # 寅 \@
+	CASE 3
+		RETURNF \@ ARG:2 ? 暁（あかつき） # 卯 \@
+	CASE 4
+		RETURNF \@ ARG:2 ? 早天（そうてん） # 辰 \@
+	CASE 5
+		RETURNF \@ ARG:2 ? 小昼（こひる） # 巳 \@
+	CASE 6
+		RETURNF \@ ARG:2 ? 昼中（ひるなか） # 午 \@
+	CASE 7
+		RETURNF \@ ARG:2 ? 日盛り（ひざかり） # 未 \@
+	CASE 8
+		RETURNF \@ ARG:2 ? 终日（ひねもす） # 申 \@
+	CASE 9
+		RETURNF \@ ARG:2 ? 黄昏（たそ但れ） # 酉 \@
+	CASE 10
+		RETURNF \@ ARG:2 ? 宵（よい） # 戌 \@
+	CASE 11
+		RETURNF \@ ARG:2 ? 夜半（よわ） # 亥 \@
+ENDSELECT
+
+
+;-------------------------------------------------
+;数値→漢数字变换関数@TOKANJI
+;TOSTR関数チックに、引数的数値被漢数字的字符串で返し增加
+;变数的最大値是約922京であるため、一、万、亿、兆、京的5回处理し增加
+;-------------------------------------------------
+@TOKANJI(ARG)
+#FUNCTIONS
+#LOCALSIZE 1
+#LOCALSSIZE 1
+#DIM LCOUNT, 1
+VARSET LOCALS
+FOR LCOUNT, 0, 5
+	LOCAL = ARG/POWER(10000, (4-LCOUNT))
+	ARG %= POWER(10000, (4-LCOUNT))
+	IF LOCAL
+		LOCALS += TOKANJIT(LOCAL)
+		SELECTCASE LCOUNT
+			CASE 0
+				LOCALS += "京"
+			CASE 1
+				LOCALS += "兆"
+			CASE 2
+				LOCALS += "亿"
+			CASE 3
+				LOCALS += "万"
+		ENDSELECT
+	ENDIF
+NEXT
+RETURNF \@ LOCALS != "" ? %LOCALS% # 零 \@
+
+;内部用or简易用
+;四桁以内的漢字变换。万以上与え时BUG
+@TOKANJIT(ARG)
+#FUNCTIONS
+SIF ARG >= 10000
+	RETURNF "ばぐ"
+LOCALS = \@ ARG/1000 ? %TOKANJIS(ARG/1000, 1)%千 # \@
+ARG %= 1000
+LOCALS += \@ ARG/100 ? %TOKANJIS(ARG/100, 1)%百 # \@
+ARG %= 100
+LOCALS += \@ ARG/10 ? %TOKANJIS(ARG/10, 1)%十 # \@
+ARG %= 10
+RETURNF LOCALS + TOKANJIS(ARG)
+
+
+;一桁的变换。引数1被真に做和一被省略做。2以上に做和零被显示做
+@TOKANJIS(ARG, ARG:1)
+#FUNCTIONS
+SELECTCASE ARG
+	CASE 0
+		RETURNF \@ ARG:1 > 1 ? 零 #  \@
+	CASE 1
+		RETURNF \@ ARG:1 ?  # 一 \@
+	CASE 2
+		RETURNF "二"
+	CASE 3
+		RETURNF "三"
+	CASE 4
+		RETURNF "四"
+	CASE 5
+		RETURNF "五"
+	CASE 6
+		RETURNF "六"
+	CASE 7
+		RETURNF "七"
+	CASE 8
+		RETURNF "八"
+	CASE 9
+		RETURNF "九"
+	CASE 10
+		RETURNF "十"
+	CASEELSE
+		RETURNF "ばぐ"
+ENDSELECT
+
+
+;-------------------------------------------------
+;閏年判定関数@GETURUU
+;	引数0：年数
+;西暦で年数被与え时そ的年的日数被返し增加
+;-------------------------------------------------
+@GETURUU(ARG)
+#FUNCTION
+RETURNF (!(ARG % 4) && (ARG % 100)) || !(ARG % 400) ? 366 # 365
+
+
+;-------------------------------------------------
+;年数判定関数@GETYEAR
+;	引数0：2000年1月1日から的经过日数
+;	引数1：1に做和、端日数被返し增加
+;经过日数から、经过年数被返し增加。
+;引数1被真に做和、现在的年で何日经过しているか被返し增加。
+;2000年被0年和して返すため、西暦表记做際是2000被足してください。
+;单純に经过年数被数える场合是意识しなくてもＯＫ
+;-------------------------------------------------
+@GETYEAR(ARG, ARG:1)
+#FUNCTION
+#LOCALSIZE 1
+VARSET LOCAL
+;2000年被0年目和して扱う
+;2000年から顺に回して、年数LOCAL被增加
+WHILE ARG > GETURUU(LOCAL)
+	LOCAL++
+	ARG -= GETURUU(LOCAL)
+WEND
+RETURNF ARG:1 ? ARG # LOCAL
+
+
+;-------------------------------------------------
+;日付判定関数@GETDATE
+;	引数0：年内经过日数（年内总日数被超え时き是错误…に是せず、总日数で割った余りで計算做。でもやめてね？）
+;	引数1：年内总日数（GETURUU併用推荐）
+;	引数2：省略做和○月、真に做和○日被返し增加
+;-------------------------------------------------
+@GETDATE(ARG, ARG:1 = 365, ARG:2)
+#FUNCTION
+#LOCALSIZE 2
+;念的ため的处理
+ARG %= ARG:1
+;月ご和的日数計算
+FOR LOCAL, 1, 13
+	SELECTCASE LOCAL
+		;30日的月
+		CASE 4, 6, 9, 11
+			LOCAL:1 = 30
+		;2月
+		CASE 2
+			LOCAL:1 = 28 + (ARG:2 == 366)
+		;31日的月
+		CASEELSE
+			LOCAL:1 = 31
+	ENDSELECT
+	IF ARG > LOCAL:1
+		ARG -= LOCAL:1
+	ELSE
+		BREAK
+	ENDIF
+NEXT
+RETURNF ARG:2 ? ARG # LOCAL-1
+
+
+;-------------------------------------------------
+;月名变换関数@GETMONTHNAME
+;	引数0：ｎ月的ｎ
+;旧暦的月名に变换做只！
+;12被超えていたら勝手に12で割って計算し增加。
+;-------------------------------------------------
+@GETMONTHNAME(ARG)
+#FUNCTIONS
+;念的ため的处理
+ARG %= 12
+SELECTCASE ARG
+	CASE 1
+		RETURNF "睦月"
+	CASE 2
+		RETURNF "如月"
+	CASE 3
+		RETURNF "弥生"
+	CASE 4
+		RETURNF "卯月"
+	CASE 5
+		RETURNF "皐月"
+	CASE 6
+		RETURNF "水无月"
+	CASE 7
+		RETURNF "文月"
+	CASE 8
+		RETURNF "葉月"
+	CASE 9
+		RETURNF "长月"
+	CASE 10
+		RETURNF "神无月"
+	CASE 11
+		RETURNF "霜月"
+	CASEELSE
+		RETURNF "师走"
+ENDSELECT

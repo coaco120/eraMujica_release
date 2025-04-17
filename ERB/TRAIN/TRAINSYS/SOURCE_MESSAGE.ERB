@@ -1,0 +1,613 @@
+﻿
+;────────────────────────────────────
+;快感（ＣＶＡＢ）的ソース和爱液、绝顶的处理・旁白
+;────────────────────────────────────
+@PRINT_SOURCE00_40
+#DIM KILL_ANIMEON, 1
+#DIM LCOUNT
+
+;RESULT初期化
+RESULT = 0
+
+;绝顶时动画ーション的开关被读み出し
+TRYCALLFORM KOJO_TRAIN_MESSAGE_ANIME_K{NO}
+KILL_ANIMEON = RESULT
+
+;LOCAL初期化
+VARSET LOCAL
+
+;CVAB绝顶显示
+FOR LCOUNT, 0, 4
+	SIF STR:(1030 + LCOUNT) != ""
+		PRINTSL STR:(1030 + LCOUNT)
+NEXT
+
+IF NOWEX:MASTER:射精
+	;射精种、量显示
+	PRINTSL STR:1034
+	PRINTVL DOWNBASE:MASTER:射精
+ENDIF
+
+SIF NOWEX:Ｃ绝顶
+	PRINTSL STR:1040
+SIF NOWEX:Ｖ绝顶
+	PRINTSL STR:1041
+SIF NOWEX:Ａ绝顶
+	PRINTSL STR:1042
+SIF NOWEX:Ｂ绝顶
+	PRINTSL STR:1043
+SIF NOWEX:射精
+	PRINTSL STR:1044
+
+
+;旁白跳过
+SIF FLAG:旁白控制
+	GOTO SKIP
+
+;调教对象绝顶		放尿是弹いて最下層で的み处理做ように
+IF MASTER_EX() && !NOWEX:MASTER:放尿
+	;绝顶时动画ーション
+	SIF !KILL_ANIMEON
+		CALL FLASH(2, RGBCOLOR(255, 210, 235))
+	;COMで分岐
+	SELECTCASE TRAINNAME:SELECTCOM
+		CASE "忍受快感"
+			PRINTFORMW %CALLNAME:MASTER%是\@ TALENT:MASTER:扶她 ? 咬牙将屈服的呻吟咽了下去的同时 # 发出咽不下去的甜腻的声音的同时 \@绝顶了…
+		CASE "接受快感", "开始自慰", "更加强硬"
+			PRINTFORMW %CALLNAME:MASTER%是\@ TALENT:MASTER:扶她 ? 贪图快感浅浅的动着腰的同时 # 颤抖着膝盖用甜美的声音诉说着快感的同时 \@绝顶了…
+		CASE "充满爱意的执行", "友善的回应"
+			PRINTFORMW %CALLNAME:MASTER%幸福地眯着眼睛绝顶了…
+		CASE "高潮！", "保持心情舒畅"
+			PRINTFORMW %CALLNAME:MASTER%尽情地贪图着快乐、\@ TALENT:MASTER:扶她 ? 忘记了恳求的屈辱卑微的く # 声嘶力竭的叫喊着的同时 \@绝顶了…
+		CASE "积极的执行"
+			PRINTFORMW %CALLNAME:MASTER%的眼睛里充满了快感呼唤着%CALLNAME:TARGET%的名字达到了绝顶…
+		CASE "射进里面！"
+			PRINTFORMW %CALLNAME:MASTER%用身体深处叼住阴茎，把腰相互摩擦而绝顶了…
+		CASE "不要中出！"
+			PRINTFORML %CALLNAME:MASTER%一边说着讨厌一边沉溺在快感中绝顶了…
+			PRINTFORMW 想用毫无力气的手臂把对方拉开，但嘴里只是发出喘息声…
+		CASE "忍受疼痛"
+			PRINTFORMW %CALLNAME:MASTER%像是在逃避痛苦一样集中在快感中，身体颤抖着绝顶了…
+		CASE "摆动腰部"
+			PRINTFORML %CALLNAME:MASTER%是\@ TCVAR:MASTER:位置上下 == 1 || INRANGE(TEQUIP:性交奉仕中, 3, 5) ? 像跳跃一样向上顶着腰 # 用腰部支撑身体摇晃着 \@贪图着快乐绝顶了…
+			PRINTFORMW \@ TEQUIP:性交中 || TEQUIP:性交奉仕中 ? 性交的 # 如性交般 \@彷彿快感已渗透到脑中，以迷醉的表情持续摆动腰部…
+		CASE "感到害羞", "消极的执行", "害怕", "弱弱地回应", "保持沉默"
+			PRINTFORMW %CALLNAME:MASTER%似乎想要从%CALLNAME:TARGET%的视线中逃离出来似的背过脸绝顶了…
+		CASE "讨厌", "请求宽恕", "移除道具", "发出悲鸣"
+			PRINTFORMW %CALLNAME:MASTER%厌恶的摇着头，一边说着讨厌一边绝顶了…
+		CASE "讽刺挖苦", "无所畏惧的笑", "骂笨手笨脚", "强势的回应", "冷淡地回应", "拒绝执行", "发狂"
+			PRINTFORML %CALLNAME:MASTER%固执地背过脸去绝顶了…
+			PRINTFORMW %CALLNAME:MASTER%强硬的话语被涌上的绝顶的快感的喘息所淹没…
+		CASE "接吻"
+			PRINTFORML %CALLNAME:MASTER%一边和%CALLNAME%接吻一边绝顶了…
+			PRINTFORMW 在%CALLNAME%温暖柔软的嘴唇的触感中，感觉全身的力气都被抽走了…
+		CASEELSE
+			PRINTFORML %CALLNAME:MASTER%在获得快感的同时达到了绝顶…
+			PRINTFORMW 因为太舒服了，感觉脑子里一片空白…
+	ENDSELECT
+ENDIF
+
+;调教者绝顶
+IF TARGET_EX()
+	;高潮了的但MASTER
+	IF TARGET_EX(1)
+		;COMで分岐
+		SELECTCASE TRAINNAME:SELECTCOM
+			CASE "接受快感", "开始自慰"
+				PRINTFORMW %CALLNAME:TARGET%凝视着贪图快感的%CALLNAME:MASTER%的身姿达到了绝顶…
+			CASE "充满爱意的执行"
+				PRINTFORMW %CALLNAME:TARGET%因为满足感湿润了眼睛，吐出了炽热的气息在微微的颤抖中达到了绝顶…
+			CASE "射进里面！"
+				;射精
+				IF NOWEX:射精 > 1
+					PRINTFORMW %CALLNAME:TARGET%深深地插入了%CALLNAME:MASTER%，一边扭着腰一边达到了绝顶…
+				ELSE
+					PRINTFORMW %CALLNAME:TARGET%保持着插入%CALLNAME:MASTER%，毫不费力的绝顶了…
+				ENDIF
+			CASE "不要中出！"
+				;射精
+				IF NOWEX:射精 > 1
+					PRINTFORMW %CALLNAME:TARGET%就像直到最后一刻都在犹豫一样，一边在%CALLNAME:MASTER%中享受着深深的乐趣一边达到了绝顶…
+				ELSE
+					PRINTFORMW %CALLNAME:TARGET%保持着插入%CALLNAME:MASTER%，毫不费力的绝顶了…
+				ENDIF
+			;MASTER_EX()から的コピペ的名残和思われる的で注释アウト。いずれ手入れ做可能性是割り和アリ@/L
+			;CASE "忍受疼痛"
+			;	PRINTFORMW %CALLNAME:TARGET%是痛苦から逃れるように快乐に集中し、身体被震わせ绝顶了…
+			CASE "摆动腰部"
+				PRINTFORMW %CALLNAME:TARGET%把身体交给了%CALLNAME:MASTER%的腰达到了绝顶…
+			CASE "感到害羞", "消极的执行", "讨厌", "请求宽恕", "移除道具", "发出悲鸣"
+				PRINTFORML %CALLNAME:TARGET%摇晃着身体贪图着%CALLNAME:MASTER%的爱抚、
+				PRINTFORMW 不由得皱起眉头达到了绝顶…
+			CASE "接吻"
+				PRINTFORMW %CALLNAME%从被%CALLNAME:MASTER%封住的嘴唇中，一边发出着甜美温润的声音一边达到了绝顶…
+			CASEELSE
+				PRINTFORMW %CALLNAME:TARGET%因%CALLNAME:MASTER%所给予的快乐而发出甜美的声音绝顶了…
+		ENDSELECT
+	ELSE
+		PRINTFORMW %CALLNAME:TARGET%在一阵微微的颤抖后，一边吐着甜美的气息一边达到了绝顶…
+	ENDIF
+ENDIF
+
+;同时绝顶时
+SIF MASTER_EX() && TARGET_EX()
+	PRINTFORMW %CALLNAME:MASTER%和%CALLNAME:TARGET%两人同时为绝顶的快感而颤抖起来…
+
+;调教对象射精时
+IF NOWEX:MASTER:射精 && !NOWEX:MASTER:放尿
+	;非空射精时
+	IF NOWEX:MASTER:射精 != 1
+		;绝顶时动画ーション
+		SIF !KILL_ANIMEON
+			CALL FLASH(2)
+		;前列腺射精
+		IF NOWEX:MASTER:射精 == 5
+			LOCALS = \@ TALENT:MASTER:扶她 ? 肠道 # 小穴 \@
+			SELECTCASE TALENT:MASTER:扶她 ? MA_PLAYER(1) # MV_PLAYER(1)
+				;指で
+				CASE 2
+					PRINTFORML %CALLNAME:MASTER%肥大的前列腺被手指从%LOCALS%内揉捏着、
+					PRINTFORMW 伴随着腰部融化般的妖艳快感，被强制射精了…
+				;阴茎で
+				CASE 3
+					PRINTFORML 勃起的阴茎隔着%LOCALS%的肉壁摩擦着的硬硬的前列腺、
+					PRINTFORMW 从%CALLNAME:MASTER%的阴茎上不检点地流下了精液…
+				;拳交。
+				CASE 10
+					PRINTFORML 插入%LOCALS%内的拳头把前列腺压扁了、
+					PRINTFORMW 从%CALLNAME:MASTER%的阴茎上不检点地流下了精液…
+				;跳蛋、震动棒、三角木马、肛门震动棒、肛门拉珠
+				CASE 100, 101, 133, 102, 111
+					PRINTFORML %LOCALS%内的异物妖异的刺激了%CALLNAME:MASTER%的前列腺、
+					PRINTFORMW 白色的浊液随意地从阴茎溢出，奇妙的快感涌上心头…
+				;假阴茎
+				CASE 103
+					PRINTFORML 假阴茎用一定的角度深深地刺激着%CALLNAME:MASTER%的前列腺、
+					PRINTFORMW 精液从阴茎里吧嗒吧嗒地溢出来，仿佛抽掉了全身的力气…
+				;灌肠
+				CASE 132
+					PRINTFORML %CALLNAME:MASTER%被突然袭来的便意刺激了内部的前列腺、
+					PRINTFORMW 阴茎的前端不检点地流下了白色浊液…
+				;他。
+				CASEELSE
+					PRINTFORML 在%LOCALS%内被玩弄着肥大的前列腺、
+					PRINTFORMW 从%CALLNAME:MASTER%的阴茎上滴下了白浊液…
+			ENDSELECT
+		ENDIF
+		;素股
+		IF GET_ACTNAME(GET_NORMALACTNUM(TFLAG:ACT)) == "摩擦性器"
+			;绝顶时动画ーション
+			SIF !KILL_ANIMEON
+				CALL FLASH
+			;大量射精
+			IF NOWEX:MASTER:射精 == 3
+				;助手協力时
+				IF ASSI:1 > 0 && TCVAR:(ASSI:1):助手方针 == GET_ASSIMENUNUM("コンビネーション")
+					;仰面体位
+					IF TFLAG:仰面
+						PRINTFORMW 夹在两人性器之间的%CALLNAME:MASTER%的阴茎像喷泉一样不断的释放着精液…
+					;其他
+					ELSE
+						PRINTFORMW %CALLNAME:MASTER%在两人的性器之间释放出了精液…
+					ENDIF
+				;助手非協力时
+				ELSE
+					PRINTFORMW 从紧贴着的%CALLNAME:MASTER%和%CALLNAME:TARGET%的身体间隙中不断地溢出精液…
+				ENDIF
+			;其他
+			ELSE
+				;助手協力时
+				IF ASSI:1 > 0 && TCVAR:(ASSI:1):助手方针 == GET_ASSIMENUNUM("コンビネーション")
+					;仰面体位
+					IF TFLAG:仰面
+						PRINTFORMW 被夹在两人性器之间的%CALLNAME:MASTER%的阴茎很有气势地喷出了精液…
+					;其他
+					ELSE
+						PRINTFORMW %CALLNAME:MASTER%在两人的性器之间释放出了精液…
+					ENDIF
+				;助手非協力时
+				ELSE
+					PRINTFORMW %CALLNAME:MASTER%在%CALLNAME:TARGET%的阴唇上摩擦着龟头射精了…
+				ENDIF
+			ENDIF
+		;小穴内射精
+		ELSEIF MC_PLAYER(1) == 4
+			;主人もイってる
+			SIF TARGET_EX(1, 2)
+				PRINTFORML 因为达到了绝顶收紧精神而无法忍受阴道带来的快感、
+			;插入直后
+			IF !TFLAG:上次合性交奉仕
+				PRINTFORML %CALLNAME:MASTER%插入的同时在%CALLNAME:TARGET%的深处释放出了白浊液…
+			;其他
+			ELSE
+				PRINTFORML %CALLNAME:MASTER%在%CALLNAME:TARGET%的深处释放出了白浊液…
+			ENDIF
+			;绝顶时动画ーション
+			SIF !KILL_ANIMEON
+				CALL FLASH
+			;不拔出採用时
+			IF TFLAG:不拔出
+				;今日的方针但做小孩
+				IF IS_POLICY("今日", "做小孩")
+					PRINTFORMW 在%CALLNAME:TARGET%的子宫里注入精液的%CALLNAME:MASTER%为了进行下一次播种催促起%CALLNAME:TARGET%再次开始动了腰…
+				;其他
+				ELSE
+					;调教者但羞涩また是清楚素質
+					IF TALENT:羞涩 || TALENT:清楚
+						PRINTFORML 被%CALLNAME:MASTER%的精液味道占据了的%CALLNAME:TARGET%用想要的表情凝视着%CALLNAME:MASTER%，温柔地勒紧了阴道内的阴茎…
+					;调教者但好色素質
+					ELSEIF TALENT:好色
+						PRINTFORML %CALLNAME:TARGET%在%CALLNAME:MASTER%的射精开始后露出了贪婪的表情，更加激烈地使用起腰来…
+					;其他
+					ELSE
+						PRINTFORML 被%CALLNAME:MASTER%的精液味道占据了的%CALLNAME:TARGET%为了再次被内射而扭动了腰…
+					ENDIF
+					WAIT
+				ENDIF
+			;不拔出非採用时
+			ELSE
+				{
+				PRINTFORML %CALLNAME:TARGET%是\@ GROUPMATCH(NOWEX:MASTER:射精, 2, 3) > 0 && IS_COMGRONAME("淡然的服从/积极的服从/接受") 
+				? 满足げに微笑む和 # \@小穴から%CALLNAME:MASTER%的阴茎被解放し、秘部から垂れる精液被看到付けてきた…
+				}
+				;今日的方针但做小孩
+				IF IS_POLICY("今日", "做小孩")
+					{
+					PRINTFORMW %CALLNAME:TARGET%是\@ GROUPMATCH(NOWEX:MASTER:射精, 2, 3) > 0 && IS_COMGRONAME("淡然的服从/积极的服从/接受") 
+					? 后代被授かるこ和的期待からか # やや不满一边も \@、下腹部被撫で一边%CALLNAME:MASTER%被幸せそうな表情で见つめている…
+					}
+				;其他
+				ELSE
+					WAIT
+				ENDIF
+			ENDIF
+		;肛门へ射精
+		ELSEIF MC_PLAYER(1) == 5
+			SIF TARGET_EX(1, 3)
+				PRINTFORML 屈服于贪图绝顶而强烈收紧的肛门所带来的触感、
+			;插入直后
+			IF !TFLAG:上次合性交奉仕
+				PRINTFORML %CALLNAME:MASTER%插入的同时在%CALLNAME:TARGET%的深处释放出了白浊液
+			;其他
+			ELSE
+				PRINTFORML %CALLNAME:MASTER%在%CALLNAME:TARGET%的肠道深处释放出了白浊液…
+			ENDIF
+			;绝顶时动画ーション
+			SIF !KILL_ANIMEON
+				CALL FLASH
+			;不拔出採用时
+			IF TFLAG:不拔出
+				PRINTFORMW %CALLNAME:TARGET%收紧肛门，不肯放开%CALLNAME:MASTER%的阴茎…
+			;不拔出非採用时
+			ELSE
+				PRINTFORMW 从%CALLNAME:TARGET%的肛门溢出了%CALLNAME:MASTER%屈服的证明，一直垂到秘部…
+			ENDIF
+		;手淫
+		ELSEIF GET_ACTNAME(GET_NORMALACTNUM(TFLAG:ACT)) == "用手爱抚" || TEQUIP:调教对象Ｃ使用 == 1
+			;助手協力时
+			IF ASSI:1 > 0 && TCVAR:(ASSI:1):助手方针 == GET_ASSIMENUNUM("コンビネーション")
+				LOCALS = 二人
+			;助手非協力时
+			ELSE
+				LOCALS = %CALLNAME:TARGET%
+			ENDIF
+			;大量射精
+			IF NOWEX:MASTER:射精 == 3
+				PRINTFORML %LOCALS%配合着%CALLNAME:MASTER%的射精节奏刺激着阴茎…
+				;绝顶时动画ーション
+				SIF !KILL_ANIMEON
+					CALL FLASH
+				PRINTFORML 同时%LOCALS%愉快地望着大量喷出的精液
+				PRINTFORMW %CALLNAME:MASTER%沾满精液变得黏糊糊的阴茎被牵引着达到了绝顶…
+			;其他
+			ELSE
+				PRINTFORML %CALLNAME:MASTER%被%LOCALS%的手玩弄着射精了…
+				;绝顶时动画ーション
+				SIF !KILL_ANIMEON
+					CALL FLASH
+				PRINTFORML 同时%LOCALS%愉快地望着被吐出的精液
+				PRINTFORMW 一直爱抚着直到%CALLNAME:MASTER%阴茎的脉动完全消失为止…
+			ENDIF
+		;口淫
+		ELSEIF GET_ACTNAME(GET_NORMALACTNUM(TFLAG:ACT)) == "用口爱抚" || TEQUIP:调教对象Ｃ使用 == 2
+			IF 0
+			[SKIPSTART]
+			;２５％でディープスロート
+			IF !RAND:4
+				PRINTFORML %CALLNAME:TARGET%咽下了在食道里直接释放出来的精液
+				;绝顶时动画ーション
+				SIF !KILL_ANIMEON
+					CALL FLASH
+				PRINTFORMW 用喉咙勒紧了%CALLNAME:MASTER%的阴茎…
+			ディープスロート被口上侧で参照できるように
+			さらに射精种毎に分ける
+			[SKIPEND]
+			;大量射精
+			ELSEIF NOWEX:MASTER:射精 == 3
+				;助手協力时
+				IF ASSI:1 > 0 && TCVAR:(ASSI:1):助手方针 == GET_ASSIMENUNUM("コンビネーション")
+					PRINTFORML 两个人交替吸吮着反复射精后的%CALLNAME:MASTER%阴茎
+					;绝顶时动画ーション
+					SIF !KILL_ANIMEON
+						CALL FLASH
+					PRINTFORMW 吸取着向上喷出来的精液…
+				;助手非協力时
+				ELSE
+					;调教者但情欲那么ディープスロート
+					IF IS_CONDITION(TARGET, "情欲") && EXP:TARGET:口淫経験 >= 50
+						PRINTFORML %CALLNAME:MASTER%无法忍受在喉咙深处性交般的甜蜜刺激、
+						PRINTFORML 直接在%CALLNAME:TARGET%的食道内释放出大量精液…
+						;绝顶时动画ーション
+						SIF !KILL_ANIMEON
+							CALL FLASH
+						PRINTFORML %CALLNAME:TARGET%将持续脉动的阴茎紧箍在喉咙深处，一滴不剩地榨取了…
+					ELSE
+						PRINTFORML %CALLNAME:MASTER%每次被舌头玩弄到龟头时都会射出精液、
+						;绝顶时动画ーション
+						SIF !KILL_ANIMEON
+							CALL FLASH
+						;乱数分岐
+						IF RAND:2
+							PRINTFORMW 应%CALLNAME:TARGET%的要求在口内持续释放着大量精液…
+						ELSE
+							PRINTFORMW %CALLNAME:TARGET%将大量的精液全部喝了下去的同时在嘴里爱抚着，促进着更进一步的射精…
+						ENDIF
+					ENDIF
+				ENDIF
+			;其他
+			ELSE
+				;助手協力时
+				IF ASSI:1 > 0 && TCVAR:(ASSI:1):助手方针 == GET_ASSIMENUNUM("コンビネーション")
+					PRINTFORML %CALLNAME:MASTER%在%CALLNAME:TARGET%的嘴里射精了…
+					;绝顶时动画ーション
+					SIF !KILL_ANIMEON
+						CALL FLASH
+					PRINTFORMW 两个人像争夺一样地舔舐着%CALLNAME:MASTER%射出的精液…
+				;助手非協力时
+				ELSE
+					;调教者但情欲那么ディープスロート
+					IF IS_CONDITION(TARGET, "情欲") && EXP:TARGET:口淫経験 >= 50
+						PRINTFORML %CALLNAME:MASTER%就像性交一样在喉咙深处蠕动、
+						PRINTFORML 在%CALLNAME:TARGET%的食道内直接射精了…
+						;绝顶时动画ーション
+						SIF !KILL_ANIMEON
+							CALL FLASH
+						PRINTFORML %CALLNAME:TARGET%在喉咙深处紧紧勒住的同时，催促着更进一步的射精…
+					;其他
+					ELSE
+						PRINTFORML %CALLNAME:MASTER%在%CALLNAME:TARGET%的嘴里射精了…
+						;绝顶时动画ーション
+						SIF !KILL_ANIMEON
+							CALL FLASH
+						PRINTFORMW %CALLNAME:TARGET%一边用舌头品尝着气势十足释放出来的精液一边慢慢吞下去…
+					ENDIF
+				ENDIF
+			ENDIF
+		;乳交
+		ELSEIF GET_ACTNAME(GET_NORMALACTNUM(TFLAG:ACT)) == "进行乳交"
+			;绝顶时动画ーション
+			SIF !KILL_ANIMEON
+				CALL FLASH
+			;助手協力时
+			IF ASSI:1 > 0 && TCVAR:(ASSI:1):助手方针 == GET_ASSIMENUNUM("コンビネーション")
+				;巨乳存在时
+				IF TALENT:巨乳 || TALENT:ASSI:巨乳
+					PRINTFORMW 二人在%CALLNAME:MASTER%\@ NOWEX:MASTER:射精 == 3 ? 提心吊胆地继续射精# \@之后夹着肉棒吸着积在胸前的精液…
+				;其他
+				ELSE
+					PRINTFORMW %CALLNAME:MASTER%的阴茎\@ NOWEX:MASTER:射精 == 3 ? 大量地 # 势头良好 \@释放出的精液弄脏了两个人的上半身…
+				ENDIF
+			;助手非協力时
+			ELSE
+				;貧乳时
+				IF TALENT:貧乳
+					PRINTFORMW %CALLNAME:MASTER%在%CALLNAME:TARGET%的%OPPAI_DESCRIPTION(TARGET)%\@ NOWEX:MASTER:射精 == 3 ? 大量的 # 势头良好 \@释放出精液…
+				;其他
+				ELSE
+					PRINTFORMW %CALLNAME:MASTER%被%CALLNAME:TARGET%的%OPPAI_DESCRIPTION(TARGET)%夹着的同时射精了…
+				ENDIF
+				;貧乳时
+				IF TALENT:貧乳
+					PRINTFORMW %CALLNAME:TARGET%是\@ NOWEX:MASTER:射精 == 3 ? 一边舔着散落到脸上的精液 # \@用手指捧着从没什么起伏的身体里流下来的精液玩弄着…
+				;巨乳时
+				ELSEIF TALENT:巨乳
+					PRINTFORMW %CALLNAME:TARGET%是\@ NOWEX:MASTER:射精 == 3 ? 提心吊胆地继续射精# \@夹着肉棒吸着积在胸前的精液…
+				;普乳时
+				ELSE
+					PRINTFORMW %CALLNAME:TARGET%用胸部夹着%CALLNAME:MASTER%的阴茎\@ NOWEX:MASTER:射精 == 3 ? 大量地 # 势头良好 \@的同时出神地望着释放精液的样子…
+				ENDIF
+			ENDIF
+		;足交
+		ELSEIF GET_ACTNAME(GET_NORMALACTNUM(TFLAG:ACT)) == "进行足交"
+			;绝顶时动画ーション
+			SIF !KILL_ANIMEON
+				CALL FLASH
+			;助手協力时
+			IF ASSI:1 > 0 && TCVAR:(ASSI:1):助手方针 == GET_ASSIMENUNUM("コンビネーション")
+				PRINTFORMW %CALLNAME:MASTER%被两个人的脚玩弄着射精了…
+			;助手非協力时
+			ELSE
+				PRINTFORMW %CALLNAME:MASTER%被%CALLNAME:TARGET%的脚玩弄着射精了…
+			ENDIF
+		;助手に小穴内射精(他的处理是后回し)
+		ELSEIF TFLAG:插入助手中
+			PRINTFORML %CALLNAME:MASTER%在%CALLNAME:(ASSI:(TFLAG:插入助手中))%的深处释放出了白浊液
+			;绝顶时动画ーション
+			SIF !KILL_ANIMEON
+				CALL FLASH
+			PRINTFORMW %CALLNAME:(ASSI:(TFLAG:插入助手中))%恋恋不舍地解放了%CALLNAME:MASTER%的阴茎…
+			;旁白以外的处理但あるべきで是ない但、助手系に是まだ手出ししたくない@これみ
+			TFLAG:插入助手中 = 0
+		;自慰
+		ELSEIF TEQUIP:自慰中 == 1 || TEQUIP:自慰中 == 3
+			;顔射自慰绝顶
+			IF ME_PLAYER(1) == 9
+				PRINTFORML %CALLNAME:MASTER%对着在阴茎前等待着的%CALLNAME:TARGET%的嘴巴射精了…
+				;绝顶时动画ーション
+				SIF !KILL_ANIMEON
+					CALL FLASH
+				PRINTFORMW %CALLNAME:TARGET%看起来很好吃地咽下了%CALLNAME:MASTER%吐出的充满欲望的精液…
+			;其他
+			ELSE
+				PRINTFORML %CALLNAME:MASTER%在玩弄自己的阴茎的同时绝顶了…
+				;绝顶时动画ーション
+				SIF !KILL_ANIMEON
+					CALL FLASH
+				PRINTFORMW %CALLNAME:TARGET%嘲笑着%CALLNAME:MASTER%战战兢兢射精的姿态…
+			ENDIF
+		ENDIF
+	;空射精时
+	ELSEIF NOWEX:MASTER:射精 == 1
+		;绝顶时动画ーション
+		SIF !KILL_ANIMEON
+			CALL QUAKE
+		PRINTFORML %CALLNAME:MASTER%在没有射精的情况下迎来了绝顶…
+		;调教者に插入中射精时
+		IF GROUPMATCH(MC_PLAYER(1), 4, 5)
+			;不拔出採用时
+			IF TFLAG:不拔出
+				PRINTFORML %CALLNAME:TARGET%想从因过度快感而痉挛的%CALLNAME:MASTER%中挤出精液、
+				;肛交时
+				IF TEQUIP:性交奉仕中 == 6
+					PRINTFORMW 收紧蠢蠢欲动的肛门，刺激着阴茎…
+				;小穴性交时
+				ELSE
+					PRINTFORMW 执拗地纠缠着阴道里的阴茎…
+				ENDIF
+			;不拔出非採用时
+			ELSE
+				PRINTFORMW %CALLNAME:TARGET%确认吸尽了%CALLNAME:MASTER%的精液后，一脸不满意的表情放开了%CALLNAME:MASTER%的阴茎…
+			ENDIF
+		;これら的ACTで射精时
+		ELSEIF IS_NOWACTNAME("用手爱抚/用口爱抚/摩擦性器/进行乳交/进行足交")
+			PRINTFORMW %CALLNAME:TARGET%还在让%CALLNAME:MASTER%脉动的同时吐着透明液体的阴茎继续工作着…
+		;助手に小穴内射精(他的处理是后回し)
+		ELSEIF TEQUIP:助手性交奉仕中
+			PRINTFORML %CALLNAME:MASTER%的阴茎在%CALLNAME:(ASSI:(TFLAG:插入助手中))%的阴道内剧烈的痉挛着…
+			PRINTFORMW 察觉到绝顶的%CALLNAME:(ASSI:(TFLAG:插入助手中))%恋恋不舍地放开了%CALLNAME:MASTER%的阴茎…
+			;旁白以外的处理但あるべきで是ない但、助手系に是まだ手出ししたくない@これみ
+			TFLAG:插入助手中 = 0
+			TFLAG:助手连续交合 = 0
+		ENDIF
+	ENDIF
+ENDIF
+;调教者同时射精
+IF NOWEX:射精
+	;中/外に射精
+	IF TEQUIP:性交中
+		;不要中出！
+		IF IS_NOWCOMNAME("不要中出！")
+			IF TFLAG:上次中出 == 0
+				PRINTFORMW %CALLNAME:TARGET%接受了%CALLNAME:MASTER%的愿望，在射精之前拔出阴茎在外面射出了白浊液…
+			ELSE
+				PRINTFORMW %CALLNAME:TARGET%没有听从%CALLNAME:MASTER%的愿望，%CALLNAME:MASTER%的\@ A_SEX() ? 肠道 # 小穴 \@里面射出了白浊液…
+			ENDIF
+		;射进里面！
+		ELSEIF IS_NOWCOMNAME("射进里面！")
+			PRINTFORMW %CALLNAME:TARGET%接受了%CALLNAME:MASTER%的愿望，%CALLNAME:MASTER%的\@ A_SEX() ? 肠道 # 小穴 \@里面射出了白浊液…
+		ELSEIF TFLAG:上次中出 == 0
+			PRINTFORMW %CALLNAME:TARGET%在射精前拔出阴茎，在外面射出了白浊液…
+		ELSE
+			PRINTFORMW %CALLNAME:TARGET%在%CALLNAME:MASTER%的\@ A_SEX() ? 肠道 # 小穴 \@里面射出了白浊液…
+		ENDIF
+	ELSE
+		;对面座位
+		IF IS_NOWACTNAME("对面座位侍奉") || TEQUIP:性交奉仕中 == 4
+			PRINTFORMW 从紧贴着%CALLNAME:MASTER%身体的%CALLNAME:TARGET%的阴茎中喷出精液…
+		;背面座位
+		ELSEIF IS_NOWACTNAME("背面座位侍奉") || TEQUIP:性交奉仕中 == 5
+			PRINTFORMW %CALLNAME:MASTER%的阴茎在被%CALLNAME:TARGET%吸弄的同时射精了…
+		;手淫
+		ELSEIF IS_NOWACTNAME("强制手爱抚") && TC_PLAYER(1) == 2
+			PRINTFORMW %CALLNAME:TARGET%把阴茎朝向%CALLNAME:MASTER%的脸，气势满满地射精了…
+		;口淫
+		ELSEIF IS_NOWACTNAME("强制口爱抚") && TC_PLAYER(1) == 1
+			PRINTFORMW %CALLNAME:TARGET%是\@ TFLAG:ACT派生 == 1 ? %CALLNAME:MASTER%的嘴里 # \@吐出欲望后、一脸满足的抚摸着%CALLNAME:MASTER%的脑门沉浸在快感的余韵中…
+		;素股
+		ELSEIF IS_NOWACTNAME("素股") && TC_PLAYER(1) == 8
+			PRINTFORMW %CALLNAME:TARGET%在%CALLNAME:MASTER%的阴唇上摩擦着性器射精了…
+		;乳交
+		ELSEIF IS_NOWACTNAME("乳交") && TC_PLAYER(1) == 6
+			PRINTFORMW 从%CALLNAME:MASTER%的乳房中间露出的龟头喷出了精液…
+		ELSEIF GETBIT(TEQUIP:自慰中, 1) || GETBITAND(TEQUIP:自慰中, 0, 1)
+			IF TE_PLAYER(1) == 9
+				PRINTFORML 当%CALLNAME:TARGET%转向%CALLNAME:MASTER%的脸时
+				PRINTFORMW 浮现出恍惚的表情射精了…
+			ELSE
+				PRINTFORMW %CALLNAME:TARGET%玩弄自己的阴茎达到了绝顶…
+			ENDIF
+		;爱抚物无的场合
+		ELSEIF !TC_PLAYER(1)
+			;阴茎に对做爱抚物无で射精了场合的扱い但悩ましい
+			PRINTFORM %CALLNAME%是
+			IF TV_PLAYER(1) || TA_PLAYER(1)
+				PRINTFORM \@ TV_PLAYER(1) ? 小穴内 # 肛门 \@へ的刺激に
+			ELSE
+				PRINTFORM 和自己的意思相反
+			ENDIF
+			PRINTFORML 、没想到射出来了…
+			;//对面座位, 背面座位被TEQUIPでも拾うようにした的で、こ的部位直到落ちてくる可能性是かなり低和思われる
+			;//それでも可能性是ゼロで是ない的で
+		ENDIF
+	ENDIF
+	IF (IS_NOWACTNAME("逆强奸/正常位侍奉/后背位侍奉/对面座位侍奉/背面座位侍奉") || TEQUIP:性交奉仕中) && NOWEX:Ｖ绝顶 > 0 
+		IF NOWEX:MASTER:射精
+			IF NOWEX:MASTER:射精 != 1
+				IF TFLAG:不拔出
+					PRINTFORMW 被精液填满的%CALLNAME:TARGET%的阴道微微颤动，紧紧地勒住了%CALLNAME:MASTER%的阴茎…
+				ELSE
+					PRINTFORMW 在绝顶的余韵中绽开的%CALLNAME:TARGET%的小穴口充满了%CALLNAME:MASTER%射出来的精液…
+				ENDIF
+			ELSE
+				IF TFLAG:不拔出
+					PRINTFORMW %CALLNAME:TARGET%的阴道微微颤动，紧紧地勒着刚刚玩弄过的%CALLNAME:MASTER%的阴茎…
+				ELSE
+					PRINTFORMW %CALLNAME:TARGET%沉浸在绝顶的余韵中从绽放的小穴口散漫地露了出来…
+				ENDIF
+			ENDIF
+		ELSE
+			PRINTFORMW %CALLNAME:TARGET%沉浸在绝顶的余韵中，品味着阴道内阴茎的触感…
+		ENDIF
+	ENDIF
+ENDIF
+
+;调教对象潮吹
+IF NOWEX:MASTER:潮吹 > 1
+	PRINTFORMW %CALLNAME:MASTER%从尿道喷出大量的潮吹，腰部颤抖着沉浸在快感中…
+ELSEIF NOWEX:MASTER:潮吹
+	PRINTFORMW 绝顶的瞬间，%CALLNAME:MASTER%的尿道中气势汹汹地迸发出透明的液体…
+ENDIF
+
+;调教对象放尿	无かった的で追加してみる@/L
+IF NOWEX:MASTER:放尿
+	PRINTFORML %CALLNAME:MASTER%无法忍受上扬的尿意、
+	PRINTFORM %CALLNAME:TARGET%的
+	IF (IS_NOWACTNAME("逆强奸/正常位侍奉/后背位侍奉/对面座位侍奉/背面座位侍奉/肛交侍奉") || TEQUIP:性交奉仕中)
+		PRINTFORMW \@ V_SEX(MASTER) ? 小穴 # 肛 \@内に放尿してしまった…
+	ELSE
+		PRINTFORMW 在眼前漏了出来…
+	ENDIF
+ENDIF
+
+;旁白跳过完了
+$SKIP
+
+
+IF TFLAG:上次中出 < 0
+	;调教对象(主人)的小穴内射精量被增加
+	SIF TEQUIP:性交中 < 6
+		CFLAG:M小穴精 += DOWNBASE:射精
+	TFLAG:上次中出 = 0
+ENDIF
+
+;喷乳、多重、放尿绝顶显示
+FOR LCOUNT, 5, 9
+	SIF STR:(1030 + LCOUNT) != ""
+		PRINTSL STR:(1030 + LCOUNT)
+NEXT
+
+SIF NOWEX:喷乳
+	PRINTSL STR:1045
+SIF NOWEX:Ｃ绝顶 || NOWEX:Ｖ绝顶 || NOWEX:Ａ绝顶 || NOWEX:Ｂ绝顶
+	PRINTSL STR:1046
+

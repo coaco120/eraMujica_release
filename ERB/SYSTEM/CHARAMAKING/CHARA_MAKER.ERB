@@ -1,0 +1,441 @@
+﻿;角色メイキング　byぱ。
+;まず紫先生的質問に答えて性別和体格被決定。
+;そ的后、随机に選ば受到１０人から的質問コーナー但是じまり增加
+;返答に应じて素質但決まり增加。
+@CHARA_MAKER
+#LOCALSIZE 200
+#DIM LCOUNT, 2
+#DIM REROOL, 1
+#DIM LITTLE_CHECK, 1
+;コンダクター和して紫被追加。助手に指定（イメージ的なも的です）
+ADDCHARA 22
+ASSI = CHARANUM-1
+
+;保存さ受到角色但いれば读む
+IF MATCH(GLOBALS, "", 0, 5) < 5
+	$MAKE_OR_LORD
+	PRINTFORMDL [0]角色制作
+	PRINTFORMDL [1]角色加载
+	CALL INPUTINT(0, 1)
+	IF RESULT == 1
+		CALL CHARAMAKE_DATA_MENU
+		SIF !RESULT
+			GOTO MAKE_OR_LORD
+		CALL KOJO_COLOR(ASSI)
+		PRINTFORMW 「你回来了\@ CALLNAME:MASTER != "您" ? 、%CALLNAME:MASTER% # \@」
+		PRINTL 
+		CALL CHARA_CUTIN(CSTR:ASSI:10, CSTR:ASSI:11, CSTR:ASSI:单词)
+		PRINTL 
+		PRINTFORMW 「又迷路了吗，真是没救了」
+		PRINTFORMW 「快来选择吧。阁下的——主人大人」
+		PRINTL 
+		RESETCOLOR
+		DELCHARA ASSI
+		ASSI = -1
+		RETURN 1
+	ENDIF
+ENDIF
+
+CALL KOJO_COLOR(ASSI)
+PRINTFORMW 「呵呵，初次见面」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:ASSI:10, CSTR:ASSI:11, CSTR:ASSI:单词)
+PRINTL 
+PRINTFORMW 「我想您知道我的名字，所以我就不过多废话了」
+PRINTFORMW 「这前方是被称为幻想乡的庸俗蒙昧的世界」
+PRINTFORMW 「那么，你准备好了吗？」
+PRINTL 
+CALL BGM_CUTIN("二つ的世界")
+PRINTFORMW 「——做好沉溺于幻想的准备。来吧」
+
+;性別的決定
+PRINTL 
+PRINTFORML 「我先问问吧。在这个世界的阁下的性别是？」
+PRINTFORMW 「精力充沛的男性？长得漂亮的女性？还是……」
+PRINTL 
+PRINTFORMDL [0] 男性
+PRINTFORMDL [1] 女性
+PRINTFORMDL [2] 『还是……？』
+CALL INPUTINTD(0, 1, 2)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORMW 「男性啊。我知道了…请期待吧」
+		TALENT:MASTER:男人 = 1
+	CASE 1
+		PRINTFORMW 「女性啊。…嗯，好的。嘛，那也算是一种乐趣」
+	CASE 2
+		PRINTFORML 「不能选择吗？呵呵，即使是任性又贪婪的阁下，这里也会温和地接纳的」
+		PRINTFORMW 「来吧，无法后退了。没关系，性的界限本来就是不存在的」
+		TALENT:MASTER:扶她 = 1
+ENDSELECT
+
+;体格的決定
+PRINTFORMW 「那么，接下来去下一处吧」
+PRINTL 
+PRINTFORMW 「您的性别已经决定了。还有，您的体格又是怎样的？」
+IF TALENT:MASTER:男人
+	PRINTFORML 「非常普通的男性？还是高大的美男子」
+	PRINTFORMW 「又或者……是个尚未元服的小孩子，也许吧？」
+ELSE
+	PRINTFORML 「平凡的女孩也可以。还是说，不输给男人的高大美女？」
+	PRINTFORMW 「不为人所知的年幼少女…虽然也可以，但可不要期望会因此被温柔对待啊」
+ENDIF
+PRINTL 
+PRINTFORMDL [0] 普通的\@ TALENT:MASTER:男人 ? 青年 # 女性 \@程度
+PRINTFORMDL [1] 所谓的\@ TALENT:MASTER:男人 ? 少年 # 少女 \@水平
+PRINTFORMDL [2]觉得个子还算高
+PRINTFORMDL [3]怎么看都还是个孩子
+CALL INPUTINTD(0, 1, 2, 3)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「没有特征的人会逐渐变得庸俗」
+		PRINTFORMW 「阁下会变成什么样，呢」
+	CASE 1
+		PRINTFORML 「年轻活泼的身体…呼呼呼」
+		PRINTFORMW 「即使被玷污也不会失去魅力，真是不可思议啊」
+		;后で参照做ために、矮小被=2和做
+		;こ的场合、能力や素質的判定是幼い扱いで行われる但、矮小自体是最后に消える
+		TALENT:MASTER:矮小 = 2
+		LITTLE_CHECK = 1
+	CASE 2
+		PRINTFORML 「是的，很高大的……真可怜。得天独厚，却毫无自觉地那份自命不凡的心」
+		PRINTFORMW 「今后终将成为一种伤害到阁下的剧毒吧。所谓的得天独厚呢」
+		TALENT:MASTER:高大 = 1
+	CASE 3
+		PRINTFORML 「呵呵…啊哈哈」
+		PRINTFORMW 「作为小孩子来到这样的地方。真讨人喜欢啊」
+		TALENT:MASTER:矮小 = 1
+		TALENT:MASTER:幼稚 = 1
+		LITTLE_CHECK = 2
+ENDSELECT
+
+
+;男人でなければ、乳房的決定
+IF !TALENT:MASTER:男人
+	PRINTL 
+	PRINTFORML 「这么说来，阁下的女性的象征…嗯，是的。乳房」
+	PRINTFORMW 「总之就是胸部的大小。是什么程度的呢？」
+	PRINTL 
+	PRINTFORMDL [0]小一点的会不好吗？
+	PRINTFORMDL [1]和大家差不多的普通程度
+	PRINTFORMDL [2]被说成很大
+	CALL INPUTINTD(0, 1, 2)
+	SELECTCASE RESULT
+		CASE 0
+			IF TALENT:MASTER:矮小
+				PRINTFORMW 「按您的体格这也是理所当然的。不是需要在意的事」
+			ELSE
+				PRINTFORMW 「真小啊。但既然是您的选择，那也是没办法的事」
+			ENDIF
+			TALENT:MASTER:貧乳 = 1
+		CASE 1
+			PRINTFORMW 「很普通啊。倒是人见人爱的水平呢，呵呵」
+		CASE 2
+			IF TALENT:MASTER:矮小
+				PRINTFORML 「体格那么大…倒像是男人会喜欢的身体呢」
+				PRINTFORMW 「为了雄性而生的充满欲望，粗俗的身体…呵呵，会不会有点恶心了呢？」
+			ELSE
+				PRINTFORMW 「你真幸运啊。如果不会吸引仇恨就好了。呋呋」
+			ENDIF
+			TALENT:MASTER:巨乳 = 1
+	ENDSELECT
+ENDIF
+
+;名前的決定
+PRINTL 
+PRINTFORMW 「好的，阁下的事情我明白了。但还有一件重要的事情要问你」
+PRINTL 
+PRINTFORML 「虽然重要但很简单。阁下的话，怎么称呼呢？」
+PRINTFORMW 「可以叫您的名字，也可以不叫名字，简单的称呼为『您』就可以了」
+PRINTL 
+PRINTFORMDL [0]报上名字
+PRINTFORMDL [1]不报名字
+CALL INPUTINTD(0, 1)
+IF !RESULT
+	PRINTFORMW 「阁下的名字是…？」
+	;字符串入力な的でカラー被戻す
+	RESETCOLOR
+	REUSELASTLINE ※名前被入力してください
+	$NAME_ENTRY
+	INPUTS
+	IF STRLENS(RESULTS) > 16
+		CLEARLINE 1
+		REUSELASTLINE ※名前但长すぎ增加！
+		GOTO NAME_ENTRY
+	ELSEIF RESULTS == ""
+		CLEARLINE 1
+		REUSELASTLINE ※名前被入力してください
+		GOTO NAME_ENTRY
+	ELSE
+		PRINTFORML 「%RESULTS%」这样可以吗？
+		PRINTL 
+		PRINTL [0] 是
+		PRINTL [1] 否
+		PRINTL [2]删除已报上的名字
+		CALL INPUTINT(0, 1, 2)
+		IF RESULT == 1
+			REUSELASTLINE ※名前被入力してください
+			GOTO NAME_ENTRY
+		ELSEIF RESULT == 0
+			NAME:MASTER = %RESULTS%
+			CALL KOJO_COLOR(ASSI)
+			PRINTFORMW 「%NAME:MASTER%先生是吧。是的，知道了」
+			PRINTFORMW 「称呼的时候，按照名字那样叫作『%NAME:MASTER%』、可以吗？」
+			PRINTL 
+			PRINTDL [0] 可以
+			PRINTDL [1] 不可
+			CALL INPUTINTD(0, 1)
+			IF RESULT == 1
+				PRINTFORMW 「那么，请告诉我怎么称呼比较好」
+				;字符串入力な的でカラー被戻す
+				RESETCOLOR
+				REUSELASTLINE ※呼び名被入力してください
+				$CALLNAME_ENTRY
+				INPUTS
+				IF STRLENS(RESULTS) > 12
+					CLEARLINE 1
+					REUSELASTLINE ※呼び名但长すぎ增加！
+					GOTO CALLNAME_ENTRY
+				ELSEIF RESULTS == ""
+					CLEARLINE 1
+					REUSELASTLINE ※呼び名被入力してください
+					GOTO CALLNAME_ENTRY
+				ELSE
+					PRINTFORML 「%RESULTS%」这样可以吗？
+					PRINTL 
+					PRINTL [0] 是
+					PRINTL [1] 否
+					CALL INPUTINTD(0, 1)
+					IF RESULT == 1
+						REUSELASTLINE ※呼び名被入力してください
+						GOTO CALLNAME_ENTRY
+					ENDIF
+				ENDIF
+				CALLNAME:MASTER = %RESULTS%
+				CALL KOJO_COLOR(ASSI)
+				PRINTFORMW 「%CALLNAME:MASTER%………呋呋，我知道了。就这么称呼吧」
+			ELSE
+				CALLNAME:MASTER = %NAME:MASTER%
+				PRINTFORMW 「那么、%CALLNAME:MASTER%就让我这么称呼你吧」
+			ENDIF
+		ELSE
+			PRINTFORML 「哎呀，不愿意自报家门吗？」
+			PRINTFORMW 「呋呋。聪明伶俐、小心谨慎、宛如野外的小动物般的气质出乎意料地多呢」
+		ENDIF
+	ENDIF
+ELSE
+	PRINTFORML 「……好像没有自报家门的打算呢。我知道了」
+	PRINTFORMW 「呵呵，你是在警戒吗？还是说，害羞？」
+ENDIF
+PRINTFORMW 「虽然不知道还有没有缘分」
+PRINTFORMW 「请多关照、『%CALLNAME:MASTER%』」
+
+;性格決定是全角色から１０人被選んで質問される
+PRINTL 
+PRINTFORML 「当然。差不多该休息了吧」
+PRINTFORMW 「是的，我会让你做一个梦。在那个梦里，你会经过十个房间」
+PRINTFORMW 「请好好考虑一下。在那里的问答中，我们对于%CALLNAME:MASTER%的事情将有所了解」
+PRINTFORMW 「呵呵，祝你玩得开心。那么，晚安」
+PRINTL 
+PRINTFORMW 「——等你醒过来时，将是真正的幻想」
+PRINTL 
+RESETCOLOR
+PRINTW ………
+PRINTW ……
+PRINTW …
+PRINTL 
+$CHARAMAKE_REROLL
+;数値被设置
+VARSET LOCAL
+CALLF CM_PROF("设置")
+;１０人回して呼ぶ。FLAG:8是您以外的角色总数
+;LOCAL:角色番号但真だ和すでに呼ば受到扱い
+FOR LCOUNT, 0, 10
+	$CHARAMAKE_LOOP
+	ADDCHARA RAND:(FLAG:Cha总数+1)
+	TARGET = CHARANUM-1
+	IF LOCAL:(NO:TARGET)
+		DELCHARA TARGET
+		GOTO CHARAMAKE_LOOP
+	ENDIF
+	LOCAL:(NO:TARGET) = 1
+	CALL KOJO_COLOR(TARGET)
+	TRYCCALLFORM CHARAMAKE_K{NO:TARGET}(LCOUNT)
+	CATCH
+		DELCHARA TARGET
+		GOTO CHARAMAKE_LOOP
+	ENDCATCH
+	PRINTL 
+	PRINTDW ――。
+	PRINTL 
+	DELCHARA TARGET
+NEXT
+;素質決定
+FOR LCOUNT, 0, 150
+	TRYCALLFORM CM_SET_TALENT_{LCOUNT}
+NEXT
+;経験決定
+FOR LCOUNT, 0, 100
+	TRYCALLFORM CM_SET_EXP_{LCOUNT}
+NEXT
+;能力決定
+FOR LCOUNT, 0, 30
+	TRYCALLFORM CM_SET_ABL_{LCOUNT}
+NEXT
+;少女判定に使った矮小的削除
+TALENT:MASTER:矮小 %= 2
+RESETCOLOR
+PRINTL 
+PRINTDW ………
+PRINTDW ……
+PRINTDW …
+PRINTL 
+
+;主人公的ゲージ被设置上升、MASTERCUSTOM.ERBに格納
+CALL BASE_MASTER_SETUP
+
+
+CALL PRINTSTATE_CHARAMAKE(MASTER)
+CALL PRINT_DIALOG("こ的出场人物被保存し增加か？", 1, 1, 1)
+PRINTL [0] 是
+PRINTL [1] 否
+CALL INPUTINT(0, 1)
+IF !RESULT
+	CALL CHARAMAKE_DATA_MENU, 1
+ENDIF
+
+CALL KOJO_COLOR(ASSI)
+PRINTFORMW 「呵呵，祝你做个好梦……吧？」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:ASSI:10, CSTR:ASSI:11, CSTR:ASSI:单词)
+PRINTL 
+PRINTFORMW 「啊啦、%CALLNAME:MASTER%是这样的人吗。可以吧？」
+PRINTL 
+PRINTDL [0]这样就可以了
+PRINTDL [1]好像哪里不对
+CALL INPUTINTD(0, 1)
+IF RESULT == 1
+	PRINTFORMW 「哎呀？既然这么说，那就再做一次梦吧」
+	PRINTFORMW 「虽然你想要掩饰什么的样子很难看」
+	PRINTFORMW 「呋呋，但反正是被玩弄的话，选一个理想的自己也不错吧」
+	PRINTL 
+	PRINTFORMW 「——晚安了，任性的%CALLNAME:MASTER%」
+	PRINTL 
+	RESETCOLOR
+	PRINTW ………
+	PRINTW ……
+	PRINTW …
+	PRINTL 
+	;新たに您被追加做
+	ADDCHARA 0
+	TARGET = CHARANUM-1
+	;決定済み的要素被COPY
+	NAME = %NAME:MASTER%
+	CALLNAME = %CALLNAME:MASTER%
+	TALENT:男人 = TALENT:MASTER:男人
+	TALENT:扶她 = TALENT:MASTER:扶她
+	TALENT:貧乳 = TALENT:MASTER:貧乳
+	TALENT:巨乳 = TALENT:MASTER:巨乳
+	TALENT:高大 = TALENT:MASTER:高大
+	IF LITTLE_CHECK == 2
+		TALENT:矮小 = 1
+		TALENT:幼稚 = 1
+	ELSEIF LITTLE_CHECK == 1
+		TALENT:矮小 = 2
+	ENDIF
+	SWAPCHARA MASTER, TARGET
+	MASTER = 0
+	DELCHARA CHARANUM-1
+	GOTO CHARAMAKE_REROLL
+ENDIF
+PRINTFORMW 「那么，这是最后的选择了」
+PRINTFORMW 「掌握着你在这个世界上的命运——你的主人是哪位？」
+PRINTL 
+RESETCOLOR
+DELCHARA ASSI
+ASSI = -1
+
+;相关関数。性格値的受け皿など
+;引数0是加算、引数1是代入（省略做和代入不做）
+
+;性格値セッター
+@CM_PROF(ARGS, ARG, ARG:1 = -100)
+#FUNCTION
+#LOCALSIZE 100
+#DIM PROFNUM, 1
+;PROFNUM的设置
+SELECTCASE ARGS
+	CASE "攻击"
+		PROFNUM = 0
+	CASE "被虐"
+		PROFNUM = 1
+	CASE "坦率"
+		PROFNUM = 2
+	CASE "自尊心"
+		PROFNUM = 3
+	CASE "冲动"
+		PROFNUM = 4
+	CASE "好奇心"
+		PROFNUM = 5
+	CASE "羞耻"
+		PROFNUM = 6
+	CASE "乐观"
+		PROFNUM = 7
+	CASE "知性"
+		PROFNUM = 8
+	CASE "倒错"
+		PROFNUM = 9
+	CASE "同性爱"
+		PROFNUM = 10
+	CASE "洁癖"
+		PROFNUM = 11
+	CASE "道德"
+		PROFNUM = 12
+	CASE "神経質"
+		PROFNUM = 13
+	CASE "Ｃ喜欢"
+		PROFNUM = 50
+	CASE "Ｖ喜欢"
+		PROFNUM = 51
+	CASE "Ａ喜欢"
+		PROFNUM = 52
+	CASE "Ｂ喜欢"
+		PROFNUM = 53
+	CASE "设置"
+		VARSET LOCAL
+		RETURNF 0
+	CASEELSE
+		RETURNF 0
+ENDSELECT
+
+;代入
+IF ARG:1 != -100
+	LOCAL:PROFNUM = ARG:1
+;加算
+ELSE
+	LOCAL:PROFNUM += ARG
+ENDIF
+RETURNF LOCAL:PROFNUM
+
+;性格値から素質判定値被取り出す関数
+;性格値に偏り被持たせ想要场合、二度指定すればいい
+@CM_TALENT_MAKE(ARGS, ARGS:1, ARGS:2, ARGS:3, ARGS:4, ARGS:5, ARGS:6, ARGS:7, ARGS:8, ARGS:9, ARGS:10, ARGS:11, ARGS:12, ARGS:13, ARGS:14, ARGS:15, ARGS:16, ARGS:17, ARGS:18, ARGS:19)
+#FUNCTION
+#DIM LCOUNT, 1
+VARSET LOCAL
+FOR LCOUNT, 0, 20
+	;分母加算
+	LOCAL:1++
+	;逆　和いう字但入ってい时性格値的分引く
+	IF STRFIND(ARGS:LCOUNT, "逆") >= 0
+		LOCAL -= CM_PROF(REPLACE(ARGS:LCOUNT, "逆",""))
+	ELSEIF ARGS:LCOUNT != ""
+		LOCAL += CM_PROF(ARGS:LCOUNT)
+	ELSE
+		;引数但空那么分母被戻す
+		LOCAL:1--
+	ENDIF
+NEXT
+RETURNF LOCAL/(LOCAL:1)
+
+

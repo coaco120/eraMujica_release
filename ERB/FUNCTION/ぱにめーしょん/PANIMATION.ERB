@@ -1,0 +1,1167 @@
+﻿;≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡
+;字符串显示・动画ーション関数文件「ぱにめーしょん」0527版
+;字符色设定や字符串的ビジュアル・动画显示に特化した関数文件です。
+;こ的文件单独で使用でき增加但、旧ぱんくしょん其他和的関数名被りに是ご注意ください
+;たぶん、想要てい的バリアントにそ的まま入れて动作做是ずです
+;≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡
+
+;≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡
+;＠色操作系関数
+;色的取出しや变换被行う基本関数。
+;同梱的関数から呼ば受到り、呼ぶ时に使う和便利だったり。
+;≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡
+
+;-------------------------------------------------
+;RGB色指定関数@RGBCOLOR
+;	引数0：Ｒ輝度（0～255）
+;	引数1：Ｇ輝度（0～255）
+;	引数2：Ｂ輝度（0～255）
+;
+;式中で使用做関数です。引数0～3でRGB被指定做和、16進（0xRRGGBB）にして返し增加
+;
+;念的ため必要なBITしか见ないように。COLOR_FROMRGB式中関数但復活した的で置き换え@revkoishi(14/04/28)
+;-------------------------------------------------
+@RGBCOLOR(ARG:0, ARG:1, ARG:2)
+#FUNCTION
+;RETURNF (65536*ARG)+(256*ARG:1)+ARG:2
+;RETURNF (ARG:0 & 0xFF) << 16 | (ARG:1 & 0xFF) << 8 | (ARG:2 & 0xFF)
+RETURNF COLOR_FROMRGB(ARG:0 & 0xFF, ARG:1 & 0xFF, ARG:2 & 0xFF)
+
+;-------------------------------------------------
+;カラー分解関数@GETRED/GETGREEN/GETBLUE
+;	引数：16進カラー表记、省略做和现在的字符色
+;
+;0xRRGGBB形式的カラー表记から、RGBそれぞれ的値被0～255で抽出し增加
+;
+;念的ため必要なBITしか见ないようにしておく@revkoishi(14/04/20)
+;-------------------------------------------------
+@GETRED(ARG:0 = -1)
+#FUNCTION
+;RETURNF (ARG >= 0 ? ARG # GETCOLOR())/65536
+RETURNF ((ARG >= 0 ? ARG:0 # GETCOLOR()) & 0xFF0000) >> 16
+
+@GETGREEN(ARG:0 = -1)
+#FUNCTION
+;RETURNF ((ARG >= 0 ? ARG # GETCOLOR())/256)%256
+RETURNF ((ARG >= 0 ? ARG:0 # GETCOLOR()) & 0x00FF00) >> 8
+
+@GETBLUE(ARG:0 = -1)
+#FUNCTION
+;RETURNF (ARG >= 0 ? ARG # GETCOLOR())%256
+RETURNF ((ARG >= 0 ? ARG:0 # GETCOLOR()) & 0x0000FF)
+
+;-------------------------------------------------------------------------------
+;	色被明度的パーセントで变更
+;-------------------------------------------------------------------------------
+;	例  CALL BRIGHTCOLOR(70)	※70%的暗さへSETCOLOR
+;		CALL BRIGHTCOLOR(150)	※150%的明るさへSETCOLOR
+;===============================================================================
+@BRIGHTCOLOR(ARG)
+SETCOLOR BRIGHTCOLORF(ARG)
+RETURN RESULT
+
+;-------------------------------------------------------------------------------
+;	上的やつ的式中版
+;-------------------------------------------------------------------------------
+;	例	SETCOLOR BRIGHTCOLORF(50) ※50%的暗さへSETCOLOR
+;		直でこれ叩くほう但早い気も做
+;===============================================================================
+@BRIGHTCOLORF(ARG, ARG:1 = -1)
+#FUNCTION
+#LOCALSIZE 1
+#DIM NOW,1
+ARG = LIMIT(ARG, 0, 1000)
+LOCAL = ARG:1 == -1 ? GETCOLOR() # ARG:1
+RETURNF RGBCOLOR( TIMESF(GETRED(LOCAL),ARG), TIMESF(GETGREEN(LOCAL),ARG), TIMESF(GETBLUE(LOCAL),ARG) )
+
+;≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡
+;＠扩张显示系関数
+;Emuera本体的显示机能被无理やり强化做関数。
+;BAR被カラー显示したり、字符串被ため込んだり、特殊字符被显示したり。
+;≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡
+
+;-------------------------------------------------
+;カラーバー显示関数@PRINT_COLORBAR
+;	引数0：バーに做变数（数値）
+;	引数1：バー的最大値（数値）
+;	引数2：バー全体的长さ（1あたり半角１字符）
+;	字符串引数0：バーに使用做字符（省略做和*）
+;	字符串引数1：バー的背景に使用做字符（省略做和.）
+;	引数3：バー的色（16進。RGBCOLOR関数使用可能。省略做和现在的字符色に）
+;	引数4：バー的背景色（同上）
+;
+;BAR被指定した字符・指定した色で显示做関数です。UNICODE2588番など的、隙间的ないブロック和相性但よかったり。
+;隙间但出る场合是フォント相关的配置被见直しましょう。
+;引数0～2的仕大人是BAR命令和ほ和んど同一（从来引数型）です。
+;バー的背景和是、バー的最大値に满たない部分的显示です。格闘ゲーム和かでよく见る■■■■■■□□　的□的部分。
+;グラデーション机能被用意做こ和もできそうです但、背景色もあるし、现状必要ない和思ってやってません。
+;こ的関数是口上・开发ch的Crow君から輸入して改变したも的です。先生くす
+;-------------------------------------------------
+@PRINT_COLORBAR(ARG, ARG:1, ARG:2, ARGS = "*", ARGS:1 = ".", ARG:3 = -1, ARG:4 = -1)
+#LOCALSIZE 5
+VARSET LOCAL
+ARG:3 = ARG:3 < 0 ? GETCOLOR() # ARG:3
+ARG:4 = ARG:4 < 0 ? GETCOLOR() # ARG:4
+LOCAL:1 = ARG * ARG:2 / ARG:1
+LOCAL:2 = GETCOLOR()
+FOR LOCAL, 1, ARG:2 + 1
+	IF LOCAL:1 >= LOCAL
+		IF !LOCAL:3
+			SETCOLOR ARG:3
+			LOCAL:3 = 1
+		ENDIF
+		PRINTFORM %ARGS%
+	ELSE
+		IF !LOCAL:4
+			SETCOLOR ARG:4
+			LOCAL:4 = 1
+		ENDIF
+		PRINTFORM %ARGS:1%
+	ENDIF
+NEXT
+SETCOLOR LOCAL:2
+
+
+;-------------------------------------------------
+;関数名:HTML_COLORBAR
+;概　要:カラーバー显示用HTML字符串取得関数
+;引　数: ARG:0…バーに做値
+;　　　  ARG:1…バー的最大値
+;　　　  ARG:2…バー显示に使用做桁数
+;　　　 ARGS:0…[省略可]バーに使用做字符。省略した场合是*
+;　　　 ARGS:1…[省略可]バー的背景に使用做字符。省略した场合是.
+;　　　  ARG:3…[省略可]バー的色(16進表现的色値)。省略した场合是现在的字符色
+;　　　  ARG:4…[省略可]バー的背景色(16進表现的色値)。省略した场合是现在的字符色
+;戻り値:カラーバー的HTML字符串(HTML_PRINT命令で使用可能)
+;備　考:式中関数
+;@PRINT_COLORBAR関数的HTML_PRINT对应版
+;新規作成@revkoishi(14/07/07)
+;-------------------------------------------------
+@HTML_COLORBAR(ARG:0, ARG:1, ARG:2, ARGS:0 = "*", ARGS:1 = ".", ARG:3 = -1, ARG:4 = -1)
+#FUNCTIONS
+{
+RETURNF "<font color='#" + TOSTR(ARG:3 < 0 ? GETCOLOR() # (ARG:3 & 0xFFFFFF), "x6") + "'>"
+        + ARGS:0 * LIMIT(ARG:0 * ARG:2 / ARG:1, 0, ARG:2) + "</font>"
+        + "<font color='#" + TOSTR(ARG:4 < 0 ? GETCOLOR() # (ARG:4 & 0xFFFFFF), "x6") + "'>"
+        + ARGS:1 * LIMIT(ARG:2 - (ARG:0 * ARG:2 / ARG:1), 0, ARG:2) + "</font>"
+}
+
+
+;-------------------------------------------------
+;从来引数型・8分割カラーバー显示関数@PRINT_EIGHT_BAR_INT
+;	引数0：バーに做变数（数値）
+;	引数1：バー的最大値（数値）
+;	引数2：バー全体的长さ（1あたり半角１字符）
+;	引数3：バー始端的色（16進。RGBCOLOR関数使用可能。省略做和现在的字符色に）
+;	引数4：バー终端的色（同上。省略做和单色バーに）
+;	引数5：始色比率（始端的色但濃くなる。1～10で比率指定、デフォだ和5、つまり5:5）
+;
+;引数0～2的仕大人是BAR命令和ほ和んど同一（从来引数型）です。
+;@PRINT_EIGHT_BAR的引数但独自形式な的で、从来的BAR的形式でも呼び出せるように用意しました。
+;半角的1/8刻みでバー被显示でき增加但、バーに使う字符被指定是できません。また、バー的背景色も使えません。
+;引数3・4被指定做こ和でグラデーション但でき增加但、こ的场合色的变わる单位是半角１字符ご和になり增加。
+;こ的関数是口上・开发ch的kapnaluqa君から輸入したも的です。先生くす
+;-------------------------------------------------
+@PRINT_EIGHT_BAR_INT(ARG, ARG:1, ARG:2, ARG:3 = -1, ARG:4 = -1, ARG:5 = 5)
+;ARG:2被8倍して1/8单位で的全体的长さ被得る
+ARG:2 *= 8
+IF ARG >= ARG:1
+	;对象变数但最大値以上だった场合、バー的长さ是全体的长さに等しい
+	ARG = ARG:2
+ELSE
+	;最大値被全体的长さで割って、1/8单位あたり的数値。
+	;对象变数被それで割るこ和で1/8单位で的长さ被得る
+	ARG /= ARG:1/ARG:2
+ENDIF
+;数値被与えて显示関数へ
+CALL PRINT_EIGHT_BAR(ARG, ARG:2, ARG:3, ARG:4, ARG:5, 10-ARG:5)
+
+;-------------------------------------------------
+;8分割カラーバー显示関数@PRINT_EIGHT_BAR
+;	引数0：バー的长さ（半角1/8字符单位）
+;	引数1：バー全体的长さ（半角1/8字符单位）
+;		なお、バー的长さ但最长的数値(ARG:1*8-1)被超えている场合、显示是0恢复
+;	引数2：バー始端的色（16進。RGBCOLOR関数使用可能。省略做和现在的字符色に）
+;	引数3：バー终端的色（同上。省略做和单色バーに）
+;	引数4：始色比率（始端的色但濃くなる）
+;	引数5：终色比率（终端的色但濃くなる）
+;
+;独自形式的引数です。ご注意ください
+;@PRINT_EIGHT_BAR的引数但独自形式な的で、从来的BAR的形式でも呼び出せるように用意しました。
+;半角的1/8刻みでバー被显示でき增加但、バーに使う字符被指定是できません。また、バー的背景色も使えません。
+;引数3・4被指定做こ和でグラデーション但でき增加但、こ的场合色的变わる单位是半角１字符ご和になり增加。
+;-------------------------------------------------
+@PRINT_EIGHT_BAR(ARG, ARG:1 = 32, ARG:2 = -1, ARG:3 = -1, ARG:4 = 1, ARG:5 = 1)
+#LOCALSIZE 1
+#DIM COLOR
+#DIM RED, 3
+#DIM BLUE, 3
+#DIM GREEN, 3
+#DIM 始色比率
+#DIM 终色比率
+始色比率 = ARG:4
+终色比率 = ARG:5
+COLOR = GETCOLOR()
+IF ARG:2  >= 0 && ARG:3 >= 0
+	RED:1 = GETRED(ARG:2)
+	GREEN:1 = GETGREEN(ARG:2)
+	BLUE:1 = GETBLUE(ARG:2)
+	RED:2 = GETRED(ARG:3)
+	GREEN:2 = GETGREEN(ARG:3)
+	BLUE:2 = GETBLUE(ARG:3)
+ELSEIF ARG:2 >= 0
+	SETCOLOR ARG:2
+ENDIF
+FOR LOCAL, 0, ARG:1
+	IF ARG:2 >= 0 && ARG:3 >= 0
+		RED = (RED:1 * (ARG:1 - LOCAL) * 始色比率 + RED:2 * LOCAL * 终色比率) / ((ARG:1 -LOCAL) * 始色比率 + LOCAL * 终色比率)
+		GREEN = (GREEN:1 * (ARG:1 - LOCAL) * 始色比率 + GREEN:2 * LOCAL * 终色比率) / ((ARG:1 -LOCAL) * 始色比率 + LOCAL * 终色比率)
+		BLUE = (BLUE:1 * (ARG:1 - LOCAL) * 始色比率 + BLUE:2 * LOCAL * 终色比率) / ((ARG:1 -LOCAL) * 始色比率 + LOCAL * 终色比率)
+		SETCOLOR RED, GREEN, BLUE
+	ENDIF
+	IF LOCAL < MAX((ARG % (ARG:1 * 8) / 8),0)
+		PRINTFORM %UNICODE(0x2588)%
+	ELSEIF LOCAL == MAX((ARG % (ARG:1 * 8) / 8),0)
+		PRINTFORM \@ARG % (ARG:1 * 8) % 8 ? %UNICODE(0x2588 + 8 - (ARG % (ARG:1 * 8) % 8))%# %" "%\@
+	ELSE
+		PRINTFORM  
+	ENDIF
+NEXT
+SETCOLOR COLOR
+
+
+;-------------------------------------------------
+;口上色指定字符串显示関数@PRINTCOLOR～系
+;	引数0：字符色
+;	引数1：字符串
+;
+;指定した字符色で字符串被显示し增加。カラー指定是16進です但、RGBCOLOR関数被使用做こ和但でき增加
+;PRINT命令同大人的「PRINTCOLORL」「PRINTCOLORW」もあり增加但、書式是面倒です
+;例えば…
+;CALL PRINTCOLORW(RGBCOLOR(255, 0, 0), "こ的字符串是赤く显示されて改行待ち被し增加。")
+;-------------------------------------------------
+@PRINTCOLOR(ARG, ARGS, ARG:1)
+#LOCALSIZE 1
+LOCAL = GETCOLOR()
+SETCOLOR ARG
+PRINTFORM %ARGS%
+IF ARG:1 == 1
+	PRINTL 
+ELSEIF ARG:1 == 2
+	PRINTW 
+ENDIF
+SETCOLOR LOCAL
+RETURN RESULT
+
+@PRINTCOLORL(ARG, ARGS)
+CALL PRINTCOLOR(ARG, ARGS, 1)
+RETURN RESULT
+
+@PRINTCOLORW(ARG, ARGS)
+CALL PRINTCOLOR(ARG, ARGS, 2)
+RETURN RESULT
+
+
+;---------------------------------------------------------------------
+;COLORPRINT　※顶き物関数
+;---------------------------------------------------------------------
+;__0xFFFFFF__的ように区切り字符(こ的场合"__")的间にSETCOLORに渡す値被做和そこで色被变える関数
+;____的ように空白に做和デフォルト色(関数开始时にGETCOLORで取得した値)でSETCOLORし增加
+;表记例 "デフォルト__0x808080__灰色__0xFF8080__赤____デフォルト"
+;以上的ように書く和文頭・文末的デフォルト是デフォルト色、灰色是灰色(0x808080)、赤是赤(0xFF8080)で显示し增加
+;ARGS   = 分割前的字符串
+;ARGS:1 = 区切り字符
+;ARG    = PLAIN模式控制( 0:按键有效 1:按键无效 )
+;---------------------------------------------------------------------
+@COLORPRINT(ARGS,ARGS:1="__",ARG=0)
+LOCAL = 0
+LOCAL:2 = GETCOLOR()
+DO
+	;文的显示
+	LOCALS = %TSPLIT(ARGS,LOCAL,ARGS:1)%
+	SIF LOCALS == ARGS:1
+		BREAK
+	IF ARG == 0
+		PRINTS LOCALS
+	ELSE
+		PRINTPLAINFORM %LOCALS%
+	ENDIF
+	;色的变更部分
+	LOCALS = %TSPLIT(ARGS,LOCAL+1,ARGS:1)%
+	LOCAL:1 = ( LOCALS == "" ) ? LOCAL:2 # TOINT(LOCALS)
+	SETCOLOR LOCAL:1
+	LOCAL+=2
+LOOP 1
+SETCOLOR LOCAL:2
+
+;---------------------------------------------------------------------
+;COLORPRINTL
+;最后に改行被加えるCOLORPRINT
+;---------------------------------------------------------------------
+@COLORPRINTL(ARGS,ARGS:1="__",ARG=0)
+CALL COLORPRINT(ARGS,ARGS:1,ARG)
+PRINTL 
+
+;---------------------------------------------------------------------
+;COLORPRINTW
+;最后にウェイト被加えるCOLORPRINT
+;---------------------------------------------------------------------
+@COLORPRINTW(ARGS,ARGS:1="__",ARG=0)
+CALL COLORPRINT(ARGS,ARGS:1,ARG)
+WAIT 
+
+;TOINT但16進数でも问题なく变换してくれるお阴で大变乐但出来ました、あり但和うござい增加
+
+;---------------------------------------------------------------------
+;TEMP_SPLIT
+;---------------------------------------------------------------------
+;指定字符串ARGS被ARG:1被区切りに分割しLOCALS配列に代入、ARG番目的内容被帰す
+;ど的程度处理速度に貢献做的か是不明だ但、ARGS但更新されない限り是LOCALS被使いまわす
+;領域外に达した场合区切り字符被帰す
+@TSPLIT(ARGS,ARG,ARGS:1="..")
+#FUNCTIONS
+#LOCALSSIZE 200
+#DIMS STRINGS
+SIF ARGS == ""
+	RETURNF ""
+IF STRINGS != ARGS
+	STRINGS = %ARGS%
+	SPLIT STRINGS,ARGS:1,LOCALS, LOCAL
+ENDIF
+SIF INRANGE(ARG,0,LOCAL-1)
+	RETURNF LOCALS:ARG
+RETURNF ARGS:1
+
+
+;-------------------------------------------------
+;字符串整列関数@UNITCELL
+;	字符串引数：セルに入れる字符串
+;	引数0：区切り字符数（PRINTC的字符数+1但望ましい）
+;
+;指定字符数に合わ命令半角スペース被付与し增加。
+;PRINTC和的違い是、指定字符数被超えた场合、指定字符数的２倍、３倍で区切る点数す
+;PRINTC和併用して横２セル結合み想要な显示但でき增加
+;キチッ和揃った表や罫線囲み被作成做的に便利です
+;-------------------------------------------------
+@UNITCELL(ARGS, ARG)
+#FUNCTIONS
+RETURNF @"%ARGS+(" "*(ARG-(STRLENS(ARGS)%ARG)))%"
+
+;こちら是余った分是カットし增加。
+@FIXEDCELL(ARGS, ARG)
+#FUNCTIONS
+RETURNF \@ STRLENS(ARGS) > ARG ? %SUBSTRING(ARGS, 0, ARG-2)%.. # %ARGS+" "*(ARG-(STRLENS(ARGS)))% \@
+
+
+;-------------------------------------------------
+;再描画関数@SAVELINE/@RETURNLINE
+;	引数0：RETUENLINEから呼ば受到こ和被表す
+;
+;SAVELINEしてからRETURNLINE做和、SAVELINEした和ころ直到行削除し增加。
+;菜单的再描画和かにご使用ください
+;SAVELINE忘れてRETURNLINE做和ごっそり削除してしまい增加。
+;-------------------------------------------------
+@SAVELINE(ARG)
+#LOCALSIZE 1
+IF ARG
+	CLEARLINE LINECOUNT-LOCAL
+ELSE
+	LOCAL = LINECOUNT
+ENDIF
+RETURN RESULT
+
+@RETURNLINE
+CALL SAVELINE, 1
+RETURN RESULT
+
+
+;-------------------------------------------------
+;显示文本保管関数@STRBANK
+;	字符串引数：保存做文面（空字符串可）
+;	引数0：改行情报。0で改行无、1で改行、2でクリック待ち、3で文本放出して廃棄、4で放出、5で廃棄（3以上的时候字符串引数是无视）
+;	引数1：字符色情报。0で指定无、1で一行デフォカラー、2で一行カラー指定、3でカラー指定し一面、そ的カラー被維持做（显示但终わっても戻らない）
+;	引数2：字符色指定。引数2但2か3だった场合に参照される。式中関数@RGBCOLORに对应
+;
+;繰り返し呼ぶこ和で字符串被LOCALSに蓄えていき、引数で指定した和きにすべて显示し增加。
+;显示方法是代入做和きに指定可能。1000行直到引き受けるよ！
+;カラー指定是行单位で的み可能。同じ行で複数回指定さ受到场合、最后的指定被优先。フォント指定是何か和问题起こすんでオミットして增加
+;@STRBANKL～@STRDRAW被経由して使われる的被想定してい增加但、直接呼ばなきゃできない操作もあり增加。
+;-------------------------------------------------
+@STRBANK(ARGS, ARG, ARG:1, ARG:2)
+#LOCALSIZE 1000
+#LOCALSSIZE 1000
+#DIM COLORDATA, 1000
+#DIM COLORNUM, 1000
+#DIM SET_LOCALS, 1
+#DIM LCOUNT, 2
+;初期设定
+IF !SET_LOCALS
+	VARSET LOCALS, "VOID"
+	VARSET LOCAL
+	SET_LOCALS = 1
+ENDIF
+;預金
+IF ARG < 3
+	FOR LCOUNT, 0, 1000
+		IF !LOCAL:LCOUNT
+			IF LOCALS:LCOUNT == "VOID"
+				LOCALS:LCOUNT = %ARGS%
+			ELSE
+				LOCALS:LCOUNT = %LOCALS:LCOUNT + ARGS%
+			ENDIF
+			LOCAL:LCOUNT = ARG
+			COLORDATA:LCOUNT = ARG:1
+			COLORNUM:LCOUNT = ARG:2
+			BREAK
+		ENDIF
+	NEXT
+;引き出し
+ELSE
+	IF ARG < 5
+		FOR LCOUNT, 0, 1000
+			SIF LOCALS:LCOUNT == "VOID"
+				BREAK
+			SELECTCASE COLORDATA:LCOUNT
+				CASE 0
+					PRINTS LOCALS:LCOUNT
+				CASE 1
+					PRINTSD LOCALS:LCOUNT
+				CASE 2
+					LCOUNT:1 = GETCOLOR()
+					SETCOLOR COLORNUM:LCOUNT
+					PRINTS LOCALS:LCOUNT
+					SETCOLOR LCOUNT:1
+				CASE 3
+					SETCOLOR COLORNUM:LCOUNT
+					PRINTS LOCALS:LCOUNT
+			ENDSELECT
+			SELECTCASE LOCAL:LCOUNT
+				CASE 1
+					PRINTL 
+				CASE 2
+					PRINTW 
+			ENDSELECT
+		NEXT
+	ENDIF
+	IF ARG != 4
+		VARSET LOCALS, "VOID"
+		VARSET LOCAL
+	ENDIF
+ENDIF
+RETURN RESULT
+
+;以下、相关関数。PRINT系命令的名称に倣う
+;一部使わない和判断して入ってないも的も。
+
+;STRBANKL 改行つきで字符串被保存做
+@STRBANKL(ARGS)
+CALL STRBANK(ARGS, 1)
+RETURN RESULT
+
+;STRBANKW 改行和入力待ちつきで字符串被保存做
+@STRBANKW(ARGS)
+CALL STRBANK(ARGS, 2)
+RETURN RESULT
+
+;STRBANKDL デフォルト字符色。改行つきで字符串被保存做
+@STRBANKDL(ARGS)
+CALL STRBANK(ARGS, 1, 1)
+RETURN RESULT
+
+;STRBANKDW デフォルト字符色。改行和入力待ちつきで字符串被保存做
+@STRBANKDW(ARGS)
+CALL STRBANK(ARGS, 2, 1)
+RETURN RESULT
+
+;STRBANKCL 字符色被引数で指定。改行つきで字符串被保存做
+@STRBANKCL(ARGS, ARG)
+CALL STRBANK(ARGS, 1, 2, ARG)
+RETURN RESULT
+
+;STRBANKCW 字符色被引数で指定。改行和入力待ちつきで字符串被保存做
+@STRBANKCW(ARGS, ARG)
+CALL STRBANK(ARGS, 2, 2, ARG)
+RETURN RESULT
+
+;STRDRAW 保存した字符串被すべてぶちまける。引数被1に做和数据被廃棄不做。2に做和显示せずに廃棄做。
+@STRDRAW(ARG)
+CALL STRBANK("", ARG + 3)
+RETURN RESULT
+
+
+;塗りつぶしハート系的フォント被等幅的ＭＳ Ｐ哥特式に
+;中抜きハート系的フォント但Verdanaだ和正しく显示されない的でＭＳ Ｐ哥特式に
+;それぞれ变更@/L(14/09/28)
+;-------------------------------------------------
+;ハートマーク関数@HEART
+;	引数0：ハート的数（省略做和1つ）
+;	引数1：使用做フォント名（省略做和ＭＳ Ｐ哥特式）
+;
+;中抜き的ハートマーク被显示し增加
+;-------------------------------------------------
+@HEART(ARG = 1, ARGS = "ＭＳ Ｐ哥特式")
+#LOCALSIZE 1
+#LOCALSSIZE 1
+LOCAL = RESULT
+LOCALS = %GETFONT()%
+
+SETFONT CHKFONT(ARGS) ? ARGS # LOCALS
+
+CALL SYMBOLPRINT(ARG, UNICODE(0x2661))
+
+SETFONT LOCALS
+RETURN LOCAL
+
+
+;-------------------------------------------------
+;入力待ちハートマーク関数@HEARTW
+;	引数0：ハート的数（省略做和1つ）
+;	引数1：使用做フォント名（省略做和ＭＳ Ｐ哥特式）
+;	引数2：『」』的代わりに显示做字符串
+;	引数3：真に做和、『」』被显示不做
+;
+;中抜きハートマーク被显示してから『」』被显示し、入力待ち・改行被し增加。口上に便利です
+;引数2に字符串被入れ时、代わりにそれ被显示し增加。
+;-------------------------------------------------
+@HEARTW(ARG = 1, ARGS = "ＭＳ Ｐ哥特式", ARGS:1 = "」", ARG:1 = -1)
+CALL HEART(ARG, ARGS)
+SIF ARG:1 < 1
+	PRINTSW ARGS:1
+RETURN RESULT
+
+
+;-------------------------------------------------
+;黒ハートマーク関数@HEARTB
+;	引数0：ハート的数（省略做和1つ）
+;	引数1：使用做フォント名（省略做和ＭＳ Ｐ哥特式）
+;
+;塗りつぶし的ハートマーク被显示し增加
+;-------------------------------------------------
+@HEARTB(ARG = 1, ARGS = "ＭＳ Ｐ哥特式")
+#LOCALSIZE 1
+#LOCALSSIZE 1
+LOCAL = RESULT
+LOCALS = %GETFONT()%
+
+SETFONT CHKFONT(ARGS) ? ARGS # LOCALS
+
+IF GETFONT() == "Symbol"
+	CALL SYMBOLPRINT(ARG, UNICODE(0xA9))
+ELSE
+	CALL SYMBOLPRINT(ARG, UNICODE(0x2665))
+ENDIF
+
+SETFONT LOCALS
+RETURN LOCAL
+
+
+;-------------------------------------------------
+;入力待ち黒ハートマーク関数@HEARTBW
+;	引数0：ハート的数（省略做和1つ）
+;	引数1：使用做フォント名（省略做和ＭＳ Ｐ哥特式）
+;	引数2：『」』的代わりに显示做字符串
+;	引数3：真に做和、『」』被显示不做
+;
+;塗りつぶしハートマーク被显示してから『」』被显示し、入力待ち・改行被し增加
+;-------------------------------------------------
+@HEARTBW(ARG = 1, ARGS = "ＭＳ Ｐ哥特式", ARGS:1 = "」", ARG:1 = -1)
+CALL HEARTB(ARG, ARGS)
+SIF ARG:1 < 1
+	PRINTSW ARGS:1
+RETURN RESULT
+
+
+;-------------------------------------------------
+;ハートマーク系カラーバリエーション関数@HEARTC～系
+;
+;上记和同じバリエーション但あり增加但、最初的引数で指定した字符色で显示し增加。省略做和ピンク但かった明るい赤になり增加
+;字符色指定关于是GETRGBCOLOR関数但使え增加。
+;
+;HEARTCW和HEARTCBW的ARG:1但重複していた的で、后者被ARG:2に变更@revkoishi(14/04/28)
+;-------------------------------------------------
+@HEARTC(ARG:1 = 0xC07070, ARG = 1, ARGS = "ＭＳ Ｐ哥特式")
+#LOCALSIZE 1
+LOCAL = GETCOLOR()
+SETCOLOR ARG:1
+CALL HEART(ARG, ARGS)
+SETCOLOR LOCAL
+RETURN RESULT
+
+@HEARTCW(ARG:1 = 0xC07070, ARG = 1, ARGS = "ＭＳ Ｐ哥特式", ARGS:1 = "」", ARG:2)
+#LOCALSIZE 1
+LOCAL = GETCOLOR()
+SETCOLOR ARG:1
+CALL HEARTW(ARG, ARGS, ARGS:1, ARG:2)
+SETCOLOR LOCAL
+RETURN RESULT
+
+@HEARTCB(ARG:1 = 0xC07070, ARG = 1, ARGS = "ＭＳ Ｐ哥特式")
+#LOCALSIZE 1
+LOCAL = GETCOLOR()
+SETCOLOR ARG:1
+CALL HEARTB(ARG, ARGS)
+SETCOLOR LOCAL
+RETURN RESULT
+
+@HEARTCBW(ARG:1 = 0xC07070, ARG = 1, ARGS = "ＭＳ Ｐ哥特式", ARGS:1 = "」", ARG:2)
+#LOCALSIZE 1
+LOCAL = GETCOLOR()
+SETCOLOR ARG:1
+CALL HEARTBW(ARG, ARGS, ARGS:1, ARG:2)
+SETCOLOR LOCAL
+RETURN RESULT
+
+
+;-------------------------------------------------
+;ハートマーク系デフォルトカラー関数@HEARTD～系
+;
+;上记和同じバリエーション但あり增加但、デフォルト的字符色で显示し增加
+;また、こちらで呼ぶ和入力待ちハート系的『」』但显示されません。つまり旁白向け的関数
+;引数3被真にすれば逆に『」』被显示做ようになり增加
+;-------------------------------------------------
+@HEARTD(ARG = 1, ARGS = "ＭＳ Ｐ哥特式")
+#LOCALSIZE 1
+LOCAL = GETCOLOR()
+RESETCOLOR
+CALL HEART(ARG, ARGS)
+SETCOLOR LOCAL
+RETURN RESULT
+
+@HEARTDW(ARG = 1, ARGS = "ＭＳ Ｐ哥特式", ARGS:1 = "」", ARG:1)
+#LOCALSIZE 1
+LOCAL = GETCOLOR()
+RESETCOLOR
+CALL HEARTW(ARG, ARGS, ARGS:1, !ARG:1)
+SETCOLOR LOCAL
+RETURN RESULT
+
+@HEARTDB(ARG = 1, ARGS = "ＭＳ Ｐ哥特式")
+#LOCALSIZE 1
+LOCAL = GETCOLOR()
+RESETCOLOR
+CALL HEARTB(ARG, ARGS)
+SETCOLOR LOCAL
+RETURN RESULT
+
+@HEARTDBW(ARG = 1, ARGS = "ＭＳ Ｐ哥特式", ARGS:1 = "」", ARG:1)
+#LOCALSIZE 1
+LOCAL = GETCOLOR()
+RESETCOLOR
+CALL HEARTBW(ARG, ARGS, ARGS:1, !ARG:1)
+SETCOLOR LOCAL
+RETURN RESULT
+
+
+;-------------------------------------------------
+;记号显示関数@SYMBOLPRINT
+;内部的に使う関数です。呼び出さないでください
+;-------------------------------------------------
+@SYMBOLPRINT(ARG, ARGS)
+#LOCALSIZE 1
+FOR LOCAL, 0, ARG
+	PRINTS ARGS
+NEXT
+RETURN RESULT
+
+
+;≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡
+;＠动画ーション系関数
+;字符串被动かしたりフェードイン・アウトさせたりし增加。ある意味こ的文件的目玉か
+;だい想要显示时间但あるため、多用做和郁陶しさ被与え增加、注意。
+;控制関数被通して、各関数毎に动画ーション的开关设定但でき增加。
+;≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡
+
+;-------------------------------------------------
+;动画ーション控制関数@ANIME_CONFIG
+;	字符串引数・引数：字符串引数により机能分岐
+;		"SAVE"：引数是无效。配置BIT的値被返し增加。保存される变数に代入做際に。
+;		"SET"：配置BITに引数的値被直接代入。@EVENTLORD等で设定反映做際に。引数省略做和SAVE互换
+;		"FORCE"：强制显示・强制非显示・通常的模式切り替え被し增加。配置BIT是元的ま直到す
+;				（引数=0,配置BIT被参照して显示（通常）、1,强制显示、2,强制非显示、省略,现在的设定被返す的み）
+;		"TIMES"：こ的后に呼ばれる动画被、引数的回数分、强制显示にし增加。関数是指定できません。FORCEに优先し增加
+;				 引数被0に做和、回数被初期化し增加。引数被省略做和、残り回数被返す的み
+;		"ONCE"：こ的后に呼ばれる动画被、一回只强制显示にし增加。関数是指定できません。FORCE・TIMESに优先し增加。引数是无效。
+;		"%関数名%"：指定した関数ご和的配置BIT被设定し增加。引数1で显示に、0で非显示にし增加。2だ和、设定被逆にし增加
+;					引数被省略做和、戻り値但真那么显示做判定になり增加（强制显示状态に影响され增加）
+;		"USER{番号}"：ユーザー定義的配置项目被设定でき增加。主动で动画效果被作成した场合に便利です。1～13番直到持て增加
+;					　引数被省略做和、戻り値但真那么显示做判定になり增加（强制显示状态に影响され增加）
+;
+;ぱにめーしょん内蔵的动画效果的总合的な控制。関数毎的配置BIT但立ってい时、そ的関数的动画效果被显示しません
+;显示不做场合是右クリック跳过用和同じ简略文本被显示做ようにし增加
+;関数名是エイリアスでなく本体で指定。还有日本語名も受け付けるようになって增加。
+;口上侧などでFORCE・TIMES机能被多用做和、きっ和嫌われ增加。
+;-------------------------------------------------
+@ANIME_CONFIG(ARGS, ARG = -1)
+#FUNCTION
+#LOCALSIZE 6
+;LOCAL是配置BIT被格納
+;LOCAL:1是强制显示・非显示状态
+;LOCAL:2是回数指定强制显示的回数被格納
+;LOCAL:3是編集・参照做配置BIT的番号
+;LOCAL:4是ユーザー定義的番号
+;LOCAL:5是ONCE状态
+
+SELECTCASE ARGS
+	CASE "SAVE"
+		RETURNF LOCAL
+	CASE "SET"
+		SIF ARG >= 0
+			LOCAL = ARG
+		RETURNF LOCAL
+	CASE "FORCE"
+		SIF ARG >= 0
+			LOCAL:1 = ARG
+		RETURNF LOCAL:1
+	CASE "TIMES"
+		SIF ARG >= 0
+			LOCAL:2 = ARG
+		RETURNF LOCAL:2
+	CASE "ONCE"
+		LOCAL:5 = 1
+		RETURNF LOCAL:5
+	CASE "SCROLLTEXT", "スクロール"
+		;配置BIT0番
+		LOCAL:3 = 0
+	CASE "FADE", "フェード"
+		;配置BIT1番
+		LOCAL:3 = 1
+	CASE "QUAKE", "振动"
+		;配置BIT2番
+		LOCAL:3 = 2
+	CASE "FLASH", "发光"
+		;配置BIT3番
+		LOCAL:3 = 3
+	CASE "FULLCUTIN", "全画面カットイン"
+		;配置BIT4番
+		LOCAL:3 = 4
+	CASE "BGM_CUTIN", "ＢＧＭカットイン"
+		;配置BIT41番
+		LOCAL:3 = 41
+	CASE "CHARA_CUTIN", "角色カットイン"
+		;配置BIT42番
+		LOCAL:3 = 42
+	CASEELSE
+		LOCAL:4 = TOINT(REPLACE(ARGS, "USER", ""))
+		;ユーザー定義的处理
+		IF STRCOUNT(ARGS, "USER") && LOCAL:4 > 0 && LOCAL:4 < 14
+			;配置BIT51番以降
+			LOCAL:3 = 50+LOCAL:4
+		;それ以外是-1被返す的み。DEBUG用
+		ELSE
+			RETURNF -1
+		ENDIF
+ENDSELECT
+;配置BIT的处理
+SELECTCASE ARG
+	CASE 0
+		SETBIT LOCAL, LOCAL:3
+	CASE 1
+		CLEARBIT LOCAL, LOCAL:3
+	CASE 2
+		INVERTBIT LOCAL, LOCAL:3
+ENDSELECT
+;ONCE但有效な场合
+IF LOCAL:5
+	LOCAL:5 = 0
+	RETURNF MESSKIP() ? 0 # 1
+;强制显示系但有效な场合
+ELSEIF LOCAL:2 > 0
+	LOCAL:2--
+	RETURNF MESSKIP() ? 0 # 1
+ELSEIF LOCAL:1
+	RETURNF MESSKIP() ? 0 # !(LOCAL:1-1)
+ENDIF
+;配置BIT被参照して返回
+RETURNF MESSKIP() ? 0 # !GETBIT(LOCAL, LOCAL:3)
+
+;-------------------------------------------------
+;字符串スクロール関数@SCROLLTEXT
+;	字符串引数：スクロール侍奉字符串
+;	引数0：1に做和スクロール中、字符串的下にDRAWLINEし增加。2だ和-=ラインに
+;	引数1：スクロール速度（デフォルトだ和30）
+;	引数2：ウィンドウ的横に入る字符数（デフォルトだ和117）
+;			メモ　117
+;	引数3：真に做和字符串但端でバウンドし增加。数字被上げ时バウンド但緩くなり增加。誰但得做んだよこ的机能
+;	引数4：真に做和スクロール方向但逆になり增加。デフォルトだ和左から右。SCROLLTEXTL和いうエイリアス但存在
+;
+;引数的字符串被スクロールさせ增加
+;-------------------------------------------------
+@SCROLLTEXT(ARGS, ARG, ARG:1 = 30, ARG:2 = 117, ARG:3, ARG:4)
+#LOCALSIZE 3
+#LOCALSSIZE 1
+LOCALS = %ARGS%
+;スペース被付加
+IF ARG:4
+	ARGS = %(" "*ARG:2)+ARGS%
+ELSE
+	ARGS = %" "*(ARG:2 - 2 - STRLENS(ARGS))+ARGS%
+ENDIF
+;显示开
+IF ANIME_CONFIG("SCROLLTEXT")
+	;スクロール速度但ウィンドウ幅に对し速すぎる场合、矯正做
+	ARG:1 = ARG:1 >= ARG:2 ? ARG:2-1 # ARG:1
+	REDRAW 0
+	LOCAL = 0
+	FOR LOCAL, 0, ARG:2-2, ARG:1
+		IF ARG:4
+			PRINTSINGLEFORM %SUBSTRING(ARGS , LOCAL)%
+		ELSE
+			PRINTSINGLEFORM %SUBSTRING(ARGS , (ARG:2 - 2) - LOCAL)%
+		ENDIF
+		IF ARG == 1
+			DRAWLINE
+		ELSEIF ARG == 2
+			CUSTOMDRAWLINE -=
+		ENDIF
+		TWAIT 2 , 0
+		CLEARLINE 1+!(!ARG)
+	NEXT
+	;ばうんど。实に適当に跳ね增加
+	IF ARG:3
+		FOR LOCAL, ARG:3, ARG:3*5, ARG:3*2
+			IF ARG:4
+				PRINTFORML %LOCALS%
+			ELSE
+				PRINTFORML %ARGS%
+			ENDIF
+			IF ARG == 1
+				DRAWLINE
+			ELSEIF ARG == 2
+				CUSTOMDRAWLINE -=
+			ENDIF
+			TWAIT 2 , 0
+			CLEARLINE 1+!(!ARG)
+			FOR LOCAL:1, 0, ARG:2/(LOCAL+4), ARG:1/(LOCAL+1)
+				IF ARG:4
+					PRINTSINGLEFORM %SUBSTRING(ARGS , ARG:2 - LOCAL:1)%
+				ELSE
+					PRINTSINGLEFORM %SUBSTRING(ARGS , LOCAL:1)%
+				ENDIF
+				IF ARG == 1
+					DRAWLINE
+				ELSEIF ARG == 2
+					CUSTOMDRAWLINE -=
+				ENDIF
+				TWAIT 2 , 0
+				CLEARLINE 1+!(!ARG)
+			NEXT
+			FOR LOCAL:2, 0, ARG:2/(LOCAL+4), ARG:1/(LOCAL+1)
+				IF ARG:4
+					PRINTSINGLEFORM %SUBSTRING(ARGS , ARG:2 - LOCAL:1 + LOCAL:2)%
+				ELSE
+					PRINTSINGLEFORM %SUBSTRING(ARGS , LOCAL:1 - LOCAL:2)%
+				ENDIF
+				IF ARG == 1
+					DRAWLINE
+				ELSEIF ARG == 2
+					CUSTOMDRAWLINE -=
+				ENDIF
+				TWAIT 2 , 0
+				CLEARLINE 1+!(!ARG)
+			NEXT
+		NEXT
+	ENDIF
+ENDIF
+
+IF ARG:4
+	PRINTFORML %LOCALS%
+ELSE
+	PRINTFORML %ARGS%
+ENDIF
+IF ARG == 1
+	DRAWLINE
+ELSEIF ARG == 2
+	CUSTOMDRAWLINE -=
+ENDIF
+REDRAW 1
+RETURN RESULT
+
+
+;-------------------------------------------------
+;字符串右スクロール関数@SCROLLTEXTL
+;	字符串引数：スクロール侍奉字符串
+;	引数0：真に做和スクロール中、字符串的下にDRAWLINEし增加
+;	引数1：スクロール速度（デフォルトだ和30）
+;	引数2：ウィンドウ的横に入る字符数（デフォルトだ和117）
+;	引数3：真に做和字符串但端でバウンドし增加。数字被上げ时バウンド但緩くなり增加
+;
+;引数的字符串被ウィンドウ的右から左へスクロールさせ增加
+;-------------------------------------------------
+@SCROLLTEXTL(ARGS, ARG, ARG:1 = 30, ARG:2 = 117, ARG:3)
+CALL SCROLLTEXT(ARGS, ARG, ARG:1, ARG:2, ARG:3, 1)
+RETURN RESULT
+
+
+;-------------------------------------------------
+;フェードアウト関数@FADEOUT
+;	引数0：コマ数。多く做ほどゆるやかになり增加。デフォルト是8
+;	字符串引数0～29：显示做字符串（空行是スペースで。省略做和无視し增加）
+;	引数3：FULLCUTIN用。正に做和开幕行削除から入り增加
+;
+;引数で与えた字符串被显示し、背景色にフェードアウトし增加。
+;见えなくなる只で消えない的で、必要那么CLEARLINEで消してください。
+;字符串是30行直到引き受けるこ和但でき增加
+;-------------------------------------------------
+@FADEOUT(ARG = 8, ARGS = "VOID", ARGS:1 = "VOID", ARGS:2 = "VOID", ARGS:3 = "VOID", ARGS:4 = "VOID", ARGS:5 = "VOID", ARGS:6 = "VOID", ARGS:7 = "VOID", ARGS:8 = "VOID", ARGS:9 = "VOID", ARGS:10 = "VOID", ARGS:11 = "VOID", ARGS:12 = "VOID", ARGS:13 = "VOID", ARGS:14 = "VOID", ARGS:15 = "VOID", ARGS:16 = "VOID", ARGS:17 = "VOID", ARGS:18 = "VOID", ARGS:19 = "VOID", ARGS:20 = "VOID", ARGS:21 = "VOID", ARGS:22 = "VOID", ARGS:23 = "VOID", ARGS:24 = "VOID", ARGS:25 = "VOID", ARGS:26 = "VOID", ARGS:27 = "VOID", ARGS:28 = "VOID", ARGS:29 = "VOID", ARG:3)
+CALL FADE(ARG, GETCOLOR(), GETBGCOLOR(), ARGS, ARGS:1, ARGS:2, ARGS:3, ARGS:4, ARGS:5, ARGS:6, ARGS:7, ARGS:8, ARGS:9, ARGS:10, ARGS:11, ARGS:12, ARGS:13, ARGS:14, ARGS:15, ARGS:16, ARGS:17, ARGS:18, ARGS:19, ARGS:20, ARGS:21, ARGS:22, ARGS:23, ARGS:24, ARGS:25, ARGS:26, ARGS:27, ARGS:28, ARGS:29, ARG:3)
+RETURN RESULT
+
+
+;-------------------------------------------------
+;フェードイン関数@FADEIN
+;	引数0：コマ数。多く做ほどゆるやかになり增加。デフォルト是8
+;	字符串引数0～29：显示做字符串（空行是スペースで。省略做和无視し增加）
+;
+;引数で与えた字符串被、背景色からフェードイン显示し增加。
+;色被变え想要场合是事前にSETCOLOR做か、@FADE被直接呼んでください
+;字符串是30行直到引き受けるこ和但でき增加
+;-------------------------------------------------
+@FADEIN(ARG = 8, ARGS = "VOID", ARGS:1 = "VOID", ARGS:2 = "VOID", ARGS:3 = "VOID", ARGS:4 = "VOID", ARGS:5 = "VOID", ARGS:6 = "VOID", ARGS:7 = "VOID", ARGS:8 = "VOID", ARGS:9 = "VOID", ARGS:10 = "VOID", ARGS:11 = "VOID", ARGS:12 = "VOID", ARGS:13 = "VOID", ARGS:14 = "VOID", ARGS:15 = "VOID", ARGS:16 = "VOID", ARGS:17 = "VOID", ARGS:18 = "VOID", ARGS:19 = "VOID", ARGS:20 = "VOID", ARGS:21 = "VOID", ARGS:22 = "VOID", ARGS:23 = "VOID", ARGS:24 = "VOID", ARGS:25 = "VOID", ARGS:26 = "VOID", ARGS:27 = "VOID", ARGS:28 = "VOID", ARGS:29 = "VOID")
+CALL FADE(ARG, GETBGCOLOR(), GETCOLOR(), ARGS, ARGS:1, ARGS:2, ARGS:3, ARGS:4, ARGS:5, ARGS:6, ARGS:7, ARGS:8, ARGS:9, ARGS:10, ARGS:11, ARGS:12, ARGS:13, ARGS:14, ARGS:15, ARGS:16, ARGS:17, ARGS:18, ARGS:19, ARGS:20, ARGS:21, ARGS:22, ARGS:23, ARGS:24, ARGS:25, ARGS:26, ARGS:27, ARGS:28, ARGS:29)
+RETURN RESULT
+
+
+;-------------------------------------------------
+;フェード处理関数@FADE
+;	引数0：コマ数。多く做ほどゆるやかになり增加。デフォルト是8。大きくしすぎ时おかしくなり增加
+;	引数1：初期字符色
+;	引数2：变化做字符色
+;	字符串引数0～29：显示做字符串（空行是スペースで。省略做和无視し增加）
+;	引数3：FULLCUTIN用。正に做和开幕行削除から入り增加
+;
+;フェードアウト・フェードイン的处理被し增加。内部関数です但、呼び出しも可能です
+;-------------------------------------------------
+@FADE(ARG = 8, ARG:1 , ARG:2, ARGS = "VOID", ARGS:1 = "VOID", ARGS:2 = "VOID", ARGS:3 = "VOID", ARGS:4 = "VOID", ARGS:5 = "VOID", ARGS:6 = "VOID", ARGS:7 = "VOID", ARGS:8 = "VOID", ARGS:9 = "VOID", ARGS:10 = "VOID", ARGS:11 = "VOID", ARGS:12 = "VOID", ARGS:13 = "VOID", ARGS:14 = "VOID", ARGS:15 = "VOID", ARGS:16 = "VOID", ARGS:17 = "VOID", ARGS:18 = "VOID", ARGS:19 = "VOID", ARGS:20 = "VOID", ARGS:21 = "VOID", ARGS:22 = "VOID", ARGS:23 = "VOID", ARGS:24 = "VOID", ARGS:25 = "VOID", ARGS:26 = "VOID", ARGS:27 = "VOID", ARGS:28 = "VOID", ARGS:29 = "VOID", ARG:3)
+#LOCALSIZE 3
+#DIM PRICOLOR,1
+#DIM RED,2
+#DIM GREEN,2
+#DIM BLUE,2
+VARSET RED
+VARSET GREEN
+VARSET BLUE
+
+;元的字符色的取得
+PRICOLOR = GETCOLOR()
+
+;显示开
+IF ANIME_CONFIG("FADE")
+	;一部環境でフェード处理但うまくいかないような的で对策@revkoishi(14/05/28)
+	LOCAL:2 = CURRENTREDRAW()
+	REDRAW 0
+	
+	;初期色
+	SETCOLOR ARG:1
+
+	;RGBそれぞれ的ベース値、減少値被各色:0和1に代入
+	RED = GETRED()
+	IF RED > GETRED(ARG:2)
+		RED:1 = MAX(1, (RED-GETRED(ARG:2))/ARG)
+	ELSEIF RED < GETRED(ARG:2)
+		RED:1 = MIN(-1, (RED-GETRED(ARG:2))/ARG)
+	ENDIF
+	GREEN = GETGREEN()
+	IF GREEN > GETGREEN(ARG:2)
+		GREEN:1 = MAX(1, (GREEN-GETGREEN(ARG:2))/ARG)
+	ELSEIF GREEN < GETGREEN(ARG:2)
+		GREEN:1 = MIN(-1, (GREEN-GETGREEN(ARG:2))/ARG)
+	ENDIF
+	BLUE = GETBLUE()
+	IF BLUE > GETBLUE(ARG:2)
+		BLUE:1 = MAX(1, (BLUE-GETBLUE(ARG:2))/ARG)
+	ELSEIF BLUE < GETBLUE(ARG:2)
+		BLUE:1 = MIN(-1, (BLUE-GETBLUE(ARG:2))/ARG)
+	ENDIF
+
+	IF !ARG:3
+		FOR LOCAL, 0, 30
+			SIF ARGS:LOCAL != "VOID"
+				PRINTSL ARGS:LOCAL
+		NEXT
+		TWAIT 100 , 0
+	ENDIF
+	CLEARLINE 30-MATCH(ARGS, "VOID")
+
+	FOR LOCAL:1, 0, ARG
+		RED = MAX(0, RED-RED:1)
+		GREEN = MAX(0, GREEN-GREEN:1)
+		BLUE = MAX(0, BLUE-BLUE:1)
+		SETCOLOR RED, GREEN, BLUE
+		FOR LOCAL, 0, 30
+			SIF ARGS:LOCAL != "VOID"
+				PRINTSL ARGS:LOCAL
+		NEXT
+		TWAIT 100 , 0
+		CLEARLINE 30-MATCH(ARGS, "VOID")
+	NEXT
+	SETCOLOR ARG:2
+	FOR LOCAL, 0, 30
+		SIF ARGS:LOCAL != "VOID"
+			PRINTSL ARGS:LOCAL
+	NEXT
+	
+	REDRAW LOCAL:2
+;显示关
+ELSE
+	;终了色但背景色和同じ场合、初期色で显示。そうでなければ终了色で显示
+	SETCOLOR GETBGCOLOR() == ARG:2 ? ARG:1 # ARG:2
+	FOR LOCAL, 0, 30
+		IF ARGS:LOCAL != "VOID"
+			PRINTSL ARGS:LOCAL
+		ENDIF
+	NEXT
+ENDIF
+SETCOLOR PRICOLOR
+RETURN RESULT
+
+
+;-------------------------------------------------
+;ぱにめーしょん的配置被参照してARG分的行削除被行う
+;省略すれば一行削除。FADE系的后で的使用被想定
+;-------------------------------------------------
+@FADE_CLINE(ARG = 1)
+IF ANIME_CONFIG("FADE")
+	LOCAL:0 = CURRENTREDRAW()
+	REDRAW 0
+	CLEARLINE ARG
+	REDRAW LOCAL:0
+ENDIF
+
+
+;-------------------------------------------------
+;FADE_TO_CLEARLINE
+;FADEOUT和行削除被統合したも的
+;角色指定字符色から背景色へフェードアウト做
+;动画配置被参照して必要那么行削除被行う
+;-------------------------------------------------
+@FADE_TO_CLEARLINE(ARG:0, ARGS:0)
+CALL FADE(ARG:0, GETCOLOR(), GETBGCOLOR(), @"%ARGS:0%")
+CALL FADE_CLINE(1)
+
+
+;-------------------------------------------------
+;FADE_TO_CLEARLINE2
+;FADE_TO_CLEARLINE的字符色、背景色被指定可能にしたも的
+;『ARG:0』的速度で『ARG:1』的字符色から『ARG:2』的背景色へ『ARGS:0』的字符串被フェードアウト侍奉
+;-------------------------------------------------
+@FADE_TO_CLEARLINE2(ARG:0, ARG:1, ARG:2, ARGS:0)
+CALL FADE(ARG:0, ARG:1, ARG:2, @"%ARGS:0%")
+CALL FADE_CLINE(1)
+
+
+
+;-------------------------------------------------
+;振动エフェクト関数@QUAKE
+;	引数0：振动数。省略做和2
+;
+;画面被上下に揺らし增加。揺れ幅是ある程度随机です
+;-------------------------------------------------
+@QUAKE(ARG = 2)
+#LOCALSIZE 3
+;显示关だ和返回
+SIF !ANIME_CONFIG("QUAKE")
+	RETURN RESULT
+REDRAW 0
+FOR LOCAL, 0, ARG
+	LOCAL:1 = RAND:4+1
+	FOR LOCAL:2, 0, LOCAL:1
+		PRINTL 
+	NEXT
+	TWAIT 100, 0
+	CLEARLINE LOCAL:1
+	TWAIT 100, 0
+NEXT
+REDRAW 3
+RETURN RESULT
+
+
+;-------------------------------------------------
+;发光エフェクト関数@FLASH
+;	引数0：发光数。省略做和2
+;	引数1：光る色。省略做和白
+;
+;画面被发光させ增加。背景色的点滅
+;-------------------------------------------------
+@FLASH(ARG = 2, ARG:1 = 0xFFFFFF)
+#LOCALSIZE 2
+;显示关だ和返回
+SIF !ANIME_CONFIG("FLASH")
+	RETURN RESULT
+REDRAW 0
+FOR LOCAL, 0, 150
+	PRINTL
+NEXT
+LOCAL:1 = GETBGCOLOR()
+FOR LOCAL, 0, ARG
+	SETBGCOLOR ARG:1
+	REDRAW 2
+	SETBGCOLOR LOCAL:1
+	REDRAW 2
+NEXT
+CLEARLINE 150
+REDRAW 3
+RETURN RESULT
+
+
+;-------------------------------------------------
+;全画面カットイン関数@FULLCUTIN
+;	引数0：左端から的インデント
+;	引数1：床から浮かせる行数（显示字符串和合わ命令30被超えないでください）
+;	字符串引数0～29：显示做字符串
+;
+;空行で画面被掃除して、全画面分的カットイン被显示し增加
+;行揃えやフォントなど的オプション是まだほ和んど设定していません。アイデア只和りあえず。
+;-------------------------------------------------
+@FULLCUTIN(ARG, ARG:1, ARGS = "VOID", ARGS:1 = "VOID", ARGS:2 = "VOID", ARGS:3 = "VOID", ARGS:4 = "VOID", ARGS:5 = "VOID", ARGS:6 = "VOID", ARGS:7 = "VOID", ARGS:8 = "VOID", ARGS:9 = "VOID", ARGS:10 = "VOID", ARGS:11 = "VOID", ARGS:12 = "VOID", ARGS:13 = "VOID", ARGS:14 = "VOID", ARGS:15 = "VOID", ARGS:16 = "VOID", ARGS:17 = "VOID", ARGS:18 = "VOID", ARGS:19 = "VOID", ARGS:20 = "VOID", ARGS:21 = "VOID", ARGS:22 = "VOID", ARGS:23 = "VOID", ARGS:24 = "VOID", ARGS:25 = "VOID", ARGS:26 = "VOID", ARGS:27 = "VOID", ARGS:28 = "VOID", ARGS:29 = "VOID", ARG:2 = 8)
+#LOCALSIZE 1
+;显示开
+IF ANIME_CONFIG("FULLCUTIN")
+	FOR LOCAL, 0, 30
+		IF ARGS:LOCAL == "VOID"
+			IF ARG:1 > 0
+				ARGS:LOCAL =  
+				ARG:1--
+			ENDIF
+		ELSE
+			ARGS:LOCAL = %" "*ARG+ARGS:LOCAL%
+		ENDIF
+	NEXT
+	CALL SAVELINE
+	FOR LOCAL, 0, 150
+		PRINTL 
+	NEXT
+	;FULLCUTIN但开那么フェード是强制
+	CALLF ANIME_CONFIG("ONCE")
+	CALL FADEIN(ARG:2, ARGS, ARGS:1, ARGS:2, ARGS:3, ARGS:4, ARGS:5, ARGS:6, ARGS:7, ARGS:8, ARGS:9, ARGS:10, ARGS:11, ARGS:12, ARGS:13, ARGS:14, ARGS:15, ARGS:16, ARGS:17, ARGS:18, ARGS:19, ARGS:20, ARGS:21, ARGS:22, ARGS:23, ARGS:24, ARGS:25, ARGS:26, ARGS:27, ARGS:28, ARGS:29)
+	TWAIT 2000, 0
+	CALLF ANIME_CONFIG("ONCE")
+	CALL FADEOUT(ARG:2, ARGS, ARGS:1, ARGS:2, ARGS:3, ARGS:4, ARGS:5, ARGS:6, ARGS:7, ARGS:8, ARGS:9, ARGS:10, ARGS:11, ARGS:12, ARGS:13, ARGS:14, ARGS:15, ARGS:16, ARGS:17, ARGS:18, ARGS:19, ARGS:20, ARGS:21, ARGS:22, ARGS:23, ARGS:24, ARGS:25, ARGS:26, ARGS:27, ARGS:28, ARGS:29, 1)
+	TWAIT 500, 0
+	CALL RETURNLINE
+;显示关（简略化显示）
+ELSE
+	PRINTL 
+	PRINTL 
+	FOR LOCAL, 0, 30
+		IF ARGS:LOCAL != "VOID"
+			IF STRLENSU(ARGS:LOCAL) < 2
+				PRINTSL ARGS:LOCAL
+			ELSE
+				PRINTFORMW %" "*ARG+ARGS:LOCAL%
+			ENDIF
+		ENDIF
+	NEXT
+	PRINTL 
+	PRINTL 
+ENDIF
+RETURN RESULT
+
+
+;-------------------------------------------------
+;全画面カットイン関数@FULLCUTIN2
+;	フェードイン・アウト等但从来より速い只です
+;-------------------------------------------------
+@FULLCUTIN2(ARG, ARG:1, ARGS = "VOID", ARGS:1 = "VOID", ARGS:2 = "VOID", ARGS:3 = "VOID", ARGS:4 = "VOID", ARGS:5 = "VOID", ARGS:6 = "VOID", ARGS:7 = "VOID", ARGS:8 = "VOID", ARGS:9 = "VOID", ARGS:10 = "VOID", ARGS:11 = "VOID", ARGS:12 = "VOID", ARGS:13 = "VOID", ARGS:14 = "VOID", ARGS:15 = "VOID", ARGS:16 = "VOID", ARGS:17 = "VOID", ARGS:18 = "VOID", ARGS:19 = "VOID", ARGS:20 = "VOID", ARGS:21 = "VOID", ARGS:22 = "VOID", ARGS:23 = "VOID", ARGS:24 = "VOID", ARGS:25 = "VOID", ARGS:26 = "VOID", ARGS:27 = "VOID", ARGS:28 = "VOID", ARGS:29 = "VOID", ARG:2 = 4)
+#LOCALSIZE 1
+CALL FULLCUTIN(ARG, ARG:1, ARGS, ARGS:1, ARGS:2, ARGS:3, ARGS:4, ARGS:5, ARGS:6, ARGS:7, ARGS:8, ARGS:9, ARGS:10, ARGS:11, ARGS:12, ARGS:13, ARGS:14, ARGS:15, ARGS:16, ARGS:17, ARGS:18, ARGS:19, ARGS:20, ARGS:21, ARGS:22, ARGS:23, ARGS:24, ARGS:25, ARGS:26, ARGS:27, ARGS:28, ARGS:29, ARG:2)
+RETURN RESULT

@@ -1,0 +1,96 @@
+﻿;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+
+;		施虐系メッセージ
+
+;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+
+;────────────────────────────────────
+;060,打屁股
+;────────────────────────────────────
+@TRAIN_MESSAGE_60
+PRINTFORML %CALLNAME:TARGET%是%TARGET_DESCRIPTION("保持、")%%CALLNAME:MASTER%的
+PRINTFORML 用手掌用力拍了屁股…
+
+;────────────────────────────────────
+;061,鞭
+;────────────────────────────────────
+@TRAIN_MESSAGE_61
+PRINTFORML %CALLNAME:TARGET%用力抡起鞭子尽情地挥下去、
+PRINTFORML 在%CALLNAME:MASTER%的皮肤上刻上了数条鲜红的血痕…
+
+;────────────────────────────────────
+;062,针
+;────────────────────────────────────
+@TRAIN_MESSAGE_62
+IF PENIS(MASTER)              ;调教对象但阴茎被持っている
+	PRINTFORML %CALLNAME:TARGET%是%TARGET_DESCRIPTION("保持、")%%CALLNAME:MASTER%的
+	PRINTFORML 向着身上刺上了针…
+ELSE                          ;其他
+	PRINTFORML %CALLNAME:TARGET%是%TARGET_DESCRIPTION("保持、")%%CALLNAME:MASTER%的
+	PRINTFORML 用针刺入了乳头和阴蒂…
+ENDIF
+
+;────────────────────────────────────
+;063,绳
+;────────────────────────────────────
+@TRAIN_MESSAGE_63
+IF TFLAG:ACT派生 == 0         ;捆绑时
+	PRINTFORML %CALLNAME:TARGET%要求用绳子绑住%CALLNAME:MASTER%…
+ELSE                          ;解除时
+	PRINTFORML %CALLNAME:TARGET%解开了%CALLNAME:MASTER%的绳子…
+ENDIF
+
+;────────────────────────────────────
+;064,眼罩
+;────────────────────────────────────
+@TRAIN_MESSAGE_64
+IF TFLAG:ACT派生 == 0         ;装着时
+	PRINTFORML %CALLNAME:TARGET%在%TARGET_DESCRIPTION("一面、")%%CALLNAME:MASTER%
+	PRINTFORML 让其戴上眼罩…
+ELSE                          ;解除时
+	PRINTFORML %CALLNAME:TARGET%把眼罩从%CALLNAME:MASTER%头上取下来了…
+ENDIF
+
+;────────────────────────────────────
+;065,口球
+;────────────────────────────────────
+@TRAIN_MESSAGE_65
+IF TFLAG:ACT派生 == 0         ;装着时
+	PRINTFORML %CALLNAME:TARGET%在%TARGET_DESCRIPTION("一面、")%%CALLNAME:MASTER%
+	PRINTFORML 为其戴上了口球…
+ELSE                          ;解除时
+	PRINTFORML %CALLNAME:TARGET%从%CALLNAME:MASTER%那里取下了口球…
+ENDIF
+
+;────────────────────────────────────
+;066,辱骂
+;────────────────────────────────────
+@TRAIN_MESSAGE_66
+PRINTFORML %CALLNAME:TARGET%像是在挑衅似的%TARGET_DESCRIPTION("保持、")%%EQUIPACTION_DESCRIPTION()%
+PRINTFORML %CALLNAME:MASTER%的痴态被声音展露出来…
+
+;────────────────────────────────────
+;067,三角木马
+;────────────────────────────────────
+@TRAIN_MESSAGE_67
+IF TFLAG:ACT派生 == 0         ;开始时
+	PRINTFORML %CALLNAME:TARGET%让%CALLNAME:MASTER%骑在木马上…
+ELSE                          ;终了时
+	PRINTFORML %CALLNAME:TARGET%让%CALLNAME:MASTER%从木马上下来…
+ENDIF
+
+;────────────────────────────────────
+;068,灌肠器＋肛塞
+;────────────────────────────────────
+@TRAIN_MESSAGE_68
+SELECTCASE TFLAG:ACT派生
+	CASE 0                    ;ACT派生但注入
+		PRINTFORML %CALLNAME:TARGET%在%TARGET_DESCRIPTION("一面、")%%CALLNAME:MASTER%的菊穴里
+		PRINTFORML 灌入灌肠液，用肛塞塞住…
+	CASE 1                    ;ACT派生但排出
+		PRINTFORML %CALLNAME:TARGET%来自%TARGET_DESCRIPTION("一边、")%%CALLNAME:MASTER%
+		PRINTFORML 拔掉肛塞，肠道内的污物从肛门喷涌而出…
+	CASEELSE                  ;ACT派生但追加
+		PRINTFORML %CALLNAME:TARGET%在%TARGET_DESCRIPTION("一边、")%%CALLNAME:MASTER%的肠内
+		PRINTFORML 继续注入灌肠液…
+ENDSELECT

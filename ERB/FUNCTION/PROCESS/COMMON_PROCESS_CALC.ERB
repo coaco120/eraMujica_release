@@ -1,0 +1,1187 @@
+﻿;-------------------------------------------------
+;通用関数置き场
+;显示フロー、計算处理など被切り出したも的。
+;また是内部处理的な関数
+;-------------------------------------------------
+
+;-------------------------------------------------
+;計算相关
+;-------------------------------------------------
+
+;────────────────────────────────────
+;调教对象行动根据一括ソース修正
+;────────────────────────────────────
+@REACT_TYPE_CHECK
+SELECTCASE COMGRONAME(TFLAG:REACT分类)
+	CASE "消极的服从"
+		;快感ソース是基準値和做
+		;非快感ソース的修正
+		;压力に屈してしぶしぶ服从内容
+		TIMES SOURCE:MASTER:接触     , 0.90
+		TIMES SOURCE:MASTER:情爱     , 1.00
+		TIMES SOURCE:MASTER:性行动   , 1.00
+		TIMES SOURCE:MASTER:疼痛     , 0.90
+		TIMES SOURCE:MASTER:捆绑     , 1.00
+		TIMES SOURCE:MASTER:露出     , 1.00
+		TIMES SOURCE:MASTER:不洁     , 1.50
+		TIMES SOURCE:MASTER:逃脱     , 1.00
+		TIMES SOURCE:MASTER:中毒充足 , 1.00
+		TIMES SOURCE:MASTER:心理创伤 , 1.00
+		TIMES SOURCE:MASTER:屈从     , 1.20
+		TIMES SOURCE:MASTER:达成     , 0.50
+		TIMES SOURCE:MASTER:乐趣     , 0.75
+		TIMES SOURCE:MASTER:反抗     , 0.75
+		TIMES SOURCE:MASTER:恐怖     , 1.20
+	CASE "淡然的服从"
+		;快感ソース的修正
+		;奉仕系ACTか、性交主導権但调教对象的时候调教者快感増加
+		IF MENUMATCH(TFLAG:ACT, "奉仕") || SEX_INITIATIVE(MASTER)
+			TIMES SOURCE:快Ｃ , 2.00
+			TIMES SOURCE:快Ｖ , 2.00
+			TIMES SOURCE:快Ａ , 2.00
+			TIMES SOURCE:快Ｂ , 2.00
+		ENDIF
+		;自慰的时候调教对象快感増加
+		IF GROUPMATCH(1, MC_PLAYER(), MV_PLAYER(), MA_PLAYER(), MB_PLAYER())
+			TIMES SOURCE:MASTER:快Ｃ , 1.20
+			TIMES SOURCE:MASTER:快Ｖ , 1.20
+			TIMES SOURCE:MASTER:快Ａ , 1.20
+			TIMES SOURCE:MASTER:快Ｂ , 1.20
+		ENDIF
+		;性交主導権但调教对象的时候、性交种に应じて调教对象快感減少
+		IF SEX_INITIATIVE(MASTER)
+			IF TEQUIP:性交奉仕中 || TEQUIP:助手性交奉仕中
+				TIMES SOURCE:MASTER:快Ｃ , 0.75
+			ELSEIF TEQUIP:性交中 == 3
+				TIMES SOURCE:MASTER:快Ｖ , 0.75
+			ENDIF
+		ENDIF
+		;非快感ソース的修正
+		;主动被保ち一面飄々和命令に从って看到る内容
+		TIMES SOURCE:MASTER:接触     , 1.50
+		TIMES SOURCE:MASTER:情爱     , 0.50
+		TIMES SOURCE:MASTER:性行动   , 1.50
+		TIMES SOURCE:MASTER:疼痛     , 0.75
+		TIMES SOURCE:MASTER:捆绑     , 0.80
+		TIMES SOURCE:MASTER:露出     , 1.50
+		TIMES SOURCE:MASTER:不洁     , 0.50
+		TIMES SOURCE:MASTER:逃脱     , 2.00
+		TIMES SOURCE:MASTER:中毒充足 , 1.20
+		TIMES SOURCE:MASTER:心理创伤 , 0.75
+		TIMES SOURCE:MASTER:屈从     , 0.50
+		TIMES SOURCE:MASTER:达成     , 2.50
+		TIMES SOURCE:MASTER:乐趣     , 0.75
+		TIMES SOURCE:MASTER:反抗     , 1.20
+		TIMES SOURCE:MASTER:恐怖     , 0.50
+	CASE "积极的服从"
+		;快感ソース的修正
+		;奉仕系ACTか、性交主導権但调教对象的时候调教者快感増加
+		IF MENUMATCH(TFLAG:ACT, "奉仕") || SEX_INITIATIVE(MASTER)
+			TIMES SOURCE:快Ｃ , 2.50
+			TIMES SOURCE:快Ｖ , 2.50
+			TIMES SOURCE:快Ａ , 2.50
+			TIMES SOURCE:快Ｂ , 2.50
+		ENDIF
+		;自慰的时候调教对象快感増加
+		IF GROUPMATCH(1, MC_PLAYER(), MV_PLAYER(), MA_PLAYER(), MB_PLAYER())
+			TIMES SOURCE:MASTER:快Ｃ , 2.00
+			TIMES SOURCE:MASTER:快Ｖ , 2.00
+			TIMES SOURCE:MASTER:快Ａ , 2.00
+			TIMES SOURCE:MASTER:快Ｂ , 2.00
+		ENDIF
+		;非快感ソース的修正
+		;命令に从い积极的に奉仕行动被行う内容
+		TIMES SOURCE:MASTER:接触     , 2.00
+		TIMES SOURCE:MASTER:情爱     , 2.00
+		TIMES SOURCE:MASTER:性行动   , 1.50
+		TIMES SOURCE:MASTER:疼痛     , 0.75
+		TIMES SOURCE:MASTER:捆绑     , 0.80
+		TIMES SOURCE:MASTER:露出     , 1.50
+		TIMES SOURCE:MASTER:不洁     , 0.50
+		TIMES SOURCE:MASTER:逃脱     , 1.20
+		TIMES SOURCE:MASTER:中毒充足 , 2.00
+		TIMES SOURCE:MASTER:心理创伤 , 0.50
+		TIMES SOURCE:MASTER:屈从     , 1.50
+		TIMES SOURCE:MASTER:达成     , 2.00
+		TIMES SOURCE:MASTER:乐趣     , 1.25
+		TIMES SOURCE:MASTER:反抗     , 0.50
+		TIMES SOURCE:MASTER:恐怖     , 1.00
+	CASE "接受"
+		;快感ソース的修正
+		;调教对象快感増加
+		TIMES SOURCE:MASTER:快Ｃ , 2.50
+		TIMES SOURCE:MASTER:快Ｖ , 2.50
+		TIMES SOURCE:MASTER:快Ａ , 2.50
+		TIMES SOURCE:MASTER:快Ｂ , 2.50
+		;奉仕系ACTか、性交主導権但调教对象的时候调教者快感減少
+		IF MENUMATCH(TFLAG:ACT, "奉仕") || SEX_INITIATIVE(MASTER)
+			TIMES SOURCE:快Ｃ , 0.75
+			TIMES SOURCE:快Ｖ , 0.75
+			TIMES SOURCE:快Ａ , 0.75
+			TIMES SOURCE:快Ｂ , 0.75
+		ENDIF
+		;非快感ソース的修正
+		;快乐に溺れて命令遂行よりも主动但感受良くなる方に重点但ある
+		TIMES SOURCE:MASTER:接触     , 2.00
+		TIMES SOURCE:MASTER:情爱     , 2.00
+		TIMES SOURCE:MASTER:性行动   , 2.50
+		TIMES SOURCE:MASTER:疼痛     , 0.50
+		TIMES SOURCE:MASTER:捆绑     , 1.00
+		TIMES SOURCE:MASTER:露出     , 2.00
+		TIMES SOURCE:MASTER:不洁     , 1.00
+		TIMES SOURCE:MASTER:逃脱     , 1.00
+		TIMES SOURCE:MASTER:中毒充足 , 2.50
+		TIMES SOURCE:MASTER:心理创伤 , 0.75
+		TIMES SOURCE:MASTER:屈从     , 2.50
+		TIMES SOURCE:MASTER:达成     , 1.00
+		TIMES SOURCE:MASTER:乐趣     , 2.50
+		TIMES SOURCE:MASTER:反抗     , 0.75
+		TIMES SOURCE:MASTER:恐怖     , 0.75
+	CASE "请求宽恕"
+		;快感ソース的修正
+		;奉仕系ACTか、性交主導権但调教对象的时候调教者快感減少
+		IF MENUMATCH(TFLAG:ACT, "奉仕") || SEX_INITIATIVE(MASTER)
+			TIMES SOURCE:快Ｃ , 0.50
+			TIMES SOURCE:快Ｖ , 0.50
+			TIMES SOURCE:快Ａ , 0.50
+			TIMES SOURCE:快Ｂ , 0.50
+		ENDIF
+		;性交主導権但调教对象的时候、性交种に应じて调教对象快感減少
+		IF SEX_INITIATIVE(MASTER)
+			IF TEQUIP:性交奉仕中 || TEQUIP:助手性交奉仕中
+				TIMES SOURCE:MASTER:快Ｃ , 0.50
+			ELSEIF TEQUIP:性交中 == 3
+				TIMES SOURCE:MASTER:快Ｖ , 0.50
+			ENDIF
+		ENDIF
+		;自慰的时候调教对象快感減少
+		IF GROUPMATCH(1, MC_PLAYER(), MV_PLAYER(), MA_PLAYER(), MB_PLAYER())
+			TIMES SOURCE:MASTER:快Ｃ , 0.50
+			TIMES SOURCE:MASTER:快Ｖ , 0.50
+			TIMES SOURCE:MASTER:快Ａ , 0.50
+			TIMES SOURCE:MASTER:快Ｂ , 0.50
+		ENDIF
+		;非快感ソース的修正
+		;怯えたりして竦んでしまい满足に命令に从えていない
+		TIMES SOURCE:MASTER:接触     , 0.50
+		TIMES SOURCE:MASTER:情爱     , 0.50
+		TIMES SOURCE:MASTER:性行动   , 1.00
+		TIMES SOURCE:MASTER:疼痛     , 2.00
+		TIMES SOURCE:MASTER:捆绑     , 1.25
+		TIMES SOURCE:MASTER:露出     , 0.50
+		TIMES SOURCE:MASTER:不洁     , 1.50
+		TIMES SOURCE:MASTER:逃脱     , 1.50
+		TIMES SOURCE:MASTER:中毒充足 , 0.75
+		TIMES SOURCE:MASTER:心理创伤 , 2.50
+		TIMES SOURCE:MASTER:屈从     , 2.00
+		TIMES SOURCE:MASTER:达成     , 0.50
+		TIMES SOURCE:MASTER:乐趣     , 0.50
+		TIMES SOURCE:MASTER:反抗     , 0.50
+		TIMES SOURCE:MASTER:恐怖     , 2.00
+	;拒绝・发狂・逃跑・何も无
+	CASEELSE
+		;奉仕系ACTか、性交主導権但调教对象的时候调教者快感減少
+		IF MENUMATCH(TFLAG:ACT, "奉仕") || SEX_INITIATIVE(MASTER)
+			TIMES SOURCE:快Ｃ , 0.30
+			TIMES SOURCE:快Ｖ , 0.30
+			TIMES SOURCE:快Ａ , 0.30
+			TIMES SOURCE:快Ｂ , 0.30
+		ENDIF
+		;性交主導権但调教对象的时候、性交种に应じて调教对象快感減少
+		IF SEX_INITIATIVE(MASTER)
+			IF TEQUIP:性交奉仕中 || TEQUIP:助手性交奉仕中
+				TIMES SOURCE:MASTER:快Ｃ , 0.30
+			ELSEIF TEQUIP:性交中 == 3
+				TIMES SOURCE:MASTER:快Ｖ , 0.30
+			ENDIF
+		ENDIF
+		;非快感ソース的修正
+		;概ね抵抗に寄る
+		TIMES SOURCE:MASTER:接触     , 0.50
+		TIMES SOURCE:MASTER:情爱     , 0.50
+		TIMES SOURCE:MASTER:性行动   , 0.50
+		TIMES SOURCE:MASTER:疼痛     , 1.00
+		TIMES SOURCE:MASTER:捆绑     , 1.00
+		TIMES SOURCE:MASTER:露出     , 1.00
+		TIMES SOURCE:MASTER:不洁     , 1.00
+		TIMES SOURCE:MASTER:逃脱     , 1.00
+		TIMES SOURCE:MASTER:中毒充足 , 1.00
+		TIMES SOURCE:MASTER:心理创伤 , 1.00
+		TIMES SOURCE:MASTER:屈从     , 1.00
+		TIMES SOURCE:MASTER:达成     , 1.00
+		TIMES SOURCE:MASTER:乐趣     , 0.50
+		TIMES SOURCE:MASTER:反抗     , 2.00
+		TIMES SOURCE:MASTER:恐怖     , 1.00
+ENDSELECT
+
+;────────────────────────────────────
+;衣服的ソース修正
+;────────────────────────────────────
+@CLOTHES_CHECK
+;下半身内衣
+;内裤・パンスト
+IF TEQUIP:MASTER:下半身内衣 == 2 || TEQUIP:MASTER:下半身内衣 == 4
+	;跳蛋や助手的行动にもかかってしまうけど今是仕方ない
+	;暫定的なも的和し增加
+	IF !TALENT:穿墙
+		TIMES SOURCE:MASTER:快Ｃ , 0.95
+		TIMES SOURCE:MASTER:快Ｖ , 0.90
+		TIMES SOURCE:MASTER:快Ａ , 0.90
+	ENDIF
+	TIMES SOURCE:MASTER:露出 , 0.95
+;ドロワ・短裤
+ELSEIF TEQUIP:MASTER:下半身内衣 == 1 || TEQUIP:MASTER:下半身内衣 == 3
+	IF !TALENT:穿墙
+		TIMES SOURCE:MASTER:快Ｃ , 0.90
+		TIMES SOURCE:MASTER:快Ｖ , 0.80
+		TIMES SOURCE:MASTER:快Ａ , 0.80
+	ENDIF
+	TIMES SOURCE:MASTER:露出 , 0.90
+ENDIF
+
+;上半身内衣
+;ブラ・裹胸布
+IF TEQUIP:MASTER:上半身内衣 == 1 || TEQUIP:MASTER:上半身内衣 == 3
+	SIF !TALENT:穿墙
+		TIMES SOURCE:MASTER:快Ｂ , 0.80
+	TIMES SOURCE:MASTER:露出 , 0.90
+;キャミ・Ｔ衬衫
+ELSEIF TEQUIP:MASTER:上半身内衣 == 2 || TEQUIP:MASTER:上半身内衣 == 2
+	SIF !TALENT:穿墙
+		TIMES SOURCE:MASTER:快Ｂ , 0.95
+	TIMES SOURCE:MASTER:露出 , 0.80
+ENDIF
+
+;下半身外套
+;裤裙・裤子
+IF TEQUIP:MASTER:下半身外套 > 1
+	IF TALENT:着衣PLAY喜欢 == 0
+		IF !TALENT:穿墙
+			TIMES SOURCE:MASTER:快Ｃ , 0.60
+			TIMES SOURCE:MASTER:快Ｖ , 0.70
+			TIMES SOURCE:MASTER:快Ａ , 0.70
+		ENDIF
+		TIMES SOURCE:MASTER:露出 , 0.60
+	ELSE
+		IF !TALENT:穿墙
+			TIMES SOURCE:MASTER:快Ｃ , 0.80
+			TIMES SOURCE:MASTER:快Ｖ , 0.90
+			TIMES SOURCE:MASTER:快Ａ , 0.90
+		ENDIF
+		TIMES SOURCE:MASTER:露出 , 0.70
+	ENDIF
+;裙子
+ELSEIF TEQUIP:MASTER:下半身外套 == 1
+	IF TALENT:着衣PLAY喜欢 == 0
+		IF !TALENT:穿墙
+			TIMES SOURCE:MASTER:快Ｃ , 0.70
+			TIMES SOURCE:MASTER:快Ｖ , 0.80
+			TIMES SOURCE:MASTER:快Ａ , 0.80
+		ENDIF
+		TIMES SOURCE:MASTER:露出 , 0.70
+	ELSE
+		TIMES SOURCE:MASTER:露出 , 0.90
+	ENDIF
+ENDIF
+
+;上半身外套
+;外套
+IF TEQUIP:MASTER:上半身外套 && TALENT:着衣PLAY喜欢 == 0
+	SIF !TALENT:穿墙
+		TIMES SOURCE:MASTER:快Ｂ , 0.60
+	TIMES SOURCE:MASTER:露出 , 0.60
+ENDIF
+
+;全身外套
+IF TALENT:着衣PLAY喜欢 == 0
+	;和服、教师服
+	IF TEQUIP:MASTER:全身外套 && TEQUIP:MASTER:全身外套 != 3
+		IF !TALENT:穿墙
+			TIMES SOURCE:MASTER:快Ｃ , 0.60
+			TIMES SOURCE:MASTER:快Ｖ , 0.70
+			TIMES SOURCE:MASTER:快Ａ , 0.70
+			TIMES SOURCE:MASTER:快Ｂ , 0.60
+		ENDIF
+		TIMES SOURCE:MASTER:露出 , 0.40
+	;连衣裙
+	ELSEIF TEQUIP:MASTER:全身外套 == 3
+		IF !TALENT:穿墙
+			TIMES SOURCE:MASTER:快Ｃ , 0.70
+			TIMES SOURCE:MASTER:快Ｖ , 0.80
+			TIMES SOURCE:MASTER:快Ａ , 0.80
+			TIMES SOURCE:MASTER:快Ｂ , 0.70
+		ENDIF
+		TIMES SOURCE:MASTER:露出 , 0.60
+	ENDIF
+ENDIF
+
+;自定义服装/COSPLAY
+;束缚衣
+IF TEQUIP:MASTER:COSPLAY == 1
+	TIMES SOURCE:MASTER:接触 , 1.05
+	TIMES SOURCE:MASTER:情爱 , 0.80
+	TIMES SOURCE:MASTER:露出 , 1.40
+	SOURCE:MASTER:逃脱 += 100
+	TIMES SOURCE:MASTER:逃脱 , 1.10
+	SOURCE:MASTER:中毒充足 += GET_ABL(MASTER, "受虐气质") * GET_ABL(MASTER, "捆绑中毒") * (GET_ABL(MASTER, "捆绑中毒") + 10 + CFLAG:MASTER:调教等级 * 5) / 1000
+	SIF ABL:MASTER:受虐气质 + ABL:MASTER:捆绑中毒 > 4
+		TIMES SOURCE:MASTER:中毒充足 , 1.25
+	TIMES SOURCE:MASTER:心理创伤 , 1.20
+	SOURCE:MASTER:屈从 += 50
+	TIMES SOURCE:MASTER:屈从 , 1.25
+	TIMES SOURCE:MASTER:反抗 , 0.75
+ENDIF
+
+;-------------------------------------------------
+;関数名:SET_KISS
+;概　要:任意的部位で接吻的处理被行う
+;引　数:无（MASTER-TARGET间的み）
+;使用例 CALL SET_KISS
+;-------------------------------------------------
+@SET_KISS
+#LOCALSIZE 1
+;接吻に伴う一连的处理 不洁SOURCE关于是割爱
+SOURCE:MASTER:接触 = 150 + GET_TRAINLV(TARGET) * 5
+SOURCE:MASTER:情爱 = 100 + CFLAG:M好感 / 50 + GET_ABL(TARGET, "爱抚") * (GET_ABL(TARGET, "技巧") / 10 + TALENT:舌使 * 2) + GET_ABL(TARGET, "奉仕精神") * 5
+SOURCE:MASTER:性行动 = 50 + SOURCE:MASTER:情爱 / 15
+;脏污但相互移动
+CALL MOVE_STAIN("口", TARGET, "口", MASTER)
+;経験被付与
+EXP:接吻経験 += 1
+EXP:MASTER:接吻経験 += 1
+
+;-------------------------------------------------
+;関数名:SUCKING_NIPPLES
+;概　要:任意的部位でARGに对做吸乳头的处理被行う
+;引　数:0 行為的对象　省略做和TARGET。MASTER-TARGET间的み
+;使用例 CALL SUCKING_NIPPLES
+;-------------------------------------------------
+@SUCKING_NIPPLES(ARG = -2)
+#LOCALSIZE 2
+ARG = ARG == MASTER ? MASTER # TARGET
+IF ARG == MASTER
+	SOURCE:MASTER:快Ｂ = 150 + ACT_FROM(TARGET, 4) * (3 + TALENT:舌使) / 3
+	SOURCE:MASTER:接触 = 75 + GET_TRAINLV(TARGET) * 10
+	SOURCE:MASTER:情爱 = SOURCE:MASTER:接触 / 2 + GET_ABL(TARGET, "奉仕精神") * 5
+	SOURCE:MASTER:性行动 = 50 + SOURCE:MASTER:快Ｂ / 10
+	;脏污但相互移动
+	CALL MOVE_STAIN("口", TARGET, "胸", MASTER)
+	EXP:MASTER:Ｂ経験 += 1
+ELSE
+	SOURCE:MASTER:接触 = 50 + GET_TRAINLV(TARGET) * 5 + CFLAG:MASTER:调教等级 * 5
+	SOURCE:MASTER:情爱 = 50 + CFLAG:M好感 / 50 + GET_ABL(TARGET, "奉仕精神") * 5
+	LOCAL:1 = ACT_TO(TARGET, 4) * (3 + TALENT:MASTER:灵巧的指尖) / 10
+	;脏污但相互移动
+	CALL MOVE_STAIN("胸", TARGET, "口", MASTER)
+	SOURCE:MASTER:性行动 += 50 + LOCAL:1 / 8
+	SOURCE:MASTER:达成 += LOCAL:1 / 4
+	SOURCE:快Ｂ += LOCAL:1
+	EXP:Ｂ経験 += 1
+ENDIF
+
+;-------------------------------------------------
+;関数名:ACT_FROM
+;概　要:MASTERに对して爱抚被行う和き的計算被行う関数
+;引　数:ARG:0…MASTERに爱抚被行う角色的登录番号(TARGET/ASSI/ASSI:1/ASSI:2)
+;      :ARG:1…行う爱抚的种类
+;              (1.Ｃ爱抚/2.Ｖ爱抚/3.Ａ爱抚/4.Ｂ爱抚/5.Ｖ性交/6.Ａ性交/7.Ｖ性交奉仕/8.Ａ性交奉仕/11.Ｃ道具/12.Ｖ道具/13.Ａ道具/14.Ｂ道具)
+;戻り値:計算結果
+;備　考:式中関数
+;@ABL_REVISIONにおける、S:1～S:8・S:11～S:14・S:21～S:27・S:31～S:34的代替
+;
+;技巧-感觉:  0   1   2   3   4   5   6   7   8   9  10
+;　 基本値:100 121 144 169 196 225 256 289 324 361 400
+;-------------------------------------------------
+@ACT_FROM(ARG:0, ARG:1)
+#FUNCTION
+#LOCALSIZE 1
+SELECTCASE ARG:1
+	;Ｃ爱抚/Ｖ爱抚/Ａ爱抚/Ｂ爱抚
+	CASE 1 TO 4
+		LOCAL = MAX(ABL:(ARG:0):技巧 + ABL:(ARG:0):爱抚 - ABL:MASTER:(2 + ARG:1), MARK:(ARG:0):屈服刻印)
+	;Ｖ性交/Ａ性交
+	CASE 5, 6
+		LOCAL = MAX(ABL:(ARG:0):技巧 + ABL:(ARG:0):性交 - ABL:MASTER:(ARG:1 - 1), MARK:(ARG:0):屈服刻印)
+	;Ｖ性交奉仕/Ａ性交奉仕
+	CASE 7, 8
+		LOCAL = MAX(ABL:(ARG:0):技巧 + ABL:(ARG:0):性交 + ABL:(ARG:0):(ARG:1 - 3) - ABL:MASTER:Ｃ感觉, MARK:(ARG:0):屈服刻印)
+	;Ｃ道具/Ｖ道具/Ａ道具/Ｂ道具
+	CASE 11 TO 14
+		LOCAL = MAX(ABL:(ARG:0):技巧 + ABL:(ARG:0):道具 - ABL:MASTER:(ARG:1 - 8), MARK:(ARG:0):屈服刻印)
+	;正体不明
+	CASEELSE
+		RETURNF 0
+ENDSELECT
+RETURNF POWER(LOCAL + 10, 2) * LIMIT(MAX(CFLAG:(ARG:0):调教等级 * 10 / (CFLAG:MASTER:调教等级 + 1), MIN(CFLAG:(ARG:0):M好感 / 200, 30)), 10, 1000) / 10
+
+
+;-------------------------------------------------
+;関数名:ACT_TO
+;概　要:MASTER但爱抚被行う和き的計算被行う関数
+;引　数:ARG:0…MASTER但爱抚被行う对象角色的登录番号(TARGET/ASSI/ASSI:1/ASSI:2)
+;      :ARG:1…行う爱抚的种类
+;              (1.Ｃ爱抚/2.Ｖ爱抚/3.Ａ爱抚/4.Ｂ爱抚/5.Ｖ性交/6.Ａ性交/7.Ｖ性交奉仕/8.Ａ性交奉仕)
+;戻り値:計算結果
+;備　考:式中関数
+;@ABL_REVISIONにおける、S:41・S:43～S:48・S:51・S:53～S:58的代替
+;
+;技巧-感觉:  0   1   2   3   4   5   6   7   8   9  10
+;　 基本値:100 121 144 169 196 225 256 289 324 361 400
+;-------------------------------------------------
+@ACT_TO(ARG:0, ARG:1)
+#FUNCTION
+#LOCALSIZE 1
+SELECTCASE ARG:1
+	;Ｃ爱抚/Ｖ爱抚/Ａ爱抚/Ｂ爱抚
+	CASE 1 TO 4
+		LOCAL = MAX(2 * ABL:MASTER:技巧 - ABL:(ARG:0):(2 + ARG:1), MARK:(ARG:0):屈服刻印)
+	;Ｖ性交/Ａ性交
+	CASE 5, 6
+		LOCAL = MAX(ABL:MASTER:技巧 + ABL:MASTER:(ARG:1 - 1) - ABL:(ARG:0):Ｃ感觉, MARK:(ARG:0):屈服刻印)
+	;Ｖ性交奉仕/Ａ性交奉仕
+	CASE 7, 8
+		LOCAL = MAX(2 * ABL:MASTER:技巧 - ABL:(ARG:0):(ARG:1 - 3), MARK:(ARG:0):屈服刻印)
+	;正体不明
+	CASEELSE
+		RETURNF 0
+ENDSELECT
+RETURNF POWER(LOCAL + 10, 2) * LIMIT(MAX(CFLAG:MASTER:调教等级 * 10 / (CFLAG:(ARG:0):调教等级 + 1), MIN(CFLAG:(ARG:0):好感 / 200, 30)), 10, 1000) / 10
+
+
+;-------------------------------------------------
+;関数名:GET_ABL
+;概　要:修正能力値取得関数
+;引　数:ARG:0…角色登录番号
+;       ARG:1…ABL名称
+;戻り値:修正后的ABL値
+;備　考:式中関数
+;@ABL_REVISIONにおける、A:1～A:29・B:1～B:30・C:1～C:29的代替
+;-------------------------------------------------
+@GET_ABL(ARG, ARGS)
+#FUNCTION
+;ARGS但空那么0被返す
+SIF ARGS == ""
+	RETURNF 0
+;指定但间違っていたら错误落ちしてくれる是ず
+RETURNF 100 - 500 / (5 + ABL:ARG:ARGS)
+
+
+;-------------------------------------------------
+;関数名:GET_TRAINLV
+;概　要:修正调教等级取得関数
+;引　数:ARG…角色登录番号
+;戻り値:修正后的调教等级
+;備　考:式中関数
+;@ABL_REVISIONにおける、A:30・C:30的代替
+;-------------------------------------------------
+@GET_TRAINLV(ARG)
+#FUNCTION
+RETURNF 50 - 2000 / (40 + CFLAG:ARG:调教等级)
+
+
+;-------------------------------------------------
+;関数名:GET_REVISION
+;概　要:通用修正値取得関数
+;引　数:ARG:0…参照做数値
+;       ARG:1…上限
+;       ARG:2…上升率
+;戻り値:修正后的値
+;備　考:式中関数
+;ある数値被、上限値に漸近していく数値に变换し想要和きに
+;ARG:2但小さい和すぐに上限に达做、大きい和逆になかなか上限直到近づかない
+;	ぱ。注：使っている形跡但ないん只ど…どう使うつもりだったんだろう
+;-------------------------------------------------
+@GET_REVISION(ARG:0, ARG:1, ARG:2)
+#FUNCTION
+RETURNF ARG:1 - ARG:2 * ARG:1 / (ARG:2 + ARG:0)
+
+
+;-------------------------------------------------
+;関数名:GET_REVISION_SQRT
+;概　要:通用修正値取得関数・平方根法
+;引　数:ARG:0…参照做数値
+;       (>=0的场合是そ的まま、<0的场合是ARG:0、返り値的符号被反転做)
+;       ARG:1…目標値(<0的场合是ARG:1、ARG:2的符号被反転して扱う, 初期値=100)
+;       ARG:2…目標値で的返り値(制限无, 初期値=100)
+;戻り値:修正后的値
+;備　考:式中関数
+;『ARG:0』但0から∞へ増加していく和き、
+;『ARG:0 ==     0』的时候『返り値 =     0』
+;『ARG:0 == ARG:1』的时候『返り値 = ARG:2』
+;『ARG:0 ==    ∞』的时候『返り値 =  ±∞』和なるように变换做
+;こ的时候、ARG:0但大きくなるほど増加速度是小さくなる
+;ARG:0(=X)和返り値(=Y)和的関係是「Y=A√X」和なる
+;※こ的时候A是ARG:1,2によって決まる
+;
+;※ARG:1但0であ时、どうにも那么ない的で0被返す
+;
+;計算誤差但大きい的で注意！
+;-------------------------------------------------
+@GET_REVISION_SQRT(ARG:0, ARG:1 = 100, ARG:2 = 100)
+#FUNCTION
+;LOCAL初期化
+VARSET LOCAL
+;ARG的どれか但0的时、常に0被返す
+SIF ARG:0 == 0 || ARG:1 == 0 || ARG:2 == 0
+	RETURNF 0
+;ARG:0但负那么正にして、返り値的符号被反転做
+IF ARG:0 < 0
+	ARG:0 = -ARG:0
+	LOCAL:1 = 1
+ENDIF
+;ARG:1但负那么正にし、ARG:2的符号被反転做
+IF ARG:1 < 0
+	ARG:1 = -ARG:1
+	ARG:2 = -ARG:2
+ENDIF
+;ARG:0的平方根被和り、ARG:1でARG:2但返るよう调整做
+LOCAL = SQRT(ARG:0 * 10000) * ARG:2 / SQRT(ARG:1) / 100
+;ARG:0但负だった和き的、返り値的符号反転
+SIF LOCAL:1
+	LOCAL = -LOCAL
+;値被返す
+RETURNF LOCAL
+
+
+;-------------------------------------------------
+;関数名:GET_REVISION_SQRT_PROP
+;概　要:通用修正値取得関数・平方根/比例混合法
+;引　数:ARG:0…参照做数値
+;       (>=0的场合是そ的まま、<0的场合是ARG:0、返り値的符号被反転做)
+;       ARG:1…目標値(<0的场合是ARG:1、ARG:2的符号被反転して扱う, 初期値=100)
+;       ARG:2…目標値で的返り値(制限无, 初期値=100)
+;       ARG:3…第二目標値(<0的场合是ARG:3、ARG:4的符号被反転して扱う, 初期値=100)
+;       ARG:4…第二目標値で的返り値(制限无, 初期値=100)
+;戻り値:修正后的値
+;備　考:式中関数
+;『ARG:0』但0から∞へ増加していく和き、
+;『ARG:0 ==     0』的时候『返り値 =     0』
+;『ARG:0 == ARG:1』的时候『返り値 = ARG:2』
+;『ARG:0 == ARG:3』的时候『返り値 = ARG:4』
+;『ARG:0 ==    ∞』的时候『返り値 =  ±∞』和なるように变换做
+;こ的时候、ARG:0但大きくなるほど増加速度是小さくなる
+;ARG:0(=X)和返り値(=Y)和的関係是「Y=B*A√X+(1-B)*A'X」和なる
+;※まず、「Y=A√X, Y=A'X」但共にARG:1,2的条件被满足做よう设定し、
+;　そ的后ARG:3,4的条件被满たすB被设定做
+;
+;※ARG:1但0であ时、どうにも那么ない的で0被返す
+;※ARG:3但0的时、ARG:4も0那么平方根法使用、それ以外那么0被返す
+;※ARG:3但ARG:1和等しい时、ARG:4もARG:2和等しい那么平方根法使用、それ以外那么0被返す
+;
+;計算誤差但大きい的で注意！
+;-------------------------------------------------
+@GET_REVISION_SQRT_PROP(ARG:0, ARG:1 = 100, ARG:2 = 100, ARG:3 = 100, ARG:4 = 100)
+#FUNCTION
+;LOCAL初期化
+VARSET LOCAL
+;ARG,0-2的どれか但0的时、常に0被返す
+SIF ARG:0 == 0 || ARG:1 == 0 || ARG:2 == 0
+	RETURNF 0
+;ARG:0但负那么正にして、返り値的符号被反転做
+IF ARG:0 < 0
+	ARG:0 = -ARG:0
+	LOCAL:3 = 1
+ENDIF
+;ARG:1但负那么正にし、ARG:2的符号被反転做
+IF ARG:1 < 0
+	ARG:1 = -ARG:1
+	ARG:2 = -ARG:2
+ENDIF
+;目標値和第二目標値但同じ
+IF ARG:1 == ARG:3
+	;ARG:4但ARG:2和等しくなければ0被返す
+	SIF ARG:4 != ARG:2
+		RETURNF 0
+	;平方根法使用
+	LOCAL = 0
+;第二目標値但0
+ELSEIF ARG:3 == 0
+	;ARG:4但0でなければ0被返す
+	SIF ARG:4 != 0
+		RETURNF 0
+	;平方根法使用
+	LOCAL = 0
+;问题无
+ELSE
+	;ARG:3但负那么正にし、ARG:4的符号被反転做
+	IF ARG:3 < 0
+		ARG:3 = -ARG:1
+		ARG:4 = -ARG:2
+	ENDIF
+	;混合比被計算做
+	LOCAL:1 = ARG:3 * ARG:2 * 100 / ARG:1
+	LOCAL:2 = SQRT(ARG:3 * 10000) * ARG:2 / SQRT(ARG:1)
+	LOCAL = (ARG:4 * 100 - LOCAL:2) * 100 / (LOCAL:1 - LOCAL:2)
+ENDIF
+;混合比に基づき、√ARG:0和ARG:0被混合做
+LOCAL:1 = LOCAL * (ARG:0 * ARG:2 * 100 / ARG:1)
+LOCAL:2 = (100 - LOCAL) * (SQRT(ARG:0 * 10000) * ARG:2 / SQRT(ARG:1))
+LOCAL = (LOCAL:1 + LOCAL:2) / 10000
+;ARG:0但负だった和き的、返り値的符号反転
+SIF LOCAL:3
+	LOCAL = -LOCAL
+;値被返す
+RETURNF LOCAL
+
+
+;-------------------------------------------------
+;関数名:GET_REVISION_SQRT_PROP_TEST
+;概　要:通用修正値取得関数・平方根/比例混合法『試験』
+;引　数:ARG:0  …今的和ころ不要
+;       ARG:1-4…GET_REVISION_SQRT_PROPに渡す
+;戻り値:无
+;備　考:関数(式中间数で是ない)
+;GET_REVISION_SQRT_PROP的返り値被确认做
+;
+;※DEBUG用！
+;  だっせぇ手抜き实装になってる的で構文的使用に是注意！
+;
+;※※こんな関数被外付けで作らにゃ那么ん时点数
+;    不良品関数な的だ和いう说但あり增加
+;
+;@これみ
+;-------------------------------------------------
+@GET_REVISION_SQRT_PROP_TEST(ARG:0, ARG:1 = 100, ARG:2 = 100, ARG:3 = 0, ARG:4 = 0)
+;LOCAL初期化
+VARSET LOCAL
+;両引数但同符号もしく是どちらか但0
+IF SIGN(ARG:1) == SIGN(ARG:3) || SIGN(ARG:1) == 0 || SIGN(ARG:3) == 0
+	;最大幅取得
+	LOCAL:3 = ABS(ARG:1) < ABS(ARG:3) ? ABS(ARG:3) # ABS(ARG:1)
+	;有效1桁で处理
+	LOCAL:3 = ROUND(LOCAL:3, , 1)
+	;最低10必要
+	SIF LOCAL:3 < 10
+		LOCAL:3 = 10
+	;基準被取得
+	LOCAL:4 = ARG:1 > ARG:3 ? ARG:3 # ARG:1
+	;基準但正那么0に、负那么有效1桁で处理
+	LOCAL:4 = LOCAL:4 < 0 ? ROUND(LOCAL:4, , 1) # 0
+;両引数但异符号
+ELSE
+	;最大幅取得
+	LOCAL:3 = ABS(ARG:1) < ABS(ARG:3) ? ABS(ARG:3) # ABS(ARG:1)
+	;有效1桁で处理后倍に做
+	LOCAL:3 = ROUND(LOCAL:3, , 1) * 2
+	;最低10必要
+	SIF LOCAL:3 < 10
+		LOCAL:3 = 10
+	;基準被取得
+	LOCAL:4 = ARG:1 > ARG:3 ? ARG:3 # ARG:1
+	;有效1桁で处理
+	LOCAL:4 = ROUND(LOCAL:4, , 1)
+ENDIF
+;-5つめから显示被始める
+LOCAL = -5
+;显示被黄色く做
+SETCOLOR 255, 255, 0
+DO
+	;0に达做和元的色に、11から是黄色く做
+	SIF LOCAL == 0
+		RESETCOLOR
+	SIF LOCAL == 11
+		SETCOLOR 255, 255, 0
+	;本次的引数被計算做
+	LOCAL:1 = LOCAL:4 + LOCAL:3 * LOCAL / 10
+	;上次的引数和同じであれば显示不做
+	SIF LOCAL:1 == LOCAL:2
+		BREAK
+	;本次的分被显示
+	PRINTFORML {LOCAL:1, 10} = {GET_REVISION_SQRT_PROP(LOCAL:1, ARG:1, ARG:2, ARG:3, ARG:4), 20}
+	;本次的引数被记录しておく
+	LOCAL:2 = LOCAL:1
+	;次的显示に移行
+	LOCAL++
+;5つ余分に進んだら终了
+LOOP LOCAL <= 15
+;色被戻す
+RESETCOLOR
+;入力待ち被做
+WAIT
+;终了
+RETURN RESULT
+
+
+;-------------------------------------------------
+;関数名:LINE_CALC
+;概　要:折れ線グラフ関数
+;引　数:ARG …参照做数値
+;       ARGS…関数形状设定(,区切りで命令被代入)
+;書　式：ARGSに代入做(正規表现…解说)
+;        \d→\d        …ARG→そ的时的返り値
+;                        ※ARG是小さい顺に记述做こ和
+;        LIMIT/\d?～\d?…数値～数値的范围に返り値被収める
+;                        ※複数存在时最后的も的被採用
+;        (NO)ADJUST    …四捨五入调整处理的开关(デフォルト是开)
+;                        ※四捨五入调整：参照做数値被+0.5和して扱う
+;備　考:式中间数
+;-------------------------------------------------
+@LINE_CALC(ARG, ARGS)
+#FUNCTION
+#LOCALSIZE 1
+#LOCALSSIZE 10
+#DIM LCOUNT
+#DIM LRESULT
+#DIM LFIND
+#DIM LFLAG
+#DIM LVAR, 10
+#DIM LFUNC, 10
+#DIM LLIM, 3
+#DIM LADJ
+#DIMS LTEMPS
+;命令被LOCALSに顺に代入
+SPLIT ARGS, ",", LOCALS, LRESULT
+;ARG指定値保存数标志被初期化
+VARSET LFLAG
+;LIMIT指定初期化
+VARSET LLIM
+;ADJUST指定初期化
+LADJ = 1
+;LOCALS的数ぶんループ
+FOR LCOUNT, 0, LRESULT
+	;文中に"→"但あれば\d→\d命令和见なす
+	LFIND = STRFINDU(LOCALS:LCOUNT, "→")
+	IF LFIND != -1
+		;指定但完結していれば处理不做
+		SIF LFLAG < 0
+			CONTINUE
+		;ARG指定被读み出し保存
+		LTEMPS = %SUBSTRINGU(LOCALS:LCOUNT, 0, LFIND)%
+		LVAR:LFLAG = TOINT(LTEMPS)
+		;そ的时的返り値被读み出し保存
+		LTEMPS = %SUBSTRINGU(LOCALS:LCOUNT, LFIND + 1)%
+		LFUNC:LFLAG = TOINT(LTEMPS)
+		;指定値保存被カウント
+		LFLAG++
+		;ARG指定値但参照做ARG以上で、かつ指定値保存但2回以上行われていれば
+		;指定被完了した和见なす
+		SIF ARG >= LVAR:(LFLAG - 1) && LFLAG >= 2
+			LFLAG = -LFLAG
+	ENDIF
+	;文中に"LIMIT"但あればLIMIT命令和见なす
+	IF STRFINDU(LOCALS:LCOUNT, "LIMIT") != -1
+		;波線的位置被确认
+		LFIND = STRFINDU(LOCALS:LCOUNT, "～")
+		;LIMIT指定初期化
+		VARSET LLIM
+		;一つ目的値被读み出す
+		LTEMPS = %SUBSTRINGU(LOCALS:LCOUNT, 6, LFIND - 6)%
+		;指定但あれば保存し记录
+		IF LTEMPS != ""
+			LLIM:1 = TOINT(LTEMPS)
+			LLIM |= 1
+		ENDIF
+		;二つ目的値被读み出す
+		LTEMPS = %SUBSTRINGU(LOCALS:LCOUNT, LFIND + 1)%
+		;指定但あれば保存し记录
+		IF LTEMPS != ""
+			LLIM:2 = TOINT(LTEMPS)
+			LLIM |= 2
+		ENDIF
+	ENDIF
+	;文中に"ADJUST"但あればADJUST命令和见なす
+	IF STRFINDU(LOCALS:LCOUNT, "ADJUST") != -1
+		;NOADJUSTであれば
+		IF STRFINDU(LOCALS:LCOUNT, "NO") != -1
+			;ADJUST指定被切る
+			LADJ = 0
+		ELSE
+			;ADJUST指定被入れる
+			LADJ = 1
+		ENDIF
+	ENDIF
+NEXT
+
+;\d→\d命令处理
+;LFLAG被正に固定
+LFLAG = ABS(LFLAG)
+;实際的位置へ指定被移动
+LFLAG--
+;命令但なかった场合
+IF LFLAG == -1
+	;0被返す
+	LOCAL = 0
+;命令但一つしかなかった场合
+ELSEIF LFLAG == 0
+	;そ的唯一的返り値指定に服从
+	LOCAL = LFUNC
+;命令但二つ以上あった场合
+;ARG指定但同一
+ELSEIF LVAR:LFLAG == LVAR:(LFLAG - 1)
+	;后者的返り値指定に服从
+	LOCAL = LFUNC:LFLAG
+;ARG指定但异なる
+ELSE
+	;使用做部分的指定被使用し、返り値被生成
+	LOCAL = (ARG - LVAR:(LFLAG - 1)) * 100 / (LVAR:LFLAG - LVAR:(LFLAG - 1))
+	LOCAL = ((LFUNC:LFLAG - LFUNC:(LFLAG - 1)) * LOCAL + LADJ * 50) / 100
+	LOCAL += LFUNC:(LFLAG - 1)
+ENDIF
+;LIMIT命令处理
+;存在すれば处理
+IF LLIM
+	;二つ的値的中で存在不做も的是参照做ARG和做
+	SIF !(LLIM & 1)
+		LLIM:1 = ARG
+	SIF !(LLIM & 2)
+		LLIM:2 = ARG
+	;一つ目但二つ目より大きければ並び替える
+	SIF LLIM:1 > LLIM:2
+		SWAP LLIM:1, LLIM:2
+	;LIMIT处理
+	LOCAL = LIMIT(LOCAL, LLIM:1, LLIM:2)
+ENDIF
+;値被返す
+RETURNF LOCAL
+
+
+;-------------------------------------------------
+;関数名:GET_ASYMPTOTE
+;概　要:漸近曲線取得関数
+;引　数:ARG:0…参照做数値
+;       ARG:1…目標値
+;       ARG:2…接近速度(正的数、大きいほど迟い)
+;戻り値:无
+;備　考:式中间数
+;目標値に向けて0から单调増加(減少)做関数です
+;接近速度是目標値に依らず割合但同じになり增加
+;ARG:0、ARG:1にあまり大きい値但入时オーバーフローし增加
+;@これみ
+;-------------------------------------------------
+@GET_ASYMPTOTE(ARG:0, ARG:1, ARG:2 = 0)
+#FUNCTION
+LOCAL = ARG:0 < 0 ? -1 # 1
+RETURNF LOCAL * (ARG:1 * ARG:0 * ARG:0) / (ARG:2 + ARG:0 * ARG:0)
+
+;-------------------------------------------------
+;関数名:ABSQSI
+;概　要:正负对应平方根関数
+;備　考:式中间数
+;-------------------------------------------------
+@ABSQSI(ARG)
+#FUNCTION
+RETURNF SQRT(ABS(ARG))*SIGN(ARG)
+
+
+;-------------------------------------------------
+;関数名:ABCBSI
+;概　要:正负对应立方根関数
+;備　考:式中间数
+;-------------------------------------------------
+@ABCBSI(ARG)
+#FUNCTION
+RETURNF CBRT(ABS(ARG))*SIGN(ARG)
+
+
+;-------------------------------------------------
+;関数名:ABLOSI_10
+;概　要:正负对应常用对数関数
+;備　考:式中间数
+;-------------------------------------------------
+@ABLOSI_10(ARG)
+#FUNCTION
+RETURNF LOG10(ABS(ARG))*SIGN(ARG)
+
+
+;-------------------------------------------------
+;関数名:ABLOSI_E
+;概　要:正负对应自然对数関数
+;備　考:式中间数
+;-------------------------------------------------
+@ABLOSI_E(ARG)
+#FUNCTION
+RETURNF LOG(ABS(ARG))*SIGN(ARG)
+
+
+;-------------------------------------------------
+;関数名:ROUND
+;概　要:端数处理
+;引　数:ARG:0…丸める数値
+;       ARG:1…丸める方法
+;              0=RN最近接偶数へ的丸め(おすすめ)
+;              1=RZ切り捨て,2=RI切り上げ
+;       ARG:2…有效桁(有效数字的考え方。0那么使用不做)
+;       ARG:3…绝对桁(小数点上n桁和いう考え方。0那么使用不做)
+;戻り値:丸めた結果
+;備　考:式中间数
+;
+;小数但常に切り捨てられるEmueraで是
+;一定的需要但ある的で是ないでしょうか@これみ
+;
+;※もしもこ的関数被頻繁に使用做ようであれば
+;  最后に桁被戻さないオプションなど被追加做和いい和思う
+;-------------------------------------------------
+@ROUND(ARG, ARG:1 = 0, ARG:2 = 0, ARG:3 = 0)
+#FUNCTION
+;LOCAL初期化
+VARSET LOCAL
+;ARG:1以降に负的値但存在すれば处理是行わない
+SIF MIN(ARG:1, ARG:2, ARG:3) < 0
+	RETURNF ARG
+;有效桁指定被绝对桁指定に变换做
+SIF ARG:2 != 0
+	LOCAL = LOG10(ABS(ARG)) + 1 - ARG:2
+;绝对桁指定和比較し、大きいも的被採用
+LOCAL = MAX(LOCAL, ARG:3)
+;桁指定但0以下になればそ的まま的値被返す
+SIF LOCAL <= 0
+	RETURNF ARG
+;桁指定但ARG被超過した场合0被返す
+SIF LOCAL > LOG10(ABS(ARG)) + 1
+	RETURNF 0
+;最近接偶数へ的丸め时、振り分け处理
+IF ARG:1 == 0
+	;处理做値被抜き出す
+	LOCAL:1 = ABS(ARG) / POWER(10, LOCAL - 1) % 10
+	;下一桁但4以下那么0に接近
+	IF LOCAL:1 < 5
+		ARG:1 = 1
+	;下一桁但6以上那么+-∞に接近
+	ELSEIF LOCAL:1 > 5
+		ARG:1 = 2
+	;ちょうど5であれば
+	ELSE
+		;处理做値的一つ上に对し偶奇被判定做
+		LOCAL:1 = ABS(ARG) / POWER(10, LOCAL) % 2
+		;偶数那么0に接近、奇数那么+-∞に接近
+		ARG:1 = LOCAL:1 + 1
+	ENDIF
+ENDIF
+;处理做値的一つ上直到一旦切り捨てる
+LOCAL:1 = ABS(ARG) / POWER(10, LOCAL) % 10
+;切り上げ那么+-1被足す
+SIF ARG:1 == 2
+	LOCAL:1++
+;桁被戻して結果被返す
+RETURNF SIGN(ARG) * LOCAL:1 * POWER(10, LOCAL)
+
+;-------------------------------------------------
+;其他的内部处理
+;-------------------------------------------------
+;-------------------------------------------------
+;助手和交代関数@ASSISWAP
+;调教途中にTARGET和ASSI被『暂时的』、『内部处理的』に交代侍奉和きに使い增加
+;こ的関数的点数是、TEQUIPやEX等的数据是移动不做点数す（交代させたうえで数据只戻している）
+;口上显示的时候的みASSI被TARGET的つもりで呼び出す、和いった用途に使い增加。決してそ的ままに不做こ和
+;繰り返すようです但、『普通に交代したければSWAP TARGET, ASSI只書いてください』
+;交代中であるこ和是ISSWAP関数で确认でき增加
+;-------------------------------------------------
+@ASSISWAP
+#LOCALSIZE 2
+;TARGET但管理しているMASTER的数据被移动
+;そもそもMASTER的数据但TARGETで管理されている事自体但アレな気も做但、まぁ仕方ない
+;变数大移动でPALAM, SOURCE, EX, NOWEX的各变数是それぞれ的角色に移管済みな的で、それら的SWAP处理被削除@revkoishi(14/05/19)
+
+;调教对象但装備しているTEQUIP被移し变え增加
+FOR LOCAL:0, 10, 100
+	SWAP TEQUIP:TARGET:(LOCAL:0), TEQUIP:ASSI:(LOCAL:0)
+NEXT
+SWAP TARGET, ASSI
+LOCAL:1 = !LOCAL:1
+RETURN ISSWAP(1, LOCAL:1)
+
+@ISSWAP(ARG:0, ARG:1)
+#FUNCTION
+#LOCALSIZE 1
+LOCAL:0 = ARG:0 ? ARG:1 # LOCAL:0
+RETURNF LOCAL:0
+
+
+;-------------------------------------------------
+;REACT分类设定関数@SET_COMGRO
+;REACT分类被字符串で设定做只的関数@これみ
+;-------------------------------------------------
+@SET_COMGRO(ARGS)
+TFLAG:REACT分类 = COMGRONUM(ARGS)
+IF TFLAG:REACT分类 == -1
+	CALLF PRINT_ERRORMESSAGE(@"@SET_COMGRO に无效な指定(%ARGS%)但渡されました")
+	RETURN -1
+ENDIF
+RETURN RESULT
+
+;-------------------------------------------------
+;REACT印象设定関数@SET_COMIMP
+;REACT印象被字符串で设定做只的関数@これみ
+;-------------------------------------------------
+@SET_COMIMP(ARGS)
+IF 0
+ELSEIF ARGS == "影响无" || ARGS == ""
+	TFLAG:REACT印象 = 0
+ELSEIF ARGS == "好印象大"
+	TFLAG:REACT印象 = 1
+ELSEIF ARGS == "好印象小"
+	TFLAG:REACT印象 = 2
+ELSEIF ARGS == "恶印象小"
+	TFLAG:REACT印象 = 3
+ELSEIF ARGS == "恶印象大"
+	TFLAG:REACT印象 = 4
+ELSEIF ARGS == "0から遠ざかる"
+	TFLAG:REACT印象 = 5
+ELSEIF ARGS == "0接近"
+	TFLAG:REACT印象 = 6
+ELSE
+	PRINTL 
+	PRINTL @SET_COMIMP 收到无效的指定
+	PRINTL 
+ENDIF
+RETURN RESULT
+
+;-------------------------------------------------
+;依存度变化関数@ADD_DEPEND
+;相互的依存度被同时に加算し增加
+;引数是TARGET・MASTER的顺
+;-------------------------------------------------
+@ADD_DEPEND(ARG, ARG:1)
+CFLAG:TARGET:依存度 += ARG
+CFLAG:MASTER:依存度 += ARG:1
+RETURN RESULT
+
+;==================================================
+;
+;	脏污相关関数
+;
+;==================================================
+
+
+;-------------------------------------------------
+;関数名:SET_STAIN
+;概　要:ARG的ARGSにARGS:1的脏污被つける
+;引　数:0 脏污被つける部位
+;引　数:1 脏污的种类
+;引　数:2 脏污被つける对象
+;使用例 CALL SET_STAIN("口", "爱液", TARGET)
+;-------------------------------------------------
+@SET_STAIN(ARGS, ARGS:1, ARG = -99)
+#LOCALSIZE 1
+SIF ARG == -99
+	ARG = TARGET
+SELECTCASE ARGS
+	CASE "口"
+		LOCAL = 0
+	CASE "手"
+		LOCAL = 1
+	CASE "阴茎"
+		LOCAL = 2
+	CASE "小穴"
+		LOCAL = 3
+	CASE "肛门"
+		LOCAL = 4
+	CASE "胸"
+		LOCAL = 5
+	CASE "足"
+		LOCAL = 6
+ENDSELECT
+SELECTCASE ARGS:1
+	CASE "爱液"
+		SETBIT STAIN:ARG:LOCAL, 0
+	CASE "阴茎"
+		SETBIT STAIN:ARG:LOCAL, 1
+	CASE "精液"
+		SETBIT STAIN:ARG:LOCAL, 2
+	CASE "肛门"
+		SETBIT STAIN:ARG:LOCAL, 3
+	CASE "母乳"
+		SETBIT STAIN:ARG:LOCAL, 4
+	CASE "血"
+		SETBIT STAIN:ARG:LOCAL, 5
+	CASE "粘液"
+		SETBIT STAIN:ARG:LOCAL, 6
+ENDSELECT
+
+;-------------------------------------------------
+;関数名:GET_STAIN
+;概　要:ARG的ARGSにARGS:1的脏污但ついているか被判定做
+;引　数:0 脏污的部位
+;引　数:1 脏污的种类
+;引　数:2 脏污的ある对象
+;使用例 GET_STAIN("小穴", "精液", TARGET)
+;-------------------------------------------------
+@GET_STAIN(ARGS, ARGS:1, ARG = -99)
+#FUNCTION
+#LOCALSIZE 1
+SIF ARG == -99
+	ARG = TARGET
+SELECTCASE ARGS
+	CASE "口"
+		LOCAL = 0
+	CASE "手"
+		LOCAL = 1
+	CASE "阴茎"
+		LOCAL = 2
+	CASE "小穴"
+		LOCAL = 3
+	CASE "肛门"
+		LOCAL = 4
+	CASE "胸"
+		LOCAL = 5
+	CASE "足"
+		LOCAL = 6
+ENDSELECT
+SELECTCASE ARGS:1
+	CASE "爱液"
+		RETURNF GETBIT(STAIN:ARG:LOCAL, 0)
+	CASE "阴茎"
+		RETURNF GETBIT(STAIN:ARG:LOCAL, 1)
+	CASE "精液"
+		RETURNF GETBIT(STAIN:ARG:LOCAL, 2)
+	CASE "肛门"
+		RETURNF GETBIT(STAIN:ARG:LOCAL, 3)
+	CASE "母乳"
+		RETURNF GETBIT(STAIN:ARG:LOCAL, 4)
+	CASE "血"
+		RETURNF GETBIT(STAIN:ARG:LOCAL, 5)
+	CASE "粘液"
+		RETURNF GETBIT(STAIN:ARG:LOCAL, 6)
+ENDSELECT
+
+;========================================
+;脏污移动関数
+;関数名:MOVE_STAIN
+;概　要:ARG的ARGS:1和ARG:1的ARG:1的ARGS的间的脏污被相互移动做
+;引　数:0 脏污的移る部位
+;引　数:1 脏污的移る对象
+;引　数:2 脏污的种类
+;引　数:3 脏污的元的对象
+;使用例:CALL MOVE_STAIN("口", TARGET, "阴茎", MASTER)
+;========================================
+@MOVE_STAIN(ARGS, ARG, ARGS:1, ARG:1)
+#LOCALSIZE 1
+SELECTCASE ARGS:1
+	CASE "口"
+		LOCAL = 0
+	CASE "手"
+		LOCAL = 1
+	CASE "阴茎"
+		LOCAL = 2
+	CASE "小穴"
+		LOCAL = 3
+	CASE "肛门"
+		LOCAL = 4
+	CASE "胸"
+		LOCAL = 5
+	CASE "足"
+		LOCAL = 6
+ENDSELECT
+SELECTCASE ARGS
+	CASE "口"
+		STAIN:ARG:口 |= STAIN:(ARG:1):LOCAL
+		STAIN:(ARG:1):LOCAL = STAIN:ARG:口
+	CASE "手"
+		STAIN:ARG:手 |= STAIN:(ARG:1):LOCAL
+		STAIN:(ARG:1):LOCAL = STAIN:ARG:手
+	CASE "阴茎"
+		STAIN:ARG:阴茎 |= STAIN:(ARG:1):LOCAL
+		STAIN:(ARG:1):LOCAL = STAIN:ARG:阴茎
+	CASE "小穴"
+		STAIN:ARG:小穴 |= STAIN:(ARG:1):LOCAL
+		STAIN:(ARG:1):LOCAL = STAIN:ARG:小穴
+	CASE "肛门"
+		STAIN:ARG:肛门 |= STAIN:(ARG:1):LOCAL
+		STAIN:(ARG:1):LOCAL = STAIN:ARG:肛门
+	CASE "胸"
+		STAIN:ARG:胸 |= STAIN:(ARG:1):LOCAL
+		STAIN:(ARG:1):LOCAL = STAIN:ARG:胸
+	CASE "足"
+		STAIN:ARG:足 |= STAIN:(ARG:1):LOCAL
+		STAIN:(ARG:1):LOCAL = STAIN:ARG:足
+ENDSELECT

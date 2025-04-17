@@ -1,0 +1,560 @@
+﻿;こういう画面那么设定し容易んじゃね？和いう電波被受信した的で、やってみた結果但これだよ！！！
+;画面的情报量但思っていた以上に多過ぎてパッ和见、訳但判らん。こりゃ失敗ですな。
+;改良的余地是…ある的だろうか？
+@MASTER_CUSTOM2
+;-----------------------------------------------------------
+;显示部分
+;-----------------------------------------------------------
+PRINTFORML %CALLNAME:MASTER%的属性可以设定。
+PRINTL 请选择想要变更的项目。
+PRINTW （过于极端的设定，会导致难度发生很大变化，请注意）
+
+WHILE 1
+	DRAWLINE
+	LOCAL:1 = 0
+	LOCAL:2 = GETCOLOR()
+	PRINT 姓名： 
+	PRINTBUTTON @"[{LOCAL:1,2}] %CALLNAME:MASTER%", LOCAL:1++
+	PRINTL 
+	PRINTL □ 素質 □-----------------------------------------------------------------------
+	PRINT 性別： 
+	SETCOLOR !TALENT:MASTER:扶她 && !TALENT:MASTER:男人 ? 0x00FF00 # 0xA0A0A0
+	PRINTBUTTON @"[{LOCAL:1,2}] 女人      　", LOCAL:1++
+	SETCOLOR TALENT:MASTER:扶她 ? 0x00FF00 # 0xA0A0A0
+	PRINTFORM [{LOCAL:1++,2}] %TALENTNAME:121,12,LEFT%　
+	SETCOLOR TALENT:MASTER:男人 ? 0x00FF00 # 0xA0A0A0
+	PRINTFORML [{LOCAL:1++,2}] %TALENTNAME:122,12,LEFT%
+	SETCOLOR LOCAL:2
+
+	LOCAL:3 = 4
+	PRINT 性格： 
+	FOR LOCAL, 10, 94
+		IF LOCAL == 10
+			;最初是PRINTBUTTON被使わない和、『性格：』和くっつく
+			LOCAL:3--
+			SETCOLOR TALENT:MASTER:LOCAL ? 0x00FF00 # 0xA0A0A0
+			PRINTBUTTON @"[{LOCAL:1,2}] %TALENTNAME:LOCAL,12,LEFT%", LOCAL:1++
+			CONTINUE
+		ELSEIF LOCAL:3
+			;空白
+			PRINT 　
+		ELSE
+			;改行
+			PRINTL 
+			PRINT 　　　 
+			LOCAL:3 = 4
+		ENDIF
+		LOCAL:3--
+		SETCOLOR TALENT:MASTER:LOCAL ? 0x00FF00 # 0xA0A0A0
+		PRINTFORM [{LOCAL:1++,2}] %TALENTNAME:LOCAL,12,LEFT%
+		;性格に分类されない素質飛ばす
+		SELECTCASE LOCAL
+			CASE 17
+				LOCAL += 2
+			CASE 37
+				LOCAL += 25
+			CASE 63, 88, 90
+				LOCAL += 1
+			CASE 65
+				LOCAL += 14
+		ENDSELECT
+	NEXT
+	PRINTL 
+	SETCOLOR LOCAL:2
+
+	LOCAL:3 = 4
+	LOCAL:4 = GETSTYLE()
+	PRINT 体質： 
+	FOR LOCAL, 40, 127
+		IF LOCAL == 40
+			LOCAL:3--
+			SETCOLOR TALENT:MASTER:LOCAL ? 0x00FF00 # 0xA0A0A0
+			PRINTBUTTON @"[{LOCAL:1,2}] %TALENTNAME:LOCAL,12,LEFT%", LOCAL:1++
+			CONTINUE
+		ELSEIF LOCAL:3
+			PRINT 　
+		ELSE
+			PRINTL 
+			PRINT 　　　 
+			LOCAL:3 = 4
+		ENDIF
+		LOCAL:3--
+		;女人/男人で选择できない素質に取り消し線被入れてみる
+		SELECTCASE LOCAL
+			CASE 102, 103, 108, 109
+				SIF TALENT:MASTER:男人
+					FONTSTYLE 4
+			CASE 123, 124
+				SIF !TALENT:MASTER:扶她 && !TALENT:MASTER:男人
+					FONTSTYLE 4
+		ENDSELECT
+		SETCOLOR TALENT:MASTER:LOCAL ? 0x00FF00 # 0xA0A0A0
+		PRINTFORM [{LOCAL:1++,2}] %TALENTNAME:LOCAL,12,LEFT%
+		FONTSTYLE LOCAL:4
+		SELECTCASE LOCAL
+			CASE 43
+				LOCAL += 16
+			CASE 62
+				LOCAL += 7
+			CASE 71
+				LOCAL += 28
+			CASE 113
+				LOCAL += 2
+			CASE 116
+				LOCAL += 6
+		ENDSELECT
+	NEXT
+	PRINTL 
+	SETCOLOR LOCAL:2
+
+	PRINT 技能： 
+	SETCOLOR TALENT:MASTER:习得快 ? 0x00FF00 # 0xA0A0A0
+	PRINTBUTTON @"[{LOCAL:1,2}] %TALENTNAME:50,12,LEFT%　", LOCAL:1++
+	SETCOLOR TALENT:MASTER:习得慢 ? 0x00FF00 # 0xA0A0A0
+	PRINTFORML [{LOCAL:1++,2}] %TALENTNAME:51,12,LEFT%
+	SETCOLOR LOCAL:2
+
+	PRINTL □ 経験 □-----------------------------------------------------------------------
+	LOCAL:1 = 100
+	PRINT 性経験： 
+	SETCOLOR !EXP:MASTER:性交経験 ? 0x00FF00 # 0xA0A0A0
+	PRINTBUTTON @"[{LOCAL:1,3}] 无　　", LOCAL:1++
+	SETCOLOR EXP:MASTER:性交経験 == 1 ? 0x00FF00 # 0xA0A0A0
+	PRINTFORM [{LOCAL:1++,3}] 少　　
+	SETCOLOR EXP:MASTER:性交経験 > 1 ? 0x00FF00 # 0xA0A0A0
+	PRINTFORML [{LOCAL:1++,3}] 多
+	SETCOLOR LOCAL:2
+
+	PRINT 性知识： 
+	SETCOLOR !MASTER_CUSTOMV(-1) ? 0x00FF00 # 0xA0A0A0
+	PRINTBUTTON @"[{LOCAL:1,3}] 全无　　", LOCAL:1++
+	SETCOLOR MASTER_CUSTOMV(-1) == 1 ? 0x00FF00 # 0xA0A0A0
+	PRINTFORM [{LOCAL:1++,3}] 少　　
+	SETCOLOR MASTER_CUSTOMV(-1) > 1 ? 0x00FF00 # 0xA0A0A0
+	PRINTFORML [{LOCAL:1++,3}] 丰富
+	SETCOLOR LOCAL:2
+
+	DRAWLINE
+	ALIGNMENT RIGHT
+	PRINT [997] - 设定模式变更　　
+	PRINT [998] - 设置　　
+	PRINTL  [999] - 设定完成　
+	ALIGNMENT LEFT
+
+;-----------------------------------------------------------
+;入力处理部分
+;-----------------------------------------------------------
+	$INPUT_LOOP
+	INPUT
+	SELECTCASE RESULT
+		;名前的变更
+		CASE 0
+			PRINTL 请输入名称。
+			INPUTS
+			CALLNAME:MASTER = %RESULTS%
+;-----------------------------------------------------------
+		;女人→扶她/男人/早泄/迟漏被OFF
+		CASE 1
+			TALENT:MASTER:扶她 = 0
+			TALENT:MASTER:男人 = 0
+			TALENT:MASTER:早泄 = 0
+			TALENT:MASTER:迟漏 = 0
+		;扶她→扶她被ON。男人被OFF
+		CASE 2
+			TALENT:MASTER:扶她 = 1
+			TALENT:MASTER:男人 = 0
+		;男人→男人被ON。Ｖ敏感/Ｖ钝感/貧乳/巨乳/扶她被OFF
+		CASE 3
+			TALENT:MASTER:Ｖ敏感 = 0
+			TALENT:MASTER:Ｖ钝感 = 0
+			TALENT:MASTER:貧乳 = 0
+			TALENT:MASTER:巨乳 = 0
+			TALENT:MASTER:扶她 = 0
+			TALENT:MASTER:男人 = 1
+;-----------------------------------------------------------
+		;胆怯→胆怯被反転。刚毅被OFF
+		CASE 4
+			TALENT:MASTER:胆怯 = !TALENT:MASTER:胆怯
+			TALENT:MASTER:刚毅 = 0
+		;反抗的→反抗的被反転。坦率被OFF
+		CASE 5
+			TALENT:MASTER:反抗的 = !TALENT:MASTER:反抗的
+			TALENT:MASTER:坦率 = 0
+		;刚毅→刚毅被反転。胆怯被OFF
+		CASE 6
+			TALENT:MASTER:胆怯 = 0
+			TALENT:MASTER:刚毅 = !TALENT:MASTER:刚毅
+		;坦率→坦率被反転。反抗的被OFF
+		CASE 7
+			TALENT:MASTER:反抗的 = 0
+			TALENT:MASTER:坦率 = !TALENT:MASTER:坦率
+		;成熟→成熟被反転。自大被OFF
+		CASE 8
+			TALENT:MASTER:成熟 = !TALENT:MASTER:成熟
+			TALENT:MASTER:自大 = 0
+		;自尊心高→自尊心高被反転。自尊心低被OFF
+		CASE 9
+			TALENT:MASTER:自尊心高 = !TALENT:MASTER:自尊心高
+			TALENT:MASTER:自尊心低 = 0
+		;自大→自大被反転。坦率被OFF
+		CASE 10
+			TALENT:MASTER:成熟 = 0
+			TALENT:MASTER:自大 = !TALENT:MASTER:自大
+		;自尊心低→自尊心低被反転。自尊心高被OFF
+		CASE 11
+			TALENT:MASTER:自尊心高 = 0
+			TALENT:MASTER:自尊心低 = !TALENT:MASTER:自尊心低
+		;自制的→自制的被反転。冲动的被OFF
+		CASE 12
+			TALENT:MASTER:自制的 = !TALENT:MASTER:自制的
+			TALENT:MASTER:冲动的 = 0
+		;冲动的→冲动的被反転。自制的被OFF
+		CASE 13
+			TALENT:MASTER:自制的 = 0
+			TALENT:MASTER:冲动的 = !TALENT:MASTER:冲动的
+		;无关心→无关心被反転。好奇心被OFF
+		CASE 14
+			TALENT:MASTER:无关心 = !TALENT:MASTER:无关心
+			TALENT:MASTER:好奇心 = 0
+		;好奇心→好奇心被反転。无关心被OFF
+		CASE 15
+			TALENT:MASTER:无关心 = 0
+			TALENT:MASTER:好奇心 = !TALENT:MASTER:好奇心
+		;缺乏感情→缺乏感情被反転。感情丰富被OFF
+		CASE 16
+			TALENT:MASTER:缺乏感情 = !TALENT:MASTER:缺乏感情
+			TALENT:MASTER:感情丰富 = 0
+		;感情丰富→感情丰富被反転。缺乏感情被OFF
+		CASE 17
+			TALENT:MASTER:缺乏感情 = 0
+			TALENT:MASTER:感情丰富 = !TALENT:MASTER:感情丰富
+		;乐观的→乐观的被反転。悲观的被OFF
+		CASE 18
+			TALENT:MASTER:乐观的 = !TALENT:MASTER:乐观的
+			TALENT:MASTER:悲观的 = 0
+		;悲观的→悲观的被反転。乐观的被OFF
+		CASE 19
+			TALENT:MASTER:乐观的 = 0
+			TALENT:MASTER:悲观的 = !TALENT:MASTER:悲观的
+		;不越过底线→不越过底线被反転
+		CASE 20
+			TALENT:MASTER:不越过底线 = !TALENT:MASTER:不越过底线
+		;渴望关注→渴望关注被反転
+		CASE 21
+			TALENT:MASTER:渴望关注 = !TALENT:MASTER:渴望关注
+		;贞操观念→贞操观念被反転。不在意贞操被OFF
+		CASE 22
+			TALENT:MASTER:贞操观念 = !TALENT:MASTER:贞操观念
+			TALENT:MASTER:不在意贞操 = 0
+		;不在意贞操→不在意贞操被反転。贞操观念被OFF
+		CASE 23
+			TALENT:MASTER:贞操观念 = 0
+			TALENT:MASTER:不在意贞操 = !TALENT:MASTER:不在意贞操
+		;压抑→压抑被反転。解放被OFF
+		CASE 24
+			TALENT:MASTER:压抑 = !TALENT:MASTER:压抑
+			TALENT:MASTER:解放 = 0
+		;解放→解放被反転。压抑被OFF
+		CASE 25
+			TALENT:MASTER:压抑 = 0
+			TALENT:MASTER:解放 = !TALENT:MASTER:解放
+		;羞涩→羞涩被反転。无耻被OFF
+		CASE 26
+			TALENT:MASTER:羞涩 = !TALENT:MASTER:羞涩
+			TALENT:MASTER:无耻 = 0
+		;无耻→无耻被反転。羞涩被OFF
+		CASE 27
+			TALENT:MASTER:羞涩 = 0
+			TALENT:MASTER:无耻 = !TALENT:MASTER:无耻
+		;好色→好色被反転。清楚被OFF
+		CASE 28
+			TALENT:MASTER:好色 = !TALENT:MASTER:好色
+			TALENT:MASTER:清楚 = 0
+		;清楚→清楚被反転。好色被OFF
+		CASE 29
+			TALENT:MASTER:好色 = 0
+			TALENT:MASTER:清楚 = !TALENT:MASTER:清楚
+		;献身的→献身的被反転。被动被OFF
+		CASE 30
+			TALENT:MASTER:献身的 = !TALENT:MASTER:献身的
+			TALENT:MASTER:被动 = 0
+		;被动→被动被反転。献身的被OFF
+		CASE 31
+			TALENT:MASTER:献身的 = 0
+			TALENT:MASTER:被动 = !TALENT:MASTER:被动
+		;倒错的→倒错的被反転
+		CASE 32
+			TALENT:MASTER:倒错的 = !TALENT:MASTER:倒错的
+		;双性恋→双性恋被反転。恐男被OFF
+		CASE 33
+			TALENT:MASTER:双性恋 = !TALENT:MASTER:双性恋
+			TALENT:MASTER:恐男 = 0
+		;恐男→恐男被反転。双性恋被OFF
+		CASE 34
+			TALENT:MASTER:双性恋 = 0
+			TALENT:MASTER:恐男 = !TALENT:MASTER:恐男
+		;虐待狂→虐待狂被反転
+		CASE 35
+			TALENT:MASTER:虐待狂 = !TALENT:MASTER:虐待狂
+		;慎重→慎重被反転。急躁被OFF
+		CASE 36
+			TALENT:MASTER:慎重 = !TALENT:MASTER:慎重
+			TALENT:MASTER:急躁 = 0
+		;急躁→急躁被反転。慎重被OFF
+		CASE 37
+			TALENT:MASTER:慎重 = 0
+			TALENT:MASTER:急躁 = !TALENT:MASTER:急躁
+		;坏心眼→坏心眼被反転。好心眼被OFF
+		CASE 38
+			TALENT:MASTER:坏心眼 = !TALENT:MASTER:坏心眼
+			TALENT:MASTER:好心眼 = 0
+		;好心眼→好心眼被反転。坏心眼被OFF
+		CASE 39
+			TALENT:MASTER:坏心眼 = 0
+			TALENT:MASTER:好心眼 = !TALENT:MASTER:好心眼
+		;幼稚→幼稚被反転
+		CASE 40
+			TALENT:MASTER:幼稚 = !TALENT:MASTER:幼稚
+		;威压感→威压感被反転
+		CASE 41
+			TALENT:MASTER:威压感 = !TALENT:MASTER:威压感
+		;亲近容易→亲近容易被反転。难以接近被OFF
+		CASE 42
+			TALENT:MASTER:亲近容易 = !TALENT:MASTER:亲近容易
+			TALENT:MASTER:难以接近 = 0
+		;难以接近→难以接近被反転。亲近容易被OFF
+		CASE 43
+			TALENT:MASTER:亲近容易 = 0
+			TALENT:MASTER:难以接近 = !TALENT:MASTER:难以接近
+;-----------------------------------------------------------
+		;怕疼→怕疼被反転。耐痛被OFF
+		CASE 44
+			TALENT:MASTER:怕疼 = !TALENT:MASTER:怕疼
+			TALENT:MASTER:耐痛 = 0
+		;耐痛→耐痛被反転。怕疼被OFF
+		CASE 45
+			TALENT:MASTER:怕疼 = 0
+			TALENT:MASTER:耐痛 = !TALENT:MASTER:耐痛
+		;易湿→易湿被反転。不易湿被OFF
+		CASE 46
+			TALENT:MASTER:易湿 = !TALENT:MASTER:易湿
+			TALENT:MASTER:不易湿 = 0
+		;不易湿→不易湿被反転。易湿被OFF
+		CASE 47
+			TALENT:MASTER:易湿 = 0
+			TALENT:MASTER:不易湿 = !TALENT:MASTER:不易湿
+		;自慰し容易→自慰し容易被反転。
+		CASE 48
+			TALENT:MASTER:自慰し容易 = !TALENT:MASTER:自慰し容易
+		;污臭钝感→污臭钝感被反転。污臭敏感被OFF
+		CASE 49
+			TALENT:MASTER:污臭钝感 = !TALENT:MASTER:污臭钝感
+			TALENT:MASTER:污臭敏感 = 0
+		;污臭敏感→污臭敏感被反転。污臭钝感被OFF
+		CASE 50
+			TALENT:MASTER:污臭钝感 = 0
+			TALENT:MASTER:污臭敏感 = !TALENT:MASTER:污臭敏感
+		;承认快感→承认快感被反転。否定快感被OFF
+		CASE 51
+			TALENT:MASTER:承认快感 = !TALENT:MASTER:承认快感
+			TALENT:MASTER:否定快感 = 0
+		;否定快感→否定快感被反転。承认快感被OFF
+		CASE 52
+			TALENT:MASTER:承认快感 = 0
+			TALENT:MASTER:否定快感 = !TALENT:MASTER:否定快感
+		;Ｃ敏感→Ｃ敏感被反転。Ｃ钝感被OFF
+		CASE 53
+			TALENT:MASTER:Ｃ敏感 = !TALENT:MASTER:Ｃ敏感
+			TALENT:MASTER:Ｃ钝感 = 0
+		;Ｃ钝感→Ｃ钝感被反転。Ｃ敏感被OFF
+		CASE 54
+			TALENT:MASTER:Ｃ敏感 = 0
+			TALENT:MASTER:Ｃ钝感 = !TALENT:MASTER:Ｃ钝感
+		;Ｖ敏感→男人的场合是入力错误。Ｖ敏感被反転。Ｖ钝感被OFF
+		CASE 55
+			IF TALENT:MASTER:男人
+				CLEARLINE 1
+				REUSELASTLINE 是男人吧？
+				GOTO INPUT_LOOP
+			ENDIF
+			TALENT:MASTER:Ｖ敏感 = !TALENT:MASTER:Ｖ敏感
+			TALENT:MASTER:Ｖ钝感 = 0
+		;Ｖ钝感→男人的场合是入力错误。Ｖ钝感被反転。Ｖ敏感被OFF
+		CASE 56
+			IF TALENT:MASTER:男人
+				CLEARLINE 1
+				REUSELASTLINE 是男人吧？
+				GOTO INPUT_LOOP
+			ENDIF
+			TALENT:MASTER:Ｖ敏感 = 0
+			TALENT:MASTER:Ｖ钝感 = !TALENT:MASTER:Ｖ钝感
+		;Ａ敏感→Ａ敏感被反転。Ａ钝感被OFF
+		CASE 57
+			TALENT:MASTER:Ａ敏感 = !TALENT:MASTER:Ａ敏感
+			TALENT:MASTER:Ａ钝感 = 0
+		;Ａ钝感→Ａ钝感被反転。Ａ敏感被OFF
+		CASE 58
+			TALENT:MASTER:Ａ敏感 = 0
+			TALENT:MASTER:Ａ钝感 = !TALENT:MASTER:Ａ钝感
+		;Ｂ敏感→Ｂ敏感被反転。Ｂ钝感被OFF
+		CASE 59
+			TALENT:MASTER:Ｂ敏感 = !TALENT:MASTER:Ｂ敏感
+			TALENT:MASTER:Ｂ钝感 = 0
+		;Ｂ钝感→Ｂ钝感被反転。Ｂ敏感被OFF
+		CASE 60
+			TALENT:MASTER:Ｂ敏感 = 0
+			TALENT:MASTER:Ｂ钝感 = !TALENT:MASTER:Ｂ钝感
+		;貧乳→男人的场合是入力错误。貧乳被反転。巨乳被OFF
+		CASE 61
+			IF TALENT:MASTER:男人
+				CLEARLINE 1
+				REUSELASTLINE 是男人吧？
+				GOTO INPUT_LOOP
+			ENDIF
+			TALENT:MASTER:貧乳 = !TALENT:MASTER:貧乳
+			TALENT:MASTER:巨乳 = 0
+		;巨乳→男人的场合是入力错误。巨乳被反転。貧乳被OFF
+		CASE 62
+			IF TALENT:MASTER:男人
+				CLEARLINE 1
+				REUSELASTLINE 是男人吧？
+				GOTO INPUT_LOOP
+			ENDIF
+			TALENT:MASTER:貧乳 = 0
+			TALENT:MASTER:巨乳 = !TALENT:MASTER:巨乳
+		;矮小→矮小被反転。高大被OFF
+		CASE 63
+			TALENT:MASTER:矮小 = !TALENT:MASTER:矮小
+			TALENT:MASTER:高大 = 0
+		;高大→高大被反転。矮小被OFF
+		CASE 64
+			TALENT:MASTER:矮小 = 0
+			TALENT:MASTER:高大 = !TALENT:MASTER:高大
+		;回复快→回复快被反転。回复慢被OFF
+		CASE 65
+			TALENT:MASTER:回复快 = !TALENT:MASTER:回复快
+			TALENT:MASTER:回复慢 = 0
+		;回复慢→回复慢被反転。回复快被OFF
+		CASE 66
+			TALENT:MASTER:回复快 = 0
+			TALENT:MASTER:回复慢 = !TALENT:MASTER:回复慢
+		;漏尿癖→漏尿癖被反転
+		CASE 67
+			TALENT:MASTER:漏尿癖 = !TALENT:MASTER:漏尿癖
+		;早泄→女人的场合是入力错误。早泄被反転。迟漏被OFF
+		CASE 68
+			IF !TALENT:MASTER:扶她 && !TALENT:MASTER:男人
+				CLEARLINE 1
+				REUSELASTLINE 女人ですよね？
+				GOTO INPUT_LOOP
+			ENDIF
+			TALENT:MASTER:早泄 = !TALENT:MASTER:早泄
+			TALENT:MASTER:迟漏 = 0
+		;迟漏→女人的场合是入力错误。迟漏被反転。早泄被OFF
+		CASE 69
+			IF !TALENT:MASTER:扶她 && !TALENT:MASTER:男人
+				CLEARLINE 1
+				REUSELASTLINE 女人ですよね？
+				GOTO INPUT_LOOP
+			ENDIF
+			TALENT:MASTER:早泄 = 0
+			TALENT:MASTER:迟漏 = !TALENT:MASTER:迟漏
+		;精力绝伦→精力绝伦被反転。精力薄弱被OFF
+		CASE 70
+			TALENT:MASTER:精力绝伦 = !TALENT:MASTER:精力绝伦
+			TALENT:MASTER:精力薄弱 = 0
+		;精力薄弱→精力薄弱被反転。精力绝伦被OFF
+		CASE 71
+			TALENT:MASTER:精力绝伦 = 0
+			TALENT:MASTER:精力薄弱 = !TALENT:MASTER:精力薄弱
+		;习得快→习得快被反転。习得慢被OFF
+		CASE 72
+			TALENT:MASTER:习得快 = !TALENT:MASTER:习得快
+			TALENT:MASTER:习得慢 = 0
+		;习得慢→习得慢被反転。习得快被OFF
+		CASE 73
+			TALENT:MASTER:习得快 = 0
+			TALENT:MASTER:习得慢 = !TALENT:MASTER:习得慢
+;-----------------------------------------------------------
+		;性経験无
+		CASE 100
+			EXP:MASTER:性交経験 = 0
+		;性経験少
+		CASE 101
+			EXP:MASTER:性交経験 = 1
+		;性経験多
+		CASE 102
+			EXP:MASTER:性交経験 = 3
+		;性知识全无
+		CASE 103
+			CALLF MASTER_CUSTOMV(0)
+		;性知识少
+		CASE 104
+			CALLF MASTER_CUSTOMV(1)
+		;性知识丰富
+		CASE 105
+			CALLF MASTER_CUSTOMV(2)
+;-----------------------------------------------------------
+		CASE 997
+			JUMP MASTER_CUSTOM
+		CASE 998
+			REPEAT 300
+				TALENT:MASTER:COUNT = 0
+			REND
+			REPEAT 100
+				EXP:MASTER:COUNT = 0
+			REND
+			CALLF MASTER_CUSTOMV(0)
+			TALENT:MASTER:男人 = 1
+		;设定完成
+		CASE 999
+			BREAK
+		CASEELSE
+			CLEARLINE 1
+			GOTO INPUT_LOOP
+	ENDSELECT
+WEND
+
+;-----------------------------------------------------------
+;后处理部分
+;-----------------------------------------------------------
+;性経験根据后处理
+SELECTCASE EXP:MASTER:性交経験
+	CASE 0
+		;性経験无
+		TALENT:MASTER:处女 = !TALENT:MASTER:男人
+		TALENT:MASTER:童贞 = TALENT:MASTER:扶她 || TALENT:MASTER:男人
+		EXP:MASTER:射精経験 = (TALENT:MASTER:扶她 || TALENT:MASTER:男人) ? TALENT:MASTER:自慰し容易 # 0
+		EXP:MASTER:性知识 = MASTER_CUSTOMV(-1) * 5
+	CASE 1
+		;性経験少
+		TALENT:MASTER:童贞 = 0
+		EXP:MASTER:Ｃ経験 = 4
+		EXP:MASTER:Ｖ経験 = TALENT:MASTER:男人 ? 0 # 2
+		EXP:MASTER:Ｂ経験 = TALENT:MASTER:男人 ? 0 # 3
+		EXP:MASTER:射精経験 = (TALENT:MASTER:扶她 || TALENT:MASTER:男人) ? 3 + TALENT:MASTER:自慰し容易 # 0
+		EXP:MASTER:性知识 = 5 + MASTER_CUSTOMV(-1) * 5
+	CASE IS > 1
+		;性経験多
+		TALENT:MASTER:童贞 = 0
+		ABL:MASTER:欲望 = 1
+		EXP:MASTER:Ｃ経験 = 10
+		EXP:MASTER:Ｖ経験 = TALENT:MASTER:男人 ? 0 # 10
+		EXP:MASTER:Ｂ経験 = TALENT:MASTER:男人 ? 0 # 10
+		EXP:MASTER:射精経験 = (TALENT:MASTER:扶她 || TALENT:MASTER:男人) ? 12 + TALENT:MASTER:自慰し容易 # 0
+		EXP:MASTER:性知识 = 10 + MASTER_CUSTOMV(-1) * 5
+ENDSELECT
+
+;自慰経験。自慰し容易场合、+10
+EXP:MASTER:自慰経験 = TALENT:MASTER:自慰し容易 * 10
+
+;-----------------------------------------------------------
+;MASTER_CUSTOMで使用做变数(MASTER性知识的程度)被保持
+;-----------------------------------------------------------
+@MASTER_CUSTOMV(ARG)
+#FUNCTION
+;ARG被保持し、ARG但-1であればそ的値被返す
+SIF ARG != -1
+	LOCAL = ARG
+RETURNF LOCAL
+

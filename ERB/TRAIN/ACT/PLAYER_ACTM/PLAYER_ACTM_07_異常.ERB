@@ -1,0 +1,663 @@
+﻿;────────────────────────────────────
+;异常 (Fist70/ＡFi71/両Fi72/放置73/公衆74/Ｐ装75/嗤笑9/用脚18/足舐55/木马67)
+;────────────────────────────────────
+@ACT_M7(ARG = 0)
+;1以上那么判定被行わない
+#DIM LCOUNT, 1
+
+;関数初期化
+CALL ACT_M_INIT(7)
+
+;处理开始
+
+LOCALS = ACT_ACTM7
+
+CALL CHA_CRI_VAR, "基準値"
+CALLFORM %LOCALS%_REFERENCE
+
+CALL CHA_CRI_VAR, "调教者的素質"
+CALLFORM %LOCALS%_TALENT_T
+
+CALL CHA_CRI_VAR, "调教对象的素質"
+CALLFORM %LOCALS%_TALENT_M
+
+CALL CHA_CRI_VAR, "调教对象的拳交適性"
+CALLFORM %LOCALS%_FIST
+
+CALL CHA_CRI_VAR, "调教者的能力"
+CALLFORM %LOCALS%_ABL_T
+
+CALL CHA_CRI_VAR, "调教对象的能力"
+CALLFORM %LOCALS%_ABL_M
+
+CALL CHA_CRI_VAR, "调教者的ALI"
+CALLFORM %LOCALS%_ALI_T
+
+CALL CHA_CRI_VAR, "调教者的气力"
+CALLFORM %LOCALS%_MENTAL_T
+
+CALL CHA_CRI_VAR, "调教者的理性"
+CALLFORM %LOCALS%_REASON_T
+
+CALL CHA_CRI_VAR, "调教者的兴趣"
+CALLFORM %LOCALS%_INTEREST_T
+
+CALL CHA_CRI_VAR, "调教对象的体力"
+CALLFORM %LOCALS%_PHYSICAL_M
+
+CALL CHA_CRI_VAR, @"调教者的状态(%CONDITION(TCVAR:状态变化)%)"
+CALLFORM %LOCALS%_CONDITION_T
+
+CALL CHA_CRI_VAR, "媚药"
+CALLFORM %LOCALS%_DRAG
+
+CALL CHA_CRI_VAR, "绳"
+CALLFORM %LOCALS%_ROPE
+
+CALL CHA_CRI_VAR, "眼罩"
+CALLFORM %LOCALS%_EYEMASK
+
+CALL CHA_CRI_VAR, "口球"
+CALLFORM %LOCALS%_GAG
+
+CALL CHA_CRI_VAR, "三角木马"
+CALLFORM %LOCALS%_HORSE
+
+CALL CHA_CRI_VAR, "野外PLAY"
+CALLFORM %LOCALS%_OUT
+
+CALL CHA_CRI_VAR, "道具被是ずした"
+CALLFORM %LOCALS%_TAKE_OFF_TOOLS
+
+CALL CHA_CRI_VAR, "调教者自慰中"
+CALLFORM %LOCALS%_MASTURBATION_T
+
+CALL CHA_CRI_VAR, "调教对象的衣服"
+CALLFORM %LOCALS%_CLOTH_M
+
+CALL CHA_CRI_VAR, "更加强硬"
+CALLFORM %LOCALS%_PLEASE_HARD
+
+CALL CHA_CRI_VAR, "请求宽恕"
+CALLFORM %LOCALS%_PLEASE_HELP
+
+CALL CHA_CRI_VAR, "惩罚"
+CALLFORM %LOCALS%_OSHIOKI
+
+CALL CHA_CRI_VAR, "连续行动修正"
+CALLFORM %LOCALS%_PREV
+
+CALL CHA_CRI_VAR, "口上修正値"
+CALL ACT_ACTM_KOJO_CORRECTION_T, 7
+
+CALL CHA_CRI_VAR, "ACT修正値"
+CALLFORM %LOCALS%_CORRECTION(ARG)
+
+;ARG但1以上那么处理中断
+SIF ARG
+	RETURN RESULT
+
+CALL CHA_CRI_VAR, "实行判定"
+CALLFORM %LOCALS%_ABLE
+
+;────────────────────────────────────
+;最终判定
+;────────────────────────────────────
+CALL DEF_CRI_VAR("最大前者")
+LOCAL = GET_CRI_VAR("決定")
+IF LOCAL == -1
+	SIF FLAG:DEBUG
+		PRINTL (异常类ACT中不存在可执行的ACT)
+	TFLAG:ACT = -1
+	CALL ACT_MENU_RESULT(2, "异常")
+ELSE
+	TFLAG:ACT = GET_ACTNUM(RESULTS)
+ENDIF
+CALL ANA_CRI_VAR()
+
+;-------------------------------------------------------------------------
+;基準値
+;-------------------------------------------------------------------------
+@ACT_ACTM7_REFERENCE
+
+;要らないかも和思った的で試しに无效化@これみ
+[SKIPSTART]
+CALL ADD_CRI_VAR("拳交", 10)
+CALL ADD_CRI_VAR("肛门拳交", 10)
+CALL ADD_CRI_VAR("两穴拳交", 10)
+CALL ADD_CRI_VAR("放置PLAY", 10)
+CALL ADD_CRI_VAR("公共肉便器PLAY", 10)
+CALL ADD_CRI_VAR("令人毛骨悚然的笑", 8)
+CALL ADD_CRI_VAR("进行足交", 5)
+CALL ADD_CRI_VAR("强制舔足", 5)
+CALL ADD_CRI_VAR("三角木马", 5)
+[SKIPEND]
+
+;-------------------------------------------------------------------------
+;调教者的素質参照
+;-------------------------------------------------------------------------
+@ACT_ACTM7_TALENT_T
+
+;调教者但胆怯/刚毅
+IF TALENT:胆怯
+	CALL ADD_CRI_VAR("公共肉便器PLAY", -5)
+ELSEIF TALENT:刚毅
+	CALL ADD_CRI_VAR("公共肉便器PLAY", , 5)
+ENDIF
+
+;调教者但成熟/自大
+IF TALENT:成熟
+	CALL ADD_CRI_VAR("拳交", -5)
+	CALL ADD_CRI_VAR("肛门拳交", -6)
+	CALL ADD_CRI_VAR("两穴拳交", -7)
+ELSEIF TALENT:自大
+	CALL ADD_CRI_VAR("放置PLAY", , 4)
+	CALL ADD_CRI_VAR("令人毛骨悚然的笑", , 6)
+	CALL ADD_CRI_VAR("进行足交", 2, 2)
+ENDIF
+
+;调教者但自尊心高/低
+IF TALENT:自尊心高
+	CALL ADD_CRI_VAR("强制舔足", , 5)
+ELSEIF TALENT:自尊心低
+	CALL ADD_CRI_VAR("强制舔足", , -5)
+ENDIF
+
+;调教者但自制的/冲动的
+IF TALENT:自制的
+	CALL ADD_CRI_VAR("放置PLAY", , 4)
+	CALL ADD_CRI_VAR("公共肉便器PLAY", -5)
+ELSEIF TALENT:冲动的
+	CALL ADD_CRI_VAR("公共肉便器PLAY", , 5)
+	CALL ADD_CRI_VAR("三角木马", 4)
+ENDIF
+
+;调教者但无关心/好奇心
+IF TALENT:无关心
+	CALL ADD_CRI_VAR("公共肉便器PLAY", 5)
+ELSEIF TALENT:好奇心
+	CALL ADD_CRI_VAR("进行足交", , 6)
+ENDIF
+
+;调教者但缺乏感情/感情丰富な
+IF TALENT:缺乏感情
+	CALL ADD_CRI_VAR("公共肉便器PLAY", 3)
+ELSEIF TALENT:感情丰富
+	CALL ADD_CRI_VAR("令人毛骨悚然的笑", , 6)
+ENDIF
+
+;调教者但渴望关注
+IF TALENT:渴望关注
+	CALL ADD_CRI_VAR("进行足交", 5)
+	CALL ADD_CRI_VAR("强制舔足", 3)
+ENDIF
+
+;调教者但压抑/解放
+IF TALENT:压抑
+	CALL ADD_CRI_VAR("公共肉便器PLAY", -5)
+	CALL ADD_CRI_VAR("令人毛骨悚然的笑", -5)
+	CALL ADD_CRI_VAR("进行足交", -5)
+	CALL ADD_CRI_VAR("强制舔足", -5)
+ELSEIF TALENT:解放
+	CALL ADD_CRI_VAR("公共肉便器PLAY", , 6)
+	CALL ADD_CRI_VAR("进行足交", , 4)
+ENDIF
+
+;调教者但羞涩/无耻
+IF TALENT:羞涩
+	CALL ADD_CRI_VAR("公共肉便器PLAY", -5)
+ELSEIF TALENT:无耻
+	CALL ADD_CRI_VAR("公共肉便器PLAY", 5)
+ENDIF
+
+;调教者但献身的/被动
+IF TALENT:献身的
+	CALL ADD_CRI_VAR("进行足交", 5)
+ELSEIF TALENT:被动
+	CALL ADD_CRI_VAR("强制舔足", 5)
+ENDIF
+
+;调教者但恐男で调教对象但扶她。進展度に应じて緩和
+SIF TALENT:恐男 && TALENT:MASTER:扶她
+	CALL ADD_CRI_VAR("进行足交", CFLAG:M好感 + CFLAG:好感 >= 10000? -4 # -7)
+
+;调教者但虐待狂
+IF TALENT:虐待狂
+	CALL ADD_CRI_VAR("强制舔足", , 6)
+	CALL ADD_CRI_VAR("三角木马", 3, 4)
+ENDIF
+
+;调教者但慎重/急躁
+IF TALENT:慎重
+	CALL ADD_CRI_VAR("公共肉便器PLAY", -5)
+ELSEIF TALENT:急躁
+	CALL ADD_CRI_VAR("公共肉便器PLAY", 5)
+ENDIF
+
+;调教者但坏心眼/好心眼
+IF TALENT:坏心眼
+	CALL ADD_CRI_VAR("令人毛骨悚然的笑", 3)
+	CALL ADD_CRI_VAR("进行足交", 3)
+ELSEIF TALENT:好心眼
+	CALL ADD_CRI_VAR("公共肉便器PLAY", -5)
+	CALL ADD_CRI_VAR("三角木马", -5)
+ENDIF
+
+;调教者但疯狂
+IF TALENT:疯狂
+	CALL ADD_CRI_VAR("拳交", , 4)
+	CALL ADD_CRI_VAR("肛门拳交", , 4)
+	CALL ADD_CRI_VAR("两穴拳交", , 4)
+	CALL ADD_CRI_VAR("放置PLAY", , 4)
+	CALL ADD_CRI_VAR("公共肉便器PLAY", , 4)
+	CALL ADD_CRI_VAR("令人毛骨悚然的笑", , 7)
+	CALL ADD_CRI_VAR("进行足交", , 4)
+	CALL ADD_CRI_VAR("强制舔足", , 4)
+	CALL ADD_CRI_VAR("三角木马", , 4)
+ENDIF
+
+;调教者但Ｃ敏感
+SIF TALENT:Ｃ敏感
+	CALL ADD_CRI_VAR("进行足交", 2, 4)
+
+;----------------------------------------------------------------------
+;拳交適性
+;経験和双方的素質但絡む的で素質から独立
+;
+;ただ、矮小高大によって乗算被かける意義但あんまり感じられないし
+;それぞれ経験和素質で、普通に加減すればいい和思う的和
+;経験但ない和き、マイナスになるっていう的被採用做ん那么基礎値的概念使って
+;----------------------------------------------------------------------
+@ACT_ACTM7_FIST
+;矮小/巨躯/ＶＡ経験/扩张経験/淫系素質などで拳交的处理被してみる
+VARSET LOCAL
+
+;Ｖ経験/扩张経験/淫系素質によって増減
+IF EXP:MASTER:Ｖ経験 < 10
+	LOCAL:0 = -6
+ELSEIF EXP:MASTER:Ｖ経験 < 20 && EXP:MASTER:Ｖ扩张経験 < 1
+	LOCAL:0 = -4
+ELSEIF EXP:MASTER:Ｖ経験 < 40 && EXP:MASTER:Ｖ扩张経験 < 3
+	LOCAL:0 = -2
+ENDIF
+SIF TALENT:MASTER:淫壶
+	LOCAL:0 += 4
+
+;Ａ経験/扩张経験/淫系素質によって増減
+IF EXP:MASTER:Ａ経験 < 10
+	LOCAL:1 = -6
+ELSEIF EXP:MASTER:Ａ経験 < 20 && EXP:MASTER:Ａ扩张経験 < 1
+	LOCAL:1 = -4
+ELSEIF EXP:MASTER:Ａ経験 < 40 && EXP:MASTER:Ａ扩张経験 < 3
+	LOCAL:1 = -2
+ENDIF
+SIF TALENT:MASTER:淫尻
+	LOCAL:1 += 4
+
+;矮小/高大によって増減
+IF TALENT:MASTER:矮小 || TALENT:高大
+	LOCAL:0 = LOCAL:0 * 3 / 4
+	LOCAL:1 = LOCAL:1 * 3 / 4
+ELSEIF TALENT:MASTER:高大 || TALENT:矮小
+	LOCAL:0 = LOCAL:0 * 4 / 3
+	LOCAL:1 = LOCAL:1 * 4 / 3
+ENDIF
+
+;加算处理
+CALL ADD_CRI_VAR("拳交", LOCAL:0)
+CALL ADD_CRI_VAR("肛门拳交", LOCAL:1)
+CALL ADD_CRI_VAR("两穴拳交", LOCAL:0 + LOCAL:1)
+
+;-------------------------------------------------------------------------
+;调教对象的素質参照
+;-------------------------------------------------------------------------
+@ACT_ACTM7_TALENT_M
+
+;调教对象但胆怯/刚毅
+IF TALENT:MASTER:胆怯
+	CALL ADD_CRI_VAR("令人毛骨悚然的笑", 3)
+ELSEIF TALENT:MASTER:刚毅
+	CALL ADD_CRI_VAR("公共肉便器PLAY", 3)
+ENDIF
+
+;调教对象但反抗的/坦率
+IF TALENT:MASTER:反抗的
+	CALL ADD_CRI_VAR("公共肉便器PLAY", 4)
+	CALL ADD_CRI_VAR("三角木马", 3)
+ELSEIF TALENT:MASTER:坦率
+	CALL ADD_CRI_VAR("强制舔足", 3)
+ENDIF
+
+;调教对象但羞涩/无耻
+IF TALENT:MASTER:羞涩
+	CALL ADD_CRI_VAR("放置PLAY", 3)
+ELSEIF TALENT:MASTER:无耻
+	CALL ADD_CRI_VAR("放置PLAY", -3)
+ENDIF
+
+;调教对象但怕疼/耐痛
+IF TALENT:MASTER:怕疼
+	CALL ADD_CRI_VAR("三角木马", 5)
+ELSEIF TALENT:MASTER:耐痛
+	CALL ADD_CRI_VAR("三角木马", -5)
+ENDIF
+
+;调教对象但淫茎
+SIF TALENT:MASTER:淫核／淫茎
+	CALL ADD_CRI_VAR("进行足交", , 9)
+
+;调教对象但Ｃ敏感/钝感
+IF TALENT:MASTER:Ｃ敏感
+	CALL ADD_CRI_VAR("进行足交", 1, 6)
+ELSEIF TALENT:MASTER:Ｃ钝感
+	CALL ADD_CRI_VAR("进行足交", -1, -6)
+ENDIF
+
+;调教对象但Ｖ敏感/钝感
+IF TALENT:MASTER:Ｖ敏感
+	CALL ADD_CRI_VAR("穿上假阴茎", TEQUIP:调教者假阴茎 ? 0 # 3, TEQUIP:调教者假阴茎 ? 0 # 1)
+ELSEIF TALENT:MASTER:Ｖ钝感
+	CALL ADD_CRI_VAR("穿上假阴茎", TEQUIP:假阴茎 ? 0 # -3, TEQUIP:调教者假阴茎 ? 0 # -1)
+ENDIF
+
+;调教者但Ｖ敏感/钝感
+IF TALENT:TARGET:Ｖ敏感
+	CALL ADD_CRI_VAR("穿上假阴茎", TEQUIP:调教者假阴茎 ? 0 # 3, TEQUIP:调教者假阴茎 ? 0 # 1)
+ELSEIF TALENT:TARGET:Ｖ钝感
+	CALL ADD_CRI_VAR("穿上假阴茎", TEQUIP:调教者假阴茎 ? 0 # -3, TEQUIP:调教者假阴茎 ? 0 # -1)
+ENDIF
+
+;调教者但处女
+SIF TALENT:TARGET:处女
+	CALL ADD_CRI_VAR("穿上假阴茎", -10)
+
+;调教对象但蓬莱人
+SIF TALENT:不死
+	CALL ADD_CRI_VAR("公共肉便器PLAY", , 9)
+
+;调教对象但扶她
+SIF TALENT:MASTER:扶她
+	CALL ADD_CRI_VAR("进行足交", TALENT:好奇心 * 3 - TALENT:无关心, 4)
+
+;调教对象但处女
+IF TALENT:MASTER:处女
+	CALL ADD_CRI_VAR("拳交", -10)
+	CALL ADD_CRI_VAR("两穴拳交", -10)
+	CALL ADD_CRI_VAR("公共肉便器PLAY", -10)
+ENDIF
+
+;调教对象但童贞
+SIF TALENT:MASTER:童贞
+	CALL ADD_CRI_VAR("公共肉便器PLAY", -5)
+
+;调教对象但扶她
+SIF TALENT:MASTER:扶她
+	CALL ADD_CRI_VAR("公共肉便器PLAY", -3, -4)
+
+;────────────────────────────────────
+;能力、参数根据变动
+;────────────────────────────────────
+;-------------------------------------------------------------------------
+;调教者的能力被参照
+;-------------------------------------------------------------------------
+@ACT_ACTM7_ABL_T
+
+;调教者的会话但[0→0, 5→0～5]被加算(0～5)
+CALL ADD_CRI_VAR("令人毛骨悚然的笑", , LINE_CALC(ABL:会话, "0→0,5→5,LIMIT/0～5"))
+
+;调教者的爱抚但[0→0, 5→2～4]被加算(0～4)
+CALL ADD_CRI_VAR("进行足交", LINE_CALC(ABL:爱抚, "0→0,5→2,LIMIT/0～2"), LINE_CALC(ABL:爱抚, "0→0,5→2,LIMIT/0～2"))
+
+;调教者的奉仕但[0→0, 5→3～5]被加算(0～5)
+CALL ADD_CRI_VAR("强制舔足", LINE_CALC(ABL:奉仕, "0→0,5→3,LIMIT/0～3"), LINE_CALC(ABL:奉仕, "0→0,5→2,LIMIT/0～2"))
+
+;-------------------------------------------------------------------------
+;调教对象的能力被参照
+;-------------------------------------------------------------------------
+@ACT_ACTM7_ABL_M
+
+;调教对象的Ｖ感觉但[0→0, 5→3]被加算(0～3)
+CALL ADD_CRI_VAR("拳交", LINE_CALC(ABL:MASTER:Ｖ感觉, "0→0,5→3,LIMIT/0～3"))
+;调教对象的Ｖ感觉但[0→0, 5→2]被加算(0～2)
+CALL ADD_CRI_VAR("两穴拳交", LINE_CALC(ABL:MASTER:Ｖ感觉, "0→0,5→2,LIMIT/0～2"))
+
+;调教对象的Ａ感觉但[0→0, 5→3]被加算(0～3)
+CALL ADD_CRI_VAR("肛门拳交", LINE_CALC(ABL:MASTER:Ａ感觉, "0→0,5→3,LIMIT/0～3"))
+;调教对象的Ａ感觉但[0→0, 5→2]被加算(0～2)
+CALL ADD_CRI_VAR("两穴拳交", LINE_CALC(ABL:MASTER:Ａ感觉, "0→0,5→2,LIMIT/0～2"))
+
+;-------------------------------------
+;调教者的ALI
+;-------------------------------------
+@ACT_ACTM7_ALI_T
+
+;定位但[-50→3～8, 50→-8～-3]被加算(-8～8)
+CALL ADD_CRI_VAR("公共肉便器PLAY", LINE_CALC(CFLAG:定位, "-50→3,50→-3,LIMIT/-3～3"), LINE_CALC(CFLAG:定位, "-50→5,50→-5,LIMIT/-5～5"))
+;定位但[-50→-8～-3, 50→3～8]被加算(-8～8)
+CALL ADD_CRI_VAR("进行足交", LINE_CALC(CFLAG:定位, "-50→-3,50→3,LIMIT/-3～3"), LINE_CALC(CFLAG:定位, "-50→-5,50→5,LIMIT/-5～5"))
+;定位但[-30→0, 0→3, 30→0]被加算(0～3)
+CALL ADD_CRI_VAR("强制舔足", LINE_CALC(CFLAG:定位, "-30→0,0→3,30→0,LIMIT/0～3"))
+;定位但[-20→0, 0→2, 20→0]被加算(0～2)
+CALL ADD_CRI_VAR("拳交", LINE_CALC(CFLAG:定位, "-20→0,0→2,20→0,LIMIT/0～2"))
+
+;────────────────────────────────────
+;ゲージや状态根据变动
+;────────────────────────────────────
+;-------------------------------------
+;调教者的气力
+;-------------------------------------
+@ACT_ACTM7_MENTAL_T
+
+;调教者的气力但[0→3+α*3, 750→0, 1000→-3]被加算(-3～3+α*3)(α=调教者疲惫度)
+CALL ADD_CRI_VAR("放置PLAY", LINE_CALC(BASE:气力, "0→3,750→0,1000→-3,LIMIT/-3～3") + TFLAG:调教者疲惫度 * LINE_CALC(BASE:气力, "0→3,750→0,LIMIT/0～3"))
+CALL ADD_CRI_VAR("公共肉便器PLAY", LINE_CALC(BASE:气力, "0→3,750→0,1000→-3,LIMIT/-3～3") + TFLAG:调教者疲惫度 * LINE_CALC(BASE:气力, "0→3,750→0,LIMIT/0～3"))
+
+;-------------------------------------
+;调教者的理性
+;-------------------------------------
+@ACT_ACTM7_REASON_T
+
+;调教者的理性但[0→2～7, 750→0]被加算(0～7)
+CALL ADD_CRI_VAR("令人毛骨悚然的笑", LINE_CALC(BASE:理性, "0→2,750→0,LIMIT/0～2"), LINE_CALC(BASE:理性, "0→5,750→0,LIMIT/0～5"))
+;调教者的理性但[500→0, 1000→3]被加算(0～3)
+CALL ADD_CRI_VAR("进行足交", LINE_CALC(BASE:理性, "500→0,1000→3,LIMIT/0～3"))
+;调教者的理性但[500→0, 1000→2～5]被加算(0～5)
+CALL ADD_CRI_VAR("强制舔足", LINE_CALC(BASE:理性, "500→0,1000→2,LIMIT/0～2"), LINE_CALC(BASE:理性, "500→0,1000→5,LIMIT/0～5"))
+
+;-------------------------------------
+;调教者的兴趣
+;-------------------------------------
+@ACT_ACTM7_INTEREST_T
+
+;调教者的兴趣但[0→-3, 550→0]被加算(-3～0)
+CALL ADD_CRI_VAR("拳交", LINE_CALC(BASE:兴趣, "0→-3,550→0,LIMIT/-3～0"))
+CALL ADD_CRI_VAR("肛门拳交", LINE_CALC(BASE:兴趣, "0→-3,550→0,LIMIT/-3～0"))
+CALL ADD_CRI_VAR("两穴拳交", LINE_CALC(BASE:兴趣, "0→-3,550→0,LIMIT/-3～0"))
+;调教者的兴趣但[0→3, 700→-3]被加算(-3～3)
+CALL ADD_CRI_VAR("放置PLAY", LINE_CALC(BASE:兴趣, "0→3,700→-3,LIMIT/-3～3"))
+;调教者的兴趣但[0→5, 700→-5]被加算(-5～5)
+CALL ADD_CRI_VAR("公共肉便器PLAY", LINE_CALC(BASE:兴趣, "0→5,700→-5,LIMIT/-5～5"))
+;调教者的兴趣但[0→-5, 700→0]被加算(-5～0)
+CALL ADD_CRI_VAR("进行足交", LINE_CALC(BASE:兴趣, "0→-5,700→0,LIMIT/-5～0"))
+CALL ADD_CRI_VAR("强制舔足", LINE_CALC(BASE:兴趣, "0→-5,700→0,LIMIT/-5～0"))
+
+;-------------------------------------
+;调教对象的体力
+;-------------------------------------
+@ACT_ACTM7_PHYSICAL_M
+
+;调教对象的体力但[0→-1, 500→0]被加算(-1～0)
+CALL ADD_CRI_VAR("拳交", LINE_CALC(BASE:MASTER:体力, "0→-1,500→0,LIMIT/-1～0"))
+;调教对象的体力但[0→-3, 1000→0]被加算(-3～0)
+CALL ADD_CRI_VAR("肛门拳交", LINE_CALC(BASE:MASTER:体力, "0→-3,1000→0,LIMIT/-3～0"))
+;调教对象的体力但[0→-4, 1000→0]被加算(-4～0)
+CALL ADD_CRI_VAR("两穴拳交", LINE_CALC(BASE:MASTER:体力, "0→-4,1000→0,LIMIT/-4～0"))
+;※キャンセル时正的修正
+;调教对象的体力但[0→9/-9, 1500→0]被加算(-9～9)
+LOCAL = TEQUIP:三角木马 ? 1 # -1
+CALL ADD_CRI_VAR("三角木马", LOCAL * LINE_CALC(BASE:MASTER:体力, "0→9,1500→0,LIMIT/0～9"))
+
+;-------------------------------------
+;调教者的状态
+;-------------------------------------
+@ACT_ACTM7_CONDITION_T
+
+;调教者的状态(0=通常/1=疲惫/2=衰弱/3=无气力/4=朦胧/5=情欲/6=愤怒/7=无聊/8=郁闷)
+SELECTCASE GET_CONDITION(TARGET)
+	CASE "疲惫", "衰弱"
+		CALL ADD_CRI_VAR("拳交", -TFLAG:调教者疲惫度)
+		CALL ADD_CRI_VAR("肛门拳交", -TFLAG:调教者疲惫度)
+		CALL ADD_CRI_VAR("两穴拳交", -TFLAG:调教者疲惫度 - 3)
+		CALL ADD_CRI_VAR("进行足交", -TFLAG:调教者疲惫度 * 2)
+		CALL ADD_CRI_VAR("强制舔足", -TFLAG:调教者疲惫度 / 2)
+		CALL ADD_CRI_VAR("三角木马", -TFLAG:调教者疲惫度, -5)
+	CASE "无聊"
+		CALL ADD_CRI_VAR("放置PLAY", 5)
+		CALL ADD_CRI_VAR("公共肉便器PLAY", 5)
+ENDSELECT
+
+;────────────────────────────────────
+;上次的行动や状況根据变动
+;────────────────────────────────────
+;-------------------------------------
+;媚药
+;-------------------------------------
+@ACT_ACTM7_DRAG
+SIF TEQUIP:媚药
+	CALL ADD_CRI_VAR("放置PLAY", TALENT:坏心眼 * 3 - TALENT:好心眼 * 3, 4)
+
+;-------------------------------------
+;绳
+;-------------------------------------
+@ACT_ACTM7_ROPE
+SIF TEQUIP:绳
+	CALL ADD_CRI_VAR("放置PLAY", 5)
+
+;-------------------------------------
+;眼罩
+;-------------------------------------
+@ACT_ACTM7_EYEMASK
+SIF TEQUIP:眼罩
+	CALL ADD_CRI_VAR("放置PLAY", 3)
+
+;-------------------------------------
+;口球
+;-------------------------------------
+@ACT_ACTM7_GAG
+SIF TEQUIP:口球
+	CALL ADD_CRI_VAR("放置PLAY", , 3)
+
+;-------------------------------------
+;三角木马
+;-------------------------------------
+@ACT_ACTM7_HORSE
+SIF TEQUIP:三角木马
+	CALL ADD_CRI_VAR("放置PLAY", , 7)
+
+;-------------------------------------
+;野外PLAY
+;-------------------------------------
+@ACT_ACTM7_OUT
+IF TEQUIP:野外PLAY
+	CALL MUL_CRI_VAR("放置PLAY", 150)
+	CALL MUL_CRI_VAR("公共肉便器PLAY", 125)
+ENDIF
+
+;-------------------------------------
+;要求されて道具被是ずした
+;-------------------------------------
+@ACT_ACTM7_TAKE_OFF_TOOLS
+;キャンセルに应じて装着被躊躇
+SIF !TEQUIP:三角木马
+	CALL ADD_CRI_VAR("三角木马", -CANCEL_TEQUIP_COUNT("三角木马") / 20)
+
+;-------------------------------------
+;调教者自慰中
+;-------------------------------------
+@ACT_ACTM7_MASTURBATION_T
+;调教者的み自慰中
+SIF TEQUIP:自慰中 == 2
+	CALL ADD_CRI_VAR("放置PLAY", , 9)
+
+;-------------------------------------
+;调教对象的衣服
+;-------------------------------------
+@ACT_ACTM7_CLOTH_M
+;调教对象的下半身内衣但あ时き
+SIF CLOTHESTYPE(1, 0)
+	CALL ADD_CRI_VAR("三角木马", -2)
+
+;调教对象的下半身外套に妨害され时き
+IF CLOTHESTYPE(1, 1) == 2
+	;调教者に穿墙但ない
+	IF !TALENT:穿墙
+		CALL ADD_CRI_VAR("拳交", -5)
+		CALL ADD_CRI_VAR("肛门拳交", -5)
+		CALL ADD_CRI_VAR("两穴拳交", -5)
+	ENDIF
+	CALL ADD_CRI_VAR("三角木马", -5)
+ENDIF
+
+;-------------------------------------
+;更加强硬
+;-------------------------------------
+@ACT_ACTM7_PLEASE_HARD
+IF IS_NOWCOMNAME("更加强硬")
+	CALL ADD_CRI_VAR("放置PLAY", -10)
+	CALL ADD_CRI_VAR("公共肉便器PLAY", 2)
+	CALL ADD_CRI_VAR("令人毛骨悚然的笑", -3)
+	CALL ADD_CRI_VAR("进行足交", -3)
+ENDIF
+
+;-------------------------------------
+;请求宽恕
+;-------------------------------------
+@ACT_ACTM7_PLEASE_HELP
+;許し被乞ったかつ、调教者的状态但郁闷以外
+SIF IS_NOWCOMNAME("请求宽恕") && TCVAR:状态变化 < 8
+	CALL ADD_CRI_VAR("放置PLAY", 5)
+
+;-------------------------------------
+;惩罚中
+;-------------------------------------
+@ACT_ACTM7_OSHIOKI
+IF TFLAG:惩罚标志
+	CALL ADD_CRI_VAR("公共肉便器PLAY", TFLAG:惩罚标志 / 2)
+	CALL ADD_CRI_VAR("三角木马", TFLAG:惩罚标志 / 2)
+ENDIF
+
+;────────────────────────────────────
+;同じ行动连续实行的确率被ダウンし增加
+;────────────────────────────────────
+@ACT_ACTM7_PREV
+SELECTCASE TFLAG:前ACT
+	CASE 9, 18, 55, 67, 70 TO 74
+		CALL ADD_CRI_VAR(GET_ACTNAME(TFLAG:前ACT), -3 * TFLAG:同一行动奖励, -4 * TFLAG:同一行动奖励)
+ENDSELECT
+
+;────────────────────────────────────
+;修正値計算
+;────────────────────────────────────
+@ACT_ACTM7_CORRECTION(ARG)
+#DIM LCOUNT
+
+;ARG但0以外那么修正値被計算し、以后的处理被行わない
+IF ARG
+	;9,18,55,67に関して是ここで計算不做
+	FOR LCOUNT, 70, 75
+		CALL ACT_M_RES_CALC(LCOUNT, GET_CRI_VAR(GET_ACTNAME(LCOUNT) + "累计"))
+	NEXT
+ELSE
+	;修正値被判定値に加算做
+	CALL ACT_ACTM_CORRECTION(7)
+ENDIF
+
+;────────────────────────────────────
+;其他变动や实行不可能的判定
+;────────────────────────────────────
+@ACT_ACTM7_ABLE
+#DIM LCOUNT
+
+;不可能判定
+CALL ACT_ACTM_ABLE(7)
+

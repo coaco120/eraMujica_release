@@ -1,0 +1,390 @@
+﻿;-------------------------------------------------
+;虹色显示相关関数
+;-------------------------------------------------
+;Emuera1810以降向け
+;PRINT_RAINBOWなど虹色显示に関做文件
+;割和ネタ要素但强。良くも恶くも目立つ
+;ぱにめーしょん関数被使用している部位但ある
+;※以前的バージョンで动作侍奉场合是、GET_RAINBOW被適当に書き直してください
+;-------------------------------------------------
+;関数的概要
+;・PRINT_RAINBOW(|L|W)…虹色でPRINT做関数
+;・BIGPRINT_RAINBOW(L|W)…大きく虹色でPRINT做関数
+;・SMALLPRINT_RAINBOW(|L|W)…小さく虹色でPRINT做関数
+;・PRINT_RAINBOW2(|L|W)…虹色でPRINT做関数。色但变化做动画ーション付き
+;・BIGPRINT_RAINBOW2(L|W)…大きく虹色でPRINT做関数。色但变化做动画ーション付き
+;・SMALLPRINT_RAINBOW2(|L|W)…小さく虹色でPRINT做関数。色但变化做动画ーション付き
+;・GET_RAINBOW…虹色的構成色値(全12色)被返す式中関数
+;-------------------------------------------------
+
+;*************************************************
+;PRINT関数
+;*************************************************
+;・普通的…いえ、异常なPRINT関数です
+;・だ但、こんなも的是序章に過ぎなかった…！
+;-------------------------------------------------
+
+;-------------------------------------------------
+;関数名:PRINT_RAINBOW(|L|W)
+;概　要:动かない虹色PRINT関数
+;引　数:ARGS:0…显示字符串。FORM字符串被使用做场合是""的前に@被付けるこ和
+;　　　 ARGS:1…[省略可]始めに元的字符色で显示做字符串(例えば"「"や"（"被入れる)
+;　　　 ARGS:2…[省略可]终わりに元的字符色で显示做字符串(例えば"」"や"）"被入れる)
+;　　　 ARG:0 …[省略可]指定値只显示开始色被ずらす。PRINT_RAINBOW被刻んで使う时用。省略做和0
+;　　　 ARG:1 …[省略可]真的场合、色的進行方向被逆顺に做。省略做和伪(正顺)
+;戻り値:无(多分RESULT保護)
+;ついでに少叩き直したPRINT_RAINBOW。PRINT_RANIBOW2和共通处理で
+;-------------------------------------------------
+@PRINT_RAINBOW(ARGS:0, ARGS:1, ARGS:2, ARG:0, ARG:1)
+PRINTS ARGS:1
+CALL _PRINT_RAINBOW_SUB1(ARGS:0, ARG:0, ARG:1)
+PRINTS ARGS:2
+RETURN RESULT
+
+@PRINT_RAINBOWL(ARGS:0, ARGS:1, ARGS:2, ARG:0, ARG:1)
+CALL PRINT_RAINBOW(ARGS:0, ARGS:1, ARGS:2, ARG:0, ARG:1)
+PRINTL 
+RETURN RESULT
+
+@PRINT_RAINBOWW(ARGS:0, ARGS:1, ARGS:2, ARG:0, ARG:1)
+CALL PRINT_RAINBOW(ARGS:0, ARGS:1, ARGS:2, ARG:0, ARG:1)
+WAIT 
+RETURN RESULT
+
+
+;-------------------------------------------------
+;関数名:BIGPRINT_RAINBOW(L|W)
+;概　要:动かない虹色BIGPRINT関数
+;引　数:ARGS:0…显示字符串。FORM字符串被使用做场合是""的前に@被付けるこ和
+;　　　 ARGS:1…[省略可]始めに元的字符色で显示做字符串(例えば"「"や"（"被入れる)
+;　　　 ARGS:2…[省略可]终わりに元的字符色で显示做字符串(例えば"」"や"）"被入れる)
+;　　　 ARG:0 …[省略可]指定値只显示开始色被ずらす。省略做和0
+;　　　 ARG:1 …[省略可]真的场合、色的進行方向被逆顺に做。省略做和伪(正顺)
+;戻り値:无(多分RESULT保護)
+;PRINT_RAINBOWにBIG和SMALL但仲间入り！
+;例によって例的如く2行使う的で必ず改行しちゃう
+;\n是やめたほう但よい予感
+;-------------------------------------------------
+@BIGPRINT_RAINBOWL(ARGS:0, ARGS:1, ARGS:2, ARG:0, ARG:1)
+#LOCALSIZE 1
+#LOCALSSIZE 1
+IF CHKFONT("Raavi")
+	LOCAL:0 = CURRENTREDRAW()
+	LOCALS:0 = %GETFONT()%
+	REDRAW 0
+	SETFONT "Raavi"
+	PRINTS " " + ARGS:1
+	CALL _PRINT_RAINBOW_SUB1(ARGS:0, ARG:0, ARG:1)
+	PRINTSL ARGS:2 + " "
+	SETFONT LOCALS:0
+	PRINTL 
+	REDRAW LOCAL:0
+ELSE
+	CALL PRINT_RAINBOWL(ARGS:0, ARGS:1, ARGS:2, ARG:0, ARG:1)
+ENDIF
+RETURN RESULT
+
+@BIGPRINT_RAINBOWW(ARGS:0, ARGS:1, ARGS:2, ARG:0, ARG:1)
+CALL BIGPRINT_RAINBOWL(ARGS:0, ARGS:1, ARGS:2, ARG:0, ARG:1)
+WAIT
+RETURN RESULT
+
+
+;-------------------------------------------------
+;関数名:SMALLRINT_RAINBOW(|L|W)
+;概　要:动かない虹色SMALLPRINT関数
+;引　数:ARGS:0…显示字符串。FORM字符串被使用做场合是""的前に@被付けるこ和
+;　　　 ARGS:1…[省略可]始めに元的字符色で显示做字符串(例えば"「"や"（"被入れる)
+;　　　 ARGS:2…[省略可]终わりに元的字符色で显示做字符串(例えば"」"や"）"被入れる)
+;　　　 ARG:0 …[省略可]指定値只显示开始色被ずらす。省略做和0
+;　　　 ARG:1 …[省略可]真的场合、色的進行方向被逆顺に做。省略做和伪(正顺)
+;戻り値:无(多分RESULT保護)
+;PRINT_RAINBOWにBIG和SMALL但仲间入り！
+;-------------------------------------------------
+@SMALLPRINT_RAINBOW(ARGS:0, ARGS:1, ARGS:2, ARG:0, ARG:1)
+#LOCALSSIZE 1
+LOCALS:0 = %GETFONT()%
+SETFONT CHKFONT("Estrangelo Edessa") ? "Estrangelo Edessa" # LOCALS:0
+CALL PRINT_RAINBOW(ARGS:0, " " + ARGS:1, ARGS:2 + " ", ARG:0, ARG:1)
+SETFONT LOCALS:0
+RETURN RESULT
+
+@SMALLPRINT_RAINBOWL(ARGS:0, ARGS:1, ARGS:2, ARG:0, ARG:1)
+CALL SMALLPRINT_RAINBOW(ARGS:0, ARGS:1, ARGS:2, ARG:0, ARG:1)
+PRINTL 
+RETURN RESULT
+
+@SMALLPRINT_RAINBOWW(ARGS:0, ARGS:1, ARGS:2, ARG:0, ARG:1)
+CALL SMALLPRINT_RAINBOW(ARGS:0, ARGS:1, ARGS:2, ARG:0, ARG:1)
+WAIT
+RETURN RESULT
+
+
+;*************************************************
+;动画ーション付きPRINT関数
+;*************************************************
+;・动画ーション做PRINT関数…割和特殊な部类？ 何故动かしたし
+;・Rev#こ_Lに組み込んで使用做都合上、ぱにめーしょん扩张和して扱う
+;・す绳ち、ぱにめーしょん同大人的配置参照被行う
+;・スクロール不可的際是普通的PRINT_RAINBOW同大人
+;・ぱにめーしょん和切り離し想要场合是、該当部位的IFネスト被外せばOK
+;・行的途中で呼ぶ和、CLEARLINE做都合上それ以前的部分但一旦消える的で、そういう的极力控えよう
+;　一应字符串只是戻す处理被入受到けど、そ的字符串的色やフォント被コロコロ变えていた场合是多分悲しい結末になる
+;　なんか書式に関做タグ情报取れるっぽい？的で自前で改行不做HTMLParserもどき組めば何和かなる的かもしれないけど…
+;-------------------------------------------------
+
+;-------------------------------------------------
+;関数名:PRINT_RAINBOW2(|L|W)
+;概　要:动く虹色PRINT関数
+;引　数:ARGS:0…显示字符串。FORM字符串被使用做场合是""的前に@被付けるこ和
+;　　　  ARG:0…ずらし回数。1回につき{ARG:1}ミリ秒消费
+;　　　 ARGS:1…[省略可]始めに元的字符色で显示做字符串(例えば"「"や"（"被入れる)
+;　　　 ARGS:2…[省略可]终わりに元的字符色で显示做字符串(例えば"」"や"）"被入れる)
+;　　　  ARG:1…[省略可]1回的描画的后にウェイト做ミリ秒。省略做和100
+;　　　  ARG:2…[省略可]机能オプション。省略した场合是0(正顺模式)。未定義的値但渡さ受到场合も0扱い
+;　　　                 0.通常的显示(色的進行方向是正顺)
+;　　　                 1.色的進行方向被逆顺に做
+;　　　                 2.虹色に做对象被ARGS:0→ARGS:1＆ARGS:2に变更做。色的進行方向是正顺＆正顺
+;　　　                 3.虹色に做对象被ARGS:0→ARGS:1＆ARGS:2に变更做。色的進行方向是正顺＆逆顺
+;　　　                 4.虹色に做对象被ARGS:0→ARGS:1＆ARGS:2に变更做。色的進行方向是逆顺＆正顺
+;　　　                 5.虹色に做对象被ARGS:0→ARGS:1＆ARGS:2に变更做。色的進行方向是逆顺＆逆顺
+;　　　 ARGS:3…[省略可]描画フォント。省略した场合や使用できないフォント但指定さ受到场合是变更不做
+;戻り値:无(多分RESULT保護)
+;恶名高き(?)KOMEIJI_FUNCTIONSより数年…
+;性懲りも无く作った、ぬるぬる动くPRINT_RAINBOW。恶ノリ的极み。虹色的中に反省的色是无かった
+;动くせいで、かえって使いどころ但限定されるかも
+;显示顺是常に%ARGS:1%%ARGS:0%%ARGS:2%
+;オプションで虹色になる部位被变えられるように机能强化さ受到的で、虹色で囲み想要时にも使えるかも
+;-------------------------------------------------
+@PRINT_RAINBOW2(ARGS:0, ARG:0, ARGS:1, ARGS:2, ARG:1 = 100, ARG:2, ARGS:3)
+#LOCALSIZE 3
+#LOCALSSIZE 2
+ARG:2 = INRANGE(ARG:2, 0, 5) ? ARG:2 # 0
+LOCAL:1 = CURRENTREDRAW()
+LOCAL:2 = STRLENSU(ARGS:1)
+LOCALS:0 = %GETFONT()%
+LOCALS:1 =
+ARGS:3 = \@ CHKFONT(ARGS:3) ? %ARGS:3% # %LOCALS:1% \@
+IF !LINEISEMPTY()
+	REDRAW 0
+	PRINTL 
+	LOCALS:1 = %HTML_TOPLAINTEXT(HTML_GETPRINTEDSTR())%
+	CLEARLINE 1
+	PRINTS LOCALS:1
+	REDRAW LOCAL:1
+ENDIF
+;スクロール可(スクロール不做けど…まぁ、动いて见える的で)
+IF ANIME_CONFIG("SCROLLTEXT")
+	FOR LOCAL:0, 0, ARG:0 - 1
+		SETFONT ARGS:3
+		IF INRANGE(ARG:2, 0, 1)
+			PRINTS ARGS:1
+			CALL _PRINT_RAINBOW_SUB1(ARGS:0, LOCAL:0, ARG:2)
+			PRINTS ARGS:2
+		ELSE
+			CALL _PRINT_RAINBOW_SUB1(ARGS:1, LOCAL:0, INRANGE(ARG:2, 4, 5))
+			PRINTS ARGS:0
+			CALL _PRINT_RAINBOW_SUB1(ARGS:2, GROUPMATCH(ARG:2, 2, 5) ? LOCAL:0 + LOCAL:2 # 12 - LOCAL:2 - LOCAL:0, GROUPMATCH(ARG:2, 3, 5))
+		ENDIF
+		TWAIT ARG:1, 0
+		CLEARLINE 1
+		SETFONT LOCALS:0
+		PRINTS LOCALS:1
+	NEXT
+ENDIF
+SETFONT ARGS:3
+IF INRANGE(ARG:2, 0, 1)
+	PRINTS ARGS:1
+	CALL _PRINT_RAINBOW_SUB1(ARGS:0, LOCAL:0, ARG:2)
+	PRINTS ARGS:2
+ELSE
+	CALL _PRINT_RAINBOW_SUB1(ARGS:1, LOCAL:0, INRANGE(ARG:2, 4, 5))
+	PRINTS ARGS:0
+	CALL _PRINT_RAINBOW_SUB1(ARGS:2, GROUPMATCH(ARG:2, 2, 5) ? LOCAL:0 + LOCAL:2 # 12 - LOCAL:2 - LOCAL:0, GROUPMATCH(ARG:2, 3, 5))
+ENDIF
+SETFONT LOCALS:0
+RETURN RESULT
+
+@PRINT_RAINBOW2L(ARGS:0, ARG:0, ARGS:1, ARGS:2, ARG:1 = 100, ARG:2)
+CALL PRINT_RAINBOW2(ARGS:0, ARG:0, ARGS:1, ARGS:2, ARG:1, ARG:2)
+PRINTL 
+RETURN RESULT
+
+@PRINT_RAINBOW2W(ARGS:0, ARG:0, ARGS:1, ARGS:2, ARG:1 = 100, ARG:2)
+CALL PRINT_RAINBOW2(ARGS:0, ARG:0, ARGS:1, ARGS:2, ARG:1, ARG:2)
+WAIT
+RETURN RESULT
+
+
+;-------------------------------------------------
+;関数名:BIGPRINT_RAINBOW2(L|W)
+;概　要:动く虹色BIGPRINT関数
+;引　数:ARGS:0…显示字符串。FORM字符串被使用做场合是""的前に@被付けるこ和
+;　　　  ARG:0…ずらし回数。1回につき{ARG:1}ミリ秒消费
+;　　　 ARGS:1…[省略可]始めに元的字符色で显示做字符串(例えば"「"や"（"被入れる)
+;　　　 ARGS:2…[省略可]终わりに元的字符色で显示做字符串(例えば"」"や"）"被入れる)
+;　　　  ARG:1…[省略可]1回的描画的后にウェイト做ミリ秒。省略做和100
+;　　　  ARG:2…[省略可]机能オプション。省略した场合是0(正顺模式)。未定義的値但渡さ受到场合も0扱い
+;　　　                 0.通常的显示(色的進行方向是正顺)
+;　　　                 1.色的進行方向被逆顺に做
+;　　　                 2.虹色に做对象被ARGS:0→ARGS:1＆ARGS:2に变更做。色的進行方向是正顺＆正顺
+;　　　                 3.虹色に做对象被ARGS:0→ARGS:1＆ARGS:2に变更做。色的進行方向是正顺＆逆顺
+;　　　                 4.虹色に做对象被ARGS:0→ARGS:1＆ARGS:2に变更做。色的進行方向是逆顺＆正顺
+;　　　                 5.虹色に做对象被ARGS:0→ARGS:1＆ARGS:2に变更做。色的進行方向是逆顺＆逆顺
+;戻り値:无(多分RESULT保護)
+;例によって例的如く2行使う的で必ず改行しちゃう
+;\n是やめたほう但よい予感
+;軽くしかテストしていない的で過度に期待不做ように…
+;しかし…ここ直到く时流石に私的頭但アレだ和思われても仕方ないわね
+;-------------------------------------------------
+@BIGPRINT_RAINBOW2L(ARGS:0, ARG:0, ARGS:1, ARGS:2, ARG:1 = 100, ARG:2)
+#LOCALSIZE 3
+#LOCALSSIZE 2
+ARG:2 = INRANGE(ARG:2, 0, 5) ? ARG:2 # 0
+LOCAL:1 = CURRENTREDRAW()
+LOCAL:2 = STRLENSU(ARGS:1) + 1
+LOCALS:0 = %GETFONT()%
+LOCALS:1 =
+IF CHKFONT("Raavi")
+	IF !LINEISEMPTY()	;既にPRINTさ受到字符串但あれば确保しておく
+		REDRAW 0
+		PRINTL 
+		LOCALS:1 = %HTML_TOPLAINTEXT(HTML_GETPRINTEDSTR())%
+		CLEARLINE 1
+		PRINTS LOCALS:1
+	ENDIF
+	;スクロール可(スクロール不做けど…まぁ、动いて见える的で)
+	IF ANIME_CONFIG("SCROLLTEXT")
+		FOR LOCAL:0, 0, ARG:0 - 1
+			REDRAW 0
+			SETFONT "Raavi"
+			IF INRANGE(ARG:2, 0, 1)
+				PRINTS " " + ARGS:1
+				CALL _PRINT_RAINBOW_SUB1(ARGS:0, LOCAL:0, ARG:2)
+				PRINTSL ARGS:2 + " "
+			ELSE
+				CALL _PRINT_RAINBOW_SUB1(" " + ARGS:1, LOCAL:0, INRANGE(ARG:2, 4, 5))
+				PRINTS ARGS:0
+				CALL _PRINT_RAINBOW_SUB1(ARGS:2 + " ", GROUPMATCH(ARG:2, 2, 5) ? LOCAL:0 + LOCAL:2 # 12 - LOCAL:2 - LOCAL:0, GROUPMATCH(ARG:2, 3, 5))
+				PRINTL 
+			ENDIF
+			SETFONT LOCALS:0
+			PRINTL 
+			REDRAW 2
+			TWAIT ARG:1, 0
+			CLEARLINE 2
+			PRINTS LOCALS:1
+		NEXT
+	ENDIF
+	REDRAW 0
+	SETFONT "Raavi"
+	IF INRANGE(ARG:2, 0, 1)
+		PRINTS " " + ARGS:1
+		CALL _PRINT_RAINBOW_SUB1(ARGS:0, LOCAL:0, ARG:2)
+		PRINTSL ARGS:2 + " "
+	ELSE
+		CALL _PRINT_RAINBOW_SUB1(" " + ARGS:1, LOCAL:0, INRANGE(ARG:2, 4, 5))
+		PRINTS ARGS:0
+		CALL _PRINT_RAINBOW_SUB1(ARGS:2 + " ", GROUPMATCH(ARG:2, 2, 5) ? LOCAL:0 + LOCAL:2 # 12 - LOCAL:2 - LOCAL:0, GROUPMATCH(ARG:2, 3, 5))
+		PRINTL 
+	ENDIF
+	SETFONT LOCALS:0
+	PRINTL 
+	REDRAW LOCAL:1
+ELSE
+	CALL PRINT_RAINBOW2L(ARGS:0, ARG:0, ARGS:1, ARGS:2, ARG:1, ARG:2)
+ENDIF
+RETURN RESULT
+
+@BIGPRINT_RAINBOW2W(ARGS:0, ARG:0, ARGS:1, ARGS:2, ARG:1 = 100, ARG:2)
+CALL BIGPRINT_RAINBOW2L(ARGS:0, ARG:0, ARGS:1, ARGS:2, ARG:1, ARG:2)
+WAIT
+RETURN RESULT
+
+
+;-------------------------------------------------
+;関数名:SMALLPRINT_RAINBOW2(|L|W)
+;概　要:动く虹色SMALLPRINT関数
+;引　数:ARGS:0…显示字符串。FORM字符串被使用做场合是""的前に@被付けるこ和
+;　　　  ARG:0…ずらし回数。1回につき{ARG:1}ミリ秒消费
+;　　　 ARGS:1…[省略可]始めに元的字符色で显示做字符串(例えば"「"や"（"被入れる)
+;　　　 ARGS:2…[省略可]终わりに元的字符色で显示做字符串(例えば"」"や"）"被入れる)
+;　　　  ARG:1…[省略可]1回的描画的后にウェイト做ミリ秒。省略做和100
+;　　　  ARG:2…[省略可]机能オプション。省略した场合是0(正顺模式)。未定義的値但渡さ受到场合も0扱い
+;　　　                 0.通常的显示(色的進行方向是正顺)
+;　　　                 1.色的進行方向被逆顺に做
+;　　　                 2.虹色に做对象被ARGS:0→ARGS:1＆ARGS:2に变更做。色的進行方向是正顺＆正顺
+;　　　                 3.虹色に做对象被ARGS:0→ARGS:1＆ARGS:2に变更做。色的進行方向是正顺＆逆顺
+;　　　                 4.虹色に做对象被ARGS:0→ARGS:1＆ARGS:2に变更做。色的進行方向是逆顺＆正顺
+;　　　                 5.虹色に做对象被ARGS:0→ARGS:1＆ARGS:2に变更做。色的進行方向是逆顺＆逆顺
+;戻り値:无(多分RESULT保護)
+;軽くしかテストしていない的で過度に期待不做ように…
+;-------------------------------------------------
+@SMALLPRINT_RAINBOW2(ARGS:0, ARG:0, ARGS:1, ARGS:2, ARG:1 = 100, ARG:2)
+CALL PRINT_RAINBOW2(ARGS:0, ARG:0, " " + ARGS:1, ARGS:2 + " ", ARG:1, ARG:2, "Estrangelo Edessa")
+RETURN RESULT
+
+@SMALLPRINT_RAINBOW2L(ARGS:0, ARG:0, ARGS:1, ARGS:2, ARG:1 = 100, ARG:2)
+CALL SMALLPRINT_RAINBOW2(ARGS:0, ARG:0, ARGS:1, ARGS:2, ARG:1, ARG:2)
+PRINTL 
+RETURN RESULT
+
+@SMALLPRINT_RAINBOW2W(ARGS:0, ARG:0, ARGS:1, ARGS:2, ARG:1 = 100, ARG:2)
+CALL SMALLPRINT_RAINBOW2(ARGS:0, ARG:0, ARGS:1, ARGS:2, ARG:1, ARG:2)
+WAIT
+RETURN RESULT
+
+
+;*************************************************
+;ユーティリティ関数
+;*************************************************
+;・他所で虹色っぽいこ和被やり想要场合に多少使える？
+;・今的和ころ虹色的定義関数しかないけど
+;-------------------------------------------------
+
+;-------------------------------------------------
+;関数名:GET_RAINBOW
+;概　要:虹色値取得用関数
+;引　数:ARG:0…何番目的色か(0～11)。范围外的场合でも顺番原样的色被返す
+;戻り値:色値
+;備　考:式中関数
+;他所で虹色被使用做たび再定義做的但面倒变成了的で関数化
+;引数错误被返す的もそれ被处理做的も面倒な的で、范围外でも顺番被崩さずに处理できるように
+;色名および顺番是以下的原样
+;Red, Orange, Yellow, Spring, Green, Teal, Cyan, Azure, Blue, Violet, Magenta, Pink
+;-------------------------------------------------
+@GET_RAINBOW(ARG:0)
+#FUNCTION
+#DIM CONST RAINBOW = 0xFF9999, 0xFFCC99, 0xFFFF99, 0xCCFF99, 0x99FF99, 0x99FFCC, 0x99FFFF, 0x99CCFF, 0x9999FF, 0xCC99FF, 0xFF99FF, 0xFF99CC
+RETURNF RAINBOW:((ARG:0 >= 0 ? ARG:0 # 11 - ABS(ARG:0 + 1)) % 12)
+
+
+;*************************************************
+;内部関数
+;*************************************************
+;・本当的意味で虹色に関做事是实質ここ只
+;・他所から直接呼んだ场合的动作是保証されません
+;・まぁ、元々动作保証なんてど的関数にもないけれど
+;・保証不做只で使ってもいい的よ。オススメ是不做けど
+;-------------------------------------------------
+
+;-------------------------------------------------
+;関数名:_PRINT_RAINBOW_SUB1
+;概　要:虹色PRINT関数的内部处理用関数
+;引　数:ARGS:0…显示字符串
+;　　　  ARG:0…[省略可]色的ずらしカウント。省略做和0
+;　　　  ARG:1…[省略可]真的场合、色的進行方向被逆顺に做。省略做和伪(正顺)
+;戻り値:无(多分RESULT保護)
+;備　考:内部関数(他所から直接呼んだ场合的动作是保証されません)
+;-------------------------------------------------
+@_PRINT_RAINBOW_SUB1(ARGS:0, ARG:0, ARG:1)
+#LOCALSIZE 3
+LOCAL:0 = GETCOLOR()		;现在的字符色被取得
+LOCAL:1 = STRLENSU(ARGS:0)	;显示字符串的字符数被取得
+FOR LOCAL:2, 0, LOCAL:1	;字符数分ループ侍奉
+	;12で割った余り、もしく是11からそれ被引いた数で色设定。ここにずらしカウント但入る
+	SETCOLOR GET_RAINBOW(ARG:1 ? 11 - (LOCAL:2 + ARG:0) % 12 # (LOCAL:2 + ARG:0) % 12)
+	PRINTS CHARATU(ARGS:0, LOCAL:2)	;ARGSから1字符抜き出して出力。こういう用途にCHARATU是实際便利
+NEXT
+SETCOLOR LOCAL:0	;元的字符色に戻す
+RETURN RESULT

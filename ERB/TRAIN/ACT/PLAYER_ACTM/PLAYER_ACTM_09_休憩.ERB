@@ -1,0 +1,159 @@
+﻿;────────────────────────────────────
+;休息 (休息90/服药91/治疗92)
+;────────────────────────────────────
+@ACT_M9(ARG = 0)
+;1以上那么判定被行わない
+#DIM LCOUNT, 1
+
+;関数初期化
+CALL ACT_M_INIT(9)
+
+;处理开始
+
+LOCALS = ACT_ACTM9
+
+CALL CHA_CRI_VAR, "基準値"
+CALLFORM %LOCALS%_REFERENCE
+
+CALL CHA_CRI_VAR, "调教者的素質"
+CALLFORM %LOCALS%_TALENT_T
+
+CALL CHA_CRI_VAR, "调教者的体力"
+CALLFORM %LOCALS%_PHYSICAL_T
+
+CALL CHA_CRI_VAR, "调教者的气力"
+CALLFORM %LOCALS%_MENTAL_T
+
+CALL CHA_CRI_VAR, @"调教者的状态(%CONDITION(TCVAR:状态变化)%)"
+CALLFORM %LOCALS%_CONDITION_T
+
+CALL CHA_CRI_VAR, "连续行动修正"
+CALLFORM %LOCALS%_PREV
+
+CALL CHA_CRI_VAR, "兴奋値"
+CALLFORM %LOCALS%_HEAT
+
+CALL CHA_CRI_VAR, "口上修正値"
+CALL ACT_ACTM_KOJO_CORRECTION_T, 9
+
+CALL CHA_CRI_VAR, "ACT修正値"
+CALLFORM %LOCALS%_CORRECTION(ARG)
+
+;ARG但1以上那么处理中断
+SIF ARG
+	RETURN RESULT
+
+CALL CHA_CRI_VAR, "实行判定"
+CALLFORM %LOCALS%_ABLE
+
+;────────────────────────────────────
+;最终判定
+;────────────────────────────────────
+CALL DEF_CRI_VAR("最大前者")
+LOCAL = GET_CRI_VAR("決定")
+IF LOCAL == -1
+	PRINTL (休息计数器异常)
+	TFLAG:ACT = 90
+ELSE
+	TFLAG:ACT = GET_ACTNUM(RESULTS)
+ENDIF
+CALL ANA_CRI_VAR()
+
+;-------------------------------------------------------------------------
+;基準値
+;-------------------------------------------------------------------------
+@ACT_ACTM9_REFERENCE
+;调合知识但あ时きに増加做动作に做ために修正@kap
+CALL ADD_CRI_VAR("进行治疗", -5)
+;要らないかも和思った的で試しに无效化@これみ
+[SKIPSTART]
+CALL DIM_CRI_VAR("稍作休息", 5)
+CALL DIM_CRI_VAR("喝营养剂", 8)
+CALL DIM_CRI_VAR("进行治疗", 10)
+[SKIPEND]
+
+;-------------------------------------------------------------------------
+;调教者的素質参照
+;-------------------------------------------------------------------------
+@ACT_ACTM9_TALENT_T
+
+;调合知识但ない <<---------？
+SIF TALENT:调合知识
+	CALL ADD_CRI_VAR("进行治疗", 5)
+
+;────────────────────────────────────
+;ゲージや状态根据变动
+;────────────────────────────────────
+;-------------------------------------
+;调教者的体力
+;-------------------------------------
+@ACT_ACTM9_PHYSICAL_T
+
+;调教者的体力但[0→3, 900→0]被加算(0～3)
+CALL ADD_CRI_VAR("稍作休息", LINE_CALC(BASE:体力, "0→3,900→0,LIMIT/0～3"))
+
+;-------------------------------------
+;调教者的气力
+;-------------------------------------
+@ACT_ACTM9_MENTAL_T
+
+;调教者的气力但[0→-9～0, 450→0]被加算(-9～0)
+CALL ADD_CRI_VAR("进行治疗", , LINE_CALC(BASE:气力, "0→-9,450→0,LIMIT/-9～0"))
+
+;-------------------------------------
+;调教者的状态
+;-------------------------------------
+@ACT_ACTM9_CONDITION_T
+
+;调教者的状态(0=通常/1=疲惫/2=衰弱/3=无气力/4=朦胧/5=情欲/6=愤怒/7=无聊/8=郁闷)
+SELECTCASE GET_CONDITION(TARGET)
+	CASE "无气力"
+		CALL ADD_CRI_VAR("进行治疗", -3)
+	CASE "朦胧"
+		CALL ADD_CRI_VAR("进行治疗", , -4)
+ENDSELECT
+
+;────────────────────────────────────
+;同じ行动连续实行的确率被ダウンし增加
+;────────────────────────────────────
+@ACT_ACTM9_PREV
+SIF INRANGE(TFLAG:前ACT, 90, 92)
+	CALL ADD_CRI_VAR(GET_ACTNAME(TFLAG:前ACT), -3 * TFLAG:同一行动奖励, -4 * TFLAG:同一行动奖励)
+
+;────────────────────────────────────
+;兴奋値被差し引き增加
+;────────────────────────────────────
+@ACT_ACTM9_HEAT
+
+;营养剤的兴奋値
+SIF FLAG:营养兴奋 > 0
+	CALL ADD_CRI_VAR("喝营养剂", -FLAG:营养兴奋)
+;治疗的兴奋値
+SIF FLAG:治疗兴奋 > 0
+	CALL ADD_CRI_VAR("进行治疗", -FLAG:治疗兴奋)
+
+;────────────────────────────────────
+;修正値計算
+;────────────────────────────────────
+@ACT_ACTM9_CORRECTION(ARG)
+#DIM LCOUNT
+
+;ARG但0以外那么修正値被計算し、以后的处理被行わない
+IF ARG
+	FOR LCOUNT, 90, 93
+		CALL ACT_M_RES_CALC(LCOUNT, GET_CRI_VAR(GET_ACTNAME(LCOUNT) + "累计"))
+	NEXT
+ELSE
+	;修正値被判定値に加算做
+	CALL ACT_ACTM_CORRECTION(9)
+ENDIF
+
+;────────────────────────────────────
+;其他变动や实行不可能的判定
+;────────────────────────────────────
+@ACT_ACTM9_ABLE
+#DIM LCOUNT
+
+;不可能判定
+CALL ACT_ACTM_ABLE(9)
+

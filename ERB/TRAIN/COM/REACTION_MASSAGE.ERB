@@ -1,0 +1,850 @@
+﻿;ACTAPPLY2被抜けてきた场合に显示做
+@REACTION_MESSAGE
+#DIMS MSTR
+#DIMS TGT
+MSTR '= CALLNAME:MASTER
+TGT  '= CALLNAME:TARGET
+
+;奉仕系的一括处理(一部的奉仕系的场合に的み机能做部位)
+IF MENUMATCH(TFLAG:ACT, "奉仕") && IS_COMGRONAME("接受") && !IS_NOWACTNAME("深喉") && !IS_NOWCOMNAME("随心所欲")
+	SELECTCASE GET_COM_RANK()
+		CASE "自然な行动"
+			PRINTFORML 被要求侍奉的%MSTR%，因为欲望和快感头脑一片空白
+			PRINTFORML 浑身软绵绵的不能顺利的进行侍奉…
+		CASE "无理的ない行动"
+			PRINTFORML %MSTR%满脑子都是变得舒服起来的事情、
+			PRINTFORML 没能很好地为%TGT%进行侍奉…
+		CASE "无理被した行动"
+			PRINTFORML %MSTR%完全不顾对%TGT%的侍奉只是一个劲的想要舒服起来
+			PRINTFORML 被%TGT%吓了一跳…
+	ENDSELECT
+	PRINTW 
+ENDIF
+
+
+
+;COM毎的处理
+SELECTCASE TRAINNAME:SELECTCOM
+
+	CASE "保持沉默"; //COM000
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				IF (IS_NOWACTNAME("眼罩") && !TFLAG:ACT派生) || TEQUIP:眼罩
+					PRINTFORML 视野被夺走，%MSTR%无法继续观察%TGT%的样子了、
+				ELSE
+					PRINTFORML %MSTR%被发现似乎在观察%TGT%的样子、
+				ENDIF
+				PRINTFORML 什么也没说就沉默了…
+			CASE "无理的ない行动"
+				PRINTFORML %MSTR%什么都没说…
+			CASE "无理被した行动"
+				;实是まんざらでもない
+				IF COMCOR_POSI()
+					PRINTFORML %MSTR%总觉得想说点什么，但是感觉内容有些羞耻
+					PRINTFORML 吞吞吐吐，说不出话来…
+				;实是嫌
+				ELSE
+					PRINTFORML %MSTR%一脸不高兴地沉默着…
+				ENDIF
+		ENDSELECT
+
+
+	CASE "弱弱地回应"; //COM001
+		;REACT派生:1:哀求做
+		IF IS_COMGRONAME("请求宽恕")
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行动"
+					PRINTFORML %MSTR%小心翼翼的念叨着，一边窥探着对方的心情
+					PRINTFORML 已经说过不要做这种事了…
+				CASE "无理的ない行动"
+					PRINTFORML %MSTR%一脸胆怯，说着请不要做这种事了…
+				CASE "无理被した行动"
+					;实是まんざらでもない
+					IF COMCOR_POSI()
+						PRINTFORML %MSTR%抛开自己想要撒娇的心情、
+						PRINTFORML 虽然很软弱，但还是说出来了请不要再做了…
+					ELSE                                    ;实是嫌
+						PRINTFORML 为了不让%MSTR%心情变差而尽量温柔起来、
+						PRINTFORML 已经说过不要做这种事了…
+					ENDIF
+			ENDSELECT
+		;RAECT派生:0:弱弱地回应
+		ELSEIF IS_COMGRONAME("消极的服从")
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行动"
+					PRINTFORML %MSTR%用微弱的声音，一边窥探对方的心情一边回答…
+				CASE "无理的ない行动"
+					PRINTFORML %MSTR%懦弱地回答了…
+				CASE "无理被した行动"
+					;实是まんざらでもない
+					IF COMCOR_POSI()
+						PRINTFORML %MSTR%隐约注意到了自己心情的同时、
+						PRINTFORML 保持距离软弱地进行了回答…
+					;实是嫌
+					ELSE
+						PRINTFORML %MSTR%为了不让对方心情变差而尽量温柔地回答了…
+					ENDIF
+			ENDSELECT
+		ENDIF
+
+
+	CASE "冷淡地回应"; //COM002
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %MSTR%用坚强的眼睛看着%TGT%，冷淡地回应了…
+			CASE "无理的ない行动"
+				PRINTFORML %MSTR%冷淡的\@ IS_NOWACTNAME("推倒") ? 回应 # 回答 \@了…
+			CASE "无理被した行动"
+				;实是まんざらでもない
+				IF COMCOR_POSI()
+					PRINTFORML %MSTR%总觉得想说点什么，但是感觉内容有些羞耻
+					PRINTFORML 若无其事地敷衍了一下…
+				;实是嫌
+				ELSE
+					PRINTFORML %MSTR%竭尽全力的抵抗着冷淡地回应了…
+				ENDIF
+		ENDSELECT
+
+
+	CASE "友善的回应"; //COM003
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %MSTR%开心地对%TGT%露出微笑、
+				PRINTFORML 亲切地回答了…
+			CASE "无理的ない行动"
+				PRINTFORML %MSTR%很亲切的\@ IS_NOWACTNAME("推倒") ? 回应 # 回答 \@了…
+			CASE "无理被した行动"
+				PRINTFORML %MSTR%为了讨好对方笑着回应了…
+		ENDSELECT
+
+
+	CASE "强势的回应"; //COM004
+		;REACT派生1：推到に屈不做
+		IF IS_NOWACTNAME("推倒")
+			;「冷淡に」「友善よく」に派生但なく、「果断に」只派生标志但设置してある理由是、
+			;「果断で回答した」和「もうやめろ和强く言った」的ニュアンス但异なるためです。
+			;基準和して是、それぞれ的旁白に对して同じ口上但显示される的但よい的か、別的口上被用意したほう但よい的かです。
+			;TFLAG:REACT派生 = 1		@COM4で代入されている的で注释アウト@/L
+			PRINTFORML %MSTR%强烈要求停止…
+		;REACT派生0：果断に回应
+		ELSE
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行动"
+					PRINTFORML %MSTR%盯着%TGT%，强硬地回应了…
+				CASE "无理的ない行动"
+					PRINTFORML %MSTR%强硬地回答了…
+				CASE "无理被した行动"
+				;实是まんざらでもない
+				IF COMCOR_POSI()
+					PRINTFORML %MSTR%总觉得想说点什么，但是感觉内容有些羞耻
+					PRINTFORML 强硬地表示与%TGT%无关…
+				;实是嫌
+				ELSE
+					PRINTFORML %MSTR%强硬地回应了，但是声音有点颤抖…
+				ENDIF
+			ENDSELECT
+		ENDIF
+
+
+	CASE "讽刺挖苦"; //COM005
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %MSTR%以看起来很从容的态度跟在后面、
+				PRINTFORML 带着讽刺的回应了…
+			CASE "无理的ない行动"
+				PRINTFORML %MSTR%虽然讽刺了一番，但还是很坦率地按照对方说的去做了…
+			CASE "无理被した行动"
+				;实是まんざらでもない
+				IF COMCOR_POSI()
+					PRINTFORML %MSTR%想坦率的表达出心情、
+					PRINTFORML 不知为何变得有些害羞，夹杂着讽刺进行了回应…
+				;实是嫌
+				ELSE
+					PRINTFORML %MSTR%言语中夹杂着小小的恶意进行了回应…
+					PRINTFORML 虽然已经说出来了，但是一直在意有没有伤害到对方的心情…
+				ENDIF
+		ENDSELECT
+
+
+	CASE "更加强硬"; //COM006
+		;こ的条件是REACT派生被反映したも的で是ない和いうこ和で@/L
+		IF SOURCE:MASTER:快Ｃ + SOURCE:MASTER:快Ｖ + SOURCE:MASTER:快Ａ + SOURCE:MASTER:快Ｂ > 10
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行动"
+					PRINTFORML %MSTR%沉溺在快感中，说要做得更劲爆一些…
+				CASE "无理的ない行动"
+					PRINTFORML %MSTR%表示想要些更厉害的…
+				CASE "无理被した行动"
+					;实是まんざらでもない
+					IF COMCOR_POSI()
+						PRINTFORML %MSTR%一边按捺着害羞的心情，一边要求再做一点…
+					;实是嫌
+					ELSE
+						PRINTFORML %MSTR%半自暴自弃的说，如果再努力一点就好了…
+					ENDIF
+			ENDSELECT
+		ELSE
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行动"
+					PRINTFORML %MSTR%想要做更舒服的事情、
+					PRINTFORML 不禁表示想要更加强硬一些…
+				CASE "无理的ない行动"
+					PRINTFORML %MSTR%有些兴趣，表示可以更强硬一些…
+				CASE "无理被した行动"
+					;实是まんざらでもない
+					IF COMCOR_POSI()
+						PRINTFORML %MSTR%整理着复杂的心情的同时组织着语言、
+						PRINTFORML 如果想要像%TGT%那样则必须更加强硬的说出来…
+					;实是嫌
+					ELSE
+						PRINTFORML %MSTR%变得自暴自弃了，表示再强硬一点就好了…
+						PRINTFORML 虽然说了出来，但已经是双唇紧闭肩膀颤抖的样子了…
+					ENDIF
+			ENDSELECT
+		ENDIF
+		;REACT派生1：「こ的恥知らず的メス豚め！」
+		SIF TFLAG:REACT派生
+			PRINTFORML 对于%MSTR%不知羞耻的言论，%TGT%似乎很不高兴…
+
+
+	CASE "请求宽恕"; //COM007
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %MSTR%含泪恳求%TGT%原谅…
+			CASE "无理的ない行动"
+				PRINTFORML %MSTR%请求着原谅…
+			CASE "无理被した行动"
+				;实是まんざらでもない
+				IF COMCOR_POSI()
+					PRINTFORML %MSTR%害怕的快要疯了、
+					PRINTFORML 恳求着%TGT%的原谅…
+				;实是嫌
+				ELSE
+					{
+					PRINTFORML %MSTR%为了讨好\@ 
+					TEQUIP:性交中 == 3 || TEQUIP:三角木马 
+					? な視線被%TGT%に投げかけ 
+					# に%TGT%被见上げ时 
+					\@、もう許して和願った…
+					}
+				ENDIF
+		ENDSELECT
+		;REACT派生1：「意见被出すなんていい度胸だね！」
+		SIF IS_COMIMPNAME("0から遠ざかる")
+			PRINTFORML %MSTR%的意见，似乎完全破坏了%TGT%的心情…
+
+
+	CASE "保持心情舒畅"; //COM008
+		IF SOURCE:MASTER:快Ｃ + SOURCE:MASTER:快Ｖ + SOURCE:MASTER:快Ａ + SOURCE:MASTER:快Ｂ > 10
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行动"
+					PRINTFORML %MSTR%沉溺在快感中，想要变的更舒服…
+				CASE "无理的ない行动"
+					PRINTFORML %MSTR%继续说着想要更舒服一些…
+				CASE "无理被した行动"
+					;实是まんざらでもない
+					IF COMCOR_POSI()
+						PRINTFORML %MSTR%一边按捺着害羞的心情，一边要求再做一点…
+					;实是嫌
+					ELSE
+						PRINTFORML %MSTR%认为比受伤要好，并表面希望保持原样…
+					ENDIF
+			ENDSELECT
+		ELSE
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行动"
+					PRINTFORML %MSTR%像是被情欲所俘虏一样，一个劲的要求着更舒服的事情…
+				CASE "无理的ない行动"
+					PRINTFORML %MSTR%表示想要舒服起来…
+				CASE "无理被した行动"
+					;实是まんざらでもない
+					IF COMCOR_POSI()
+						PRINTFORML %MSTR%一边压抑着害羞的心情，一边坦率地面对欲望
+						PRINTFORML 说了想做更舒服的事…
+					;实是嫌
+					ELSE
+						PRINTFORML %MSTR%觉得比受伤要好、
+						PRINTFORML 说无论如何都想舒服起来…
+					ENDIF
+			ENDSELECT
+		ENDIF
+		;REACT派生1：「こ的恥知らず的メス豚め！」
+		SIF TFLAG:REACT派生
+			PRINTFORML 对于%MSTR%不知羞耻的言论，%TGT%似乎很不高兴…
+
+
+	CASE "感到害羞"; //COM010
+		;REACT派生1：快感に感到害羞
+		IF SOURCE:MASTER:快Ｃ + SOURCE:MASTER:快Ｖ + SOURCE:MASTER:快Ａ + SOURCE:MASTER:快Ｂ > 10
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行动"
+					PRINTFORML %MSTR%因为快感漏出了声音，吃惊地屏住呼吸
+					PRINTFORML 害羞的移开了视线…
+				CASE "无理的ない行动"
+					PRINTFORML %MSTR%无法隐藏上扬的快感，害羞地转过脸…
+				CASE "无理被した行动"
+					;实是心情舒畅
+					IF COMCOR_POSI()
+						PRINTFORML %MSTR%开始意识到自己想要变得更舒服、
+						PRINTFORML 被羞耻染红了脸颊…
+					;实是嫌
+					ELSE
+						PRINTFORML %MSTR%对于被给予快感感到强烈的羞耻、
+						PRINTFORML 由于害羞蜷着身子…
+					ENDIF
+			ENDSELECT
+		;REACT派生0：状況に感到害羞
+		ELSE
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行动"
+					PRINTFORML %MSTR%感受到%TGT%舔舐般的视线、
+					PRINTFORML 不由得害羞的移开视线…
+				CASE "无理的ない行动"
+					PRINTFORML %MSTR%无法忍受这样屈辱的状况，因极度的羞耻而转过了脸…
+				CASE "无理被した行动"
+					;实是まんざらでもない
+					IF COMCOR_POSI()
+						PRINTFORML %MSTR%因为被看到害羞的样子心情变得有些奇怪、
+						PRINTFORML 因更加害羞而红了脸…
+					;实是嫌
+					ELSE
+						PRINTFORML %MSTR%受不了羞辱自己的视线、
+						PRINTFORML 害羞地抱着身子…
+					ENDIF
+			ENDSELECT
+		ENDIF
+
+
+	CASE "讨厌"; //COM011
+		;REACT派生0：讨厌但ACT是妨害せず
+		IF !IS_COMGRONAME("发狂")
+			SELECTCASE GET_COM_RANK()
+				;自然な行动
+				CASE "自然な行动"
+					PRINTFORML %MSTR%对%TGT%说了讨厌那样…
+				;无理的ない行动
+				CASE "无理的ない行动"
+					PRINTFORML %MSTR%讨厌的摇着头…
+				;无理被した行动
+				CASE "无理被した行动"
+					;实是まんざらでもない
+					IF COMCOR_POSI()
+						PRINTFORML 虽然%MSTR%的内心并不是很满足、
+						PRINTFORML 因为害羞表现出了不愿意的样子…
+					;实是嫌
+					ELSE
+						PRINTFORML %MSTR%用尽全身全力，用颤抖的声音说出了讨厌…
+					ENDIF
+			ENDSELECT
+		;REACT派生1：嫌但ってACT妨害
+		ELSE
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行动"
+					PRINTFORML %MSTR%由于讨厌推开了了%TGT%…
+				CASE "无理的ない行动"
+					PRINTFORML %MSTR%因为讨厌而扭动着身子，妨碍着%TGT%的动作…
+				CASE "无理被した行动"
+					;实是まんざらでもない
+					IF COMCOR_POSI()
+						PRINTFORML %MSTR%虽然十分不情愿但还是伸出了手、
+						PRINTFORML %TGT%露出抱歉的表情…
+					;实是嫌
+					ELSE
+						PRINTFORML %MSTR%因为讨厌而用尽全身力气，从%TGT%手中逃了出来…
+					ENDIF
+			ENDSELECT
+		ENDIF
+
+
+	CASE "骂笨手笨脚"; //COM012
+		;REACT派生0：こきおろす
+		IF IS_COMIMPNAME("恶印象大")
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行动"
+					PRINTFORML %MSTR%说这样的话自己能做得更好…
+				CASE "无理的ない行动"
+					PRINTFORML 对于%TGT%不成熟的技术，%MSTR%表示技术很差…
+				CASE "无理被した行动"
+					PRINTFORML %MSTR%用尽全身力气，表示%TGT%技术很差…
+			ENDSELECT
+		;REACT派生1：强但る
+		ELSEIF IS_COMIMPNAME("恶印象小")
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行动"
+					PRINTFORML %MSTR%因为快感的冲击表情都扭曲了，但还是说自己一点感觉都没有…
+				CASE "无理的ない行动"
+					PRINTFORML 虽然切实感受到了快感，但%MSTR%还是坚持说技术不行…
+				CASE "无理被した行动"
+					PRINTFORML %MSTR%夹杂着喘息声，虚张声势的表示%TGT%的技术不行…
+			ENDSELECT
+		ENDIF
+
+
+	CASE "无所畏惧的笑"; //COM013
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %MSTR%嘲笑了%TGT%费尽心思的调教…
+			CASE "无理的ない行动"
+				PRINTFORML %MSTR%故意对着%TGT%挑衅似的笑了…
+			CASE "无理被した行动"
+				;实是まんざらでもない
+				IF COMCOR_POSI()
+					PRINTFORML %MSTR%为了确认自己还是清醒的而笑了笑…
+				;实是嫌
+				ELSE
+					PRINTFORML %MSTR%露出像是贴上去一样的笑容，目光游离…
+				ENDIF
+		ENDSELECT
+
+
+	CASE "忍受快感"; //COM014
+		;REACT派生1：哀求
+		IF IS_COMGRONAME("请求宽恕")
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行动"
+					PRINTFORML %MSTR%一边忍耐快感一边请求着原谅…
+				CASE "无理的ない行动"
+					PRINTFORML %MSTR%一边忍耐着强烈的快感，一边恳求不要做这样的事…
+				CASE "无理被した行动"
+					;实是まんざらでもない
+					IF COMCOR_POSI()
+						PRINTFORML %MSTR%害怕因为快感而失去理智，不停说着请求原谅的话…
+					;实是嫌
+					ELSE
+						PRINTFORML %MSTR%没有接受快感，只是一个劲的要求停下来…
+					ENDIF
+			ENDSELECT
+		;REACT派生0：耐久
+		ELSE
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行动"
+					PRINTFORML %MSTR%虽然感觉到了明显的快感，但仍在忍耐…
+				CASE "无理的ない行动"
+					PRINTFORML %MSTR%拼命忍耐着快感…
+				CASE "无理被した行动"
+					;实是まんざらでもない
+					IF COMCOR_POSI()
+						PRINTFORML %MSTR%为了摆脱欲望，努力忍受着快感…
+					;实是嫌
+					ELSE
+						PRINTFORML %MSTR%不想接受快感而一直忍耐着…
+					ENDIF
+			ENDSELECT
+		ENDIF
+
+
+	CASE "接受快感"; //COM015
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %MSTR%为了让自己变的舒服而拼命地追求快感…
+			CASE "无理的ない行动"
+				PRINTFORML %MSTR%发出甜美的娇声的同时接受了快感…
+			CASE "无理被した行动"
+				PRINTFORML 内心一旦被快感俘虏，%MSTR%的心神就慢慢荡然无存…
+		ENDSELECT
+
+
+	CASE "心情舒畅！"; //COM016
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %MSTR%用甜美的声音向%TGT%传达了快感和喜悦…
+			CASE "无理的ない行动"
+				PRINTFORML %MSTR%不停地发出感谢快感的幸福的声音…
+			CASE "无理被した行动"
+				PRINTFORML %MSTR%如同献媚似的用心情舒畅的声音喘息着…
+		ENDSELECT
+
+
+	CASE "摆动腰部"; //020
+		;主導権是调教对象
+		IF SEX_INITIATIVE(MASTER)
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行动"
+					PRINTFORML %MSTR%通过腰部的动作向对方传达着自己的喜悦…
+				CASE "无理的ない行动"
+					PRINTFORML %MSTR%为了让%TGT%开心而动着腰…
+				CASE "无理被した行动"
+					PRINTFORML 为了得到%TGT%的欢心，%MSTR%竭尽全力地扭动着腰部…
+			ENDSELECT
+		;主導権是调教者
+		ELSE
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行动"
+					PRINTFORML %MSTR%为了让舒服起来而小心翼翼地摆动着腰…
+				CASE "无理的ない行动"
+					PRINTFORML 像是沉溺在%TGT%的身体里一样，%MSTR%的腰肆意的摆动着贪图着快感…
+				CASE "无理被した行动"
+					PRINTFORML 无论%MSTR%怎么摆动腰部，自己的快感只会越来越强烈…
+			ENDSELECT
+		ENDIF
+
+
+	CASE "射进里面！"; //COM021
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %MSTR%被%TGT%侵犯的快感和情欲所支配、
+				PRINTFORML 一脸梦幻般的表情表示无论如何都好，呼喊着要求中出…
+			CASE "无理的ない行动"
+				;正常位・对面座位
+				IF GROUPMATCH(TEQUIP:性交中, 1, 4)
+					;调教对象に无脚
+					IF TALENT:MASTER:无足
+						PRINTFORML %MSTR%用下半身完全包住%TGT%的腰，小声请求着射在里面…
+					;足是ある
+					ELSE
+						PRINTFORML %MSTR%用两脚紧紧抱住%TGT%的腰，小声地要求着中出…
+					ENDIF
+				;それ以外
+				ELSE
+					PRINTFORML %MSTR%沉溺于被贯入的快感中，连射进里面！这样的话都喊出来了…
+				ENDIF
+			CASE "无理被した行动"
+				PRINTFORML %MSTR%被%TGT%侵犯着，内心被快感搅得一团乱麻
+				PRINTFORML 就像被丢弃的碗一样崩溃了，只是一个劲的说着，中出和射进去…
+		ENDSELECT
+
+
+	CASE "不要中出！"; //COM022
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %MSTR%无力地被%TGT%侵犯的同时，筋疲力尽地
+				PRINTFORML 请求着停止，哀求着原谅…
+			CASE "无理的ない行动"
+				PRINTFORML %MSTR%一边忍耐被贯穿的快感，一边喊着不要射在里面…
+			CASE "无理被した行动"
+				;实是感受いい
+				IF COMCOR_POSI()
+					PRINTFORML %MSTR%毫无羞耻的无视了外界的名声拼命地甩开想要%TGT%的感情、
+					PRINTFORML 叫着只有里面不可以，请射到外面…
+				;实是嫌
+				ELSE
+					PRINTFORML %MSTR%虽然害怕引起%TGT%的愤怒、
+					{
+					PRINTFORML \@ V_SEX() 
+					? 害怕被授种 # 对射精在肠道内感到厌恶，
+					\@、哭喊着 「不要射在里面，不要射出来」…
+					}
+				ENDIF
+		ENDSELECT
+
+
+	CASE "忍受疼痛"; //COM030
+		;派生：痛いけど心情舒畅！
+		IF SOURCE:MASTER:快Ｃ + SOURCE:MASTER:快Ｖ + SOURCE:MASTER:快Ａ + SOURCE:MASTER:快Ｂ > 10
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行动"
+					PRINTFORML %MSTR%为了缓解疼痛，同时紧紧抓住涌上心头的快感…
+				CASE "无理的ない行动"
+					PRINTFORML 快感和痛苦同时袭来，%MSTR%忍耐的声音漏了出来…
+				CASE "无理被した行动"
+					;实是まんざらでもない
+					IF COMCOR_POSI()
+						PRINTFORML %MSTR%吞下了各种各样的感情，同时忍住了快感和痛苦…
+					;实是嫌
+					ELSE
+						PRINTFORML %MSTR%意识到了隐藏在疼痛中的快感，一边害怕一边忍耐着…
+					ENDIF
+			ENDSELECT
+		;派生：疼痛被忍耐
+		ELSE
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行动"
+					;和りあえず歯被立てる的被回避。REACT派生被作って负荷に应じて色々やる的もいいんじゃないかな感@/L
+					;强制口爱抚的场合も不味い的で和りあえず弹く。和いうかいずれきっちり手入れすべき部位@/L
+					{
+					PRINTFORML %MSTR%是\@ IS_NOWACTNAME("深喉") || (IS_NOWACTNAME("强制口爱抚") && PENIS(TARGET)) 
+					? 即使被挖到喉咙深处的痛苦中漏出呜咽声，也接受了%TGT%的行为
+					# 咬紧牙关忍耐着痛苦 \@…
+					}
+				CASE "无理的ない行动"
+					PRINTFORML %MSTR%忍受着疼痛…
+				CASE "无理被した行动"
+					;实是まんざらでもない
+					IF COMCOR_POSI()
+						PRINTFORML %MSTR%忍受着痛苦，接受了%TGT%的行为…
+					;实是嫌
+					ELSE
+						PRINTFORML %MSTR%忍耐着疼痛漏出了苦闷的呻吟…
+					ENDIF
+			ENDSELECT
+		ENDIF
+
+
+	CASE "发出悲鸣"; //COM031
+		;REACT派生0：疼痛根据悲鳴
+		IF SOURCE:MASTER:疼痛 > 500 || SOURCE:MASTER:疼痛 > PALAM:MASTER:恐怖 * 2
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行动"
+					PRINTFORML %MSTR%痛得大叫起来…
+				CASE "无理的ない行动"
+					PRINTFORML %MSTR%无法忍受疼痛，发出了悲鸣…
+				CASE "无理被した行动"
+					;实是まんざらでもない
+					IF COMCOR_POSI()
+						PRINTFORML %MSTR%自然发出了%TGT%所喜欢的痛苦的悲鸣…
+					;实是嫌
+					ELSE
+						PRINTFORML %MSTR%苦闷的发出痛苦的悲鸣…
+					ENDIF
+			ENDSELECT
+		;REACT派生1：恐怖根据悲鳴
+		ELSE
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行动"
+					PRINTFORML %MSTR%感受到了异样的恐怖，凄惨的叫着…
+				CASE "无理的ない行动"
+					PRINTFORML %MSTR%感到恐怖发出了尖叫…
+				CASE "无理被した行动"
+					;实是まんざらでもない
+					IF COMCOR_POSI()
+						PRINTFORML %MSTR%发出了魅惑的悲鸣…
+					;实是嫌
+					ELSE
+						PRINTFORML %MSTR%像是害怕似的发出了悲鸣…
+					ENDIF
+			ENDSELECT
+		ENDIF
+
+
+	CASE "发狂"; //COM032
+		;REACT派生0：发狂成功
+		IF IS_COMGRONAME("发狂")
+			{
+			PRINTFORML %MSTR%是\@ TFLAG:REACT负荷 == 2 
+			? 竭尽全力抵抗、# 发狂 
+			\@妨碍了%TGT%的行动。%TGT%似乎相当生气…
+			}
+			;TCVAR:状态变化 = 6
+		ELSE
+			;REACT派生1：绳捆绑根据发狂失敗
+			IF TEQUIP:绳 && !IS_NOWACTNAME("绳")
+				{
+				PRINTFORML 被绑起来的%MSTR%是\@ TFLAG:REACT负荷 == 2 
+				? 明知无用仍试图抵抗 # 发狂试图抵抗 
+				\@但绳子更深地勒进去，只是徒增疼痛而已…
+				}
+			;REACT派生2：制止根据发狂失敗
+			ELSE
+				{
+				PRINTFORML %MSTR%是\@ TFLAG:REACT负荷 == 2 
+				? 竭尽全力试图抵抗 # 发狂试图抵抗 
+				\@但被%TGT%压制住了…
+				}
+			ENDIF
+		ENDIF
+
+
+	CASE "害怕"; //COM033
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %MSTR%像小动物一样瑟瑟发抖…
+			CASE "无理的ない行动"
+				PRINTFORML %MSTR%感到恐怖而变得害怕起来…
+			CASE "无理被した行动"
+				;实是まんざらでもない
+				IF COMCOR_POSI()
+					PRINTFORML 比起%TGT%%MSTR%更害怕慢慢变得奇怪的自己…
+				;实是嫌
+				ELSE
+					PRINTFORML %MSTR%怀着悔恨的心情，老实地将敬畏的目光投向了…
+				ENDIF
+		ENDSELECT
+		;REACT派生1：怯えに对做焦躁
+		SIF IS_COMIMPNAME("0から遠ざかる")
+			PRINTFORML 对于%MSTR%的战战兢兢和害怕的样子，%TGT%似乎很焦躁…
+
+
+	CASE "拒绝执行"; //COM040
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %MSTR%以强烈的意志拒绝了要求…
+			CASE "无理的ない行动"
+				PRINTFORML %MSTR%拒绝了%TGT%的要求…
+			CASE "无理被した行动"
+				;实是まんざらでもない
+				IF COMCOR_POSI()
+					PRINTFORML %MSTR%虽然有些迟疑但并没有答应要求…
+				;实是嫌
+				ELSE
+					PRINTFORML %MSTR%虽然感到了威压但并没有答应要求…
+				ENDIF
+		ENDSELECT
+
+
+	CASE "消极的执行"; //COM041
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %MSTR%不能违抗%TGT%…
+			CASE "无理的ない行动"
+				PRINTFORML %MSTR%最后还是按照%TGT%说的那样做了…
+			CASE "无理被した行动"
+				;实是まんざらでもない
+				IF COMCOR_POSI()
+					PRINTFORML %MSTR%好像没有独自行动的勇气…
+				;实是嫌
+				ELSE
+					PRINTFORML %MSTR%虽然很懊恼，但也不想反抗…
+				ENDIF
+		ENDSELECT
+		;REACT派生1：消极的な的但気に入らない
+		SIF IS_COMIMPNAME("恶印象小")
+			;BASE:焦躁で派生
+			{
+			PRINTFORML 对于%MSTR%的消极态度、%TGT%是\@ TENSION(TARGET, 7) == "高" 
+			? 似乎很焦躁 # 看起来不满 \@…
+			}
+
+
+	CASE "积极的执行"; //COM042
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %MSTR%想要让%TGT%开心…
+			CASE "无理的ない行动"
+				PRINTFORML %MSTR%正在为%TGT%服务…
+			CASE "无理被した行动"
+				;实是まんざらでもない
+				IF COMCOR_POSI()
+					PRINTFORML 比起自己%MSTR%更关注%TGT%…
+				;实是嫌
+				ELSE
+					PRINTFORML %MSTR%似乎有意识地表现得特别出色…
+				ENDIF
+		ENDSELECT
+
+
+	CASE "充满爱意的执行"; //COM043
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %MSTR%心里想要为心爱的人竭尽全力…
+			CASE "无理的ない行动"
+				PRINTFORML %MSTR%一脸陶醉的表情认真地完成了命令…
+			CASE "无理被した行动"
+				PRINTFORML %MSTR%装作平静的样子，却隐藏不住开心的表情…
+		ENDSELECT
+
+
+	CASE "冷淡的执行"; //COM044
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %MSTR%好像有足够的时间去确认下%TGT%的情况…
+			CASE "无理的ない行动"
+				PRINTFORML 为了让%TGT%高兴%MSTR%想引诱其欢心…
+			CASE "无理被した行动"
+				;实是まんざらでもない
+				IF COMCOR_POSI()
+					PRINTFORML %MSTR%打算保持平常心…
+				;实是嫌
+				ELSE
+					PRINTFORML %MSTR%勉强装作平静…
+				ENDIF
+		ENDSELECT
+
+
+	CASE "开始自慰"; //COM050
+		SELECTCASE GET_COM_RANK()
+			;自然な行动
+			CASE "自然な行动"
+				PRINTFORML %MSTR%的手无意识地抚摸起自己的性器…
+			;无理的ない行动
+			CASE "无理的ない行动"
+				PRINTFORML %MSTR%无法忍耐的擅自自慰起来…
+			;无理被した行动
+			CASE "无理被した行动"
+				PRINTFORML %MSTR%试图通过自慰沉溺于快感中…
+		ENDSELECT
+		;REACT派生1：勝手にオナニー做な
+		SIF IS_COMIMPNAME("恶印象大")
+			PRINTFORML 对于擅自开始自慰的%MSTR%，%TGT%似乎有些焦躁…
+
+
+	CASE "移除道具"; //COM051
+		PRINTFORML %MSTR%随意取下了安装好的道具，对此%TGT%似乎有些生气…
+
+
+	CASE "随心所欲"; //COM052
+		SELECTCASE TFLAG:REACT派生
+			;REACT派生1：无抵抗に犯される
+			CASE 1
+				PRINTFORML %MSTR%无力的身体毫无抵抗的被侵犯着，在喘息中被送入了无尽的快感…
+			;REACT派生2：溺受到ように摆动腰部
+			CASE 2
+				PRINTFORML %MSTR%像是沉迷于%TGT%的身体一样，呼吸紊乱只是一个劲地摇晃着腰…
+			;REACT派生3：言われるままゆっくり服从
+			CASE 3
+				PRINTFORML %MSTR%只是按照%TGT%说的那样做了…
+			;REACT派生4：魅入ら受到ように奉仕被繰り返す
+			CASE 4
+				PRINTFORML 就像被迷住了一样，%MSTR%专心致志地为%TGT%进行侍奉…
+				PRINTFORML 一副心不在焉的样子，动作很可疑…
+			;REACT派生5：悔しそうに睨む
+			CASE 5
+				PRINTFORML %MSTR%悔恨地咬着嘴唇，抬头看着%TGT%…
+			;REACT派生6：怯えたように见つめる
+			CASE 6
+				PRINTFORML %MSTR%害怕地盯着%TGT%…
+			;REACT派生7：声に那么ない悲鳴被上げて的たうちまわる
+			CASE 7
+				PRINTFORML %MSTR%痛得说不出话来只能惨叫着在地上打滚…
+			;REACT派生8：おなにーに夢中で聞いてない
+			CASE 8
+				PRINTFORML %MSTR%只顾着手淫而没有好好回复…
+				PRINTFORML %TGT%好像很不满…
+			;REACT派生9：感受よくって生回答
+			CASE 9
+				PRINTFORML %MSTR%被快感折磨得浑身发抖只能点头…
+			;REACT派生10：頭真っ白恍惚状态
+			CASE 10
+				PRINTFORML %MSTR%被给予的快感玩弄，变得恍惚了…
+				PRINTFORML 疲惫的大脑中一片空白，已经完全无法思考了…
+			;REACT派生11：主动でもわからないまま恥ずかしいこ和被口走る
+			CASE 11
+				PRINTFORML %MSTR%茫然地回答了…
+				PRINTFORML 自己也不太明白就说了什么丢脸的话…
+			;其他(休息一次/通常)
+			CASEELSE
+				{
+				PRINTFORML %MSTR%是\@ TFLAG:休息一次 
+				? 安心したように体的力被抜いた 
+				# 身体被投げ出し、される但ままになっている \@…
+				}
+		ENDSELECT
+
+
+	CASE "高潮！"; //COM070
+		PRINTFORM %TGT%是
+		;REACT派生1：高潮あげる
+		IF TCVAR:MASTER:焦虑度 == 1
+			{
+			PRINTFORML \@ GETBIT(TEQUIP:自慰中, 0) || (GETBITAND(TEQUIP:自慰中, 0, 1)) 
+			? 微笑着注视着在梦中继续自慰的%MSTR%的模样… 
+			# 温柔地微笑着继续爱抚 \@
+			}
+		;REACT派生2：高潮あげない
+		ELSEIF TCVAR:MASTER:焦虑度 > 1
+			{
+			PRINTFORML \@ GETBIT(TEQUIP:自慰中, 0) || (GETBITAND(TEQUIP:自慰中, 0, 1)) 
+			? 不允许通过自慰达到高潮的%MSTR%无法射出… 
+			# 当露出恶作剧般的笑容时，%MSTR%开始着急起来 \@
+			}
+		;REACT派生0：「ふーん」
+		ELSE
+			PRINTFORML 无视%MSTR%的要求，带着淘气的笑容继续着爱抚…
+		ENDIF
+
+
+	CASE "接吻"; //COM71
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %MSTR%一往情深，热情地亲吻了%TGT%…
+			CASE "无理的ない行动"
+				PRINTFORML %MSTR%为了传达心中的爱意，温柔地亲吻了%TGT%…
+			CASE "无理被した行动"
+				;实是まんざらでもない
+				IF COMCOR_POSI()
+					PRINTFORML %MSTR%犹豫着亲吻了%TGT%…
+				;实是嫌
+				ELSE
+					PRINTFORML %MSTR%为了不让对方了解自己内心真实的想法，欺骗的亲吻了对方…
+				ENDIF
+		ENDSELECT
+ENDSELECT

@@ -1,0 +1,461 @@
+﻿;-------------------------------------------------------------------------------
+;	DATAMENUで使用做マジックナンバー
+;-------------------------------------------------------------------------------
+;	和りあえずSAVE和AUTOで90+10で100枠、オプションで变更できるように做那么
+;	マジックナンバー的和ころ被適当なFLAGにでもすればおｋ
+;===============================================================================
+@SAVE_AREA(ARG)
+#FUNCTION
+RETURNF LIMIT(100 + ARG, 0, 1000)
+
+@AUTOSAVE_AREA(ARG)
+#FUNCTION
+RETURNF LIMIT(10 + ARG, 0, SAVE_AREA())
+
+;COPYDATA用GLOBAL:x/GLOBALS:x
+;	现段階で是COPY元 = GLOBAL:998、COPY先 = GLOBAL:999被使用
+;	对话窗口用暂时使用 = GLOBALS:99 被使用、TEMP保存枠に1000 被使用
+;	ここ被变えれば变更可
+@COPYDATA_BY()
+#FUNCTION
+RETURNF 998
+
+@COPYDATA_TO()
+#FUNCTION
+RETURNF 999
+
+@COPYDATA_TEMP()
+#FUNCTION
+RETURNF 1000
+
+@COPYDATA_TAG()
+#FUNCTION
+RETURNF 99
+
+;-------------------------------------------------------------------------------
+;	TITLE_LOADGAME	标题画面から加载被選んだ场合的独自处理
+;-------------------------------------------------------------------------------
+;===============================================================================
+@TITLE_LOADGAME
+CALL DATAMENU("TITLELOAD")
+
+;-------------------------------------------------------------------------------
+;	EVENTLOAD
+;-------------------------------------------------------------------------------
+;	Rev#でEVENTLOAD但见当たらなかった的でこんな和ころに
+;	え、まじで？
+;===============================================================================
+@EVENTLOAD
+LOADGLOBAL
+CALLF ANIME_CONFIG("SET", GLOBAL)
+SIF GLOBALS:COPYDATA_TAG() != ""
+	CALL DATAMENU("NOWCOPY")
+
+REDRAW 0
+CALL DAY_EFFECT
+
+;FLAG:2的更新
+FLAG:主人 = FINDTALENT("主人")
+; PLAY时间用
+CALLF PLAYTIME("SET")
+
+;-------------------------------------------------------------------------------
+;	保存时用暂时变数初期化
+;-------------------------------------------------------------------------------
+;	みたまんま
+;	Rev#的保存系统でどれ被消していい的かわからない的で行頭RETURN
+;===============================================================================
+@VAR_INITIALIZE
+#LOCALSIZE 1
+RETURN RESULT
+
+;↓以下处理-------------------------------------------------
+VARSET TFLAG
+VARSET TSTR
+FOR LOCAL, 0, VARSIZE("TCVAR")
+	CVARSET TCVAR, LOCAL
+NEXT
+FOR LOCAL, 0, VARSIZE("BASE")
+	CVARSET DOWNBASE, LOCAL
+NEXT
+FOR LOCAL, 0, VARSIZE("PALAM")
+	CVARSET PALAM, LOCAL
+	CVARSET GOTJUEL, LOCAL
+	CVARSET CUP, LOCAL
+	CVARSET CDOWN, LOCAL
+NEXT
+FOR LOCAL, 0, VARSIZE("EX")
+	CVARSET EX, LOCAL
+	CVARSET NOWEX, LOCAL
+NEXT
+FOR LOCAL, 0, VARSIZE("SOURCE")
+	CVARSET SOURCE, LOCAL
+NEXT
+FOR LOCAL, 0, VARSIZE("TEQUIP")
+	CVARSET TEQUIP, LOCAL
+NEXT
+RETURN RESULT
+
+;-------------------------------------------------------------------------------
+;	SAVEINFO		(使用せず)
+;-------------------------------------------------------------------------------
+;===============================================================================
+; →SHOP.ERBにて注释アウト
+
+;-------------------------------------------------------------------------------
+;	SAVEINFOF(式中関数)
+;-------------------------------------------------------------------------------
+;	SAVEINFO的式中関数版  PUTFORM？  何それ美味しい的？
+;===============================================================================
+@SAVEINFOF
+#FUNCTIONS
+#LOCALSSIZE 1
+GETTIME
+LOCALS = %RESULTS% %CALLNAME:MASTER% {DAY+1}日目%GET_TIME()% \@ TARGET >= 0 ? %CALLNAME:TARGET%但%CALLNAME:MASTER%被调教中 # \@【%PLAYTIME("GET")%】
+RETURNF LOCALS
+
+;-------------------------------------------------------------------------------
+;	CHKDATA的RESULTSから保存日时被取得做(式中関数)
+;-------------------------------------------------------------------------------
+;	例  2010/04/01 12:34:56  →  20100401123456
+;	式中関数版CHKDATA的RESULTへ的日时取得なんてなかった…！
+;===============================================================================
+;	ARGS = CHKDATA直后的RESULTS的み对应
+@CHKDATA_DATE(ARGS)
+#FUNCTION
+RETURNF TOINT(SUBSTRING(ARGS,0,4))*10000000000 + TOINT(SUBSTRING(ARGS,5,2))*100000000 + TOINT(SUBSTRING(ARGS,8,2))*1000000 + TOINT(SUBSTRING(ARGS,11,2))*10000 + TOINT(SUBSTRING(ARGS,14,2))*100 + TOINT(SUBSTRING(ARGS,17,2))
+
+;-------------------------------------------------------------------------------
+;	保存数据被全検索して最も新しい保存数据番号被取得(式中関数)
+;-------------------------------------------------------------------------------
+;===============================================================================
+;	ARGS = "NOAUTO" 自动保存含まない / 其他 自动保存含める
+@ALLCHKDATA_DATE_LATEST(ARGS)
+#FUNCTION
+#LOCALSIZE 4
+#LOCALSSIZE 1
+VARSET LOCAL
+LOCAL:2 = -1
+LOCAL:3 = ARGS == "NOAUTO" ? SAVE_AREA()-AUTOSAVE_AREA() # SAVE_AREA()
+FOR LOCAL, 0, LOCAL:3
+	CHKDATA LOCAL
+	IF RESULT != 0
+		CONTINUE
+	ELSEIF CHKDATA_DATE(RESULTS) > LOCAL:1 
+		LOCAL:1 = CHKDATA_DATE(RESULTS)
+		LOCAL:2 = LOCAL
+		LOCALS = %RESULTS%
+	ENDIF
+NEXT
+RESULTS = %LOCALS%
+RETURNF LOCAL:2
+
+
+;-------------------------------------------------------------------------------
+;	枠拡大自动保存
+;-------------------------------------------------------------------------------
+;	SAVE_AREA()-1番から逆算して直到AUTOSAVE_AREA()个
+;	「ゲッ、自动保存上書きされちゃった！」な事故防止用
+;===============================================================================
+;	LOCAL = COUNT  LOCAL:1 = DATE暂时保存  LOCAL:2 = 比較用DATE  LOCAL:3 = 最终 
+@SYSTEM_AUTOSAVE
+#LOCALSIZE 4
+VARSET LOCAL
+;自动保存枠但0以下那么何も不做
+SIF AUTOSAVE_AREA() <= 0
+	RETURN 0
+;デフォルト比較用にありえないDATE被(2999/12/31 23:59:59)设置
+LOCAL:2 = 29991231235959
+;逆算
+;例:SAVE枠100,AUTO枠5 99,                      99-5(94), = 95番から99番直到
+FOR LOCAL, SAVE_AREA(-1), SAVE_AREA(-1)-AUTOSAVE_AREA(), -1
+	CHKDATA LOCAL
+	;既存保存数据但存在做那么DATE被、そう不是那么-1被暂时保存
+	LOCAL:1 = RESULT == 0 ? CHKDATA_DATE(RESULTS) # -1
+	;上和比較用DATE被比較してより古いor空いている场合
+	IF LOCAL:1 < LOCAL:2
+		;比較用DATE更新
+		LOCAL:2 = LOCAL:1
+		;最も古いもしく是空き保存数据 更新
+		LOCAL:3 = LOCAL
+	ENDIF
+NEXT
+;他所大人的バリアントで怖い的で注释アウト
+;CALL VAR_INITIALIZE
+SAVEDATA LOCAL:3, @"%SAVEINFOF()%"
+RETURN 1
+
+;-------------------------------------------------------------------------------
+;	枠拡大クイック加载
+;-------------------------------------------------------------------------------
+;	最も新しい保存数据被加载
+;===============================================================================
+@QUICKLOAD
+#LOCALSIZE 1
+VARSET LOCAL
+LOCAL = ALLCHKDATA_DATE_LATEST()
+IF LOCAL == -1
+	CALL PRINT_DIALOG("保存数据但不加载",2,2,2)
+	RETURN 0
+ELSE
+	CALL PRINT_DIALOG(@"加载了{LOCAL}号",2,2,0)
+	CALL PRINT_DIALOG(RESULTS,0,2,2)
+	LOADDATA LOCAL
+ENDIF
+RETURN 1
+
+;-------------------------------------------------------------------------------
+;	保存数据总合
+;-------------------------------------------------------------------------------
+;	保存,注释保存,加载,削除,COPY的各保存数据管理被統合
+;
+;	使い方
+;			↓こういう関数被作る
+;	@TITLE_LOADGAME
+;	CALL DATAMENU("TITLELOAD")
+;
+;	SAVEGAME被CALL DATAMENU("SAVE")に置换
+;	LOADGAME被CALL DATAMENU("LOAD")に置换
+;
+;	@EVENTLOAD に↓的二行被追加
+;	SIF GLOBALS:COPYDATA_TAG() != ""
+;		CALL DATAMENU("NOWCOPY")
+;																		ENJOY!
+;===============================================================================
+@DATAMENU(ARGS)
+#DIM NOWPAGE,1
+#DIM MAXPAGE,1
+#DIM NOWMODE,1
+#DIM COPYSELECT,1
+#DIM SCREEN,1
+#LOCALSIZE 2
+#LOCALSSIZE 1
+COPYSELECT = -1
+;初期模式选择
+SELECTCASE ARGS
+	;TITLEから飛んできた(LOAD意外不可)
+	CASE "TITLELOAD"
+		NOWMODE = 0
+	;保存模式
+	CASE "SAVE"
+		NOWMODE = 1
+	;注释付き保存模式
+	CASE "SAVECOMMENT"
+		NOWMODE = 2
+	;加载模式
+	CASE "LOAD"
+		NOWMODE = 3
+	;削除模式
+	CASE "DELETE"
+		NOWMODE = 4
+	;COPY模式
+	CASE "COPY"
+		NOWMODE = 5
+	;COPY中EVENTLOADから飛んできた
+	CASE "NOWCOPY"
+		CALL COPYDATA
+		NOWMODE = 5
+	;引数字符串但おかしかったらRETURN
+	CASEELSE
+		RETURN -1
+ENDSELECT
+;初期ページ是自动保存被含まない最新数据的あ时ころ
+NOWPAGE = ALLCHKDATA_DATE_LATEST("NOAUTO") / 20
+
+;再描写是ここから-------------------------------------------
+$PRINT_LIST
+SCREEN = LINECOUNT
+;最新数据的取得
+LOCAL:1 = ALLCHKDATA_DATE_LATEST()
+;对话窗口显示
+CALL PRINT_DIALOG(DATAMENU_LABEL(NOWMODE,1,COPYSELECT),1,1,1)
+;目录显示
+FOR LOCAL, 0, SAVE_AREA()
+	;20个ずつ的显示
+	SIF !RANGE(LOCAL, NOWPAGE * 20, (NOWPAGE + 1) * 20 - 1)
+		CONTINUE
+
+	CHKDATA LOCAL
+	;选择出来ないも的被暗色化
+	SIF RESULT != 0 && !( NOWMODE == 1 || NOWMODE == 2 || (NOWMODE == 5 && COPYSELECT != -1) )
+		SETCOLOR 0x808080
+	;行頭情报	COPY/NEW!/AUTO
+	IF LOCAL == COPYSELECT
+		SETCOLOR 0xFFFF00
+		PRINTFORM %" COPY "%
+	ELSEIF LOCAL == LOCAL:1
+		SETCOLOR 0xFFFFFF
+		PRINTFORM %" NEW! "%
+	ELSEIF RANGE(LOCAL,SAVE_AREA()-AUTOSAVE_AREA(),SAVE_AREA(-1))
+		PRINTFORM %" AUTO "%
+	ELSE
+		PRINTFORM %"      "%
+	ENDIF
+	PRINTFORML [{LOCAL,2}] - %RESULTS%
+	RESETCOLOR
+NEXT
+CALL NEWLINE
+
+;最大ページ数
+MAXPAGE = (LOCAL - 1) / 20
+;ページセレクタ
+CALL PRINT_PAGESELECT(NOWPAGE,MAXPAGE)
+;标题から飛んできた场合是他机能不可
+IF NOWMODE
+	CALL NEWLINE
+	CALL PRINTC_COMMAND(1010,@"%UNICODE(0x25C0)%%DATAMENU_LABEL(TURNPAGE(NOWMODE, -1, 1, 5))%")
+	CALL PRINTC_COMMAND(1011,@"%UNICODE(0x25B6)%%DATAMENU_LABEL(TURNPAGE(NOWMODE, +1, 1, 5))%")
+ENDIF
+CALL PRINT_RETURN(,,2)
+INPUT
+SELECTCASE RESULT
+	CASE IS < 0
+		RETURN 0
+	CASE 0 TO SAVE_AREA()
+		LOCAL = RESULT
+		CHKDATA LOCAL
+		GOTO DO_PROCESS
+	CASE 1001
+		NOWPAGE = TURNPAGE(NOWPAGE, -1, 0, MAXPAGE)
+	CASE 1003
+		NOWPAGE = TURNPAGE(NOWPAGE, +1, 0, MAXPAGE)
+	CASE 1010
+		NOWMODE = NOWMODE ? TURNPAGE(NOWMODE, -1, 1, 5) # 0
+	CASE 1011
+		NOWMODE = NOWMODE ? TURNPAGE(NOWMODE, +1, 1, 5) # 0
+ENDSELECT
+;COPY模式外受到らCOPY元设置
+SIF NOWMODE != 5 && COPYSELECT != -1
+	COPYSELECT = -1
+$REPRINT
+CLEARLINE LINECOUNT - SCREEN
+GOTO PRINT_LIST
+
+
+;实处理ここから----------------------------------------------
+$DO_PROCESS
+;だみぃ
+IF NOWMODE < 0
+
+;保存(COPY先选择)处理-------------------------
+ELSEIF NOWMODE == 1 || NOWMODE == 2 || ( NOWMODE == 5 && ( COPYSELECT != -1 && COPYSELECT != LOCAL) )
+	SELECTCASE RESULT
+		CASE 0,2,3,4
+			CALL PRINT_DIALOG(@"\@ !RESULT ? 是否覆盖已存在的保存数据？ # 是否覆盖已存在的不明数据？ \@",1,1,1)
+			CALL PRINT_CHOICE(,"是",1,"否",2,)
+			SIF RESULT == 2
+				GOTO REPRINT
+		CASE 1
+	ENDSELECT
+	;COPY模式时二回目是CALL先でCOPY元被加载做的でここで终了
+	SIF NOWMODE == 5 && ( COPYSELECT != -1 )
+		CALL COPYDATA(COPYSELECT,LOCAL)
+
+	;变数初期化  こわい的で注释アウト
+	;CALL VAR_INITIALIZE
+	LOCALS = %SAVEINFOF()%
+	;注释保存模式时注释入力
+	IF NOWMODE == 2
+		CALL PRINT_DIALOG("请输入注解",1,1,1)
+		INPUTS
+		LOCALS += @" %RESULTS%"
+	ENDIF
+	SAVEDATA LOCAL, LOCALS
+	CALL PRINT_DIALOG(@"保存到{LOCAL}号",2,2,0)
+	CALL PRINT_DIALOG(LOCALS,0,2,2)
+	RETURN 1
+
+;加载处理---------------------------------------
+ELSEIF NOWMODE == 0 || NOWMODE == 3
+	SELECTCASE RESULT
+		CASE 0
+			CALL PRINT_DIALOG(@"加载了{LOCAL}号",2,2,0)
+			CALL PRINT_DIALOG(RESULTS,0,2,2)
+			LOADDATA LOCAL
+		CASE 2,3,4
+			CALL PRINT_DIALOG("并没有能加载的数据",2,2,2)
+			GOTO REPRINT
+	ENDSELECT
+
+;削除处理-----------------------------------------
+ELSEIF NOWMODE == 4 && RESULT != 1
+	CALL PRINT_DIALOG(@"可以删除{LOCAL}号吗？",1,1,0)
+	CALL PRINT_DIALOG(RESULTS,0,1,1)
+	CALL PRINT_CHOICE(,"是",1,"否",2,)
+	IF RESULT == 1
+		DELDATA LOCAL
+		CALL PRINT_DIALOG(@"{LOCAL}号已删除",2,2,0)
+		CALL PRINT_DIALOG(RESULTS,0,2,2)
+		GOTO PRINT_LIST
+	ENDIF
+
+;COPY元选择处理---------------------------------
+ELSEIF NOWMODE == 5 && COPYSELECT == -1 && RESULT == 0
+	COPYSELECT = LOCAL
+	GOTO PRINT_LIST
+ENDIF
+
+GOTO REPRINT
+
+;-----------------------------------------------------------
+;	DATAMENUで使うラベル显示用関数(式中関数)
+;===========================================================
+;	ARG = NOWMODE  ARG:1 = HEADER用  ARG:2 = COPY模式的HEADER用
+@DATAMENU_LABEL(ARG,ARG:1,ARG:2)
+#FUNCTIONS
+SELECTCASE ARG
+	CASE 1, 2
+		SIF ARG:1
+			RETURNF @"保存 - 何番に保存し增加か？ \@ ARG == 2 ? (注释模式) # \@"
+		RETURNF @"\@ARG == 1 ? %FORMCELL("保存",PRINTCPERLENGTH(-10),2)% # %FORMCELL("注释保存",PRINTCPERLENGTH(-10),2)% \@"
+	CASE 0, 3
+		SIF ARG:1
+			RETURNF "加载 - 想加载哪个存档？"
+		RETURNF FORMCELL("加载",PRINTCPERLENGTH(-10),2)
+	CASE 4
+		SIF ARG:1
+			RETURNF "削除 - 想删除哪个存档？"
+		RETURNF FORMCELL("削除",PRINTCPERLENGTH(-10),2)
+	CASE 5
+		SIF ARG:1
+			RETURNF @"\@ ARG:2 == -1 ? COPY - 想複製新增哪个存档？ # COPY - {ARG:2}想複製新增哪个存档？ \@"
+		RETURNF FORMCELL("COPY",PRINTCPERLENGTH(-10),2)
+	CASEELSE
+		RETURNF @"ERROR!{ARG,2}"
+ENDSELECT
+
+
+;-----------------------------------------------------------
+;	保存数据COPY中用
+;-----------------------------------------------------------
+;	しっかし见難いなぁｗ
+;===========================================================
+;	ARG:0 / COPYDATA_BY() = COPY元  
+;	ARG:1 / COPYDATA_TO() = COPY先
+@COPYDATA(ARG:0, ARG:1)
+;初めて飛んできた
+;现在的数据被TEMP枠に保存し、GLOBAL/Sに元/先/タグ保存してCOPY元被LOAD
+IF !GLOBAL:COPYDATA_BY() && !GLOBAL:COPYDATA_TO() && GLOBALS:COPYDATA_TAG() == ""
+	SAVEDATA COPYDATA_TEMP(), @"TEMP"
+	GLOBAL:COPYDATA_BY() = ARG:0
+	GLOBAL:COPYDATA_TO() = ARG:1
+	GLOBALS:COPYDATA_TAG() = {ARG,2}番被{ARG:1,2}番にCOPYしました
+	SAVEGLOBAL
+	LOADDATA GLOBAL:COPYDATA_BY()
+;二回目
+;LASTLOAD_NO和COPY元但同一でCOPY用タグ但真是COPY先にSAVEしてTEMP数据被LOAD
+ELSEIF LASTLOAD_NO == GLOBAL:COPYDATA_BY() && GLOBALS:COPYDATA_TAG() != ""
+	GLOBAL:COPYDATA_BY() = 0
+	SAVEGLOBAL
+	SAVEDATA GLOBAL:COPYDATA_TO(), LASTLOAD_TEXT
+	LOADDATA COPYDATA_TEMP()
+;三回目(最后)
+;LASTLOAD_NO和TEMP枠但同一でCOPY用タグ但真是タグ被显示してTEMP枠被削除
+ELSEIF LASTLOAD_NO == COPYDATA_TEMP() && GLOBALS:COPYDATA_TAG() != ""
+	CALL PRINT_DIALOG(GLOBALS:COPYDATA_TAG(),2,2,2)
+	DELDATA COPYDATA_TEMP()
+	GLOBAL:COPYDATA_TO() = 0
+	GLOBALS:COPYDATA_TAG() =
+	SAVEGLOBAL
+ENDIF
+

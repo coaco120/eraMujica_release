@@ -1,0 +1,42 @@
+﻿;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+;
+;	Module		:AUTO_SPLIT_INT.ERB
+;	Facility	:引数和して渡さ受到ARGSから、特定的字符串ARGS:1で区切った场合的ARG番目的字符串被数字化して返す関数
+;
+;	Licence		:ライセンスフリー。
+;
+;	Modification Data:
+;
+;	Edit	Date			Author					Reason
+;	001		2012/09/07		kap 					新規作成
+;	002		2013/02/05		ぱ。					SPLIT的修正被使用したRESULT保護
+;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+;
+;@AUTO_SPLIT
+;ARGS   操作做字符串
+;ARGS:1 ARGS被区切る字符串
+;ARG 　 ARGS被区切った后で、操作做部位。ARGS:2但指定されている场合、发见したARGS:2的场所+ARG番目的字符串被返す。
+;ARGS:2 検索做字符串
+;================================================
+@AUTO_SPLIT_INT(ARGS , ARGS:1 = "/" , ARG = 0 , ARGS:2 = "")
+#FUNCTION
+#LOCALSSIZE 200
+#LOCALSIZE 1
+VARSET LOCALS
+;半スペ是消す
+SPLIT REPLACE(ARGS, " ", "") , ARGS:1 , LOCALS, LOCAL
+IF ARGS:2 != ""
+	LOCAL = FINDELEMENT(LOCALS , ESCAPE(ARGS:2), , , 1)
+	IF LOCAL != -1
+		SIF ARG + LOCAL < 0
+			THROW @"错误：函数@AUTO_SPLIT在第{LOCAL}个的字符串中发现%ARGS:2%第三参数{ARG}的指定不正确。"
+		RETURNF TOINT(LOCALS:(LOCAL + ARG))
+	ELSE
+		RETURNF
+	ENDIF
+ELSE
+	SIF ARG < 0
+		THROW @"错误：函数@AUTO_SPLIT的第三参数作为{ARG}被交付"
+	RETURNF TOINT(LOCALS:ARG)
+ENDIF
+

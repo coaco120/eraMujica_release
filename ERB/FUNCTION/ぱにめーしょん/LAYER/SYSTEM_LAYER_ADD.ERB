@@ -1,0 +1,25 @@
+﻿;-------------------------------------------------------------------------
+;LAYER関係関数群的个人的なオリジナル要素追加分的ま和め
+;-------------------------------------------------------------------------
+;初期设定に按键情报的初期化被追加した関数
+;-------------------------------------------------------------------------
+@INIT_LAYER, ARGS = "`"
+LAYER_BUTTON = %ARGS%
+CALL LAYER_INIT, ARGS
+RETURN RESULT
+;-------------------------------------------------------------------------
+;INPUT可能的字符串かどうか(按键和して显示さ受到かどうか)被取得做
+;ただし、HTML_ADDBUTTON被使用してない场合是无效
+;显示されてないも的被入力做可能に做场合是ADD_LAYER_BUTTONで直接记述做こ和
+;-------------------------------------------------------------------------
+@IS_ABLE_LAYER_INPUT, ARGS
+#FUNCTION
+RETURNF STRFIND(LAYER_BUTTON, NEST_SEPARATOR + ARGS + NEST_SEPARATOR) >= 0
+
+@ADD_LAYER_BUTTON, ARGS
+CALLF ADD_LAYER_BUTTONF, ARGS
+
+@ADD_LAYER_BUTTONF, ARGS
+#FUNCTION
+LAYER_BUTTON += ARGS
+LAYER_BUTTON += NEST_SEPARATOR

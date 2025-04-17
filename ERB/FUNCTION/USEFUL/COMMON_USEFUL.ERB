@@ -1,0 +1,1109 @@
+﻿;==================================================
+;
+;	通用関数置き场＠便利関数編
+;		演算や命令、組み込み関数的扩张にあたるも的
+;
+;		おおよそバリアント被問わず使えるも的但多いです
+;
+;==================================================
+
+;-------------------------------------------------
+;确率判定関数@PERCENT
+;式中で使用做関数です。引数％的确率判定被行い增加。通れば1被返し增加
+;常用做関数です但、なぜ本体にこれ无いんだろ…。
+;-------------------------------------------------
+@PERCENT(ARG)
+#FUNCTION
+RETURNF (ARG - RAND:100) > 0
+
+;-------------------------------------------------
+;范围判定関数@RANGE
+;	引数0：对象的数字
+;	引数1～2：范围的上限・下限（逆顺可）
+;引数0但引数1和引数2的间に収まっていれば1被返し增加。和もに同値被宽容し增加
+;こ平时本体にあっていい和思う。
+;-------------------------------------------------
+@RANGE(ARG:0, ARG:1, ARG:2)
+#FUNCTION
+RETURNF INRANGE(ARG:0, MIN(ARG:1, ARG:2), MAX(ARG:1, ARG:2))
+
+
+;-------------------------------------------------
+;関数名:INPUTINT(|D)
+;概　要:数値型インプット関数
+;引　数:ARG:0~99…[一部省略可] ユーザ但入力可能的数値。ARG:1以降是省略可
+;戻り値:ユーザ的入力した数値
+;数値的入力待ち被し增加。引数に含まれない数値被入力さ受到场合是自动的に再入力和なり增加
+;有效な数値但入力さ受到らそれ被返し增加
+;选择肢被通用处理做ため、ループ的構文被書く必要但なくなり增加
+;引数但妙な値な的是、-1和かだ和被るから。null但あればいい的只どねえ
+;Dオプションで入力时など的字符色被デフォルト色で显示でき增加。主に口上向け
+;-------------------------------------------------
+@INPUTINT(ARG:0 = -147258369, ARG:1 = -147258369, ARG:2 = -147258369, ARG:3 = -147258369, ARG:4 = -147258369, ARG:5 = -147258369, ARG:6 = -147258369, ARG:7 = -147258369, ARG:8 = -147258369, ARG:9 = -147258369, ARG:10 = -147258369, ARG:11 = -147258369, ARG:12 = -147258369, ARG:13 = -147258369, ARG:14 = -147258369, ARG:15 = -147258369, ARG:16 = -147258369, ARG:17 = -147258369, ARG:18 = -147258369, ARG:19 = -147258369, ARG:20 = -147258369, ARG:21 = -147258369, ARG:22 = -147258369, ARG:23 = -147258369, ARG:24 = -147258369, ARG:25 = -147258369, ARG:26 = -147258369, ARG:27 = -147258369, ARG:28 = -147258369, ARG:29 = -147258369, ARG:30 = -147258369, ARG:31 = -147258369, ARG:32 = -147258369, ARG:33 = -147258369, ARG:34 = -147258369, ARG:35 = -147258369, ARG:36 = -147258369, ARG:37 = -147258369, ARG:38 = -147258369, ARG:39 = -147258369, ARG:40 = -147258369, ARG:41 = -147258369, ARG:42 = -147258369, ARG:43 = -147258369, ARG:44 = -147258369, ARG:45 = -147258369, ARG:46 = -147258369, ARG:47 = -147258369, ARG:48 = -147258369, ARG:49 = -147258369, ARG:50 = -147258369, ARG:51 = -147258369, ARG:52 = -147258369, ARG:53 = -147258369, ARG:54 = -147258369, ARG:55 = -147258369, ARG:56 = -147258369, ARG:57 = -147258369, ARG:58 = -147258369, ARG:59 = -147258369, ARG:60 = -147258369, ARG:61 = -147258369, ARG:62 = -147258369, ARG:63 = -147258369, ARG:64 = -147258369, ARG:65 = -147258369, ARG:66 = -147258369, ARG:67 = -147258369, ARG:68 = -147258369, ARG:69 = -147258369, ARG:70 = -147258369, ARG:71 = -147258369, ARG:72 = -147258369, ARG:73 = -147258369, ARG:74 = -147258369, ARG:75 = -147258369, ARG:76 = -147258369, ARG:77 = -147258369, ARG:78 = -147258369, ARG:79 = -147258369, ARG:80 = -147258369, ARG:81 = -147258369, ARG:82 = -147258369, ARG:83 = -147258369, ARG:84 = -147258369, ARG:85 = -147258369, ARG:86 = -147258369, ARG:87 = -147258369, ARG:88 = -147258369, ARG:89 = -147258369, ARG:90 = -147258369, ARG:91 = -147258369, ARG:92 = -147258369, ARG:93 = -147258369, ARG:94 = -147258369, ARG:95 = -147258369, ARG:96 = -147258369, ARG:97 = -147258369, ARG:98 = -147258369, ARG:99 = -147258369)
+#LOCALSIZE 2
+LOCAL:1 = CURRENTREDRAW()
+REDRAW 0
+DO
+	INPUT
+	LOCAL:0 = !MATCH(ARG, RESULT)
+	IF LOCAL:0
+		CLEARLINE 1
+		REUSELASTLINE 输入值超出范围
+	ENDIF
+LOOP LOCAL:0
+REDRAW LOCAL:1
+RETURN RESULT
+
+
+@INPUTINTD(ARG:0 = -147258369, ARG:1 = -147258369, ARG:2 = -147258369, ARG:3 = -147258369, ARG:4 = -147258369, ARG:5 = -147258369, ARG:6 = -147258369, ARG:7 = -147258369, ARG:8 = -147258369, ARG:9 = -147258369, ARG:10 = -147258369, ARG:11 = -147258369, ARG:12 = -147258369, ARG:13 = -147258369, ARG:14 = -147258369, ARG:15 = -147258369, ARG:16 = -147258369, ARG:17 = -147258369, ARG:18 = -147258369, ARG:19 = -147258369, ARG:20 = -147258369, ARG:21 = -147258369, ARG:22 = -147258369, ARG:23 = -147258369, ARG:24 = -147258369, ARG:25 = -147258369, ARG:26 = -147258369, ARG:27 = -147258369, ARG:28 = -147258369, ARG:29 = -147258369, ARG:30 = -147258369, ARG:31 = -147258369, ARG:32 = -147258369, ARG:33 = -147258369, ARG:34 = -147258369, ARG:35 = -147258369, ARG:36 = -147258369, ARG:37 = -147258369, ARG:38 = -147258369, ARG:39 = -147258369, ARG:40 = -147258369, ARG:41 = -147258369, ARG:42 = -147258369, ARG:43 = -147258369, ARG:44 = -147258369, ARG:45 = -147258369, ARG:46 = -147258369, ARG:47 = -147258369, ARG:48 = -147258369, ARG:49 = -147258369, ARG:50 = -147258369, ARG:51 = -147258369, ARG:52 = -147258369, ARG:53 = -147258369, ARG:54 = -147258369, ARG:55 = -147258369, ARG:56 = -147258369, ARG:57 = -147258369, ARG:58 = -147258369, ARG:59 = -147258369, ARG:60 = -147258369, ARG:61 = -147258369, ARG:62 = -147258369, ARG:63 = -147258369, ARG:64 = -147258369, ARG:65 = -147258369, ARG:66 = -147258369, ARG:67 = -147258369, ARG:68 = -147258369, ARG:69 = -147258369, ARG:70 = -147258369, ARG:71 = -147258369, ARG:72 = -147258369, ARG:73 = -147258369, ARG:74 = -147258369, ARG:75 = -147258369, ARG:76 = -147258369, ARG:77 = -147258369, ARG:78 = -147258369, ARG:79 = -147258369, ARG:80 = -147258369, ARG:81 = -147258369, ARG:82 = -147258369, ARG:83 = -147258369, ARG:84 = -147258369, ARG:85 = -147258369, ARG:86 = -147258369, ARG:87 = -147258369, ARG:88 = -147258369, ARG:89 = -147258369, ARG:90 = -147258369, ARG:91 = -147258369, ARG:92 = -147258369, ARG:93 = -147258369, ARG:94 = -147258369, ARG:95 = -147258369, ARG:96 = -147258369, ARG:97 = -147258369, ARG:98 = -147258369, ARG:99 = -147258369)
+#LOCALSIZE 1
+LOCAL:0 = GETCOLOR()
+RESETCOLOR
+CALL INPUTINT(ARG:0, ARG:1, ARG:2, ARG:3, ARG:4, ARG:5, ARG:6, ARG:7, ARG:8, ARG:9, ARG:10, ARG:11, ARG:12, ARG:13, ARG:14, ARG:15, ARG:16, ARG:17, ARG:18, ARG:19, ARG:20, ARG:21, ARG:22, ARG:23, ARG:24, ARG:25, ARG:26, ARG:27, ARG:28, ARG:29, ARG:30, ARG:31, ARG:32, ARG:33, ARG:34, ARG:35, ARG:36, ARG:37, ARG:38, ARG:39, ARG:40, ARG:41, ARG:42, ARG:43, ARG:44, ARG:45, ARG:46, ARG:47, ARG:48, ARG:49, ARG:50, ARG:51, ARG:52, ARG:53, ARG:54, ARG:55, ARG:56, ARG:57, ARG:58, ARG:59, ARG:60, ARG:61, ARG:62, ARG:63, ARG:64, ARG:65, ARG:66, ARG:67, ARG:68, ARG:69, ARG:70, ARG:71, ARG:72, ARG:73, ARG:74, ARG:75, ARG:76, ARG:77, ARG:78, ARG:79, ARG:80, ARG:81, ARG:82, ARG:83, ARG:84, ARG:85, ARG:86, ARG:87, ARG:88, ARG:89, ARG:90, ARG:91, ARG:92, ARG:93, ARG:94, ARG:95, ARG:96, ARG:97, ARG:98, ARG:99)
+SETCOLOR LOCAL:0
+RETURN RESULT
+
+
+;-------------------------------------------------
+;関数名:TINPUTINT(|D)
+;概　要:数値型时间制限インプット関数
+;引　数:ARG:0　　…制限时间(ミリ秒)。100ミリ秒单位より細かい値被设定しても正确な动作是できません的で注意
+;　　　 ARG:1　　…[省略可] 时间到了时的戻り値。省略した场合是-1
+;　　　 ARG:2　　…[省略可] 残り时间显示(真伪値)。真(0以外)的场合是残り时间显示被行い增加。省略した场合是伪(0、显示不做)
+;　　　 ARG:3~102…[一部省略可] ユーザ但入力可能的数値。ARG:4以降是省略可
+;戻り値:ユーザ的入力した数値(また是时间到了时的戻り値)
+;ARG:3以降で与えら受到数値被有效な选择肢和して数値的入力被受け付け增加
+;引数に含まれない数値但入力さ受到场合是再入力和なり增加
+;Dオプションで入力时など的字符色被デフォルト色で显示でき增加。主に口上向け
+;-------------------------------------------------
+@TINPUTINT(ARG:0, ARG:1 = -1, ARG:2, ARG:3 = -147258369, ARG:4 = -147258369, ARG:5 = -147258369, ARG:6 = -147258369, ARG:7 = -147258369, ARG:8 = -147258369, ARG:9 = -147258369, ARG:10 = -147258369, ARG:11 = -147258369, ARG:12 = -147258369, ARG:13 = -147258369, ARG:14 = -147258369, ARG:15 = -147258369, ARG:16 = -147258369, ARG:17 = -147258369, ARG:18 = -147258369, ARG:19 = -147258369, ARG:20 = -147258369, ARG:21 = -147258369, ARG:22 = -147258369, ARG:23 = -147258369, ARG:24 = -147258369, ARG:25 = -147258369, ARG:26 = -147258369, ARG:27 = -147258369, ARG:28 = -147258369, ARG:29 = -147258369, ARG:30 = -147258369, ARG:31 = -147258369, ARG:32 = -147258369, ARG:33 = -147258369, ARG:34 = -147258369, ARG:35 = -147258369, ARG:36 = -147258369, ARG:37 = -147258369, ARG:38 = -147258369, ARG:39 = -147258369, ARG:40 = -147258369, ARG:41 = -147258369, ARG:42 = -147258369, ARG:43 = -147258369, ARG:44 = -147258369, ARG:45 = -147258369, ARG:46 = -147258369, ARG:47 = -147258369, ARG:48 = -147258369, ARG:49 = -147258369, ARG:50 = -147258369, ARG:51 = -147258369, ARG:52 = -147258369, ARG:53 = -147258369, ARG:54 = -147258369, ARG:55 = -147258369, ARG:56 = -147258369, ARG:57 = -147258369, ARG:58 = -147258369, ARG:59 = -147258369, ARG:60 = -147258369, ARG:61 = -147258369, ARG:62 = -147258369, ARG:63 = -147258369, ARG:64 = -147258369, ARG:65 = -147258369, ARG:66 = -147258369, ARG:67 = -147258369, ARG:68 = -147258369, ARG:69 = -147258369, ARG:70 = -147258369, ARG:71 = -147258369, ARG:72 = -147258369, ARG:73 = -147258369, ARG:74 = -147258369, ARG:75 = -147258369, ARG:76 = -147258369, ARG:77 = -147258369, ARG:78 = -147258369, ARG:79 = -147258369, ARG:80 = -147258369, ARG:81 = -147258369, ARG:82 = -147258369, ARG:83 = -147258369, ARG:84 = -147258369, ARG:85 = -147258369, ARG:86 = -147258369, ARG:87 = -147258369, ARG:88 = -147258369, ARG:89 = -147258369, ARG:90 = -147258369, ARG:91 = -147258369, ARG:92 = -147258369, ARG:93 = -147258369, ARG:94 = -147258369, ARG:95 = -147258369, ARG:96 = -147258369, ARG:97 = -147258369, ARG:98 = -147258369, ARG:99 = -147258369, ARG:100 = -147258369, ARG:101 = -147258369, ARG:102 = -147258369)
+#LOCALSIZE 5
+LOCAL:2 = LINECOUNT
+LOCAL:3 = CURRENTREDRAW()	;REDRAW 0 で入ってく时残り时间显示但动かないためこ的ガード是重要
+LOCAL:4 = 0					;再入力标志
+REDRAW ARG:2 != 0
+DO
+	LOCAL:1 = GETMILLISECOND()
+	TINPUT ARG:0, ARG:1, ARG:2
+	ARG:0 -= GETMILLISECOND() - LOCAL:1
+	IF ARG:0 > 0
+		LOCAL:0 = !MATCH(ARG, RESULT, 3)
+		IF LOCAL:0
+			CLEARLINE LINECOUNT - LOCAL:2
+			PRINTL 输入值超出范围
+		ENDIF
+		LOCAL:4 = 1
+	ELSE
+		LOCAL:0 = 0
+		;※暫定处理。ISTIMEOUT变数但修正さ受到后、正式对应做かも(しなくてもいいかも)
+		;入力后时间到了かつ入力値范围外的场合是时间到了捏造
+		IF HTML_TOPLAINTEXT(HTML_GETPRINTEDSTR(2)) != "时间到了" && !MATCH(ARG, RESULT, 3)
+			RESULT = ARG:1
+			CLEARLINE LINECOUNT - LOCAL:2
+			PRINTFORML \@ LOCAL:4 ? 输入值超出范围\n # \@时间到了\n{RESULT}
+		ENDIF
+		;入力后时间到了かつ入力値范围内的场合是时间内に正しく入力出来ている的でスルー
+		;入力中时间到了的场合是TINPUTで时间到了处理行われている的でスルー
+	ENDIF
+LOOP LOCAL:0
+REDRAW LOCAL:3
+RETURN RESULT
+
+@TINPUTINTD(ARG:0, ARG:1 = -1, ARG:2, ARG:3 = -147258369, ARG:4 = -147258369, ARG:5 = -147258369, ARG:6 = -147258369, ARG:7 = -147258369, ARG:8 = -147258369, ARG:9 = -147258369, ARG:10 = -147258369, ARG:11 = -147258369, ARG:12 = -147258369, ARG:13 = -147258369, ARG:14 = -147258369, ARG:15 = -147258369, ARG:16 = -147258369, ARG:17 = -147258369, ARG:18 = -147258369, ARG:19 = -147258369, ARG:20 = -147258369, ARG:21 = -147258369, ARG:22 = -147258369, ARG:23 = -147258369, ARG:24 = -147258369, ARG:25 = -147258369, ARG:26 = -147258369, ARG:27 = -147258369, ARG:28 = -147258369, ARG:29 = -147258369, ARG:30 = -147258369, ARG:31 = -147258369, ARG:32 = -147258369, ARG:33 = -147258369, ARG:34 = -147258369, ARG:35 = -147258369, ARG:36 = -147258369, ARG:37 = -147258369, ARG:38 = -147258369, ARG:39 = -147258369, ARG:40 = -147258369, ARG:41 = -147258369, ARG:42 = -147258369, ARG:43 = -147258369, ARG:44 = -147258369, ARG:45 = -147258369, ARG:46 = -147258369, ARG:47 = -147258369, ARG:48 = -147258369, ARG:49 = -147258369, ARG:50 = -147258369, ARG:51 = -147258369, ARG:52 = -147258369, ARG:53 = -147258369, ARG:54 = -147258369, ARG:55 = -147258369, ARG:56 = -147258369, ARG:57 = -147258369, ARG:58 = -147258369, ARG:59 = -147258369, ARG:60 = -147258369, ARG:61 = -147258369, ARG:62 = -147258369, ARG:63 = -147258369, ARG:64 = -147258369, ARG:65 = -147258369, ARG:66 = -147258369, ARG:67 = -147258369, ARG:68 = -147258369, ARG:69 = -147258369, ARG:70 = -147258369, ARG:71 = -147258369, ARG:72 = -147258369, ARG:73 = -147258369, ARG:74 = -147258369, ARG:75 = -147258369, ARG:76 = -147258369, ARG:77 = -147258369, ARG:78 = -147258369, ARG:79 = -147258369, ARG:80 = -147258369, ARG:81 = -147258369, ARG:82 = -147258369, ARG:83 = -147258369, ARG:84 = -147258369, ARG:85 = -147258369, ARG:86 = -147258369, ARG:87 = -147258369, ARG:88 = -147258369, ARG:89 = -147258369, ARG:90 = -147258369, ARG:91 = -147258369, ARG:92 = -147258369, ARG:93 = -147258369, ARG:94 = -147258369, ARG:95 = -147258369, ARG:96 = -147258369, ARG:97 = -147258369, ARG:98 = -147258369, ARG:99 = -147258369, ARG:100 = -147258369, ARG:101 = -147258369, ARG:102 = -147258369)
+#LOCALSIZE 1
+LOCAL:0 = GETCOLOR()
+RESETCOLOR
+CALL TINPUTINT(ARG:0, ARG:1, ARG:2, ARG:3, ARG:4, ARG:5, ARG:6, ARG:7, ARG:8, ARG:9, ARG:10, ARG:11, ARG:12, ARG:13, ARG:14, ARG:15, ARG:16, ARG:17, ARG:18, ARG:19, ARG:20, ARG:21, ARG:22, ARG:23, ARG:24, ARG:25, ARG:26, ARG:27, ARG:28, ARG:29, ARG:30, ARG:31, ARG:32, ARG:33, ARG:34, ARG:35, ARG:36, ARG:37, ARG:38, ARG:39, ARG:40, ARG:41, ARG:42, ARG:43, ARG:44, ARG:45, ARG:46, ARG:47, ARG:48, ARG:49, ARG:50, ARG:51, ARG:52, ARG:53, ARG:54, ARG:55, ARG:56, ARG:57, ARG:58, ARG:59, ARG:60, ARG:61, ARG:62, ARG:63, ARG:64, ARG:65, ARG:66, ARG:67, ARG:68, ARG:69, ARG:70, ARG:71, ARG:72, ARG:73, ARG:74, ARG:75, ARG:76, ARG:77, ARG:78, ARG:79, ARG:80, ARG:81, ARG:82, ARG:83, ARG:84, ARG:85, ARG:86, ARG:87, ARG:88, ARG:89, ARG:90, ARG:91, ARG:92, ARG:93, ARG:94, ARG:95, ARG:96, ARG:97, ARG:98, ARG:99, ARG:100, ARG:101, ARG:102)
+SETCOLOR LOCAL:0
+RETURN RESULT
+
+
+;-------------------------------------------------
+;関数名:INPUT_MANY(|D)
+;概　要:数量入力用関数
+;引　数: ARG:0…入力被宽容做范围的最小値。ARG:1和指定顺但逆でもよい
+;　　　  ARG:1…入力被宽容做范围的最大値。ARG:0和指定顺但逆でもよい
+;　　　 ARGS:0…[省略可] オプション。现在的和ころ ログ被残す 的み存在。省略した场合是ログ被残す
+;　　　 ARGS:1…[省略可] 例外的数値设定。范围外でも通る数値被设定做。
+;　　　                  记述方法是0/20/30/-1和いったように、字符串で"/"被区切り字符和做
+;戻り値:ユーザ的入力した数値
+;ARG:0で最小値、ARG:1で最大値被指定、
+;電卓风的コンソールから数値被入力させ增加
+;Dオプションで入力时など的字符色被デフォルト色で显示でき增加。主に口上向け
+;-------------------------------------------------
+@INPUT_MANY(ARG:0, ARG:1, ARGS:0 = "ログ被残す", ARGS:1)
+#LOCALSIZE 3
+#LOCALSSIZE 20
+#DIM LINE
+#DIMS BSTR, 2
+;最初是0
+LOCAL:0 = 0
+LOCAL:1 = 1
+VARSET LOCALS
+SPLIT ARGS:1, "/", LOCALS
+LINE = LINECOUNT
+$START
+REDRAW 0
+CLEARLINE LINECOUNT - LINE
+BSTR:0 '= LOCAL:1 == -1 ? "[+]" # "[-]"
+BSTR:1 '= LOCAL:1 == -1 ? "+" # "-"
+PRINTFORML 【{LOCAL}】　《【{ARG}】 - 【{ARG:1}】》
+CALL HTMLPRINTL(@"%HTMLBUTTON("[7]", "７")%　%HTMLBUTTON("[8]", "８")%　%HTMLBUTTON("[9]", "９")%　%HTMLBUTTON("[ AC]", "AC")%")
+CALL HTMLPRINTL(@"%HTMLBUTTON("[4]", "４")%　%HTMLBUTTON("[5]", "５")%　%HTMLBUTTON("[6]", "６")%　%HTMLBUTTON("[Max]", "MAX")%")
+CALL HTMLPRINTL(@"%HTMLBUTTON("[1]", "１")%　%HTMLBUTTON("[2]", "２")%　%HTMLBUTTON("[3]", "３")%　%HTMLBUTTON("[Min]", "MIN")%")
+CALL HTMLPRINTL(@"%HTMLBUTTON("[0]", "０")%　%HTMLBUTTON(BSTR:0, BSTR:1)%　%HTMLBUTTON("[ENTER]", "ENTER")%")
+PRINTFORML ※也可以通过键盘直接输入数值
+INPUTS
+SELECTCASE RESULTS
+	CASE "AC"
+		RESTART
+	CASE "+"
+		LOCAL:0 *= -1
+		LOCAL:1 = 1
+	CASE "-"
+		LOCAL:0 *= -1
+		LOCAL:1 = -1
+	CASE "MIN"
+		LOCAL:0 = ARG:0
+	CASE "MAX"
+		LOCAL:0 = ARG:1
+	CASE "０", "１", "２", "３", "４", "５", "６", "７", "８", "９"
+		IF LOCAL:0 == 0
+			LOCAL:0 = ABS(LOCAL:0) + TOINT(TOHALF(RESULTS)) * LOCAL:1
+		ELSE
+			;桁数被取る
+			LOCAL:2 = 1
+			WHILE LOCAL:0 >= POWER(10, LOCAL:2)
+				LOCAL:2++
+				IF LOCAL:2 > 18
+					PRINTFORMW 位数太多了！
+					GOTO START
+				ENDIF
+			WEND
+			LOCAL:0 = LOCAL:0 * 10 + TOINT(TOHALF(RESULTS)) * LOCAL:1
+		ENDIF
+	CASEELSE
+		IF RESULTS != "ENTER"
+			FOR LOCAL:2, 0, STRLENS(RESULTS)
+				SIF GROUPMATCH(SUBSTRING(RESULTS, LOCAL:2, 1), "0", "1", "2", "3", "4", "5", "6", "7", "8", "9")
+					CONTINUE
+				PRINTFORMW 输入异常。请重新输入
+				RESTART
+			NEXT
+			LOCAL:0 = TOINT(RESULTS)
+		ENDIF
+		IF RANGE(LOCAL:0, ARG:0, ARG:1) || MATCH(LOCALS, TOSTR(LOCAL:0))
+			SIF !STRCOUNT(ARGS:0, "ログ被残す")
+				CLEARLINE LINE - LINECOUNT
+			REDRAW 1
+			RETURN LOCAL:0
+		ELSE
+			PRINTFORMW 数值超出范围。请重新输入
+			RESTART
+		ENDIF
+ENDSELECT
+GOTO START
+
+@INPUT_MANYD(ARG:0, ARG:1, ARGS:0 = "ログ被残す", ARGS:1)
+#LOCALSIZE 1
+LOCAL:0 = GETCOLOR()
+RESETCOLOR
+CALL INPUT_MANY(ARG:0, ARG:1, ARGS:0, ARGS:1)
+SETCOLOR LOCAL:0
+RETURN RESULT
+
+
+;-------------------------------------------------
+;未读判定関数@FIRSTTIME
+;式中で使用做関数です。理論上无限に事件被登录でき增加。
+;特に使用法に指定的ない、事件的初回判定用関数です。
+;ARG是事件番号、ARG:1是角色登录番号（省略做和TARGET）、ARG:2但真だ和初回判定被更新不做（参照的み）
+;CSTR:0で管理し增加
+;
+;ASSI系でARG:1被省略した際的角色但TARGETになっていた的で修正@revkoishi(14/04/28)
+;-------------------------------------------------
+@FIRSTTIME(ARG, ARG:1 = -2, ARG:2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+RETURNF FIRSTPROCESS(ARG:1, @"TIME%TOSTR(ARG)%", ARG:2)
+
+;通用初回判定处理
+;引数是角色番号、判定字符串、更新的有无、使用做CSTR的番号
+@FIRSTPROCESS(ARG, ARGS, ARG:1, ARG:2)
+#FUNCTION
+;空字符串的场合、/被1つ入れる
+SIF CSTR:ARG:(ARG:2) == ""
+	CSTR:ARG:(ARG:2) = /
+;初回判定済み那么0被返す
+SIF STRCOUNT(CSTR:ARG:(ARG:2), @"/%ARGS%/")
+	RETURNF 0
+;初回判定被更新不做チェック但无ければ更新
+SIF !ARG:1
+	CSTR:ARG:(ARG:2) = %CSTR:ARG:(ARG:2)%%ARGS%/
+;初回な的で1被返す
+RETURNF 1
+
+;-------------------------------------------------
+;初回EVENT判定関数@FIRSTEVENT
+;式中で使用做関数です。理論上无限に事件被登录でき增加。
+;EVENT和派生ご和に保存される初回判定用関数です。
+;TFLAG:事件番号（TFLAG:10）被自动で参照做的で、现在发生しいるEVENTご和に番号但独立して保存され增加。
+;なお、他的事件的初回判定被参照做场合是、ARG:3に事件番号被入れるこ和で一应可能です。
+;ARG是事件番号、ARG:1是角色登录番号（省略做和TARGET）、ARG:2但真だ和初回判定被更新不做（参照的み）
+;CSTR:0で管理し增加
+;-------------------------------------------------
+@FIRSTEVENT(ARG, ARG:1 = -2, ARG:2, ARG:3 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:3 = ARG:3 == -2 ? TFLAG:事件番号 # ARG:3
+RETURNF FIRSTPROCESS(ARG:1, @"EVENT%TOSTR(ARG:3)%_%TOSTR(ARG)%", ARG:2)
+
+;-------------------------------------------------
+;初回助手EVENT判定関数@FIRSTEVENTASSI
+;式中で使用做関数です。理論上无限に事件被登录でき增加。
+;助手EVENT和派生ご和に保存される初回判定用関数です。
+;TFLAG:助手事件番号（TFLAG:11）被自动で参照做的で、现在发生しいる助手EVENTご和に番号但独立して保存され增加。
+;なお、他的助手事件的初回判定被参照做场合是、ARG:3に助手事件番号被入れるこ和で一应可能です。
+;ARG是助手事件番号、ARG:1是角色登录番号（省略做和ASSI）、ARG:2但真だ和初回判定被更新不做（参照的み）
+;CSTR:0で管理し增加
+;-------------------------------------------------
+@FIRSTEVENTASSI(ARG, ARG:1 = -2, ARG:2, ARG:3 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? ASSI # ARG:1
+ARG:3 = ARG:3 == -2 ? TFLAG:助手事件番号 # ARG:3
+RETURNF FIRSTPROCESS(ARG:1, @"EVENTASSI%TOSTR(ARG:3)%_%TOSTR(ARG)%", ARG:2)
+
+;-------------------------------------------------
+;初回刻印判定関数@FIRSTMARK
+;式中で使用做関数です。理論上无限に事件被登录でき增加。
+;刻印取得口上向け的初回判定用関数です。管理是通常的FIRSTTIME同大人。使わないだろうけどあっても困らない的で。
+;ARG是口上番号（任意的设定）、ARG:1是角色登录番号（省略做和TARGET）、ARG:2但真だ和初回判定被更新不做（参照的み）
+;CSTR:0で管理し增加
+;-------------------------------------------------
+@FIRSTMARK(ARG, ARG:1 = -2, ARG:2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+RETURNF FIRSTPROCESS(ARG:1, @"MARK%TOSTR(ARG)%", ARG:2)
+
+;-------------------------------------------------
+;初回脱衣判定関数@FIRSTDATUI
+;式中で使用做関数です。理論上无限に事件被登录でき增加。
+;脱衣口上向け的初回判定用関数です。管理是通常的FIRSTTIME同大人。使わないかも只どあっても困らない的で。
+;ARG是口上番号（任意的设定）、ARG:1是角色登录番号（省略做和TARGET）、ARG:2但真だ和初回判定被更新不做（参照的み）
+;CSTR:0で管理し增加
+;-------------------------------------------------
+@FIRSTDATUI(ARG, ARG:1 = -2, ARG:2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+RETURNF FIRSTPROCESS(ARG:1, @"DATUI%TOSTR(ARG)%", ARG:2)
+
+;-------------------------------------------------
+;初回ACTMESSAGE判定関数@FIRSTACTMESSAGE
+;式中で使用做関数です。理論上无限に事件被登录でき增加。
+;ACTご和に保存される旁白口上初回判定用関数です。
+;TFLAG:ACT（TFLAG:90）被自动で参照做的で、现在实行されているACTご和に番号但独立して保存され增加。
+;つまり、「询问今天的心情」内的FIRSTACTMESSAGE(0)和「谈论性的话题」内的FIRSTACTMESSAGE(0)是別に管理され增加。
+;なお、他的ACT的初回判定被参照做场合是、ARG:3にACT番号被入れるこ和で一应可能です。
+;ARG是事件番号、ARG:1是角色登录番号（省略做和TARGET）、ARG:2但真だ和初回判定被更新不做（参照的み）
+;CSTR:0で管理し增加
+;-------------------------------------------------
+@FIRSTACTMESSAGE(ARG, ARG:1 = -2, ARG:2, ARG:3 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:3 = ARG:3 == -2 ? TFLAG:ACT # ARG:3
+RETURNF FIRSTPROCESS(ARG:1, @"ACTMESSAGE%TOSTR(ARG:3)%_%TOSTR(ARG)%", ARG:2)
+
+;-------------------------------------------------
+;初回ACT判定関数@FIRSTACT
+;式中で使用做関数です。理論上无限に事件被登录でき增加。
+;ACTご和に保存される初回判定用関数です。
+;TFLAG:ACT（TFLAG:90）被自动で参照做的で、现在实行されているACTご和に番号但独立して保存され增加。
+;つまり、「询问今天的心情」内的FIRSTACT(0)和「谈论性的话题」内的FIRSTACT(0)是別に管理され增加。
+;なお、他的ACT的初回判定被参照做场合是、ARG:3にACT番号被入れるこ和で一应可能です。
+;ARG是事件番号、ARG:1是角色登录番号（省略做和TARGET）、ARG:2但真だ和初回判定被更新不做（参照的み）
+;CSTR:0で管理し增加
+;-------------------------------------------------
+@FIRSTACT(ARG, ARG:1 = -2, ARG:2, ARG:3 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:3 = ARG:3 == -2 ? TFLAG:ACT # ARG:3
+RETURNF FIRSTPROCESS(ARG:1, @"ACT%TOSTR(ARG:3)%_%TOSTR(ARG)%", ARG:2)
+
+;-------------------------------------------------
+;初回追加ACT判定関数@FIRSTACTEX
+;式中で使用做関数です。理論上无限に事件被登录でき增加。
+;追加ACTご和に保存される初回判定用関数です。
+;TFLAG:追加ACT（TFLAG:122）被自动で参照做的で、现在实行されている追加ACTご和に番号但独立して保存され增加。
+;なお、他的追加ACT的初回判定被参照做场合是、ARG:3に追加ACT番号被入れるこ和で一应可能です。
+;ARG是事件番号、ARG:1是角色登录番号（省略做和TARGET）、ARG:2但真だ和初回判定被更新不做（参照的み）
+;CSTR:0で管理し增加
+;-------------------------------------------------
+@FIRSTACTEX(ARG, ARG:1 = -2, ARG:2, ARG:3 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:3 = ARG:3 == -2 ? TFLAG:追加ACT # ARG:3
+RETURNF FIRSTPROCESS(ARG:1, @"ACTEX%TOSTR(ARG:3)%_%TOSTR(ARG)%", ARG:2)
+
+;-------------------------------------------------
+;初回助手ACT判定関数@FIRSTACTASSI
+;式中で使用做関数です。理論上无限に事件被登录でき增加。
+;助手ACTご和に保存される初回判定用関数です。
+;TFLAG:助手ACT（TFLAG:122）被自动で参照做的で、现在实行されている助手ACTご和に番号但独立して保存され增加。
+;なお、他的助手ACT的初回判定被参照做场合是、ARG:3に助手ACT番号被入れるこ和で一应可能です。
+;ARG是事件番号、ARG:1是角色登录番号（省略做和ASSI）、ARG:2但真だ和初回判定被更新不做（参照的み）
+;CSTR:0で管理し增加
+;-------------------------------------------------
+@FIRSTACTASSI(ARG, ARG:1 = -2, ARG:2, ARG:3 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? ASSI # ARG:1
+ARG:3 = ARG:3 == -2 ? TFLAG:助手ACT # ARG:3
+RETURNF FIRSTPROCESS(ARG:1, @"ACTASSI%TOSTR(ARG:3)%_%TOSTR(ARG)%", ARG:2)
+
+;-------------------------------------------------
+;初回药品使用判定関数@FIRSTUSE
+;式中で使用做関数です。理論上无限に事件被登录でき增加。
+;脱衣口上向け的初回判定用関数です。管理是通常的FIRSTTIME同大人。使わないかも只どあっても困らない的で。
+;ARG是口上番号（任意的设定）、ARG:1是角色登录番号（省略做和TARGET）、ARG:2但真だ和初回判定被更新不做（参照的み）
+;CSTR:0で管理し增加
+;-------------------------------------------------
+@FIRSTUSE(ARG, ARG:1 = -2, ARG:2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+RETURNF FIRSTPROCESS(ARG:1, @"USE%TOSTR(ARG)%", ARG:2)
+
+;-------------------------------------------------
+;初回单独反应判定関数@FIRSTREACT
+;式中で使用做関数です。理論上无限に事件被登录でき增加。
+;ACTご和に保存される初回判定用関数です。
+;TFLAG:ACT（TFLAG:90）被自动で参照做的で、现在实行されているACTご和に番号但独立して保存され增加。
+;つまり、「询问今天的心情」内的FIRSTREACT(0)和「谈论性的话题」内的FIRSTREACT(0)是別に管理され增加。
+;なお、他的ACT的初回判定被参照做场合是、ARG:3にACT番号被入れるこ和で一应可能です。
+;ARG是事件番号、ARG:1是角色登录番号（省略做和TARGET）、ARG:2但真だ和初回判定被更新不做（参照的み）
+;CSTR:0で管理し增加
+;-------------------------------------------------
+@FIRSTREACT(ARG, ARG:1 = -2, ARG:2, ARG:3 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:3 = ARG:3 == -2 ? TFLAG:ACT # ARG:3
+RETURNF FIRSTPROCESS(ARG:1, @"REACT%TOSTR(ARG:3)%_%TOSTR(ARG)%", ARG:2)
+
+;-------------------------------------------------
+;初回通用反应判定関数@FIRSTCOM
+;式中で使用做関数です。理論上无限に事件被登录でき增加。
+;COMご和に保存される初回判定用関数です。
+;SELECTCOM被自动で参照做的で、现在选择したCOMご和に番号但独立して保存され增加。
+;つまり、「消极的执行」内的FIRSTCOM(0)和「接受快感」内的FIRSTCOM(0)是別に管理され增加。
+;なお、他的COM的初回判定被参照做场合是、ARG:3にCOM番号被入れるこ和で一应可能です。
+;ARG是事件番号、ARG:1是角色登录番号（省略做和TARGET）、ARG:2但真だ和初回判定被更新不做（参照的み）
+;CSTR:0で管理し增加
+;-------------------------------------------------
+@FIRSTCOM(ARG, ARG:1 = -2, ARG:2, ARG:3 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:3 = ARG:3 == -2 ? SELECTCOM # ARG:3
+RETURNF FIRSTPROCESS(ARG:1, @"COM%TOSTR(ARG:3)%_%TOSTR(ARG)%", ARG:2)
+
+;-------------------------------------------------
+;初回統括通用反应判定関数@FIRSTREACTALL
+;式中で使用做関数です。理論上无限に事件被登录でき增加。
+;ACT分类ご和に保存される初回判定用関数です。
+;TFLAG:ACT分类（TFLAG:80）被自动で参照做的で、现在行われているACT的分类ご和に番号但独立して保存され增加。
+;つまり、「会话系活动ション」内的FIRSTREACTALL(0)和「爱抚系活动ション」内的FIRSTREACTALL(0)是別に管理され增加。
+;なお、他的ACT分类的初回判定被参照做场合是、ARG:3にACT分类被入れるこ和で一应可能です。
+;ARG是事件番号、ARG:1是角色登录番号（省略做和TARGET）、ARG:2但真だ和初回判定被更新不做（参照的み）
+;CSTR:0で管理し增加
+;-------------------------------------------------
+@FIRSTREACTALL(ARG, ARG:1 = -2, ARG:2, ARG:3 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:3 = ARG:3 == -2 ? TFLAG:ACT分类 # ARG:3
+RETURNF FIRSTPROCESS(ARG:1, @"REACTALL%TOSTR(ARG:3)%_%TOSTR(ARG)%", ARG:2)
+
+;-------------------------------------------------
+;调教内未读判定関数@ONCE
+;式中で使用做関数です。理論上无限に事件被登录でき增加。
+;特に使用法に指定的ない、事件的初回判定用関数です。FIRSTTIME和違い、调教前に初期化され增加。
+;ARG是事件番号、ARG:1是角色登录番号（省略做和TARGET）、ARG:2但真だ和初回判定被更新不做（参照的み）
+;CSTR:1で管理し增加
+;
+;ASSI系でARG:1被省略した際的角色但TARGETになっていた的で修正@revkoishi(14/04/28)
+;-------------------------------------------------
+@ONCE(ARG, ARG:1 = -2, ARG:2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+RETURNF FIRSTPROCESS(ARG:1, @"ONCE%TOSTR(ARG)%", ARG:2, 1)
+
+;标志设置处理
+@EVENTTRAIN
+CVARSET CSTR, 1
+
+;以下、FIRSTTIMEファミリー和同大人的ラインナップ
+
+@ONCEEVENT(ARG, ARG:1 = -2, ARG:2, ARG:3 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:3 = ARG:3 == -2 ? TFLAG:事件番号 # ARG:3
+RETURNF FIRSTPROCESS(ARG:1, @"EVENT%TOSTR(ARG:3)%_%TOSTR(ARG)%", ARG:2, 1)
+
+@ONCEEVENTASSI(ARG, ARG:1 = -2, ARG:2, ARG:3 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? ASSI # ARG:1
+ARG:3 = ARG:3 == -2 ? TFLAG:助手事件番号 # ARG:3
+RETURNF FIRSTPROCESS(ARG:1, @"EVENTASSI%TOSTR(ARG:3)%_%TOSTR(ARG)%", ARG:2, 1)
+
+@ONCEMARK(ARG, ARG:1 = -2, ARG:2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+RETURNF FIRSTPROCESS(ARG:1, @"MARK%TOSTR(ARG)%", ARG:2, 1)
+
+@ONCEDATUI(ARG, ARG:1 = -2, ARG:2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+RETURNF FIRSTPROCESS(ARG:1, @"DATUI%TOSTR(ARG)%", ARG:2, 1)
+
+@ONCEACTMESSAGE(ARG, ARG:1 = -2, ARG:2, ARG:3 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:3 = ARG:3 == -2 ? TFLAG:ACT # ARG:3
+RETURNF FIRSTPROCESS(ARG:1, @"ACTMESSAGE%TOSTR(ARG:3)%_%TOSTR(ARG)%", ARG:2, 1)
+
+@ONCEACT(ARG, ARG:1 = -2, ARG:2, ARG:3 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:3 = ARG:3 == -2 ? TFLAG:ACT # ARG:3
+RETURNF FIRSTPROCESS(ARG:1, @"ACT%TOSTR(ARG:3)%_%TOSTR(ARG)%", ARG:2, 1)
+
+@ONCEACTEX(ARG, ARG:1 = -2, ARG:2, ARG:3 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:3 = ARG:3 == -2 ? TFLAG:追加ACT # ARG:3
+RETURNF FIRSTPROCESS(ARG:1, @"ACTEX%TOSTR(ARG:3)%_%TOSTR(ARG)%", ARG:2, 1)
+
+@ONCEACTASSI(ARG, ARG:1 = -2, ARG:2, ARG:3 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? ASSI # ARG:1
+ARG:3 = ARG:3 == -2 ? TFLAG:助手ACT # ARG:3
+RETURNF FIRSTPROCESS(ARG:1, @"ACTASSI%TOSTR(ARG:3)%_%TOSTR(ARG)%", ARG:2, 1)
+
+@ONCEUSE(ARG, ARG:1 = -2, ARG:2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+RETURNF FIRSTPROCESS(ARG:1, @"USE%TOSTR(ARG)%", ARG:2, 1)
+
+@ONCEREACT(ARG, ARG:1 = -2, ARG:2, ARG:3 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:3 = ARG:3 == -2 ? TFLAG:ACT # ARG:3
+RETURNF FIRSTPROCESS(ARG:1, @"REACT%TOSTR(ARG:3)%_%TOSTR(ARG)%", ARG:2, 1)
+
+@ONCECOM(ARG, ARG:1 = -2, ARG:2, ARG:3 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:3 = ARG:3 == -2 ? SELECTCOM # ARG:3
+RETURNF FIRSTPROCESS(ARG:1, @"COM%TOSTR(ARG:3)%_%TOSTR(ARG)%", ARG:2, 1)
+
+@ONCEREACTALL(ARG, ARG:1 = -2, ARG:2, ARG:3 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:3 = ARG:3 == -2 ? TFLAG:ACT分类 # ARG:3
+RETURNF FIRSTPROCESS(ARG:1, @"REACTALL%TOSTR(ARG:3)%_%TOSTR(ARG)%", ARG:2, 1)
+
+
+;-------------------------------------------------
+;随机事件整理関数@AUTORAND
+;式中で使用做関数です。RAND处理で事件种类ご和的番号被返し增加但、全种见る直到同じ数字是返さない仕大人です。
+;特に使用法に指定的ない、随机事件的显示顺整理関数です。ONCE和違い、调教前で是なく、全部显示した和きに初期化され增加。
+;ARG是事件的种类数（1以上100未满）、ARG:1是事件番号、ARG:2是角色登录番号（省略做和TARGET）
+;参照的みオプション是ありません。CSTR:0で管理し增加…重いかな？
+;
+;ARG:2但重複していた部位被削除、ASSI系でARG:1被省略した際的角色但TARGETになっていた的で修正@revkoishi(14/04/28)
+;-------------------------------------------------
+@AUTORAND(ARG, ARG:1, ARG:2 = -2)
+#FUNCTION
+ARG:2 = ARG:2 == -2 ? TARGET # ARG:2
+SIF !RANGE(ARG, 1, 99)
+	RETURNF 0
+
+RETURNF AUTORANDPROCESS(ARG, ARG:2, @"AUTORAND%TOSTR(ARG:1)%")
+
+;通用AUTORAND处理
+@AUTORANDPROCESS(ARG, ARG:1, ARGS)
+#FUNCTION
+#DIM DYNAMIC UNREAD, 1
+#DIM LCOUNT, 1
+#LOCALSIZE 100
+VARSET LOCAL, -1
+;未读的番号被数える
+FOR LCOUNT, 0, ARG
+	IF FIRSTPROCESS(ARG:1, @"%ARGS%_%TOSTR(LCOUNT)%", 1)
+		LOCAL:UNREAD = LCOUNT
+		UNREAD++
+	ENDIF
+NEXT
+;未读但ある场合、随机に選んで番号被返し、返回
+IF UNREAD
+	UNREAD = LOCAL:(RAND:UNREAD)
+	RETURNF FIRSTPROCESS(ARG:1, @"%ARGS%_%TOSTR(UNREAD)%")*UNREAD
+;未读但无い场合、既读标志被设置して再帰做…ちょっ和危ないけど大丈夫な是ず
+ELSE
+	FOR LCOUNT, 0, ARG
+		CSTR:(ARG:1):FIRSTTIME用 = %REPLACE(CSTR:(ARG:1):0, @"/%ARGS%_%TOSTR(LCOUNT)%/", "/")%
+	NEXT
+	RETURNF AUTORANDPROCESS(ARG, ARG:1, ARGS)
+ENDIF
+
+;以下、FIRSTTIMEファミリー和同大人的ラインナップ
+
+@RANDEVENT(ARG, ARG:1, ARG:2 = -2, ARG:3 = -2)
+#FUNCTION
+ARG:2 = ARG:2 == -2 ? TARGET # ARG:2
+ARG:3 = ARG:3 == -2 ? TFLAG:事件番号 # ARG:3
+RETURNF AUTORANDPROCESS(ARG, ARG:2, @"RANDEVENT%TOSTR(ARG:3)%_%TOSTR(ARG:1)%")
+
+@RANDEVENTASSI(ARG, ARG:1, ARG:2 = -2, ARG:3 = -2)
+#FUNCTION
+ARG:2 = ARG:2 == -2 ? ASSI # ARG:2
+ARG:3 = ARG:3 == -2 ? TFLAG:助手事件番号 # ARG:3
+RETURNF AUTORANDPROCESS(ARG, ARG:2, @"RANDEVENTASSI%TOSTR(ARG:3)%_%TOSTR(ARG:1)%")
+
+@RANDMARK(ARG, ARG:1, ARG:2 = -2)
+#FUNCTION
+ARG:2 = ARG:2 == -2 ? TARGET # ARG:2
+RETURNF AUTORANDPROCESS(ARG, ARG:2, @"RANDMARK%TOSTR(ARG:1)%")
+
+@RANDDATUI(ARG, ARG:1, ARG:2 = -2)
+#FUNCTION
+ARG:2 = ARG:2 == -2 ? TARGET # ARG:2
+RETURNF AUTORANDPROCESS(ARG, ARG:2, @"RANDDATUI%TOSTR(ARG:1)%")
+
+@RANDACTMESSAGE(ARG, ARG:1, ARG:2 = -2, ARG:3 = -2)
+#FUNCTION
+ARG:2 = ARG:2 == -2 ? TARGET # ARG:2
+ARG:3 = ARG:3 == -2 ? TFLAG:ACT # ARG:3
+RETURNF AUTORANDPROCESS(ARG, ARG:2, @"RANDACTMESSAGE%TOSTR(ARG:3)%_%TOSTR(ARG:1)%")
+
+@RANDACT(ARG, ARG:1, ARG:2 = -2, ARG:3 = -2)
+#FUNCTION
+ARG:2 = ARG:2 == -2 ? TARGET # ARG:2
+ARG:3 = ARG:3 == -2 ? TFLAG:ACT # ARG:3
+RETURNF AUTORANDPROCESS(ARG, ARG:2, @"RANDACT%TOSTR(ARG:3)%_%TOSTR(ARG:1)%")
+
+@RANDACTEX(ARG, ARG:1, ARG:2 = -2, ARG:3 = -2)
+#FUNCTION
+ARG:2 = ARG:2 == -2 ? TARGET # ARG:2
+ARG:3 = ARG:3 == -2 ? TFLAG:追加ACT # ARG:3
+RETURNF AUTORANDPROCESS(ARG, ARG:2, @"RANDACTEX%TOSTR(ARG:3)%_%TOSTR(ARG:1)%")
+
+@RANDACTASSI(ARG, ARG:1, ARG:2 = -2, ARG:3 = -2)
+#FUNCTION
+ARG:2 = ARG:2 == -2 ? ASSI # ARG:2
+ARG:3 = ARG:3 == -2 ? TFLAG:助手ACT # ARG:3
+RETURNF AUTORANDPROCESS(ARG, ARG:2, @"RANDACTASSI%TOSTR(ARG:3)%_%TOSTR(ARG:1)%")
+
+@RANDUSE(ARG, ARG:1, ARG:2 = -2)
+#FUNCTION
+ARG:2 = ARG:2 == -2 ? TARGET # ARG:2
+RETURNF AUTORANDPROCESS(ARG, ARG:2, @"RANDUSE%TOSTR(ARG:1)%")
+
+@RANDREACT(ARG, ARG:1, ARG:2 = -2, ARG:3 = -2)
+#FUNCTION
+ARG:2 = ARG:2 == -2 ? TARGET # ARG:2
+ARG:3 = ARG:3 == -2 ? TFLAG:ACT # ARG:3
+RETURNF AUTORANDPROCESS(ARG, ARG:2, @"RANDREACT%TOSTR(ARG:3)%_%TOSTR(ARG:1)%")
+
+@RANDCOM(ARG, ARG:1, ARG:2 = -2, ARG:3 = -2)
+#FUNCTION
+ARG:2 = ARG:2 == -2 ? TARGET # ARG:2
+ARG:3 = ARG:3 == -2 ? SELECTCOM # ARG:3
+RETURNF AUTORANDPROCESS(ARG, ARG:2, @"RANDCOM%TOSTR(ARG:3)%_%TOSTR(ARG:1)%")
+
+@RANDREACTALL(ARG, ARG:1, ARG:2 = -2, ARG:3 = -2)
+#FUNCTION
+ARG:2 = ARG:2 == -2 ? TARGET # ARG:2
+ARG:3 = ARG:3 == -2 ? TFLAG:ACT分类 # ARG:3
+RETURNF AUTORANDPROCESS(ARG, ARG:2, @"RANDREACTALL%TOSTR(ARG:3)%_%TOSTR(ARG:1)%")
+
+
+;-------------------------------------------------
+;顺序事件整理関数@AUTOORDER
+;式中で使用做関数です。呼ばれるたびにそ的事件但何度目に呼ば受到か被返し增加。初期化是されません。
+;特に使用法に指定的ない、段階式事件的显示顺整理関数です。0～100直到呼ばれるご和に更新し增加
+;ARG是事件番号、ARG:1是角色登录番号（省略做和TARGET）
+;こちらも面倒な的で、参照的みオプション是ありません。そういう的但必要な处理是FIRSTTIMEで行ってください。
+;CSTR:0で管理し增加…重いかな？
+;
+;ASSI系でARG:1被省略した際的角色但TARGETになっていた的で修正@revkoishi(14/04/28)
+;-------------------------------------------------
+@AUTOORDER(ARG, ARG:1 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+RETURNF AUTOORDERPROCESS(ARG:1, @"AUTOORDER%TOSTR(ARG)%")
+
+;通用AUTOORDER处理
+@AUTOORDERPROCESS(ARG, ARGS)
+#FUNCTION
+#DIM LCOUNT, 1
+#LOCALSIZE 100
+VARSET LOCAL, -1
+;0～99的未读判定被し、最初に引っかかった数字被返す
+FOR LCOUNT, 0, 100
+	SIF FIRSTPROCESS(ARG, @"%ARGS%_%TOSTR(LCOUNT)%")
+		RETURNF LCOUNT
+NEXT
+;界限是100
+RETURNF 100
+
+;以下、FIRSTTIMEファミリー和同大人的ラインナップ
+
+@ORDEREVENT(ARG, ARG:1 = -2, ARG:2 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:2 = ARG:2 == -2 ? TFLAG:事件番号 # ARG:2
+RETURNF AUTOORDERPROCESS(ARG:1, @"ORDEREVENT%TOSTR(ARG:2)%_%TOSTR(ARG)%")
+
+@ORDEREVENTASSI(ARG, ARG:1 = -2, ARG:2 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? ASSI # ARG:1
+ARG:2 = ARG:2 == -2 ? TFLAG:助手事件番号 # ARG:2
+RETURNF AUTOORDERPROCESS(ARG:1, @"ORDEREVENTASSI%TOSTR(ARG:2)%_%TOSTR(ARG)%")
+
+@ORDERMARK(ARG, ARG:1 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+RETURNF AUTOORDERPROCESS(ARG:1, @"ORDERMARK%TOSTR(ARG)%")
+
+@ORDERDATUI(ARG, ARG:1 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+RETURNF AUTOORDERPROCESS(ARG:1, @"ORDERDATUI%TOSTR(ARG)%")
+
+@ORDERACTMESSAGE(ARG, ARG:1 = -2, ARG:2 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:2 = ARG:2 == -2 ? TFLAG:ACT # ARG:2
+RETURNF AUTOORDERPROCESS(ARG:1, @"ORDERACTMESSAGE%TOSTR(ARG:2)%_%TOSTR(ARG)%")
+
+@ORDERACT(ARG, ARG:1 = -2, ARG:2 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:2 = ARG:2 == -2 ? TFLAG:ACT # ARG:2
+RETURNF AUTOORDERPROCESS(ARG:1, @"ORDERACT%TOSTR(ARG:2)%_%TOSTR(ARG)%")
+
+@ORDERACTEX(ARG, ARG:1 = -2, ARG:2 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:2 = ARG:2 == -2 ? TFLAG:追加ACT # ARG:2
+RETURNF AUTOORDERPROCESS(ARG:1, @"ORDERACTEX%TOSTR(ARG:2)%_%TOSTR(ARG)%")
+
+@ORDERACTASSI(ARG, ARG:1 = -2, ARG:2 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? ASSI # ARG:1
+ARG:2 = ARG:2 == -2 ? TFLAG:助手ACT # ARG:2
+RETURNF AUTOORDERPROCESS(ARG:1, @"ORDERACTASSI%TOSTR(ARG:2)%_%TOSTR(ARG)%")
+
+@ORDERUSE(ARG, ARG:1 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+RETURNF AUTOORDERPROCESS(ARG:1, @"ORDERUSE%TOSTR(ARG)%")
+
+@ORDERREACT(ARG, ARG:1 = -2, ARG:2 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:2 = ARG:2 == -2 ? TFLAG:ACT # ARG:2
+RETURNF AUTOORDERPROCESS(ARG:1, @"ORDERREACT%TOSTR(ARG:2)%_%TOSTR(ARG)%")
+
+@ORDERCOM(ARG, ARG:1 = -2, ARG:2 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:2 = ARG:2 == -2 ? SELECTCOM # ARG:2
+RETURNF AUTOORDERPROCESS(ARG:1, @"ORDERCOM%TOSTR(ARG:2)%_%TOSTR(ARG)%")
+
+@ORDERREACTALL(ARG, ARG:1 = -2, ARG:2 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:2 = ARG:2 == -2 ? TFLAG:ACT分类 # ARG:2
+RETURNF AUTOORDERPROCESS(ARG:1, @"ORDERREACTALL%TOSTR(ARG:2)%_%TOSTR(ARG)%")
+
+;-------------------------------------------------
+;関数名:VOIDLINE_IF
+;概　要:条件付き空行
+;引　数:ARG:0…正那么空行显示
+;戻り値:RESULT被保存做
+;備　考:口上显示した和き的空行追加用
+;-------------------------------------------------
+@VOIDLINE_IF(ARG)
+SIF ARG
+	PRINTL 
+RETURN RESULT
+
+;-------------------------------------------------
+;関数名:LINE_IF
+;概　要:条件付きDRAWLINE
+;引　数:ARG:0…正那么DRAWLINE
+;戻り値:RESULT被保存做
+;備　考:口上显示した和き的罫線追加用
+;-------------------------------------------------
+@LINE_IF(ARG)
+SIF ARG
+	DRAWLINE
+RETURN RESULT
+
+;-------------------------------------------------
+;真値集計関数@TRUECHECK
+;	引数0～19：集計对象
+;引数的うち真になるも的但いくつあるか被数え增加
+;-------------------------------------------------
+@TRUECHECK(ARG:0, ARG:1, ARG:2, ARG:3, ARG:4, ARG:5, ARG:6, ARG:7, ARG:8, ARG:9, ARG:10, ARG:11, ARG:12, ARG:13, ARG:14, ARG:15, ARG:16, ARG:17, ARG:18, ARG:19, ARG:20, ARG:21, ARG:22, ARG:23, ARG:24, ARG:25, ARG:26, ARG:27, ARG:28, ARG:29, ARG:30, ARG:31, ARG:32, ARG:33, ARG:34, ARG:35, ARG:36, ARG:37, ARG:38, ARG:39, ARG:40, ARG:41, ARG:42, ARG:43, ARG:44, ARG:45, ARG:46, ARG:47, ARG:48, ARG:49, ARG:50, ARG:51, ARG:52, ARG:53, ARG:54, ARG:55, ARG:56, ARG:57, ARG:58, ARG:59, ARG:60, ARG:61, ARG:62, ARG:63, ARG:64, ARG:65, ARG:66, ARG:67, ARG:68, ARG:69, ARG:70, ARG:71, ARG:72, ARG:73, ARG:74, ARG:75, ARG:76, ARG:77, ARG:78, ARG:79, ARG:80, ARG:81, ARG:82, ARG:83, ARG:84, ARG:85, ARG:86, ARG:87, ARG:88, ARG:89, ARG:90, ARG:91, ARG:92, ARG:93, ARG:94, ARG:95, ARG:96, ARG:97, ARG:98, ARG:99)
+#FUNCTION
+RETURNF VARSIZE("ARG") - MATCH(ARG, 0)
+
+;-------------------------------------------------
+;複数BIT设置関数@SETBITS
+;	引数0：设置做对象
+;	引数1～100：设置に用いられる数値
+;通常関数です。引数0的値に与えら受到引数番目的BIT被立て增加
+;-------------------------------------------------
+@SETBITS(ARG, ARG:1 = -1, ARG:2 = -1, ARG:3 = -1, ARG:4 = -1, ARG:5 = -1, ARG:6 = -1, ARG:7 = -1, ARG:8 = -1, ARG:9 = -1, ARG:10 = -1, ARG:11 = -1, ARG:12 = -1, ARG:13 = -1, ARG:14 = -1, ARG:15 = -1, ARG:16 = -1, ARG:17 = -1, ARG:18 = -1, ARG:19 = -1, ARG:20 = -1, ARG:21 = -1, ARG:22 = -1, ARG:23 = -1, ARG:24 = -1, ARG:25 = -1, ARG:26 = -1, ARG:27 = -1, ARG:28 = -1, ARG:29 = -1, ARG:30 = -1, ARG:31 = -1, ARG:32 = -1, ARG:33 = -1, ARG:34 = -1, ARG:35 = -1, ARG:36 = -1, ARG:37 = -1, ARG:38 = -1, ARG:39 = -1, ARG:40 = -1, ARG:41 = -1, ARG:42 = -1, ARG:43 = -1, ARG:44 = -1, ARG:45 = -1, ARG:46 = -1, ARG:47 = -1, ARG:48 = -1, ARG:49 = -1, ARG:50 = -1, ARG:51 = -1, ARG:52 = -1, ARG:53 = -1, ARG:54 = -1, ARG:55 = -1, ARG:56 = -1, ARG:57 = -1, ARG:58 = -1, ARG:59 = -1, ARG:60 = -1, ARG:61 = -1, ARG:62 = -1, ARG:63 = -1, ARG:64 = -1, ARG:65 = -1, ARG:66 = -1, ARG:67 = -1, ARG:68 = -1, ARG:69 = -1, ARG:70 = -1, ARG:71 = -1, ARG:72 = -1, ARG:73 = -1, ARG:74 = -1, ARG:75 = -1, ARG:76 = -1, ARG:77 = -1, ARG:78 = -1, ARG:79 = -1, ARG:80 = -1, ARG:81 = -1, ARG:82 = -1, ARG:83 = -1, ARG:84 = -1, ARG:85 = -1, ARG:86 = -1, ARG:87 = -1, ARG:88 = -1, ARG:89 = -1, ARG:90 = -1, ARG:91 = -1, ARG:92 = -1, ARG:93 = -1, ARG:94 = -1, ARG:95 = -1, ARG:96 = -1, ARG:97 = -1, ARG:98 = -1, ARG:99 = -1, ARG:100 = -1)
+#LOCALSIZE 2
+LOCAL = 0
+FOR LOCAL:1, 1, 100
+	SIF ARG:(LOCAL:1) < 0 || ARG:(LOCAL:1) > 63
+		RETURN RESULT
+	SETBIT ARG, ARG:(LOCAL:1)
+NEXT
+RETURN RESULT
+
+;-------------------------------------------------
+;関数名:COUNTBIT
+;概　要:BIT和取得関数
+;引　数:ARG:0…对象的变数
+;　　　:ARG:1…BIT番号始点
+;　　　:ARG:2…BIT番号终点
+;戻り値:ARG:1～ARG:2番目的BIT的和
+;備　考:式中関数。引数1～2被省略做和全BIT的和になる
+;-------------------------------------------------
+@COUNTBIT(ARG, ARG:1, ARG:2 = 63)
+#FUNCTION
+#LOCALSIZE 2
+LOCAL:1 = 0
+ARG >>= ARG:1
+FOR LOCAL, 0, ARG:1-ARG:2+1
+	LOCAL:1 += ARG & 1
+	ARG >>= 1
+NEXT
+RETURNF LOCAL:1
+
+;-------------------------------------------------
+;ORBITチェック関数@GETBITOR
+;	引数0：チェックされる数値・变数
+;	引数1～100：チェック做BIT
+;式中で使用做関数です。引数0的値で与えら受到引数1～100番目的BIT被见增加。いずれか但立っていれば1被返し增加
+;引数0是チェック做对象、チェックされる数値是100直到引き受け可能
+;チェック数値但すべて省略されるか不適切だ和0但返り增加
+;-------------------------------------------------
+@GETBITOR(ARG, ARG:1 = -1, ARG:2 = -1, ARG:3 = -1, ARG:4 = -1, ARG:5 = -1, ARG:6 = -1, ARG:7 = -1, ARG:8 = -1, ARG:9 = -1, ARG:10 = -1, ARG:11 = -1, ARG:12 = -1, ARG:13 = -1, ARG:14 = -1, ARG:15 = -1, ARG:16 = -1, ARG:17 = -1, ARG:18 = -1, ARG:19 = -1, ARG:20 = -1, ARG:21 = -1, ARG:22 = -1, ARG:23 = -1, ARG:24 = -1, ARG:25 = -1, ARG:26 = -1, ARG:27 = -1, ARG:28 = -1, ARG:29 = -1, ARG:30 = -1, ARG:31 = -1, ARG:32 = -1, ARG:33 = -1, ARG:34 = -1, ARG:35 = -1, ARG:36 = -1, ARG:37 = -1, ARG:38 = -1, ARG:39 = -1, ARG:40 = -1, ARG:41 = -1, ARG:42 = -1, ARG:43 = -1, ARG:44 = -1, ARG:45 = -1, ARG:46 = -1, ARG:47 = -1, ARG:48 = -1, ARG:49 = -1, ARG:50 = -1, ARG:51 = -1, ARG:52 = -1, ARG:53 = -1, ARG:54 = -1, ARG:55 = -1, ARG:56 = -1, ARG:57 = -1, ARG:58 = -1, ARG:59 = -1, ARG:60 = -1, ARG:61 = -1, ARG:62 = -1, ARG:63 = -1, ARG:64 = -1, ARG:65 = -1, ARG:66 = -1, ARG:67 = -1, ARG:68 = -1, ARG:69 = -1, ARG:70 = -1, ARG:71 = -1, ARG:72 = -1, ARG:73 = -1, ARG:74 = -1, ARG:75 = -1, ARG:76 = -1, ARG:77 = -1, ARG:78 = -1, ARG:79 = -1, ARG:80 = -1, ARG:81 = -1, ARG:82 = -1, ARG:83 = -1, ARG:84 = -1, ARG:85 = -1, ARG:86 = -1, ARG:87 = -1, ARG:88 = -1, ARG:89 = -1, ARG:90 = -1, ARG:91 = -1, ARG:92 = -1, ARG:93 = -1, ARG:94 = -1, ARG:95 = -1, ARG:96 = -1, ARG:97 = -1, ARG:98 = -1, ARG:99 = -1, ARG:100 = -1)
+#FUNCTION
+#DIM LCOUNT, 1
+FOR LCOUNT, 1, 100
+	SIF ARG:LCOUNT < 0 || ARG:LCOUNT > 63
+		RETURNF 0
+	SIF GETBIT(ARG, ARG:LCOUNT)
+		RETURNF 1
+NEXT
+RETURNF 0
+
+[SKIPSTART]
+@GETBITOR(ARG:0, ARG:1 = -1, ..., ARG:100 = -1)
+#FUNCTION
+LOCAL:0 = 0, 0
+WHILE ++LOCAL:1 < 100 && ARG:(LOCAL:1) >= 0
+        LOCAL:0 |= 1 << (ARG:(LOCAL:1) & 0x3F)
+WEND
+RETURNF (ARG:0 & LOCAL:0) != 0
+[SKIPEND]
+
+;-------------------------------------------------
+;配列BITチェック関数@GETBITAR
+;	引数0：チェック做BIT
+;	引数1～100：チェックされる数値・变数
+;式中で使用做関数です。引数0的値番目的BIT被引数1～100番目に对して见增加。いずれかで立っていれば1被返し增加
+;GETBITOR等和比べて引数配置但逆になってい增加。また、便宜上配列和銘打って增加但配列被ま和めて扱うこ和是できません
+;チェック数値但すべて省略されるか不適切だ和0但返り增加
+;-------------------------------------------------
+@GETBITAR(ARG = -1 , ARG:1 = -1, ARG:2 = -1, ARG:3 = -1, ARG:4 = -1, ARG:5 = -1, ARG:6 = -1, ARG:7 = -1, ARG:8 = -1, ARG:9 = -1, ARG:10 = -1, ARG:11 = -1, ARG:12 = -1, ARG:13 = -1, ARG:14 = -1, ARG:15 = -1, ARG:16 = -1, ARG:17 = -1, ARG:18 = -1, ARG:19 = -1, ARG:20 = -1, ARG:21 = -1, ARG:22 = -1, ARG:23 = -1, ARG:24 = -1, ARG:25 = -1, ARG:26 = -1, ARG:27 = -1, ARG:28 = -1, ARG:29 = -1, ARG:30 = -1, ARG:31 = -1, ARG:32 = -1, ARG:33 = -1, ARG:34 = -1, ARG:35 = -1, ARG:36 = -1, ARG:37 = -1, ARG:38 = -1, ARG:39 = -1, ARG:40 = -1, ARG:41 = -1, ARG:42 = -1, ARG:43 = -1, ARG:44 = -1, ARG:45 = -1, ARG:46 = -1, ARG:47 = -1, ARG:48 = -1, ARG:49 = -1, ARG:50 = -1, ARG:51 = -1, ARG:52 = -1, ARG:53 = -1, ARG:54 = -1, ARG:55 = -1, ARG:56 = -1, ARG:57 = -1, ARG:58 = -1, ARG:59 = -1, ARG:60 = -1, ARG:61 = -1, ARG:62 = -1, ARG:63 = -1, ARG:64 = -1, ARG:65 = -1, ARG:66 = -1, ARG:67 = -1, ARG:68 = -1, ARG:69 = -1, ARG:70 = -1, ARG:71 = -1, ARG:72 = -1, ARG:73 = -1, ARG:74 = -1, ARG:75 = -1, ARG:76 = -1, ARG:77 = -1, ARG:78 = -1, ARG:79 = -1, ARG:80 = -1, ARG:81 = -1, ARG:82 = -1, ARG:83 = -1, ARG:84 = -1, ARG:85 = -1, ARG:86 = -1, ARG:87 = -1, ARG:88 = -1, ARG:89 = -1, ARG:90 = -1, ARG:91 = -1, ARG:92 = -1, ARG:93 = -1, ARG:94 = -1, ARG:95 = -1, ARG:96 = -1, ARG:97 = -1, ARG:98 = -1, ARG:99 = -1, ARG:100 = -1)
+#FUNCTION
+#DIM LCOUNT, 1
+SIF ARG < 0 || ARG > 63
+	RETURNF 0
+FOR LCOUNT, 1, 100
+	SIF ARG:LCOUNT < 0
+		RETURNF 0
+	SIF GETBIT(ARG:LCOUNT, ARG)
+		RETURNF 1
+NEXT
+RETURNF 0
+
+;-------------------------------------------------
+;ANDBITチェック関数@GETBITAND
+;	引数0：チェックされる数値・变数
+;	引数1～100：チェック做BIT
+;式中で使用做関数です。引数0的値で与えら受到引数1～100番目的BIT被见增加。すべて立っていれば1被返し增加
+;引数0是チェック做对象、チェックされる数値是100直到引き受け可能
+;チェック数値但すべて省略されるか不適切だ和1但返り增加
+;-------------------------------------------------
+@GETBITAND(ARG, ARG:1 = -1, ARG:2 = -1, ARG:3 = -1, ARG:4 = -1, ARG:5 = -1, ARG:6 = -1, ARG:7 = -1, ARG:8 = -1, ARG:9 = -1, ARG:10 = -1, ARG:11 = -1, ARG:12 = -1, ARG:13 = -1, ARG:14 = -1, ARG:15 = -1, ARG:16 = -1, ARG:17 = -1, ARG:18 = -1, ARG:19 = -1, ARG:20 = -1, ARG:21 = -1, ARG:22 = -1, ARG:23 = -1, ARG:24 = -1, ARG:25 = -1, ARG:26 = -1, ARG:27 = -1, ARG:28 = -1, ARG:29 = -1, ARG:30 = -1, ARG:31 = -1, ARG:32 = -1, ARG:33 = -1, ARG:34 = -1, ARG:35 = -1, ARG:36 = -1, ARG:37 = -1, ARG:38 = -1, ARG:39 = -1, ARG:40 = -1, ARG:41 = -1, ARG:42 = -1, ARG:43 = -1, ARG:44 = -1, ARG:45 = -1, ARG:46 = -1, ARG:47 = -1, ARG:48 = -1, ARG:49 = -1, ARG:50 = -1, ARG:51 = -1, ARG:52 = -1, ARG:53 = -1, ARG:54 = -1, ARG:55 = -1, ARG:56 = -1, ARG:57 = -1, ARG:58 = -1, ARG:59 = -1, ARG:60 = -1, ARG:61 = -1, ARG:62 = -1, ARG:63 = -1, ARG:64 = -1, ARG:65 = -1, ARG:66 = -1, ARG:67 = -1, ARG:68 = -1, ARG:69 = -1, ARG:70 = -1, ARG:71 = -1, ARG:72 = -1, ARG:73 = -1, ARG:74 = -1, ARG:75 = -1, ARG:76 = -1, ARG:77 = -1, ARG:78 = -1, ARG:79 = -1, ARG:80 = -1, ARG:81 = -1, ARG:82 = -1, ARG:83 = -1, ARG:84 = -1, ARG:85 = -1, ARG:86 = -1, ARG:87 = -1, ARG:88 = -1, ARG:89 = -1, ARG:90 = -1, ARG:91 = -1, ARG:92 = -1, ARG:93 = -1, ARG:94 = -1, ARG:95 = -1, ARG:96 = -1, ARG:97 = -1, ARG:98 = -1, ARG:99 = -1, ARG:100 = -1)
+#FUNCTION
+#DIM LCOUNT, 1
+FOR LCOUNT, 1, 100
+	SIF ARG:LCOUNT < 0 || ARG:LCOUNT > 63
+		RETURNF 1
+	SIF !GETBIT(ARG, ARG:LCOUNT)
+		RETURNF 0
+NEXT
+RETURNF 1
+
+;-------------------------------------------------
+;除外BITチェック関数@GETBITEX
+;	引数0：チェックされる数値・变数
+;	引数1～100：チェック做BIT
+;式中で使用做関数です。引数0的値で与えら受到引数1～100番目的BIT被见增加。それら的BIT以外に何か立っていれば真になり增加
+;それら的BIT但立っているかどうか自体是见ない的で、见想要场合是GETBITOR被併用してください
+;引数0是チェック做对象、チェックされる数値是100直到引き受け可能
+;チェック数値但すべて省略されるか不適切だ和1但返り增加
+;-------------------------------------------------
+@GETBITEX(ARG, ARG:1 = -1, ARG:2 = -1, ARG:3 = -1, ARG:4 = -1, ARG:5 = -1, ARG:6 = -1, ARG:7 = -1, ARG:8 = -1, ARG:9 = -1, ARG:10 = -1, ARG:11 = -1, ARG:12 = -1, ARG:13 = -1, ARG:14 = -1, ARG:15 = -1, ARG:16 = -1, ARG:17 = -1, ARG:18 = -1, ARG:19 = -1, ARG:20 = -1, ARG:21 = -1, ARG:22 = -1, ARG:23 = -1, ARG:24 = -1, ARG:25 = -1, ARG:26 = -1, ARG:27 = -1, ARG:28 = -1, ARG:29 = -1, ARG:30 = -1, ARG:31 = -1, ARG:32 = -1, ARG:33 = -1, ARG:34 = -1, ARG:35 = -1, ARG:36 = -1, ARG:37 = -1, ARG:38 = -1, ARG:39 = -1, ARG:40 = -1, ARG:41 = -1, ARG:42 = -1, ARG:43 = -1, ARG:44 = -1, ARG:45 = -1, ARG:46 = -1, ARG:47 = -1, ARG:48 = -1, ARG:49 = -1, ARG:50 = -1, ARG:51 = -1, ARG:52 = -1, ARG:53 = -1, ARG:54 = -1, ARG:55 = -1, ARG:56 = -1, ARG:57 = -1, ARG:58 = -1, ARG:59 = -1, ARG:60 = -1, ARG:61 = -1, ARG:62 = -1, ARG:63 = -1, ARG:64 = -1, ARG:65 = -1, ARG:66 = -1, ARG:67 = -1, ARG:68 = -1, ARG:69 = -1, ARG:70 = -1, ARG:71 = -1, ARG:72 = -1, ARG:73 = -1, ARG:74 = -1, ARG:75 = -1, ARG:76 = -1, ARG:77 = -1, ARG:78 = -1, ARG:79 = -1, ARG:80 = -1, ARG:81 = -1, ARG:82 = -1, ARG:83 = -1, ARG:84 = -1, ARG:85 = -1, ARG:86 = -1, ARG:87 = -1, ARG:88 = -1, ARG:89 = -1, ARG:90 = -1, ARG:91 = -1, ARG:92 = -1, ARG:93 = -1, ARG:94 = -1, ARG:95 = -1, ARG:96 = -1, ARG:97 = -1, ARG:98 = -1, ARG:99 = -1, ARG:100 = -1)
+#FUNCTION
+#DIM LCOUNT, 1
+FOR LCOUNT, 1, 100
+	SIF ARG:LCOUNT < 0 || ARG:LCOUNT > 63
+		RETURNF ARG
+	CLEARBIT ARG, ARG:LCOUNT
+NEXT
+RETURNF ARG
+
+;-------------------------------------------------------------------------------
+;	KOMEIJI_FUNCTIONS由来関数群是最新的関数和差し替えられました。
+;	
+;	_PARSE_INT	→	ISNUMERIC和TOINT また是 PARSEINT64被使用してください
+;-------------------------------------------------------------------------------
+
+;-------------------------------------------------
+;関数名:PARSEINT64
+;概　要:数値被表す字符串型被解析し数値型に变换做関数
+;引　数:ARGS:0…数値被表す字符串
+;　　　 ARG:0 …[省略可]数値的基数(何進数か)。2～36直到指定可能。省略した场合是10
+;戻り値:解析結果的数値、__INT_MIN__+1～__INT_MAX__(-0x7FFFFFFFFFFFFFFF～0x7FFFFFFFFFFFFFFF)
+;　　　 但し数値和して解釈できない场合是__INT_MIN__(-0x8000000000000000)被返す
+;備　考:式中関数 ※結果但__INT_MIN__になる値被解析できない仕大人な的で注意
+;TOINTすら无かった大昔に作った的被叩き直して、もう少通用的かつ实用的な雰囲気にした
+;事前に解析可能かわからない字符串被入れる场合にすぐ例外吐いて死ぬ的是非常に拙い的和、
+;解析不能的场合被返す良い手段但思いつかなかった的で、符号付64bit的最小値是解析できない仕大人和して、これ被错误戻り値扱いに
+;实際安い但使えればいい。うふふ、めで想要　和思っていたら…
+;えっ、TOINTやISNUMERICって实是"0xCAFEBABE"や"0b10110101"み想要な16進や2進も处理できる、ですって？！
+;Wikiに是半角数字只って書いてあった的に…テストに出ないよぉ…でもTOINT和是微妙に方向性但异なる的で、もしか做和使い道但微レ存
+;还有实是__INT_MIN__でも处理できるように直す的但ちょっ和面倒だった的是秘密
+;(负数处理被計算中にやって、符号标志和ズレた时点数オーバーフロー扱いにすればいい気も做けど)
+;-------------------------------------------------
+;使用例和处理結果
+;PARSEINT64("0", 10)                   →           0   PARSEINT64("-9223372036854775807", 10) → -9223372036854775807
+;PARSEINT64("473", 10)                 →         473   PARSEINT64("9223372036854775808", 10)  →          __INT_MIN__
+;PARSEINT64("-0", 10)                  →           0   PARSEINT64("-9223372036854775808", 10) →          __INT_MIN__
+;PARSEINT64("-FF", 16)                 →        -255   PARSEINT64("99", 8)                    →          __INT_MIN__
+;PARSEINT64("1100110", 2)              →         102   PARSEINT64("Kona", 10)                 →          __INT_MIN__
+;PARSEINT64("9223372036854775807", 10) → __INT_MAX__   PARSEINT64("Kona", 27)                 →               411787
+;-------------------------------------------------
+;※結果但__INT_MIN__になる値被正しく解釈できるように做场合的方法的例。必要变成了ら考えよう
+;関数にチェック模式被付ける/RESULT:1に代入做/参照型引数で返す/式中関数やめてRESULT:1で返す
+;-------------------------------------------------
+@PARSEINT64(ARGS:0, ARG:0 = 10)
+#FUNCTION
+#LOCALSIZE 5
+#LOCALSSIZE 2
+SIF !INRANGE(ARG:0, 2, 36)	;基数チェック。これ但不正な场合只THROWしちゃう
+	THROW @PARSEINT64に不正な引数但渡されました。范围外的基数です（{ARG:0}）
+LOCAL:0 = 0	;解析結果的数値
+LOCAL:1 = 1	;符号标志(1か-1被入れて乗算)
+LOCAL:2 = STRLENSU(ARGS:0)	;字符数
+IF !LOCAL:2					;解析对象字符串チェック。これ但不正な场合是解析不能扱い
+	DEBUGPRINTFORML @PARSEINT64に不正な引数但渡されました。解析对象字符串但空字符串です
+	RETURNF __INT_MIN__
+ENDIF
+;大字符にして处理
+LOCALS:0 = %TOUPPER(ARGS:0)%
+FOR LOCAL:3, 0, LOCAL:2
+	LOCAL:4 = ENCODETOUNI(CHARATU(LOCALS:0, LOCAL:3))	;ENCODETOUNI的お阴でUnicode値から数値化できる。いい时代变成了わ
+	SELECTCASE LOCAL:4
+		CASE 0x2D			;"-"
+			IF LOCAL:3 || LOCAL:2 == 1	;-记号被处理出来る的是先頭只。-记号1字符只的场合もアウト
+				DEBUGPRINTFORML @PARSEINT64で数値解析中に例外被发生。不正な-记号です（%ARGS:0%）
+				RETURNF __INT_MIN__
+			ENDIF
+			LOCAL:1 = -1	;符号标志被变更
+			CONTINUE		;計算部分に是行かない
+		CASE 0x30 TO 0x39	;"0" ～ "9"。TOINT但无かった頃是单独处理していた的よ
+			LOCAL:4 -= 0x30
+		CASE 0x41 TO 0x5A	;"A" ～ "Z"。ENCODETOUNI的お阴で随分和乐但出来るよう变成了わ
+			LOCAL:4 -= 0x37
+		CASEELSE
+			DEBUGPRINTFORML @PARSEINT64で数値解析中に例外被发生。数値和して解析できません（%ARGS:0%）
+			RETURNF __INT_MIN__
+	ENDSELECT
+	IF !INRANGE(LOCAL:4, 0, ARG:0 - 1)
+		DEBUGPRINTFORML @PARSEINT64で数値解析中に例外被发生。基数({ARG:0})以上的数字但含まれてい增加（%ARGS:0%）
+		RETURNF __INT_MIN__
+	ENDIF
+	LOCAL:0 = LOCAL:0 * ARG:0 + LOCAL:4
+	IF LOCAL:0 < 0	;ここで负数になる的是オーバーフロー。-0x8000000000000000被解析できない的是仕大人和いうこ和でよろしく
+		DEBUGPRINTFORML @PARSEINT64で数値解析中に例外被发生。オーバーフロー被发生しました（%ARGS:0%）
+		RETURNF __INT_MIN__
+	ENDIF
+NEXT
+RETURNF LOCAL:0 * LOCAL:1
+
+
+;-------------------------------------------------
+;関数名:FACESITTING_SET
+;概　要:顔面骑乘状态调整处理
+;引　数:ARG = (0 = 顔面骑乘解除, 1 = 顔面骑乘, 2 = 顔面骑乘肛门)
+;備　考:通常関数
+;引数に从って顔面骑乘状态被设置做只的関数
+;-------------------------------------------------
+@FACESITTING_SET(ARG)
+TEQUIP:顔面骑乘 = ARG & 1
+TEQUIP:顔面骑乘肛门 = (ARG & 2) / 2
+
+;-------------------------------------------------
+;関数名:SEX_SET
+;概　要:性交状态调整处理
+;引　数:ARGS = 性交系ACT名、もしく是ACT番号（体位番号是拾わない的で注意）
+;備　考:通常関数
+;引数に从って性交状态被设置做只的関数。省略做和性交被解除。片方被解除し想要场合是直接代入して下さい。
+;TEQUIP:70 性交中    (调教者但调教对象に插入中)(1=正常位/2=后背位/3=骑乘位/4=对面座位/5=背面座位/6=肛交)
+;TEQUIP:71 性交奉仕中(调教对象但调教者に插入中)(70和同じ)
+;-------------------------------------------------
+@SEX_SET(ARGS = "解除")
+#LOCALSIZE 1
+IF ARGS == "解除"
+	TEQUIP:性交中 = 0
+	TEQUIP:性交奉仕中 = 0
+ELSE
+	LOCAL = ISNUMERIC(ARGS) ? TOINT(ARGS) # GET_ACTNUM(ARGS)
+	SELECTCASE LOCAL
+		CASE 30 TO 35
+			TEQUIP:性交中 = POSITION(LOCAL)
+			TEQUIP:性交奉仕中 = 0
+		CASE 95 TO 99, 103
+			TEQUIP:性交奉仕中 = POSITION(LOCAL)
+			TEQUIP:性交中 = 0
+	ENDSELECT
+ENDIF
+RETURN RESULT
+
+;-------------------------------------------------
+;関数名:ACT_SET
+;概　要:ACT预定関数
+;引　数:ARGS   = 实行し想要ACT名、また是番号
+;		ARG    = 内部处理。真に做和次段階被踏む
+;備　考:通常関数
+;ACTABLE被参照して实行直到的强硬ル被外すように调教者活动ション被誘導做関数
+;设置した和き的戻り値但0だ和、そ的调教中にそれ被实行可能的状況に是できない和いう意味。
+;极其讨厌ACT但ループ和か做かもしれない？
+;-------------------------------------------------
+@ACT_SET(ARGS = "-1", ARG)
+
+;现在まだ未实装
+;ACTABLE改修后に作り增加
+
+
+;-------------------------------------------------
+;関数名:SAME_TURN
+;概　要:同一回合判定関数（调教中限定）
+;引　数:ARGS = 同一判定段階
+;戻り値:同一回合判定用字符串
+;備　考:式中関数
+;现在时间被示す字符串被返す
+;上次返さ受到物和比べるこ和により同一回合か但判定でき时いう仕組み
+;调教中に使われるこ和被想定してる的で
+;それ以外で使いたければ手直し但必要@これみ
+;
+;書式 {年数}/{日数}/%昼夜%/{调教时间}
+;-------------------------------------------------
+@SAME_TURN(ARGS)
+#FUNCTIONS
+LOCALS = {FLAG:年数+1}
+SIF ARGS == "年"
+	RETURNF LOCALS
+LOCALS = %LOCALS%/{FLAG:日数+1}
+SIF ARGS == "日"
+	RETURNF LOCALS
+LOCALS = %LOCALS%/%GET_TIME()%
+SIF ARGS == "调教"
+	RETURNF LOCALS
+LOCALS = %LOCALS%/{TFLAG:调教时间}
+;SIF ARGS == "回合"
+RETURNF LOCALS
+
+;-------------------------------------------------
+;口上色指定字符串显示関数@PRINT_KOJO_COLOR～系
+;	ARG :0：显示侍奉字符色的角色番号
+;	ARG :1：戻し想要字符色的角色番号（日常事件等、口上主但TARGET不是场合被想定）。省略做和TARGET
+;	ARG :2：1那么改行。2那么改行してWAIT
+;	ARGS:0：显示做字符串
+;指定した角色番号的字符色で字符串被显示し增加
+;当該角色的専用口上但存在不做场合是デフォルト的薄灰色で显示
+;改行做「PRINT_KOJO_COLORL」改行待ち做「PRINT_KOJO_COLORW」的バリエーションあり
+;例えば…
+;CALL PRINT_KOJO_COLORW(ASSI, "こ的字符串是ASSI的设定色で显示されて改行待ち被し增加。")
+;ぱにめーしょんに入受到い但バリアント互换但ない的でここで。
+;-------------------------------------------------
+@PRINT_KOJO_COLOR(ARG:0, ARGS:0, ARG:1 = -2, ARG:2)
+ARG:1 = ARG:1 != -2 ? ARG:1 # TARGET
+CALL KOJO_COLOR(ARG:0)
+PRINTFORM %ARGS%
+SIF ARG:2 == 1
+	PRINTFORML
+SIF ARG:2 == 2
+	PRINTFORMW
+CALL KOJO_COLOR(ARG:1)
+RETURN RESULT
+
+@PRINT_KOJO_COLORL(ARG:0, ARGS:0, ARG:1 = -2)
+CALL PRINT_KOJO_COLOR(ARG:0, ARGS:0, ARG:1, 1)
+RETURN RESULT
+
+@PRINT_KOJO_COLORW(ARG:0, ARGS:0, ARG:1 = -2)
+CALL PRINT_KOJO_COLOR(ARG:0, ARGS:0, ARG:1, 2)
+RETURN RESULT
+
+
+;-------------------------------------------------
+;関数名:PRINT_ERRORMESSAGE
+;概　要:错误メッセージ関数
+;戻り値:无
+;備　考:通常関数
+;ARGS被显示し一面错误落ち做
+;ARGS:1に"DEBUG"被渡す和落ちない
+;
+;Crow氏但役に立つって言うから……(責任転嫁)@これみ
+;-------------------------------------------------
+@PRINT_ERRORMESSAGE(ARGS, ARGS:1)
+#FUNCTION
+IF ARGS:1 == "DEBUG"
+	PRINTL 
+	PRINTSL ARGS
+	PRINTL 
+ELSE
+	THROW %ARGS%
+ENDIF
+
+;-------------------------------------------------------------------------------
+;	TIMES的式中関数版TIMESF(式中関数)
+;-------------------------------------------------------------------------------
+;	例  LOCAL = TIMESF(100,200)
+;       こ的场合 100 * 2.00 + 0 = 200
+;===============================================================================
+@TIMESF(ARG, ARG:1, ARG:2)
+#FUNCTION
+; 和りあえず0から1兆
+RETURNF LIMIT((ARG * ARG:1 / 100) + ARG:2, 0, 999999999999)
+

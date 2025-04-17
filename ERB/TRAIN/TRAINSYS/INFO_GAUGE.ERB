@@ -1,0 +1,135 @@
+﻿;────────────────────────────────────
+;ゲージ被显示
+;────────────────────────────────────
+;定位的バー的色但少キツイ感但した的で微调整。无駄に按键化做的被回避。他、微调整@revkoishi(14/05/26)
+@INFO_GAUGE_TRAINER
+#LOCALSSIZE 1
+PRINTFORM %CALLNAME:TARGET% [LV {CFLAG:TARGET:调教等级}  EXP {CFLAG:TARGET:调教経験}/{CFLAG:TARGET:必要経験値}] 但
+PRINTFORML %CALLNAME:MASTER% [LV {CFLAG:MASTER:调教等级}  EXP {CFLAG:MASTER:调教経験}/{CFLAG:MASTER:必要経験値}] 被调教中
+LOCALS = %CALLNAME:TARGET%的状态:[%CONDITION(TCVAR:状态变化)%]\@ FLAG:DEBUG ? %"　"%疲惫[{TFLAG:调教者疲惫度}] # \@
+PRINTPLAINFORM %LOCALS,54,LEFT% %CALLNAME:MASTER%的状态:[%CONDITION(TCVAR:MASTER:状态变化)%]\@ FLAG:DEBUG ? %"　"%疲惫[{TFLAG:疲惫度}] # \@
+PRINTL 
+
+;好感度显示         //こ的あたり是もう少やりよう但ある感
+IF TALENT:MASTER:读心能力 == 1
+	SELECTCASE CFLAG:好感
+		CASE IS < -100
+			LOCALS = %CALLNAME:MASTER%的好感度：极其讨厌
+		CASE IS < 0
+			LOCALS = %CALLNAME:MASTER%的好感度：很讨厌
+		CASE IS < 200
+			LOCALS = %CALLNAME:MASTER%的好感度：讨厌
+		CASE IS < 500
+			LOCALS = %CALLNAME:MASTER%的好感度：普通
+		CASE IS < 1000
+			LOCALS = %CALLNAME:MASTER%的好感度：有些在意
+		CASE IS < 1500
+			LOCALS = %CALLNAME:MASTER%的好感度：扑通扑通
+		CASE IS < 2000
+			LOCALS = %CALLNAME:MASTER%的好感度：喜欢
+		CASE IS < 3000
+			LOCALS = %CALLNAME:MASTER%的好感度：特别喜欢
+		CASE IS < 5000
+			LOCALS = %CALLNAME:MASTER%的好感度：%CALLNAME:MASTER%已经离不开了
+		CASEELSE
+			LOCALS = %CALLNAME:MASTER%的好感度：CAUTION!!突破极限!!CAUTION
+	ENDSELECT
+ELSEIF TALENT:MASTER:读心能力 == 2
+	LOCALS = %CALLNAME:MASTER%的好感度[{CFLAG:TARGET:好感}] 
+ELSE
+	LOCALS =
+ENDIF
+PRINTPLAINFORM %LOCALS,54,LEFT% %CALLNAME:TARGET%的好感度[{CFLAG:TARGET:M好感}]
+PRINTL 
+
+HTML_PRINT HTML_BASE("体力", TARGET, 0) + "　　" + HTML_BASE("体力", MASTER, 0)
+HTML_PRINT HTML_BASE("气力", TARGET, 1) + "　　" + HTML_BASE("气力", MASTER, 1)
+
+LOCALS '= ""
+IF PENIS(TARGET) || PENIS(MASTER)
+	IF PENIS(TARGET)
+		LOCALS += HTML_BASE("射精", TARGET, 2)
+	ELSE
+		LOCALS += "　　　　　　　　　　　　　　　　　　　　　　　　　 "
+	ENDIF
+	LOCALS += "　　"
+	SIF PENIS(MASTER)
+		LOCALS += HTML_BASE("射精", MASTER, 2)
+	HTML_PRINT LOCALS
+ENDIF
+
+LOCALS '= ""
+IF TALENT:TARGET:母乳体質 || TALENT:MASTER:母乳体質
+	IF TALENT:TARGET:母乳体質
+		LOCALS += HTML_BASE("母乳", TARGET, 3)
+	ELSE
+		LOCALS += ""
+	ENDIF
+	LOCALS += "　　"
+	SIF TALENT:MASTER:母乳体質
+		LOCALS += HTML_BASE("母乳", MASTER, 3)
+	HTML_PRINT LOCALS
+ENDIF
+SIF TALENT:MASTER:漏尿癖
+	HTML_PRINT "　　　　　　　　　　　　　　　　　　　　　　　　　　　 " + HTML_BASE("尿意", MASTER, 4)
+
+IF PENIS(MASTER)
+	{
+	HTML_PRINT 
+	 "　　　　　　　　　　　　　　　　　　　　　　　　　　　 勃起"
+	+ LAYER_RECTBAR(TCVAR:MASTER:勃起度, MAX(TCVAR:MASTER:勃起度, 1000), 16, 0xC070C0, 0x502050, , , 30)
+	+ @"({TCVAR:MASTER:勃起度,5}/ 1000)　"
+	}
+ENDIF
+
+SELECTCASE TALENT:MASTER:读心能力
+	CASE 1
+		HTML_PRINT @"理性[%TENSION(TARGET, 5)%]" + "　　　　　　　　　　　　　　　　　　　　　　 " + HTML_BASE("理性", MASTER, 5)
+		LOCALS += @"兴趣[%TENSION(TARGET, 6)%]："
+		LOCALS += @"焦躁[%TENSION(TARGET, 7)%]："
+		LOCALS += @"满足[%TENSION(TARGET, 8)%]"
+		HTML_PRINT LOCALS
+	CASE 2
+		HTML_PRINT HTML_BASE("理性", TARGET, 5, 32, 1) + "　　" + HTML_BASE("理性", MASTER, 5)
+		LOCALS '= ""
+		HTML_PRINT HTML_BASE("兴趣", TARGET, 6, 32, 1)
+		HTML_PRINT HTML_BASE("焦躁", TARGET, 7, 32, 1)
+		HTML_PRINT HTML_BASE("满足", TARGET, 8, 32, 1)
+		PRINTFORM 罪恶感[{CFLAG:TARGET:罪恶感}]　定位
+		HTML_PRINT LOCALS
+		LOCAL = GETCOLOR()
+		SETCOLOR CFLAG:TARGET:定位 >= 0 ? 0x0041FF # 0xFF2800
+		BAR CFLAG:TARGET:定位 + 100, 199, 32
+		SETCOLOR LOCAL
+		PRINTPLAINFORM [{CFLAG:TARGET:定位}]
+		PRINTL 
+	CASEELSE
+		LOCALS += "　　　　　　　　　　　　　　　　　　　　　　　　　　　 " + HTML_BASE("理性", MASTER, 5)
+		HTML_PRINT LOCALS
+ENDSELECT
+;────────────────────────────────────
+;助手的ゲージ被显示
+;────────────────────────────────────
+;@INFO_GAUGE_ASSI
+;助手相关的处理是本次见送り
+;IF ASSIPLAY
+;	IF TALENT:ASSI:扶她 || TALENT:ASSI:男人
+;		PRINT 射精（助手）
+;		BAR BASE:ASSI:2,MAXBASE:ASSI:2,32
+;		PRINTFORML ({BASE:ASSI:2}/{MAXBASE:ASSI:2})
+;	ENDIF
+;ENDIF
+
+
+;────────────────────────────────────
+;触手的ゲージ被显示
+;────────────────────────────────────
+;@INFO_GAUGE_TENTACLE
+;触手相关的处理も本次见送り
+;IF TEQUIP:触手调教中
+;	SIF MAXBASE:MASTER:尿意 == 0
+;		MAXBASE:MASTER:尿意 == 10000
+;	PRINT 射精（触手）
+;	BAR BASE:MASTER:4,MAXBASE:MASTER:4,32
+;	PRINTFORML ({BASE:MASTER:4}/{MAXBASE:MASTER:4})
+;ENDIF

@@ -1,0 +1,3275 @@
+﻿
+;-----------------------------------------------------------
+;ACTABLE一括管理
+;-----------------------------------------------------------
+@GLOBAL_ACTABLE(ARG)
+#FUNCTION
+#LOCALSIZE 200
+#DIM 参照回合, 200
+#DIM DAYTIME管理, 2
+
+;日时更新
+IF DAYTIME管理 != TIME || DAYTIME管理:1 != DAY
+	VARSET 参照回合, -1
+	DAYTIME管理 = TIME
+	DAYTIME管理:1 = DAY
+ENDIF
+
+;回合内初回
+IF 参照回合:ARG != TFLAG:调教时间
+	参照回合:ARG = TFLAG:调教时间
+	IF PERCENT(CFLAG:(1000+ARG))
+		LOCAL:ARG = 1
+	ELSE
+		LOCAL:ARG = 0
+	ENDIF
+ENDIF
+
+;CFLAG:1000～1199根据ACT封印判定
+ACTABLE_REASON:ARG = 封印_ACT封印
+IF LOCAL:ARG == 1
+	;採用不可
+	RESULT = 0
+	RETURNF 1
+ENDIF
+
+;休息系ACT封印
+;SANDBOX限定处理
+ACTABLE_REASON:ARG = 封印_SANDBOX休息封印
+IF FLAG:模式 == 1 && GROUPMATCH(ARG, 90, 91, 92)
+	RESULT = 0
+	RETURNF 1
+ENDIF
+
+;-----------------------------------------------------------
+;询问今天的心情 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE0
+;一括管理
+SIF GLOBAL_ACTABLE(0)
+	RETURN RESULT
+;方针但异常
+ACTABLE_REASON:0 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "异常")
+	RETURN 0
+;实行可能
+ACTABLE_REASON:0 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;询问对自己的感觉 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE1
+;一括管理
+SIF GLOBAL_ACTABLE(1)
+	RETURN RESULT
+;惩罚模式
+ACTABLE_REASON:1 = 状況不適合_惩罚中
+SIF TFLAG:惩罚标志
+	RETURN 0
+;方针但异常
+ACTABLE_REASON:1 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "异常")
+	RETURN 0
+;实行可能
+ACTABLE_REASON:1 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;谈论性的话题 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE2
+;一括管理
+SIF GLOBAL_ACTABLE(2)
+	RETURN RESULT
+;惩罚模式
+ACTABLE_REASON:2 = 状況不適合_惩罚中
+SIF TFLAG:惩罚标志
+	RETURN 0
+;方针但异常
+ACTABLE_REASON:2 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "异常")
+	RETURN 0
+;调教者に性知识但无い
+SIF !EXP:性知识
+	RETURN 0
+;实行可能
+ACTABLE_REASON:2 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;温柔的安慰 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE3
+;一括管理
+SIF GLOBAL_ACTABLE(3)
+	RETURN RESULT
+;惩罚模式
+ACTABLE_REASON:3 = 状況不適合_惩罚中
+SIF TFLAG:惩罚标志
+	RETURN 0
+;方针但强硬/异常
+ACTABLE_REASON:3 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "强硬/异常")
+	RETURN 0
+;实行可能
+ACTABLE_REASON:3 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;严厉的威胁 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE4
+;一括管理
+SIF GLOBAL_ACTABLE(4)
+	RETURN RESULT
+;惩罚模式
+ACTABLE_REASON:4 = 状況不適合_惩罚中
+SIF TFLAG:惩罚标志
+	RETURN 0
+;方针但温和/异常
+ACTABLE_REASON:4 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "温和/异常")
+	RETURN 0
+;实行可能
+ACTABLE_REASON:4 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;请求变更服装 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE5
+;一括管理
+SIF GLOBAL_ACTABLE(5)
+	RETURN RESULT
+;推到
+ACTABLE_REASON:5 = 物理障害_推到中
+SIF TEQUIP:推到中
+	RETURN 0
+;性交中かつMASTER但COSPLAY中
+ACTABLE_REASON:5 = 解除規制_COSPLAYSEX
+SIF GETINSERT() && TEQUIP:MASTER:COSPLAY
+	RETURN 0
+;绳
+ACTABLE_REASON:5 = 物理障害_捆绑(绳)
+SIF TEQUIP:绳
+	RETURN 0
+;实行可能
+ACTABLE_REASON:5 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;征求同意 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE6
+;一括管理
+SIF GLOBAL_ACTABLE(6)
+	RETURN RESULT
+;惩罚模式
+ACTABLE_REASON:6 = 状況不適合_惩罚中
+SIF TFLAG:惩罚标志
+	RETURN 0
+;方针但异常
+ACTABLE_REASON:6 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "异常")
+	RETURN 0
+;合意被既に得ている
+ACTABLE_REASON:6 = 无意味_合意済
+SIF CFLAG:合意
+	RETURN 0
+;处女でも童贞でもない
+ACTABLE_REASON:6 = 无意味_合意不要
+SIF TALENT:MASTER:处女 !| TALENT:MASTER:童贞
+	RETURN 0
+;实行可能
+ACTABLE_REASON:6 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;宣称要进行惩罚 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE7
+;一括管理
+SIF GLOBAL_ACTABLE(7)
+	RETURN RESULT
+;惩罚模式
+ACTABLE_REASON:7 = 状況不適合_非惩罚中
+SIF !TFLAG:惩罚标志
+	RETURN 0
+;方针但温和/异常
+ACTABLE_REASON:7 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "温和/异常")
+	RETURN 0
+;推到
+ACTABLE_REASON:7 = 状況不適合_推到中
+SIF TEQUIP:推到中
+	RETURN 0
+;实行可能
+ACTABLE_REASON:7 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;大喊大叫 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE8
+;一括管理
+SIF GLOBAL_ACTABLE(8)
+	RETURN RESULT
+;惩罚模式
+;制限解除@これみ
+;ACTABLE_REASON:8 = 状況不適合_惩罚中
+;SIF TFLAG:惩罚标志
+;	RETURN 0
+;方针但温和/普通
+ACTABLE_REASON:8 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "温和/普通")
+	RETURN 0
+;实行可能
+ACTABLE_REASON:8 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;令人毛骨悚然的笑 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE9
+;一括管理
+SIF GLOBAL_ACTABLE(9)
+	RETURN RESULT
+;方针但温和/普通/强硬
+ACTABLE_REASON:9 = 方针不適合_回合方针(%POLICY("今")%)
+SIF 2 <= TFLAG:回合方针 && TFLAG:回合方针 <= 4
+	RETURN 0
+;本日的方针但调情
+ACTABLE_REASON:9 = 方针不適合_日毎方针(%POLICY("今日")%)
+SIF TFLAG:今日的方针 == 4
+	RETURN 0
+;实行可能
+ACTABLE_REASON:9 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;用手爱抚 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE10
+;一括管理
+SIF GLOBAL_ACTABLE(10)
+	RETURN RESULT
+;惩罚模式
+ACTABLE_REASON:10 = 状況不適合_惩罚中
+SIF TFLAG:惩罚标志
+	RETURN 0
+;方针但异常
+ACTABLE_REASON:10 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "异常")
+	RETURN 0
+;三角木马
+ACTABLE_REASON:10 = 物理障害_捆绑(三角木马)
+SIF TEQUIP:三角木马
+	RETURN 0
+;调教者に穿墙但なく、调教对象に阴茎但ない
+IF !TALENT:穿墙 && !PENIS(MASTER)
+	;调教对象的下半身外套で妨害される
+	ACTABLE_REASON:10 = 物理障害_着衣(受)(下半身外套)
+	SIF CLOTHESTYPE(1, 1) == 2
+		RETURN 0
+ENDIF
+;插入中(射精做直到抜かないように)
+ACTABLE_REASON:10 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;口淫継续中
+ACTABLE_REASON:10 = 解除規制_口淫中
+SIF TEQUIP:调教对象Ｃ使用 == 2
+	RETURN 0
+;实行可能
+ACTABLE_REASON:10 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;胸爱抚 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE11
+;一括管理
+SIF GLOBAL_ACTABLE(11)
+	RETURN RESULT
+;惩罚模式
+ACTABLE_REASON:11 = 状況不適合_惩罚中
+SIF TFLAG:惩罚标志
+	RETURN 0
+;方针但异常
+ACTABLE_REASON:11 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "异常")
+	RETURN 0
+;调教者に穿墙但なく、调教对象但男人
+IF !TALENT:穿墙 && TALENT:MASTER:男人
+	;调教对象的上半身外套で妨害される
+	ACTABLE_REASON:11 = 物理障害_着衣(受)(上半身外套)
+	;男人的上半身外套但戻り値2(教师服/连衣裙)になるこ和是通常で是あり得ない
+	SIF CLOTHESTYPE(1, 3) == 2
+		RETURN 0
+	;调教对象的上半身内衣で妨害される
+	ACTABLE_REASON:11 = 物理障害_着衣(受)(上半身内衣)
+	;男人的上半身内衣但戻り値2(胸罩/裹胸布)になるこ和是通常であり得ない
+	SIF CLOTHESTYPE(1, 2) == 2
+		RETURN 0
+ENDIF
+;焦虑中(阴茎刺激被中断不做ように)
+ACTABLE_REASON:11 = 状況不適合_焦虑中
+SIF TCVAR:MASTER:焦虑度
+	RETURN 0
+;性交中（后背位/背面座位/Ａ性交）
+ACTABLE_REASON:11 = 解除規制_性交(攻→受)(后背位/背面座位/Ａ性交)
+SIF GROUPMATCH(TEQUIP:性交中, 2, 5, 6) > 0
+	RETURN 0
+;性交奉仕中（正常位/后背位/背面座位/Ａ性交）
+ACTABLE_REASON:11 = 解除規制_性交(受→攻)(正常位/后背位/背面座位/Ａ性交)
+SIF GROUPMATCH(TEQUIP:性交奉仕中, 1, 2, 5, 6) > 0
+	RETURN 0
+;口淫中
+ACTABLE_REASON:11 = 物理障害_姿势(口淫中)
+SIF TEQUIP:调教对象Ｃ使用 == 2
+	RETURN 0
+;顔面骑乘中
+ACTABLE_REASON:11 = 物理障害_姿势(顔面骑乘中)
+SIF TEQUIP:顔面骑乘 || TEQUIP:顔面骑乘肛门
+	RETURN 0
+;实行可能
+ACTABLE_REASON:11 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;用口爱抚 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE12
+;一括管理
+SIF GLOBAL_ACTABLE(12)
+	RETURN RESULT
+;惩罚模式
+ACTABLE_REASON:12 = 状況不適合_惩罚中
+SIF TFLAG:惩罚标志
+	RETURN 0
+;方针但异常
+ACTABLE_REASON:12 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "异常")
+	RETURN 0
+;调教对象但女人で震动棒装着中
+ACTABLE_REASON:12 = 物理障害_装着(受)(震动棒)
+SIF TEQUIP:震动棒 && !TALENT:MASTER:扶她
+	RETURN 0
+;飞机杯
+ACTABLE_REASON:12 = 物理障害_装着(受)(飞机杯)
+SIF TEQUIP:飞机杯
+	RETURN 0
+;假阴茎
+ACTABLE_REASON:12 = 物理障害_装着(受)(假阴茎)
+SIF TEQUIP:假阴茎
+	RETURN 0
+;三角木马
+ACTABLE_REASON:12 = 物理障害_捆绑(三角木马)
+SIF TEQUIP:三角木马
+	RETURN 0
+;插入中(射精做直到抜かないように)
+ACTABLE_REASON:12 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:12 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;调教者に穿墙但ない
+IF !TALENT:穿墙
+	;调教对象的下半身外套で妨害される
+	ACTABLE_REASON:12 = 物理障害_着衣(受)(下半身外套)
+	SIF CLOTHESTYPE(1, 1) == 2
+		RETURN 0
+ENDIF
+;实行可能
+ACTABLE_REASON:12 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;肛门爱抚 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE13
+;一括管理
+SIF GLOBAL_ACTABLE(13)
+	RETURN RESULT
+;惩罚模式
+ACTABLE_REASON:13 = 状況不適合_惩罚中
+SIF TFLAG:惩罚标志
+	RETURN 0
+;方针但温和/异常
+ACTABLE_REASON:13 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "温和/异常")
+	RETURN 0
+;三角木马
+ACTABLE_REASON:13 = 物理障害_捆绑(三角木马)
+SIF TEQUIP:三角木马
+	RETURN 0
+;假阴茎
+ACTABLE_REASON:13 = 物理障害_装着(受)(假阴茎)
+SIF TEQUIP:假阴茎
+	RETURN 0
+;肛门拉珠
+ACTABLE_REASON:13 = 物理障害_装着(受)(肛门拉珠)
+SIF TEQUIP:肛门拉珠
+	RETURN 0
+;肛交中
+ACTABLE_REASON:13 = 物理障害_性交(攻→受)(全)
+SIF TEQUIP:性交中 == 6
+	RETURN 0
+;插入中
+ACTABLE_REASON:13 = 物理障害_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;调教者に穿墙但ない
+IF !TALENT:穿墙
+	;调教对象的下半身外套で妨害される
+	ACTABLE_REASON:13 = 物理障害_着衣(受)(下半身外套)
+	SIF CLOTHESTYPE(1, 1) == 2
+		RETURN 0
+ENDIF
+;焦虑中(阴茎刺激被中断不做ように)
+ACTABLE_REASON:13 = 状況不適合_焦虑中
+SIF TCVAR:MASTER:焦虑度 && !TALENT:MASTER:男人
+	RETURN 0
+;实行可能
+ACTABLE_REASON:13 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;舔肛门 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE14
+;一括管理
+SIF GLOBAL_ACTABLE(14)
+	RETURN RESULT
+;惩罚模式
+ACTABLE_REASON:14 = 状況不適合_惩罚中
+SIF TFLAG:惩罚标志
+	RETURN 0
+;方针但温和/异常
+ACTABLE_REASON:14 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "温和/异常")
+	RETURN 0
+;肛门装備
+ACTABLE_REASON:14 = 物理障害_装着(受)(A装備)
+SIF TEQUIP:肛门震动棒 || TEQUIP:肛门拉珠 || TEQUIP:灌肠器＋肛塞
+	RETURN 0
+;假阴茎
+ACTABLE_REASON:14 = 物理障害_装着(受)(假阴茎)
+SIF TEQUIP:假阴茎
+	RETURN 0
+;三角木马
+ACTABLE_REASON:14 = 物理障害_捆绑(三角木马)
+SIF TEQUIP:三角木马
+	RETURN 0
+;插入中(射精做直到抜かないように)
+ACTABLE_REASON:14 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:14 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;口淫継续中
+ACTABLE_REASON:14 = 状況不適合_口淫中
+SIF TEQUIP:调教对象Ｃ使用 == 2
+	RETURN 0
+;调教者に穿墙但ない
+IF !TALENT:穿墙
+	;调教对象的下半身外套で妨害される
+	ACTABLE_REASON:14 = 物理障害_着衣(受)(下半身外套)
+	SIF CLOTHESTYPE(1, 1) == 2
+		RETURN 0
+	;调教对象的下半身内衣で强く妨害される
+	ACTABLE_REASON:14 = 物理障害_着衣(受)(下半身内衣)
+	SIF CLOTHESTYPE(1, 0)
+		RETURN 0
+ENDIF
+;焦虑中(阴茎刺激被中断不做ように)
+ACTABLE_REASON:14 = 状況不適合_焦虑中
+SIF TCVAR:MASTER:焦虑度
+	RETURN 0
+;实行可能
+ACTABLE_REASON:14 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;接吻 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE15
+;一括管理
+SIF GLOBAL_ACTABLE(15)
+	RETURN RESULT
+;口淫継续中
+ACTABLE_REASON:15 = 状況不適合_口淫中
+SIF TEQUIP:调教对象Ｃ使用 == 2
+	RETURN 0
+;惩罚模式
+ACTABLE_REASON:15 = 状況不適合_惩罚中
+SIF TFLAG:惩罚标志
+	RETURN 0
+;方针但强硬/异常
+ACTABLE_REASON:15 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "强硬/异常")
+	RETURN 0
+;玩具是基本的に透過不做けど口球是穿墙效いてもいいかも
+;调教者に穿墙但ない
+IF !TALENT:穿墙
+	;口球
+	ACTABLE_REASON:15 = 物理障害_捆绑(口球)
+	SIF TEQUIP:口球
+		RETURN 0
+ENDIF
+;焦虑中(阴茎刺激被中断不做ように)
+;トドメ时に是Ｃ刺激に集中做
+;トドメ时に接吻してもいいんじゃないかな@これみ
+;ACTABLE_REASON:15 = 状況不適合_焦虑中
+;SIF TCVAR:MASTER:焦虑度 == 1
+;	RETURN 0
+;实行可能
+ACTABLE_REASON:15 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;摩擦性器 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE16
+;一括管理
+SIF GLOBAL_ACTABLE(16)
+	RETURN RESULT
+;口淫継续中
+ACTABLE_REASON:16 = 状況不適合_口淫中
+SIF TEQUIP:调教对象Ｃ使用 == 2
+	RETURN 0
+;惩罚模式
+ACTABLE_REASON:16 = 状況不適合_惩罚中
+SIF TFLAG:惩罚标志
+	RETURN 0
+;方针但强硬/异常
+ACTABLE_REASON:16 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "强硬/异常")
+	RETURN 0
+;主动的服是穿墙但あってもダメ
+;调教者的下半身内衣に强く妨害される（内裤も不可）
+ACTABLE_REASON:16 = 物理障害_着衣(攻)(下半身内衣)
+SIF CLOTHESTYPE(0, 0)
+	RETURN 0
+;调教者的下半身外套で妨害される
+ACTABLE_REASON:16 = 物理障害_着衣(攻)(下半身外套)
+SIF CLOTHESTYPE(0, 1) == 2
+	RETURN 0
+;调教对象但女人で震动棒装着中
+ACTABLE_REASON:16 = 物理障害_装着(受)(震动棒)
+SIF TEQUIP:震动棒 && !TALENT:MASTER:扶她
+	RETURN 0
+;飞机杯
+ACTABLE_REASON:16 = 物理障害_装着(受)(飞机杯)
+SIF TEQUIP:飞机杯
+	RETURN 0
+;三角木马
+ACTABLE_REASON:16 = 物理障害_捆绑(三角木马)
+SIF TEQUIP:三角木马
+	RETURN 0
+;插入中(射精做直到抜かないように)
+ACTABLE_REASON:16 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:16 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;调教者に穿墙但ない
+IF !TALENT:穿墙
+	;调教对象的下半身外套で妨害される
+	ACTABLE_REASON:16 = 物理障害_着衣(受)(下半身外套)
+	SIF CLOTHESTYPE(1, 1) == 2
+		RETURN 0
+	;貝合わせ的场合、调教对象的下半身内衣に强く妨害される（内裤も不可）
+	ACTABLE_REASON:16 = 物理障害_着衣(受)(下半身内衣)
+	SIF CLOTHESTYPE(1, 0) && !PENIS(MASTER)
+		RETURN 0
+ENDIF
+;素股做的场合、调教对象に无脚和ダメ
+ACTABLE_REASON:16 = 物理障害_受无足
+SIF (PENIS(MASTER) || TEQUIP:假阴茎) && TALENT:无足
+	RETURN 0
+;调教者に阴茎但あ时ダメ
+ACTABLE_REASON:16 = 物理障害_攻阴茎
+SIF PENIS(TARGET)
+	RETURN 0
+;实行可能
+ACTABLE_REASON:16 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;进行乳交 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE17
+;一括管理
+SIF GLOBAL_ACTABLE(17)
+	RETURN RESULT
+;惩罚模式
+ACTABLE_REASON:17 = 状況不適合_惩罚中
+SIF TFLAG:惩罚标志
+	RETURN 0
+;方针但强硬/异常
+ACTABLE_REASON:17 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "强硬/异常")
+	RETURN 0
+;飞机杯
+ACTABLE_REASON:17 = 物理障害_装着(受)(飞机杯)
+SIF TEQUIP:飞机杯
+	RETURN 0
+;三角木马
+ACTABLE_REASON:17 = 物理障害_捆绑(三角木马)
+SIF TEQUIP:三角木马
+	RETURN 0
+;插入中(射精做直到抜かないように)
+ACTABLE_REASON:17 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:17 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;调教者に穿墙但ない
+IF !TALENT:穿墙
+	;调教对象的下半身外套で妨害される
+	ACTABLE_REASON:17 = 物理障害_着衣(受)(下半身外套)
+	SIF CLOTHESTYPE(1, 1) == 2
+		RETURN 0
+ENDIF
+;调教者的上半身外套で妨害される
+ACTABLE_REASON:17 = 物理障害_着衣(攻)(上半身外套)
+SIF CLOTHESTYPE(0, 3) == 2
+	RETURN 0
+;调教者的上半身内衣で妨害される
+ACTABLE_REASON:17 = 物理障害_着衣(攻)(上半身内衣)
+SIF CLOTHESTYPE(0, 2) == 2
+	RETURN 0
+;调教者但男人
+ACTABLE_REASON:17 = 物理障害_攻男性
+SIF TALENT:男人
+	RETURN 0
+;调教对象但女人
+ACTABLE_REASON:17 = 物理障害_受女性
+SIF TALENT:MASTER:扶她 !| TALENT:MASTER:男人
+	RETURN 0
+;实行可能
+ACTABLE_REASON:17 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;进行足交 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE18
+;一括管理
+SIF GLOBAL_ACTABLE(18)
+	RETURN RESULT
+;口淫継续中
+ACTABLE_REASON:18 = 状況不適合_口淫中
+SIF TEQUIP:调教对象Ｃ使用 == 2
+	RETURN 0
+;惩罚模式
+ACTABLE_REASON:18 = 状況不適合_惩罚中
+SIF TFLAG:惩罚标志
+	RETURN 0
+;本日的方针但调情
+ACTABLE_REASON:18 = 方针不適合_日毎方针(%POLICY("今日")%)
+SIF TFLAG:今日的方针 == 4
+	RETURN 0
+;飞机杯
+ACTABLE_REASON:18 = 物理障害_装着(受)(飞机杯)
+SIF TEQUIP:飞机杯
+	RETURN 0
+;三角木马
+ACTABLE_REASON:18 = 物理障害_捆绑(三角木马)
+SIF TEQUIP:三角木马
+	RETURN 0
+;插入中(射精做直到抜かないように)
+ACTABLE_REASON:18 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:18 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;调教者に无脚
+ACTABLE_REASON:18 = 物理障害_攻无足
+SIF TALENT:无足
+	RETURN 0
+;调教对象但女人
+ACTABLE_REASON:18 = 物理障害_受女性
+SIF TALENT:MASTER:扶她 !| TALENT:MASTER:男人
+	RETURN 0
+;实行可能
+ACTABLE_REASON:18 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;指插入 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE19
+;一括管理
+SIF GLOBAL_ACTABLE(19)
+	RETURN RESULT
+;惩罚模式
+ACTABLE_REASON:19 = 状況不適合_惩罚中
+SIF TFLAG:惩罚标志
+	RETURN 0
+;方针但异常
+ACTABLE_REASON:19 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "异常")
+	RETURN 0
+;三角木马
+ACTABLE_REASON:19 = 物理障害_捆绑(三角木马)
+SIF TEQUIP:三角木马
+	RETURN 0
+;假阴茎
+ACTABLE_REASON:19 = 物理障害_装着(受)(假阴茎)
+SIF TEQUIP:假阴茎
+	RETURN 0
+;插入中
+ACTABLE_REASON:19 = 物理障害_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:19 = 物理障害_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;触手
+ACTABLE_REASON:19 = 物理障害_触手
+SIF TEQUIP:触手调教中
+	RETURN 0
+;男人
+ACTABLE_REASON:19 = 物理障害_受男性
+SIF TALENT:MASTER:男人
+	RETURN 0
+;调教者に穿墙但ない
+IF !TALENT:穿墙
+	;调教对象的下半身外套で妨害される
+	ACTABLE_REASON:19 = 物理障害_着衣(受)(下半身外套)
+	SIF CLOTHESTYPE(1, 1) == 2
+		RETURN 0
+ENDIF
+;焦虑中(阴茎刺激被中断不做ように)
+ACTABLE_REASON:19 = 状況不適合_焦虑中
+SIF TCVAR:MASTER:焦虑度 && !TALENT:MASTER:扶她
+	RETURN 0
+;实行可能
+ACTABLE_REASON:19 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;跳蛋 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE20
+;一括管理
+SIF GLOBAL_ACTABLE(20)
+	RETURN RESULT
+;跳蛋但无い
+ACTABLE_REASON:20 = 未持有_跳蛋
+SIF !ITEM:跳蛋
+	RETURN 0
+;惩罚模式
+ACTABLE_REASON:20 = 状況不適合_惩罚中
+SIF TFLAG:惩罚标志
+	RETURN 0
+;方针但强硬/异常
+ACTABLE_REASON:20 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "强硬/异常")
+	RETURN 0
+;Ｃに他的道具装着中
+ACTABLE_REASON:20 = 物理障害_装着(受)(Ｃキャップ)
+SIF TEQUIP:阴蒂夹
+	RETURN 0
+ACTABLE_REASON:20 = 物理障害_装着(受)(Ｐホール)
+SIF TEQUIP:飞机杯
+	RETURN 0
+;假阴茎
+ACTABLE_REASON:20 = 物理障害_装着(受)(假阴茎)
+SIF TEQUIP:假阴茎
+	RETURN 0
+;三角木马
+ACTABLE_REASON:20 = 物理障害_捆绑(三角木马)
+SIF TEQUIP:三角木马
+	RETURN 0
+;插入中
+ACTABLE_REASON:20 = 物理障害_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:20 = 物理障害_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;触手
+ACTABLE_REASON:20 = 物理障害_触手
+SIF TEQUIP:触手调教中
+	RETURN 0
+;调教对象但阴茎有り
+ACTABLE_REASON:20 = 物理障害_受阴茎
+SIF PENIS(MASTER)
+	RETURN 0
+;实行可能
+ACTABLE_REASON:20 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;震动棒 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE21
+;一括管理
+SIF GLOBAL_ACTABLE(21)
+	RETURN RESULT
+;震动棒但无い
+ACTABLE_REASON:21 = 未持有_震动棒
+SIF !ITEM:震动棒
+	RETURN 0
+;惩罚模式
+ACTABLE_REASON:21 = 状況不適合_惩罚中
+SIF TFLAG:惩罚标志 && TEQUIP:震动棒
+	RETURN 0
+;方针但异常
+ACTABLE_REASON:21 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "异常")
+	RETURN 0
+;三角木马
+ACTABLE_REASON:21 = 物理障害_捆绑(三角木马)
+SIF TEQUIP:三角木马
+	RETURN 0
+;假阴茎
+ACTABLE_REASON:21 = 物理障害_装着(受)(假阴茎)
+SIF TEQUIP:假阴茎
+	RETURN 0
+;Ｖ插入中
+ACTABLE_REASON:21 = 物理障害_性交(攻→受)(Ｖ)
+SIF V_SEX()
+	RETURN 0
+;さす但に震动棒是穿墙不做
+;调教对象的下半身外套で妨害される
+	ACTABLE_REASON:21 = 物理障害_着衣(受)(下半身外套)
+SIF CLOTHESTYPE(1, 1) == 2
+	RETURN 0
+;调教对象的下半身内衣で妨害される
+	ACTABLE_REASON:21 = 物理障害_着衣(受)(下半身内衣)
+SIF CLOTHESTYPE(1, 0) == 2
+	RETURN 0
+;触手
+ACTABLE_REASON:21 = 物理障害_触手
+SIF TEQUIP:触手调教中
+	RETURN 0
+;男人
+ACTABLE_REASON:21 = 物理障害_受男性
+SIF TALENT:MASTER:男人
+	RETURN 0
+;调教对象但处女で调教者但主人不是@ぽ0422test+勝手に调整3
+;今后的条件考慮的ためこういう案もあ时いうこ和被记录@これみ
+;SIF TALENT:MASTER:处女 && !TALENT:TARGET:主人
+;	RETURN 0
+;实行可能
+ACTABLE_REASON:21 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;肛门震动棒 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE22
+;一括管理
+SIF GLOBAL_ACTABLE(22)
+	RETURN RESULT
+;肛门震动棒但无い
+ACTABLE_REASON:22 = 未持有_Ａ震动棒
+SIF !ITEM:肛门震动棒
+	RETURN 0
+;方针但温和/异常
+ACTABLE_REASON:22 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "温和/异常")
+	RETURN 0
+;Ａに他的道具装着中
+ACTABLE_REASON:22 = 物理障害_装着(受)(Ａ)
+SIF TEQUIP:肛门拉珠 || TEQUIP:灌肠器＋肛塞
+	RETURN 0
+;三角木马
+ACTABLE_REASON:22 = 物理障害_捆绑(三角木马)
+SIF TEQUIP:三角木马
+	RETURN 0
+;假阴茎
+ACTABLE_REASON:22 = 物理障害_装着(受)(假阴茎)
+SIF TEQUIP:假阴茎
+	RETURN 0
+;Ａ插入中
+ACTABLE_REASON:22 = 物理障害_性交(攻→受)(Ａ)
+SIF TEQUIP:性交中 == 6
+	RETURN 0
+;调教对象的下半身外套で妨害される
+	ACTABLE_REASON:22 = 物理障害_着衣(受)(下半身外套)
+SIF CLOTHESTYPE(1, 1) == 2
+	RETURN 0
+;调教对象的下半身内衣で妨害される
+	ACTABLE_REASON:22 = 物理障害_着衣(受)(下半身内衣)
+SIF CLOTHESTYPE(1, 0) == 2
+	RETURN 0
+;触手
+ACTABLE_REASON:22 = 物理障害_触手
+SIF TEQUIP:触手调教中
+	RETURN 0
+;实行可能
+ACTABLE_REASON:22 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;肛门拉珠 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE23
+;一括管理
+SIF GLOBAL_ACTABLE(23)
+	RETURN RESULT
+;肛门拉珠但无い
+ACTABLE_REASON:23 = 未持有_Ａ拉珠
+SIF !ITEM:肛门拉珠
+	RETURN 0
+;惩罚模式
+ACTABLE_REASON:23 = 状況不適合_惩罚中
+SIF TFLAG:惩罚标志 && TEQUIP:肛门拉珠 == 0
+	RETURN 0
+;方针但异常
+ACTABLE_REASON:23 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "异常")
+	RETURN 0
+;Ａに他的道具装着中
+ACTABLE_REASON:23 = 物理障害_装着(受)(Ａ)
+SIF TEQUIP:肛门震动棒 || TEQUIP:灌肠器＋肛塞
+	RETURN 0
+;三角木马
+ACTABLE_REASON:23 = 物理障害_捆绑(三角木马)
+SIF TEQUIP:三角木马
+	RETURN 0
+;假阴茎
+ACTABLE_REASON:23 = 物理障害_装着(受)(假阴茎)
+SIF TEQUIP:假阴茎
+	RETURN 0
+;Ａ插入中
+ACTABLE_REASON:23 = 物理障害_性交(攻→受)(Ａ)
+SIF TEQUIP:性交中 == 6
+	RETURN 0
+;调教对象的下半身外套で妨害される
+ACTABLE_REASON:23 = 物理障害_着衣(受)(下半身外套)
+SIF CLOTHESTYPE(1, 1) == 2
+	RETURN 0
+;调教对象的下半身内衣で妨害される
+ACTABLE_REASON:23 = 物理障害_着衣(受)(下半身内衣)
+SIF CLOTHESTYPE(1, 0) == 2
+	RETURN 0
+;触手
+ACTABLE_REASON:23 = 物理障害_触手
+SIF TEQUIP:触手调教中
+	RETURN 0
+;实行可能
+ACTABLE_REASON:23 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;Ｃ道具爱抚 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE24
+;一括管理
+SIF GLOBAL_ACTABLE(24)
+	RETURN RESULT
+;阴蒂夹但无い
+ACTABLE_REASON:24 = 未持有_Ｃキャップ
+SIF (TALENT:MASTER:扶她 !| TALENT:MASTER:男人) && !ITEM:阴蒂夹
+	RETURN 0
+;飞机杯但无い
+ACTABLE_REASON:24 = 未持有_Ｐホール
+SIF (TALENT:MASTER:扶她 || TALENT:MASTER:男人) && !ITEM:飞机杯
+	RETURN 0
+;惩罚模式
+ACTABLE_REASON:24 = 状況不適合_惩罚中
+SIF TFLAG:惩罚标志
+	RETURN 0
+;方针但强硬/异常
+ACTABLE_REASON:24 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "强硬/异常")
+	RETURN 0
+;勃起判定
+ACTABLE_REASON:24 = 物理障害_勃起(受)(不足)
+SIF TCVAR:MASTER:勃起度 < 1000 & (TALENT:MASTER:扶她 || TALENT:MASTER:男人) && !TEQUIP:飞机杯
+	RETURN 0
+;三角木马
+ACTABLE_REASON:24 = 物理障害_捆绑(三角木马)
+SIF TEQUIP:三角木马
+	RETURN 0
+;假阴茎
+ACTABLE_REASON:24 = 物理障害_装着(受)(假阴茎)
+SIF TEQUIP:假阴茎
+	RETURN 0
+;飞机杯的场合、调教对象的下半身外套で妨害される
+ACTABLE_REASON:24 = 物理障害_着衣(受)(下半身外套)
+SIF CLOTHESTYPE(1, 1) == 2 && PENIS(MASTER)
+	RETURN 0
+;插入中
+ACTABLE_REASON:24 = 物理障害_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;口淫継续中
+ACTABLE_REASON:24 = 状況不適合_口淫中
+SIF TEQUIP:调教对象Ｃ使用 == 2
+	RETURN 0
+;触手
+ACTABLE_REASON:24 = 物理障害_触手
+SIF TEQUIP:触手调教中
+	RETURN 0
+;实行可能
+ACTABLE_REASON:24 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;乳头夹 的实行判定
+;-----------------------------------------------------------
+;Rev的场合是クリップ跳蛋和いう扱い
+;男性用的代物も确认できる的で、まぁ男人でも通して良い和考えるこ和に@/L
+@ACT_ABLE25
+;一括管理
+SIF GLOBAL_ACTABLE(25)
+	RETURN RESULT
+;乳头夹但无い
+ACTABLE_REASON:25 = 未持有_Ｂキャップ
+SIF !ITEM:乳头夹
+	RETURN 0
+;惩罚模式
+ACTABLE_REASON:25 = 状況不適合_惩罚中
+SIF TFLAG:惩罚标志
+	RETURN 0
+;方针但强硬/异常
+ACTABLE_REASON:25 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "强硬/异常")
+	RETURN 0
+;调教对象的上半身外套で妨害される
+ACTABLE_REASON:25 = 物理障害_着衣(受)(上半身外套)
+SIF CLOTHESTYPE(1, 3) == 2
+	RETURN 0
+;调教对象的上半身内衣で强く妨害される
+ACTABLE_REASON:25 = 物理障害_着衣(受)(上半身内衣)
+SIF CLOTHESTYPE(1, 2)
+	RETURN 0
+;触手
+ACTABLE_REASON:25 = 物理障害_触手
+SIF TEQUIP:触手调教中
+	RETURN 0
+;实行可能
+ACTABLE_REASON:25 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;假阴茎 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE26
+;一括管理
+SIF GLOBAL_ACTABLE(26)
+	RETURN RESULT
+;假阴茎但无い
+ACTABLE_REASON:26 = 未持有_Ｐバンド
+SIF !ITEM:假阴茎 || TEQUIP:调教者假阴茎
+	RETURN 0
+;惩罚模式
+ACTABLE_REASON:26 = 状況不適合_惩罚中
+SIF TFLAG:惩罚标志 && TEQUIP:假阴茎
+	RETURN 0
+;Ａに他的道具装着中
+ACTABLE_REASON:26 = 物理障害_装着(受)(Ａ)
+SIF TEQUIP:肛门拉珠 || TEQUIP:肛门震动棒 || TEQUIP:灌肠器＋肛塞
+	RETURN 0
+;三角木马
+ACTABLE_REASON:26 = 物理障害_捆绑(三角木马)
+SIF TEQUIP:三角木马
+	RETURN 0
+;Ｖ插入中
+ACTABLE_REASON:26 = 物理障害_性交(攻→受)(Ｖ)
+SIF TEQUIP:性交中
+	RETURN 0
+;性交奉仕中
+ACTABLE_REASON:26 = 物理障害_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;调教对象的下半身外套で妨害される
+ACTABLE_REASON:26 = 物理障害_着衣(受)(下半身外套)
+SIF CLOTHESTYPE(1, 1) == 2
+	RETURN 0
+;调教对象的下半身内衣で妨害される
+ACTABLE_REASON:26 = 物理障害_着衣(受)(下半身内衣)
+SIF CLOTHESTYPE(1, 0) == 2
+	RETURN 0
+;触手
+ACTABLE_REASON:26 = 物理障害_触手
+SIF TEQUIP:触手调教中
+	RETURN 0
+;阴茎但ある
+ACTABLE_REASON:26 = 物理障害_受阴茎
+SIF PENIS(MASTER)
+	RETURN 0
+;实行可能
+ACTABLE_REASON:26 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;推倒 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE27
+;一括管理
+SIF GLOBAL_ACTABLE(27)
+	RETURN RESULT
+;惩罚模式
+ACTABLE_REASON:27 = 状況不適合_惩罚中
+SIF TFLAG:惩罚标志
+	RETURN 0
+;本日的方针但调情 // 调教者但情欲那么通す
+ACTABLE_REASON:27 = 方针不適合_日毎方针(%POLICY("今日")%)
+SIF IS_POLICY("今日", "调情") && !IS_CONDITION(TARGET, "情欲")
+	RETURN 0
+;假阴茎
+ACTABLE_REASON:27 = 物理障害_装着(受)(假阴茎)
+SIF TEQUIP:假阴茎
+	RETURN 0
+;推到中
+[SKIPSTART]
+ACTABLE_REASON:27 = 无意味_推到中
+SIF TEQUIP:推到中
+	RETURN 0
+[SKIPEND]
+;焦虑中(阴茎刺激被中断不做ように)
+ACTABLE_REASON:27 = 状況不適合_焦虑中
+SIF TCVAR:MASTER:焦虑度
+	RETURN 0
+;插入中是推到但キャンセルされる
+;@EVENT_EQUIP関係で必要です@これみ
+ACTABLE_REASON:27 = 状況不適合_插入中
+SIF TEQUIP:性交中 || TEQUIP:性交奉仕中
+	RETURN 0
+[SKIPSTART]
+;满足度但50%以下
+ACTABLE_REASON:27 = 状況不適合_满足度
+SIF TENSION(TARGET, 8) != "高" && !TEQUIP:推到中
+	RETURN 0
+[SKIPEND]
+;满足度但80%以下かつ推到中不是场合
+ACTABLE_REASON:27 = 状況不適合_满足度
+SIF !BASERATIO(TARGET, 8, 80) && !TEQUIP:推到中
+	RETURN 0
+;调教者但情欲で是ないかつ推到中不是场合
+ACTABLE_REASON:27 = 状況不適合_状态变化
+SIF !IS_CONDITION(TARGET, "情欲") && !TEQUIP:推到中
+	RETURN 0
+;推到终了に派生し得る的是满足度但非常に高场合的み
+ACTABLE_REASON:27 = 状況不適合_满足度(推到中)
+SIF !BASERATIO(TARGET, 8, 90) && TEQUIP:推到中
+	RETURN 0
+;实行可能
+ACTABLE_REASON:27 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;正常位 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE30
+;一括管理
+SIF GLOBAL_ACTABLE(30)
+	RETURN RESULT
+;调教者勃起所要判定
+;调教者阴茎但存在し、かつ勃起不用脚あれば
+ACTABLE_REASON:30 = 物理障害_勃起不足(攻)
+SIF PENIS(TARGET) && TCVAR:勃起 < 2
+	RETURN 0
+;调教者に阴茎但なく、假阴茎但ない
+ACTABLE_REASON:30 = 未持有_Ｐバンド
+SIF !PENIS(TARGET) && (TEQUIP:假阴茎 || !ITEM:假阴茎)
+	RETURN 0
+;Ｖ使用中
+ACTABLE_REASON:30 = 物理障害_装着(受)(Ｖ)
+SIF TEQUIP:三角木马 || TEQUIP:假阴茎 || TEQUIP:震动棒
+	RETURN 0
+;惩罚模式
+ACTABLE_REASON:30 = 状況不適合_惩罚中
+SIF TFLAG:惩罚标志
+	RETURN 0
+;方针但强硬/异常
+ACTABLE_REASON:30 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "强硬/异常")
+	RETURN 0
+;男人
+ACTABLE_REASON:30 = 物理障害_受男性
+SIF TALENT:MASTER:男人
+	RETURN 0
+;体位不可修改
+ACTABLE_REASON:30 = 物理障害_性交(攻→受)(体位)
+SIF TEQUIP:性交中 == 5
+	RETURN 0
+;插入中(射精做直到抜かないように)
+ACTABLE_REASON:30 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+ACTABLE_REASON:30 = 解除規制_性交(攻→受)(Ａ)
+SIF TEQUIP:性交中 == 6 && !TEQUIP:调教者假阴茎
+	RETURN 0
+;调教者に穿墙但ない（假阳具も不可）
+IF !TALENT:穿墙 || !PENIS(TARGET)
+	;调教对象的下半身外套で妨害される
+	ACTABLE_REASON:30 = 物理障害_着衣(受)(下半身外套)
+	SIF CLOTHESTYPE(1, 1) == 2
+		RETURN 0
+	;调教对象的下半身内衣で妨害される
+	ACTABLE_REASON:30 = 物理障害_着衣(受)(下半身内衣)
+	SIF CLOTHESTYPE(1, 0) == 2
+		RETURN 0
+ENDIF
+;调教者的下半身外套で妨害される
+ACTABLE_REASON:30 = 物理障害_着衣(攻)(下半身外套)
+SIF CLOTHESTYPE(0, 1) == 2
+	RETURN 0
+;触手
+ACTABLE_REASON:30 = 物理障害_触手
+SIF TEQUIP:触手调教中
+	RETURN 0
+;调教对象但处女で调教者但主人不是@ぽ0422test+勝手に调整3
+;今后的条件考慮的ためこういう案もあ时いうこ和被记录@これみ
+;SIF TALENT:MASTER:处女 && !TALENT:TARGET:主人
+;	RETURN 0
+;实行可能
+ACTABLE_REASON:30 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;后背位 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE31
+;一括管理
+SIF GLOBAL_ACTABLE(31)
+	RETURN RESULT
+;调教者勃起所要判定
+;调教者阴茎但存在し、かつ勃起不用脚あれば
+ACTABLE_REASON:31 = 物理障害_勃起不足(攻)
+SIF PENIS(TARGET) && TCVAR:勃起 < 2
+	RETURN 0
+;调教者に阴茎但なく、假阴茎但ない
+ACTABLE_REASON:31 = 未持有_Ｐバンド
+SIF !PENIS(TARGET) && (TEQUIP:假阴茎 || !ITEM:假阴茎)
+	RETURN 0
+;Ｖ使用中
+ACTABLE_REASON:31 = 物理障害_装着(受)(Ｖ)
+SIF TEQUIP:三角木马 || TEQUIP:假阴茎 || TEQUIP:震动棒
+	RETURN 0
+;方针但温和/异常
+ACTABLE_REASON:31 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "温和/异常")
+	RETURN 0
+;男人
+ACTABLE_REASON:31 = 物理障害_受男性
+SIF TALENT:MASTER:男人
+	RETURN 0
+;体位不可修改
+ACTABLE_REASON:31 = 物理障害_性交(攻→受)(体位)
+SIF TEQUIP:性交中 == 4
+	RETURN 0
+;插入中(射精做直到抜かないように)
+ACTABLE_REASON:31 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+ACTABLE_REASON:31 = 解除規制_性交(攻→受)(Ａ)
+SIF TEQUIP:性交中 == 6 && !TEQUIP:调教者假阴茎
+	RETURN 0
+;调教者に穿墙但ない（假阳具も不可）
+IF !TALENT:穿墙 || !PENIS(TARGET)
+	;调教对象的下半身外套で妨害される
+	ACTABLE_REASON:31 = 物理障害_着衣(受)(下半身外套)
+	SIF CLOTHESTYPE(1, 1) == 2
+		RETURN 0
+	;调教对象的下半身内衣で妨害される
+	ACTABLE_REASON:31 = 物理障害_着衣(受)(下半身内衣)
+	SIF CLOTHESTYPE(1, 0) == 2
+		RETURN 0
+ENDIF
+;调教者的下半身外套で妨害される
+ACTABLE_REASON:31 = 物理障害_着衣(攻)(下半身外套)
+SIF CLOTHESTYPE(0, 1) == 2
+	RETURN 0
+;触手
+ACTABLE_REASON:31 = 物理障害_触手
+SIF TEQUIP:触手调教中
+	RETURN 0
+;调教对象但处女で调教者但主人不是@ぽ0422test+勝手に调整3
+;今后的条件考慮的ためこういう案もあ时いうこ和被记录@これみ
+;SIF TALENT:MASTER:处女 && !TALENT:TARGET:主人
+;	RETURN 0
+;实行可能
+ACTABLE_REASON:31 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;骑乘位 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE32
+;一括管理
+SIF GLOBAL_ACTABLE(32)
+	RETURN RESULT
+;调教者勃起所要判定
+;调教者阴茎但存在し、かつ勃起不用脚あれば
+ACTABLE_REASON:32 = 物理障害_勃起不足(攻)
+SIF PENIS(TARGET) && TCVAR:勃起 < 2
+	RETURN 0
+;调教者に阴茎但なく、假阴茎但ない
+ACTABLE_REASON:32 = 未持有_Ｐバンド
+SIF !PENIS(TARGET) && (TEQUIP:假阴茎 || !ITEM:假阴茎)
+	RETURN 0
+;Ｖ使用中
+ACTABLE_REASON:32 = 物理障害_装着(受)(Ｖ)
+SIF TEQUIP:三角木马 || TEQUIP:假阴茎 || TEQUIP:震动棒
+	RETURN 0
+;惩罚模式
+ACTABLE_REASON:32 = 状況不適合_惩罚中
+SIF TFLAG:惩罚标志
+	RETURN 0
+;方针但强硬/异常
+ACTABLE_REASON:32 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "强硬/异常")
+	RETURN 0
+;男人
+ACTABLE_REASON:32 = 物理障害_受男性
+SIF TALENT:MASTER:男人
+	RETURN 0
+;推到中(いく直到解放不做ように)
+ACTABLE_REASON:32 = 解除規制_推到中
+SIF TEQUIP:推到中
+	RETURN 0
+;插入中(射精做直到抜かないように)
+ACTABLE_REASON:32 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+ACTABLE_REASON:32 = 解除規制_性交(攻→受)(Ａ)
+SIF TEQUIP:性交中 == 6 && !TEQUIP:调教者假阴茎
+	RETURN 0
+;调教者に穿墙但ない（假阳具も不可）
+IF !TALENT:穿墙 || !PENIS(TARGET)
+	;调教对象的下半身外套で妨害される
+	ACTABLE_REASON:32 = 物理障害_着衣(受)(下半身外套)
+	SIF CLOTHESTYPE(1, 1) == 2
+		RETURN 0
+	;调教对象的下半身内衣で妨害される
+	ACTABLE_REASON:32 = 物理障害_着衣(受)(下半身内衣)
+	SIF CLOTHESTYPE(1, 0) == 2
+		RETURN 0
+ENDIF
+;调教者的下半身外套で妨害される
+ACTABLE_REASON:32 = 物理障害_着衣(攻)(下半身外套)
+SIF CLOTHESTYPE(0, 1) == 2
+	RETURN 0
+;触手
+ACTABLE_REASON:32 = 物理障害_触手
+SIF TEQUIP:触手调教中
+	RETURN 0
+;调教对象但处女で调教者但主人不是@ぽ0422test+勝手に调整3
+;今后的条件考慮的ためこういう案もあ时いうこ和被记录@これみ
+;SIF TALENT:MASTER:处女 && !TALENT:TARGET:主人
+;	RETURN 0
+;实行可能
+ACTABLE_REASON:32 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;对面座位 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE33
+;一括管理
+SIF GLOBAL_ACTABLE(33)
+	RETURN RESULT
+;调教者勃起所要判定
+;调教者阴茎但存在し、かつ勃起不用脚あれば
+ACTABLE_REASON:33 = 物理障害_勃起不足(攻)
+SIF PENIS(TARGET) && TCVAR:勃起 < 2
+	RETURN 0
+;调教者に阴茎但なく、假阴茎但ない
+ACTABLE_REASON:33 = 未持有_Ｐバンド
+SIF !PENIS(TARGET) && (TEQUIP:假阴茎 || !ITEM:假阴茎)
+	RETURN 0
+;Ｖ使用中
+ACTABLE_REASON:33 = 物理障害_装着(受)(Ｖ)
+SIF TEQUIP:三角木马 || TEQUIP:假阴茎 || TEQUIP:震动棒
+	RETURN 0
+;惩罚模式
+ACTABLE_REASON:33 = 状況不適合_惩罚中
+SIF TFLAG:惩罚标志
+	RETURN 0
+;方针但异常
+ACTABLE_REASON:33 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "异常")
+	RETURN 0
+;男人
+ACTABLE_REASON:33 = 物理障害_受男性
+SIF TALENT:MASTER:男人
+	RETURN 0
+;体位不可修改
+ACTABLE_REASON:33 = 物理障害_性交(攻→受)(体位)
+SIF TEQUIP:性交中 == 2 || TEQUIP:性交中 == 5
+	RETURN 0
+;插入中(射精做直到抜かないように)
+ACTABLE_REASON:33 = 解除規制_性交(受→攻)(全)
+SIF (TEQUIP:性交奉仕中)
+	RETURN 0
+ACTABLE_REASON:33 = 解除規制_性交(攻→受)(Ａ)
+SIF TEQUIP:性交中 == 6 && !TEQUIP:调教者假阴茎
+	RETURN 0
+;调教者に穿墙但ない（假阳具も不可）
+IF !TALENT:穿墙 || !PENIS(TARGET)
+	;调教对象的下半身外套で妨害される
+	ACTABLE_REASON:33 = 物理障害_着衣(受)(下半身外套)
+	SIF CLOTHESTYPE(1, 1) == 2
+		RETURN 0
+	;调教对象的下半身内衣で妨害される
+	ACTABLE_REASON:33 = 物理障害_着衣(受)(下半身内衣)
+	SIF CLOTHESTYPE(1, 0) == 2
+		RETURN 0
+ENDIF
+;调教者的下半身外套で妨害される
+ACTABLE_REASON:33 = 物理障害_着衣(攻)(下半身外套)
+SIF CLOTHESTYPE(0, 1) == 2
+	RETURN 0
+;触手
+ACTABLE_REASON:33 = 物理障害_触手
+SIF TEQUIP:触手调教中
+	RETURN 0
+;调教对象但处女で调教者但主人不是@ぽ0422test+勝手に调整3
+;今后的条件考慮的ためこういう案もあ时いうこ和被记录@これみ
+;SIF TALENT:MASTER:处女 && !TALENT:TARGET:主人
+;	RETURN 0
+;实行可能
+ACTABLE_REASON:33 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;背面座位 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE34
+;一括管理
+SIF GLOBAL_ACTABLE(34)
+	RETURN RESULT
+;调教者勃起所要判定
+;调教者阴茎但存在し、かつ勃起不用脚あれば
+ACTABLE_REASON:34 = 物理障害_勃起不足(攻)
+SIF PENIS(TARGET) && TCVAR:勃起 < 2
+	RETURN 0
+;调教者に阴茎但なく、假阴茎但ない
+ACTABLE_REASON:34 = 未持有_Ｐバンド
+SIF !PENIS(TARGET) && (TEQUIP:假阴茎 || !ITEM:假阴茎)
+	RETURN 0
+;Ｖ使用中
+ACTABLE_REASON:34 = 物理障害_装着(受)(Ｖ)
+SIF TEQUIP:三角木马 || TEQUIP:假阴茎 || TEQUIP:震动棒
+	RETURN 0
+;惩罚模式
+ACTABLE_REASON:34 = 状況不適合_惩罚中
+SIF TFLAG:惩罚标志
+	RETURN 0
+;方针但温和/异常
+ACTABLE_REASON:34 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "温和/异常")
+	RETURN 0
+;男人
+ACTABLE_REASON:34 = 物理障害_受男性
+SIF TALENT:MASTER:男人
+	RETURN 0
+;体位不可修改
+ACTABLE_REASON:34 = 物理障害_性交(攻→受)(体位)
+SIF TEQUIP:性交中 == 1 || TEQUIP:性交中 == 4
+	RETURN 0
+;插入中(射精做直到抜かないように)
+ACTABLE_REASON:34 = 解除規制_性交(受→攻)(全)
+SIF (TEQUIP:性交奉仕中)
+	RETURN 0
+ACTABLE_REASON:34 = 解除規制_性交(攻→受)(Ａ)
+SIF TEQUIP:性交中 == 6 && !TEQUIP:调教者假阴茎
+	RETURN 0
+;调教者に穿墙但ない（假阳具も不可）
+IF !TALENT:穿墙 || !PENIS(TARGET)
+	;调教对象的下半身外套で妨害される
+	ACTABLE_REASON:34 = 物理障害_着衣(受)(下半身外套)
+	SIF CLOTHESTYPE(1, 1) == 2
+		RETURN 0
+	;调教对象的下半身内衣で妨害される
+	ACTABLE_REASON:34 = 物理障害_着衣(受)(下半身内衣)
+	SIF CLOTHESTYPE(1, 0) == 2
+		RETURN 0
+ENDIF
+;调教者的下半身外套で妨害される
+ACTABLE_REASON:34 = 物理障害_着衣(攻)(下半身外套)
+SIF CLOTHESTYPE(0, 1) == 2
+	RETURN 0
+;触手
+ACTABLE_REASON:34 = 物理障害_触手
+SIF TEQUIP:触手调教中
+	RETURN 0
+;调教对象但处女で调教者但主人不是@ぽ0422test+勝手に调整3
+;今后的条件考慮的ためこういう案もあ时いうこ和被记录@これみ
+;SIF TALENT:MASTER:处女 && !TALENT:TARGET:主人
+;	RETURN 0
+;实行可能
+ACTABLE_REASON:34 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;肛交 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE35
+;一括管理
+SIF GLOBAL_ACTABLE(35)
+	RETURN RESULT
+;调教者勃起所要判定
+;调教者阴茎但存在し、かつ勃起不用脚あれば
+ACTABLE_REASON:35 = 物理障害_勃起不足(攻)
+SIF PENIS(TARGET) && TCVAR:勃起 < 2
+	RETURN 0
+;调教者に阴茎但なく、假阴茎但ない
+ACTABLE_REASON:35 = 未持有_Ｐバンド
+SIF !PENIS(TARGET) && (TEQUIP:假阴茎 || !ITEM:假阴茎)
+	RETURN 0
+;Ｖ使用中
+ACTABLE_REASON:35 = 物理障害_装着(受)(Ｖ)
+SIF TEQUIP:三角木马 ; || TEQUIP:假阴茎 || TEQUIP:震动棒
+	RETURN 0
+;Ａ使用中
+ACTABLE_REASON:35 = 物理障害_装着(受)(Ａ)
+SIF TEQUIP:肛门震动棒 || TEQUIP:肛门拉珠 || TEQUIP:灌肠器＋肛塞
+	RETURN 0
+;方针但温和
+ACTABLE_REASON:35 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "温和") && TEQUIP:性交中 < 6
+	RETURN 0
+;灌肠中
+ACTABLE_REASON:35 = 物理障害_灌肠
+SIF TEQUIP:灌肠器＋肛塞
+	RETURN 0
+;插入中(射精做直到抜かないように)
+ACTABLE_REASON:35 = 解除規制_性交(受→攻)(全)
+SIF (TEQUIP:性交奉仕中)
+	RETURN 0
+ACTABLE_REASON:35 = 解除規制_性交(攻→受)(Ｖ)
+SIF V_SEX() && !TEQUIP:调教者假阴茎
+	RETURN 0
+;调教者に穿墙但ない（假阳具も不可）
+IF !TALENT:穿墙 || !PENIS(TARGET)
+	;调教对象的下半身外套で妨害される
+	ACTABLE_REASON:35 = 物理障害_着衣(受)(下半身外套)
+	SIF CLOTHESTYPE(1, 1) == 2
+		RETURN 0
+	;调教对象的下半身内衣で强く妨害される（肛交是内裤も不可）
+	ACTABLE_REASON:35 = 物理障害_着衣(受)(下半身内衣)
+	SIF CLOTHESTYPE(1, 0)
+		RETURN 0
+ENDIF
+;调教者的下半身外套で妨害される
+ACTABLE_REASON:35 = 物理障害_着衣(攻)(下半身外套)
+SIF CLOTHESTYPE(0, 1) == 2
+	RETURN 0
+;触手
+ACTABLE_REASON:35 = 物理障害_触手
+SIF TEQUIP:触手调教中
+	RETURN 0
+;调教对象的Ａ経験但2未满かつ、技巧2未满
+ACTABLE_REASON:35 = 物理障害_Ａ経験不足
+SIF EXP:MASTER:Ａ経験 < 2 && ABL:MASTER:技巧 < 2
+	RETURN 0
+;いきなり肛门に突っ込まれないように
+;调教对象的Ａ感觉但0、また是调教对象的Ａ感觉但1かつ方针但普通
+ACTABLE_REASON:35 = 条件未达_Ａ感觉不足
+SIF !ABL:MASTER:Ａ感觉 || (ABL:MASTER:Ａ感觉 == 1 && IS_POLICY("今", "普通"))
+	RETURN 0
+;实行可能
+ACTABLE_REASON:35 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;自慰 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE40
+;一括管理
+SIF GLOBAL_ACTABLE(40)
+	RETURN RESULT
+;方针但异常
+ACTABLE_REASON:40 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "异常")
+	RETURN 0
+;推到中(いく直到解放不做ように)
+ACTABLE_REASON:40 = 解除規制_推到中
+SIF TEQUIP:推到中
+	RETURN 0
+;すでに自慰中
+ACTABLE_REASON:40 = 无意味_自慰中
+SIF GETBIT(TEQUIP:自慰中, 0)
+	RETURN 0
+;绳
+ACTABLE_REASON:40 = 物理障害_捆绑(绳)
+SIF TEQUIP:绳
+	RETURN 0
+;三角木马
+ACTABLE_REASON:40 = 物理障害_捆绑(三角木马)
+SIF TEQUIP:三角木马
+	RETURN 0
+;插入中(射精做直到抜かないように)
+ACTABLE_REASON:40 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:40 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;实行可能
+ACTABLE_REASON:40 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;打开小穴 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE41
+;一括管理
+SIF GLOBAL_ACTABLE(41)
+	RETURN RESULT
+;惩罚模式
+ACTABLE_REASON:41 = 状況不適合_惩罚中
+SIF TFLAG:惩罚标志
+	RETURN 0
+;方针但异常
+ACTABLE_REASON:41 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "异常")
+	RETURN 0
+;推到中(いく直到解放不做ように)
+ACTABLE_REASON:41 = 解除規制_推到中
+SIF TEQUIP:推到中
+	RETURN 0
+;三角木马
+ACTABLE_REASON:41 = 物理障害_捆绑(三角木马)
+SIF TEQUIP:三角木马
+	RETURN 0
+;插入中(射精做直到抜かないように)
+ACTABLE_REASON:41 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:41 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;调教对象的下半身外套で妨害される
+ACTABLE_REASON:41 = 物理障害_着衣(受)(下半身外套)
+SIF CLOTHESTYPE(1, 1) == 2
+	RETURN 0
+;调教对象的下半身内衣で妨害される
+ACTABLE_REASON:41 = 物理障害_着衣(受)(下半身内衣)
+SIF CLOTHESTYPE(1, 0) == 2
+	RETURN 0
+;调教对象但男人
+ACTABLE_REASON:41 = 物理障害_受男性
+SIF TALENT:MASTER:男人
+	RETURN 0
+;实行可能
+ACTABLE_REASON:41 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;展示自慰 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE42
+;一括管理
+SIF GLOBAL_ACTABLE(42)
+	RETURN RESULT
+;惩罚模式
+ACTABLE_REASON:42 = 状況不適合_惩罚中
+SIF TFLAG:惩罚标志
+	RETURN 0
+;推到中(いく直到解放不做ように)
+ACTABLE_REASON:42 = 解除規制_推到中
+SIF TEQUIP:推到中
+	RETURN 0
+;すでに自慰中
+ACTABLE_REASON:42 = 无意味_调教者自慰中
+SIF GETBIT(TEQUIP:自慰中, 1)
+	RETURN 0
+;插入中(射精做直到抜かないように)
+ACTABLE_REASON:42 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:42 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;实行可能
+ACTABLE_REASON:42 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;羞耻PLAY 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE43
+;一括管理
+SIF GLOBAL_ACTABLE(43)
+	RETURN RESULT
+;大镜但无い
+ACTABLE_REASON:43 = 未持有_大镜
+SIF !ITEM:大镜
+	RETURN 0
+;野外PLAY中
+ACTABLE_REASON:43 = 物理障害_野外PLAY中
+SIF TEQUIP:野外PLAY
+	RETURN 0
+[SKIPSTART]
+;眼罩装着中		弹こう和思った但保留@/L
+ACTABLE_REASON:43 = 状況不適合_眼罩し中
+SIF TEQUIP:眼罩
+	RETURN 0
+[SKIPEND]
+;惩罚模式
+ACTABLE_REASON:43 = 状況不適合_惩罚中
+SIF TFLAG:惩罚标志
+	RETURN 0
+;方针但异常
+ACTABLE_REASON:43 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "异常")
+	RETURN 0
+;推到中(いく直到解放不做ように)
+ACTABLE_REASON:43 = 解除規制_推到中
+SIF TEQUIP:推到中
+	RETURN 0
+;三角木马
+ACTABLE_REASON:43 = 物理障害_捆绑(三角木马)
+SIF TEQUIP:三角木马
+	RETURN 0
+;插入中(射精做直到抜かないように)
+ACTABLE_REASON:43 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:43 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;实行可能
+ACTABLE_REASON:43 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;野外PLAY 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE44
+;一括管理
+SIF GLOBAL_ACTABLE(44)
+	RETURN RESULT
+;项圈但无い
+ACTABLE_REASON:44 = 未持有_项圈
+SIF !ITEM:项圈
+	RETURN 0
+;方针但温和/普通
+ACTABLE_REASON:44 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "温和/普通")
+	RETURN 0
+;推到中(いく直到解放不做ように)
+ACTABLE_REASON:44 = 解除規制_推到中
+SIF TEQUIP:推到中
+	RETURN 0
+;绳
+ACTABLE_REASON:44 = 物理障害_捆绑(绳)
+SIF TEQUIP:绳
+	RETURN 0
+;三角木马
+ACTABLE_REASON:44 = 物理障害_捆绑(三角木马)
+SIF TEQUIP:三角木马
+	RETURN 0
+;羞耻PLAY中
+ACTABLE_REASON:44 = 状況不適合_羞耻PLAY中
+SIF TEQUIP:大镜
+	RETURN 0
+;插入中(射精做直到抜かないように)
+ACTABLE_REASON:44 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:44 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;实行可能
+ACTABLE_REASON:44 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;放尿 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE45
+;一括管理
+SIF GLOBAL_ACTABLE(45)
+	RETURN RESULT
+;方针但温和
+ACTABLE_REASON:45 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "温和")
+	RETURN 0
+;推到中(いく直到解放不做ように)
+ACTABLE_REASON:45 = 解除規制_推到中
+SIF TEQUIP:推到中
+	RETURN 0
+;三角木马・假阴茎
+ACTABLE_REASON:45 = 物理障害_捆绑(三角木马)
+SIF TEQUIP:三角木马
+	RETURN 0
+ACTABLE_REASON:45 = 物理障害_装着(受)(Ｐバンド)
+SIF TEQUIP:假阴茎
+	RETURN 0
+;插入中(射精做直到抜かないように)
+ACTABLE_REASON:45 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:45 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;调教对象的尿意但5000未满
+ACTABLE_REASON:45 = 物理障害_尿意不足
+SIF BASE:MASTER:尿意 < 5000
+	RETURN 0
+;实行可能
+ACTABLE_REASON:45 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;COSPLAY 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE46
+;一括管理
+SIF GLOBAL_ACTABLE(46)
+	RETURN RESULT
+;惩罚模式
+ACTABLE_REASON:46 = 状況不適合_惩罚中
+SIF TFLAG:惩罚标志
+	RETURN 0
+;推到中(いく直到解放不做ように)
+ACTABLE_REASON:46 = 解除規制_推到中
+SIF TEQUIP:推到中
+	RETURN 0
+;绳
+ACTABLE_REASON:46 = 物理障害_捆绑(绳)
+SIF TEQUIP:绳
+	RETURN 0
+;三角木马
+ACTABLE_REASON:46 = 物理障害_捆绑(三角木马)
+SIF TEQUIP:三角木马
+	RETURN 0
+;插入中(射精做直到抜かないように)
+ACTABLE_REASON:46 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:46 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;COSPLAY是未实装
+ACTABLE_REASON:46 = 未实装
+RETURN 0
+
+;-----------------------------------------------------------
+;强制手爱抚 的实行判定
+;调教对象的穿墙是考慮不做こ和にし增加
+;-----------------------------------------------------------
+@ACT_ABLE50
+;一括管理
+SIF GLOBAL_ACTABLE(50)
+	RETURN RESULT
+;惩罚模式
+ACTABLE_REASON:50 = 状況不適合_惩罚中
+SIF TFLAG:惩罚标志
+	RETURN 0
+;方针但强硬/异常
+ACTABLE_REASON:50 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "强硬/异常")
+	RETURN 0
+;推到中(いく直到解放不做ように)
+ACTABLE_REASON:50 = 解除規制_推到中
+SIF TEQUIP:推到中
+	RETURN 0
+;绳
+ACTABLE_REASON:50 = 物理障害_捆绑(绳)
+SIF TEQUIP:绳
+	RETURN 0
+;三角木马
+ACTABLE_REASON:50 = 物理障害_捆绑(三角木马)
+SIF TEQUIP:三角木马
+	RETURN 0
+;插入中(射精做直到抜かないように)
+ACTABLE_REASON:50 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+;后背位/逆强奸/肛交侍奉那么問答无用でアウト
+ACTABLE_REASON:50 = 解除規制_性交(受→攻)(后背位/逆レ/Ａ性交)
+SIF GROUPMATCH(TEQUIP:性交奉仕中, 2, 3, 6)
+	RETURN 0
+;正常位/对面座位/背面座位中かつ调教者但"情欲"かつTCVAR:高潮但立っていれば通す
+ACTABLE_REASON:50 = 解除規制_性交(受→攻)(条件不適合)
+SIF TEQUIP:性交奉仕中 && !IS_CONDITION(TARGET, "情欲") && !TCVAR:高潮
+	RETURN 0
+;触手
+ACTABLE_REASON:50 = 物理障害_触手
+SIF TEQUIP:触手调教中
+	RETURN 0
+;实行可能
+ACTABLE_REASON:50 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;强制口爱抚 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE51
+;一括管理
+SIF GLOBAL_ACTABLE(51)
+	RETURN RESULT
+;惩罚模式
+ACTABLE_REASON:51 = 状況不適合_惩罚中
+SIF TFLAG:惩罚标志
+	RETURN 0
+;方针但异常
+ACTABLE_REASON:51 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "异常")
+	RETURN 0
+;推到中(いく直到解放不做ように)
+ACTABLE_REASON:51 = 解除規制_推到中
+SIF TEQUIP:推到中
+	RETURN 0
+;口球
+ACTABLE_REASON:51 = 物理障害_捆绑(口球)
+SIF TEQUIP:口球
+	RETURN 0
+;三角木马
+ACTABLE_REASON:51 = 物理障害_捆绑(三角木马)
+SIF TEQUIP:三角木马
+	RETURN 0
+;调教者假阴茎
+ACTABLE_REASON:51 = 物理障害_装着(攻)(Ｐバンド)
+SIF TEQUIP:调教者假阴茎
+	RETURN 0
+;插入中(射精做直到抜かないように)
+ACTABLE_REASON:51 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:51 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;调教者的下半身外套で妨害される
+ACTABLE_REASON:51 = 物理障害_着衣(攻)(下半身外套)
+SIF CLOTHESTYPE(0, 1) == 2
+	RETURN 0
+;调教者的下半身内衣で妨害される
+ACTABLE_REASON:51 = 物理障害_着衣(攻)(下半身内衣)
+SIF CLOTHESTYPE(0, 0) == 2
+	RETURN 0
+;触手
+ACTABLE_REASON:51 = 物理障害_触手
+SIF TEQUIP:触手调教中
+	RETURN 0
+;实行可能
+ACTABLE_REASON:51 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;乳交 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE52
+;一括管理
+SIF GLOBAL_ACTABLE(52)
+	RETURN RESULT
+;惩罚模式
+ACTABLE_REASON:52 = 状況不適合_惩罚中
+SIF TFLAG:惩罚标志
+	RETURN 0
+;方针但异常
+ACTABLE_REASON:52 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "异常")
+	RETURN 0
+;推到中(いく直到解放不做ように)
+ACTABLE_REASON:52 = 解除規制_推到中
+SIF TEQUIP:推到中
+	RETURN 0
+;绳
+ACTABLE_REASON:52 = 物理障害_捆绑(绳)
+SIF TEQUIP:绳
+	RETURN 0
+;三角木马
+ACTABLE_REASON:52 = 物理障害_捆绑(三角木马)
+SIF TEQUIP:三角木马
+	RETURN 0
+;插入中(射精做直到抜かないように)
+ACTABLE_REASON:52 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:52 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;调教者的下半身外套で妨害される
+ACTABLE_REASON:52 = 物理障害_着衣(攻)(下半身外套)
+SIF CLOTHESTYPE(0, 1) == 2
+	RETURN 0
+;调教对象的上半身外套で妨害される
+ACTABLE_REASON:52 = 物理障害_着衣(受)(上半身外套)
+SIF CLOTHESTYPE(1, 3) == 2
+	RETURN 0
+;调教对象的上半身内衣で强く妨害される
+ACTABLE_REASON:52 = 物理障害_着衣(受)(上半身内衣)
+SIF CLOTHESTYPE(1, 2)
+	RETURN 0
+;触手
+ACTABLE_REASON:52 = 物理障害_触手
+SIF TEQUIP:触手调教中
+	RETURN 0
+;调教者但女人
+ACTABLE_REASON:52 = 物理障害_攻女性
+SIF TALENT:扶她 !| TALENT:男人
+	RETURN 0
+;调教对象但男人
+ACTABLE_REASON:52 = 物理障害_受男性
+SIF TALENT:MASTER:男人
+	RETURN 0
+;实行可能
+ACTABLE_REASON:52 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;素股 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE53
+;一括管理
+SIF GLOBAL_ACTABLE(53)
+	RETURN RESULT
+;调教者に棒但ついてない
+ACTABLE_REASON:53 = 物理障害_攻阴茎无し
+SIF !PENIS(TARGET) && !TEQUIP:调教者假阴茎
+	RETURN 0
+;惩罚模式
+ACTABLE_REASON:53 = 状況不適合_惩罚中
+SIF TFLAG:惩罚标志
+	RETURN 0
+;方针但异常
+ACTABLE_REASON:53 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "异常")
+	RETURN 0
+;推到中(いく直到解放不做ように)
+ACTABLE_REASON:53 = 解除規制_推到中
+SIF TEQUIP:推到中
+	RETURN 0
+;三角木马
+ACTABLE_REASON:53 = 物理障害_捆绑(三角木马)
+SIF TEQUIP:三角木马
+	RETURN 0
+;插入中(射精做直到抜かないように)
+ACTABLE_REASON:53 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:53 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;调教者的下半身外套で妨害される
+ACTABLE_REASON:53 = 物理障害_着衣(攻)(下半身外套)
+SIF CLOTHESTYPE(0, 1) == 2
+	RETURN 0
+;调教者に穿墙但ない
+IF !TALENT:穿墙
+	;调教对象的下半身外套で妨害される
+	ACTABLE_REASON:53 = 物理障害_着衣(受)(下半身外套)
+	SIF CLOTHESTYPE(1, 1) == 2
+		RETURN 0
+	;调教对象的下半身内衣で强く妨害される
+	ACTABLE_REASON:53 = 物理障害_着衣(受)(下半身内衣)
+	SIF CLOTHESTYPE(1, 0)
+		RETURN 0
+ENDIF
+;触手
+ACTABLE_REASON:53 = 物理障害_触手
+SIF TEQUIP:触手调教中
+	RETURN 0
+;调教对象に无脚和ダメ
+ACTABLE_REASON:53 = 物理障害_受无足
+SIF TALENT:MASTER:无足
+	RETURN 0
+;调教对象但阴茎有り
+ACTABLE_REASON:53 = 物理障害_受阴茎
+SIF PENIS(MASTER)
+	RETURN 0
+;实行可能
+ACTABLE_REASON:53 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;强制舔足 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE55
+;一括管理
+SIF GLOBAL_ACTABLE(55)
+	RETURN RESULT
+;方针但温和
+ACTABLE_REASON:55 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "温和")
+	RETURN 0
+;本日的方针但调情
+ACTABLE_REASON:55 = 方针不適合_日毎方针(%POLICY("今日")%)
+SIF TFLAG:今日的方针 == 4
+	RETURN 0
+;推到中(いく直到解放不做ように)
+ACTABLE_REASON:55 = 解除規制_推到中
+SIF TEQUIP:推到中
+	RETURN 0
+;口球
+ACTABLE_REASON:55 = 物理障害_捆绑(口球)
+SIF TEQUIP:口球
+	RETURN 0
+;三角木马
+ACTABLE_REASON:55 = 物理障害_捆绑(三角木马)
+SIF TEQUIP:三角木马
+	RETURN 0
+;插入中(射精做直到抜かないように)
+ACTABLE_REASON:55 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:55 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;调教者に无脚
+ACTABLE_REASON:55 = 物理障害_攻无足
+SIF TALENT:无足
+	RETURN 0
+;触手
+ACTABLE_REASON:55 = 物理障害_触手
+SIF TEQUIP:触手调教中
+	RETURN 0
+;实行可能
+ACTABLE_REASON:55 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;深喉 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE56
+;一括管理
+SIF GLOBAL_ACTABLE(56)
+	RETURN RESULT
+;调教者勃起所要判定
+;调教者阴茎但存在し、かつ勃起不用脚あれば
+ACTABLE_REASON:56 = 物理障害_勃起不足(攻)
+SIF PENIS(TARGET) && TCVAR:勃起 < 2
+	RETURN 0
+;方针但温和/普通
+ACTABLE_REASON:56 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "温和/普通")
+	RETURN 0
+;推到中(いく直到解放不做ように)
+ACTABLE_REASON:56 = 解除規制_推到中
+SIF TEQUIP:推到中
+	RETURN 0
+;口球
+ACTABLE_REASON:56 = 物理障害_捆绑(口球)
+SIF TEQUIP:口球
+	RETURN 0
+;三角木马
+ACTABLE_REASON:56 = 物理障害_捆绑(三角木马)
+SIF TEQUIP:三角木马
+	RETURN 0
+;性交中是く直到抜かないように
+ACTABLE_REASON:56 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:56 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;触手
+ACTABLE_REASON:56 = 物理障害_触手
+SIF TEQUIP:触手调教中
+	RETURN 0
+;调教者的下半身外套で妨害される
+ACTABLE_REASON:56 = 物理障害_着衣(攻)(下半身外套)
+SIF CLOTHESTYPE(0, 1) == 2
+	RETURN 0
+;调教者但女人
+ACTABLE_REASON:56 = 物理障害_攻女性
+SIF TALENT:扶她 !| TALENT:男人
+	RETURN 0
+;实行可能
+ACTABLE_REASON:56 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;胸に奉仕的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE57
+;一括管理
+SIF GLOBAL_ACTABLE(57)
+	RETURN RESULT
+;男人是不可
+ACTABLE_REASON:57 = 物理障害_攻男性
+SIF TALENT:男人
+	RETURN 0
+;惩罚模式
+ACTABLE_REASON:57 = 状況不適合_惩罚中
+SIF TFLAG:惩罚标志
+	RETURN 0
+;方针但异常
+ACTABLE_REASON:57 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "异常")
+	RETURN 0
+;推到中(いく直到解放不做ように)
+ACTABLE_REASON:57 = 解除規制_推到中
+SIF TEQUIP:推到中
+	RETURN 0
+;绳装备中是口限定になり制限被受ける
+IF TEQUIP:绳
+	;调教者的上半身外套で妨害される
+	ACTABLE_REASON:57 = 物理障害_着衣(攻)(上半身外套)
+	SIF CLOTHESTYPE(0, 3) == 2
+		RETURN 0
+	;调教者的上半身内衣で妨害される
+	ACTABLE_REASON:57 = 物理障害_着衣(攻)(上半身内衣)
+	SIF CLOTHESTYPE(0, 2) == 2
+		RETURN 0
+	;口球もあ时アウト
+	ACTABLE_REASON:57 = 物理障害_捆绑(口球)
+	SIF TEQUIP:口球
+		RETURN 0
+ENDIF
+;性交中（正常位/后背位/背面座位/Ａ性交）
+ACTABLE_REASON:11 = 解除規制_性交(攻→受)(正常位/后背位/背面座位/Ａ性交)
+SIF GROUPMATCH(TEQUIP:性交中, 1, 2, 5, 6) > 0
+	RETURN 0
+;性交奉仕中（后背位/背面座位/Ａ性交）
+ACTABLE_REASON:11 = 解除規制_性交(受→攻)(后背位/背面座位/Ａ性交)
+SIF GROUPMATCH(TEQUIP:性交奉仕中, 2, 5, 6) > 0
+	RETURN 0
+;触手
+ACTABLE_REASON:57 = 物理障害_触手
+SIF TEQUIP:触手调教中
+	RETURN 0
+;实行可能
+ACTABLE_REASON:57 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;打屁股 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE60
+;一括管理
+SIF GLOBAL_ACTABLE(60)
+	RETURN RESULT
+;性奉中是く直到抜かないように
+ACTABLE_REASON:60 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;后背位以外的性交中是規制
+ACTABLE_REASON:60 = 解除規制_性交(攻→受)(正常位/骑乘位/对面座位/背面座位/Ａ性交)
+SIF GROUPMATCH(TEQUIP:性交中, 1, 3, 4, 5, 6)
+	RETURN 0
+;调教对象的上半身外套で妨害される
+ACTABLE_REASON:60 = 物理障害_着衣(受)(上半身外套)
+SIF CLOTHESTYPE(1, 3) == 2
+	RETURN 0
+;顔面骑乘中
+ACTABLE_REASON:60 = 物理障害_姿势(顔面骑乘中)
+SIF TEQUIP:顔面骑乘 || TEQUIP:顔面骑乘肛门
+	RETURN 0
+;实行可能
+ACTABLE_REASON:60 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;鞭 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE61
+;一括管理
+SIF GLOBAL_ACTABLE(61)
+	RETURN RESULT
+;鞭但无い
+ACTABLE_REASON:61 = 未持有_鞭
+SIF !ITEM:鞭
+	RETURN 0
+;方针但温和
+ACTABLE_REASON:61 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "温和")
+	RETURN 0
+;性交中是く直到抜かないように
+ACTABLE_REASON:61 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:61 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;实行可能
+ACTABLE_REASON:61 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;针 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE62
+;一括管理
+SIF GLOBAL_ACTABLE(62)
+	RETURN RESULT
+;针但无い
+ACTABLE_REASON:62 = 未持有_针
+SIF !ITEM:针
+	RETURN 0
+;方针但温和/普通
+ACTABLE_REASON:62 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "温和/普通")
+	RETURN 0
+;性交中是く直到抜かないように
+ACTABLE_REASON:62 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:62 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;实行可能
+ACTABLE_REASON:62 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;绳 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE63
+;一括管理
+SIF GLOBAL_ACTABLE(63)
+	RETURN RESULT
+;绳但无い
+ACTABLE_REASON:63 = 未持有_绳
+SIF !ITEM:绳
+	RETURN 0
+;惩罚模式
+ACTABLE_REASON:63 = 状況不適合_惩罚中
+SIF TFLAG:惩罚标志 && TEQUIP:绳
+	RETURN 0
+;性交中是く直到抜かないように
+ACTABLE_REASON:63 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:63 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;实行可能
+ACTABLE_REASON:63 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;眼罩 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE64
+;一括管理
+SIF GLOBAL_ACTABLE(64)
+	RETURN RESULT
+;眼罩但无い
+ACTABLE_REASON:64 = 未持有_眼罩
+SIF !ITEM:眼罩
+	RETURN 0
+;惩罚模式
+ACTABLE_REASON:64 = 状況不適合_惩罚中
+SIF TFLAG:惩罚标志 && TEQUIP:眼罩
+	RETURN 0
+;插入中(射精做直到抜かないように)
+ACTABLE_REASON:64 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:64 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;实行可能
+ACTABLE_REASON:64 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;口球 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE65
+;一括管理
+SIF GLOBAL_ACTABLE(65)
+	RETURN RESULT
+;口球但无い
+ACTABLE_REASON:65 = 未持有_口球
+SIF !ITEM:口球
+	RETURN 0
+;惩罚模式
+ACTABLE_REASON:65 = 状況不適合_惩罚中
+SIF TFLAG:惩罚标志 && TEQUIP:口球
+	RETURN 0
+;方针但温和/普通
+ACTABLE_REASON:65 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "温和/普通")
+	RETURN 0
+;插入中(射精做直到抜かないように)
+ACTABLE_REASON:65 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:65 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;实行可能
+ACTABLE_REASON:65 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;辱骂 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE66
+;一括管理
+SIF GLOBAL_ACTABLE(66)
+	RETURN RESULT
+;方针但温和
+ACTABLE_REASON:66 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "温和")
+	RETURN 0
+;实行可能
+ACTABLE_REASON:66 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;三角木马 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE67
+;一括管理
+SIF GLOBAL_ACTABLE(67)
+	RETURN RESULT
+;三角木马但无い
+ACTABLE_REASON:67 = 未持有_三角木马
+SIF !ITEM:三角木马
+	RETURN 0
+;惩罚模式
+ACTABLE_REASON:67 = 状況不適合_惩罚中
+SIF TFLAG:惩罚标志 && TEQUIP:三角木马
+	RETURN 0
+;方针但温和/普通
+ACTABLE_REASON:67 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "温和/普通")
+	RETURN 0
+;本日的方针但调情
+ACTABLE_REASON:67 = 方针不適合_日毎方针(%POLICY("今日")%)
+SIF TFLAG:今日的方针 == 4
+	RETURN 0
+;道具插入中
+ACTABLE_REASON:67 = 物理障害_装着(受)(ＶＡ)
+SIF TEQUIP:震动棒 || TEQUIP:肛门震动棒 || TEQUIP:肛门拉珠 || TEQUIP:灌肠器＋肛塞 || TEQUIP:假阴茎
+	RETURN 0
+;推到中(いく直到解放不做ように)
+ACTABLE_REASON:67 = 解除規制_推到中
+SIF TEQUIP:推到中
+	RETURN 0
+;野外PLAY
+ACTABLE_REASON:67 = 物理障害_野外PLAY中
+SIF TEQUIP:野外PLAY
+	RETURN 0
+;性交中是く直到抜かないように
+ACTABLE_REASON:67 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:67 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;调教对象的上半身外套で妨害される
+ACTABLE_REASON:67 = 物理障害_着衣(受)(上半身外套)
+SIF CLOTHESTYPE(1, 3) == 2
+	RETURN 0
+;触手
+ACTABLE_REASON:67 = 物理障害_触手
+SIF TEQUIP:触手调教中
+	RETURN 0
+;男人
+ACTABLE_REASON:67 = 物理障害_受男性
+SIF TALENT:MASTER:男人
+	RETURN 0
+;实行可能
+ACTABLE_REASON:67 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;灌肠器＋肛塞 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE68
+;一括管理
+SIF GLOBAL_ACTABLE(68)
+	RETURN RESULT
+;灌肠器＋肛塞但无い
+ACTABLE_REASON:68 = 未持有_灌肠套装
+SIF !ITEM:灌肠套装
+	RETURN 0
+;方针但温和
+ACTABLE_REASON:68 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "温和")
+	RETURN 0
+;Ａに他的道具装着中
+ACTABLE_REASON:68 = 物理障害_装着(受)(Ａ)
+SIF TEQUIP:肛门震动棒 || TEQUIP:肛门拉珠 || TEQUIP:假阴茎
+	RETURN 0
+;三角木马
+ACTABLE_REASON:68 = 物理障害_捆绑(三角木马)
+SIF TEQUIP:三角木马
+	RETURN 0
+;插入中
+ACTABLE_REASON:68 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:68 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;下半身内衣
+ACTABLE_REASON:68 = 物理障害_着衣(受)(下半身内衣)
+SIF TEQUIP:MASTER:下半身内衣
+	RETURN 0
+;调教对象的上半身外套で妨害される
+ACTABLE_REASON:68 = 物理障害_着衣(受)(上半身外套)
+SIF CLOTHESTYPE(1, 3) == 2
+	RETURN 0
+;触手
+ACTABLE_REASON:68 = 物理障害_触手
+SIF TEQUIP:触手调教中
+	RETURN 0
+;实行可能
+ACTABLE_REASON:68 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;拳交 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE70
+;一括管理
+SIF GLOBAL_ACTABLE(70)
+	RETURN RESULT
+;方针但温和/普通
+ACTABLE_REASON:70 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "温和/普通")
+	RETURN 0
+;本日的方针但调情
+ACTABLE_REASON:70 = 方针不適合_日毎方针(%POLICY("今日")%)
+SIF TFLAG:今日的方针 == 4
+	RETURN 0
+;插入中(射精做直到抜かないように)
+ACTABLE_REASON:70 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:70 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;调教者に穿墙但ない
+IF !TALENT:穿墙
+	;调教对象的下半身外套で妨害される
+	ACTABLE_REASON:70 = 物理障害_着衣(受)(下半身外套)
+	SIF CLOTHESTYPE(1, 1) == 2
+		RETURN 0
+	;调教对象的下半身内衣で妨害される
+	ACTABLE_REASON:70 = 物理障害_着衣(受)(下半身内衣)
+	SIF CLOTHESTYPE(1, 0) == 2
+		RETURN 0
+ENDIF
+;触手
+ACTABLE_REASON:70 = 物理障害_触手
+SIF TEQUIP:触手调教中
+	RETURN 0
+;调教对象但男人
+ACTABLE_REASON:70 = 物理障害_受男性
+SIF TALENT:MASTER:男人
+	RETURN 0
+;调教对象但处女で调教者但主人不是@ぽ0422test+勝手に调整3
+;今后的条件考慮的ためこういう案もあ时いうこ和被记录@これみ
+;SIF TALENT:MASTER:处女 && !TALENT:TARGET:主人
+;	RETURN 0
+;实行可能
+ACTABLE_REASON:70 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;肛门拳交 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE71
+;一括管理
+SIF GLOBAL_ACTABLE(71)
+	RETURN RESULT
+;方针但温和/普通
+ACTABLE_REASON:71 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "温和/普通")
+	RETURN 0
+;本日的方针但调情
+ACTABLE_REASON:71 = 方针不適合_日毎方针(%POLICY("今日")%)
+SIF TFLAG:今日的方针 == 4
+	RETURN 0
+;插入中(射精做直到抜かないように)
+ACTABLE_REASON:71 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:71 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;调教者に穿墙但ない
+IF !TALENT:穿墙
+	;调教对象的下半身外套で妨害される
+	ACTABLE_REASON:71 = 物理障害_着衣(受)(下半身外套)
+	SIF CLOTHESTYPE(1, 1) == 2
+		RETURN 0
+	;调教对象的下半身内衣で强く妨害される
+	ACTABLE_REASON:71 = 物理障害_着衣(受)(下半身内衣)
+	SIF CLOTHESTYPE(1, 0)
+		RETURN 0
+ENDIF
+;触手
+ACTABLE_REASON:71 = 物理障害_触手
+SIF TEQUIP:触手调教中
+	RETURN 0
+;实行可能
+ACTABLE_REASON:71 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;两穴拳交 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE72
+;一括管理
+SIF GLOBAL_ACTABLE(72)
+	RETURN RESULT
+;方针但温和/普通/强硬
+ACTABLE_REASON:72 = 方针不適合_回合方针(%POLICY("今")%)
+SIF 2 <= TFLAG:回合方针 && TFLAG:回合方针 <= 4
+	RETURN 0
+;本日的方针但调情
+ACTABLE_REASON:72 = 方针不適合_日毎方针(%POLICY("今日")%)
+SIF TFLAG:今日的方针 == 4
+	RETURN 0
+;插入中(射精做直到抜かないように)
+ACTABLE_REASON:72 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:72 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;调教者に穿墙但ない
+IF !TALENT:穿墙
+	;调教对象的下半身外套で妨害される
+	ACTABLE_REASON:72 = 物理障害_着衣(受)(下半身外套)
+	SIF CLOTHESTYPE(1, 1) == 2
+		RETURN 0
+	;调教对象的下半身内衣で强く妨害される
+	ACTABLE_REASON:72 = 物理障害_着衣(受)(下半身内衣)
+	SIF CLOTHESTYPE(1, 0)
+		RETURN 0
+ENDIF
+;触手
+ACTABLE_REASON:72 = 物理障害_触手
+SIF TEQUIP:触手调教中
+	RETURN 0
+;调教对象但男人
+ACTABLE_REASON:72 = 物理障害_受男性
+SIF TALENT:MASTER:男人
+	RETURN 0
+;调教对象但处女で调教者但主人不是@ぽ0422test+勝手に调整3
+;今后的条件考慮的ためこういう案もあ时いうこ和被记录@これみ
+;SIF TALENT:MASTER:处女 && !TALENT:TARGET:主人
+;	RETURN 0
+;实行可能
+ACTABLE_REASON:72 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;放置PLAY 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE73
+;一括管理
+SIF GLOBAL_ACTABLE(73)
+	RETURN RESULT
+;方针但温和/普通
+ACTABLE_REASON:73 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "温和/普通")
+	RETURN 0
+;本日的方针但调情
+ACTABLE_REASON:73 = 方针不適合_日毎方针(%POLICY("今日")%)
+SIF TFLAG:今日的方针 == 4
+	RETURN 0
+;推到中(いく直到解放不做ように)
+ACTABLE_REASON:73 = 解除規制_推到中
+SIF TEQUIP:推到中
+	RETURN 0
+;插入中(射精做直到抜かないように)
+ACTABLE_REASON:73 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:73 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;实行可能
+ACTABLE_REASON:73 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;公共肉便器PLAY 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE74
+;一括管理
+SIF GLOBAL_ACTABLE(74)
+	RETURN RESULT
+;绳和项圈的どちらか但无い
+ACTABLE_REASON:74 = 未持有_绳
+SIF !ITEM:绳
+	RETURN 0
+ACTABLE_REASON:74 = 未持有_项圈
+SIF !ITEM:项圈
+	RETURN 0
+;方针但温和/普通/强硬
+ACTABLE_REASON:74 = 方针不適合_回合方针(%POLICY("今")%)
+SIF 2 <= TFLAG:回合方针 && TFLAG:回合方针 <= 4
+	RETURN 0
+;本日的方针但调情
+ACTABLE_REASON:74 = 方针不適合_日毎方针(%POLICY("今日")%)
+SIF TFLAG:今日的方针 == 4
+	RETURN 0
+;推到中(いく直到解放不做ように)
+ACTABLE_REASON:74 = 解除規制_推到中
+SIF TEQUIP:推到中
+	RETURN 0
+;插入中(射精做直到抜かないように)
+ACTABLE_REASON:74 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:74 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;触手
+ACTABLE_REASON:74 = 物理障害_触手
+SIF TEQUIP:触手调教中
+	RETURN 0
+;调教对象但处女で调教者但主人不是@ぽ0422test+勝手に调整3
+;今后的条件考慮的ためこういう案もあ时いうこ和被记录@これみ
+;SIF TALENT:MASTER:处女 && !TALENT:TARGET:主人
+;	RETURN 0
+;实行可能
+ACTABLE_REASON:74 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;穿上假阴茎 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE75
+;一括管理
+SIF GLOBAL_ACTABLE(75)
+	RETURN RESULT
+;假阴茎但无い
+ACTABLE_REASON:75 = 未持有_Ｐバンド
+SIF !ITEM:假阴茎 || TEQUIP:假阴茎
+	RETURN 0
+;插入中
+ACTABLE_REASON:75 = 物理障害_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+;性交奉仕中
+ACTABLE_REASON:75 = 物理障害_性交(受→攻)(全)
+SIF (TEQUIP:性交奉仕中)
+	RETURN 0
+;触手
+ACTABLE_REASON:75 = 物理障害_触手
+SIF TEQUIP:触手调教中
+	RETURN 0
+;阴茎但ある
+ACTABLE_REASON:75 = 物理障害_攻阴茎
+SIF PENIS(TARGET)
+	RETURN 0
+;实行可能
+ACTABLE_REASON:75 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;触手召唤 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE80
+;一括管理
+SIF GLOBAL_ACTABLE(80)
+	RETURN RESULT
+;召唤できるクリーチャー但いない
+ACTABLE_REASON:80 = 未持有_触手
+SIF !ITEM:90
+	RETURN 0
+;本日的方针但调情
+ACTABLE_REASON:80 = 方针不適合_日毎方针(%POLICY("今日")%)
+SIF TFLAG:今日的方针 == 4
+	RETURN 0
+;推到中(いく直到解放不做ように)
+ACTABLE_REASON:80 = 解除規制_推到中
+SIF TEQUIP:推到中
+	RETURN 0
+;触手召唤是未实装
+ACTABLE_REASON:80 = 未实装
+RETURN 0
+
+;-----------------------------------------------------------
+;稍作休息 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE90
+;一括管理
+SIF GLOBAL_ACTABLE(90)
+	RETURN RESULT
+;实行可能
+ACTABLE_REASON:90 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;喝营养剂 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE91
+;一括管理
+SIF GLOBAL_ACTABLE(91)
+	RETURN RESULT
+;调教者に调合知识但无い
+ACTABLE_REASON:91 = 条件未达_调合知识无し
+SIF !TALENT:调合知识
+	RETURN 0
+;实行可能
+ACTABLE_REASON:91 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;进行治疗 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE92
+;一括管理
+SIF GLOBAL_ACTABLE(92)
+	RETURN RESULT
+;调教者但治疗できない
+ACTABLE_REASON:92 = 条件未达_治疗无し
+SIF !TALENT:治疗
+	RETURN 0
+;实行可能
+ACTABLE_REASON:92 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;正常位侍奉 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE95
+;一括管理
+SIF GLOBAL_ACTABLE(95)
+	RETURN RESULT
+;调教对象に阴茎但なく、假阴茎但ない
+ACTABLE_REASON:95 = 未持有_Ｐバンド
+SIF !PENIS(MASTER) && (TEQUIP:调教者假阴茎 || !ITEM:假阴茎)
+	RETURN 0
+;调教对象但仰向
+ACTABLE_REASON:95 = 物理障害_姿势(受)(仰面)
+SIF TFLAG:仰面 && !TEQUIP:性交奉仕中
+	RETURN 0
+;Ｖ使用中
+ACTABLE_REASON:95 = 物理障害_装着(攻)(Ｐバンド)
+SIF TEQUIP:调教者假阴茎
+	RETURN 0
+;勃起1000未满
+ACTABLE_REASON:95 = 物理障害_勃起不足(受)
+SIF TCVAR:MASTER:勃起度 < 1000 && PENIS(MASTER)
+	RETURN 0
+;推到中(いく直到解放不做ように)
+ACTABLE_REASON:95 = 解除規制_推到中
+SIF TEQUIP:推到中
+	RETURN 0
+;插入中(射精做直到抜かないように)
+ACTABLE_REASON:95 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:95 = 解除規制_性交(受→攻)(Ａ)
+SIF A_SEX(MASTER)
+	RETURN 0
+;体位不可修改
+ACTABLE_REASON:95 = 物理障害_性交(受→攻)(体位)
+SIF TEQUIP:性交奉仕中 == 5
+	RETURN 0
+;不拔出那么插し替え不可
+ACTABLE_REASON:95 = 解除規制_不拔出
+SIF TFLAG:不拔出 && PREV_A_SEX(MASTER)
+	RETURN 0
+;三角木马
+ACTABLE_REASON:95 = 物理障害_捆绑(三角木马)
+SIF TEQUIP:三角木马
+	RETURN 0
+;调教者的下半身外套で妨害される
+ACTABLE_REASON:95 = 物理障害_着衣(攻)(下半身外套)
+SIF CLOTHESTYPE(0, 1) == 2
+	RETURN 0
+;调教者的下半身内衣で妨害される
+ACTABLE_REASON:95 = 物理障害_着衣(攻)(下半身内衣)
+SIF CLOTHESTYPE(0, 0) == 2
+	RETURN 0
+;调教对象的下半身外套で妨害される
+ACTABLE_REASON:95 = 物理障害_着衣(受)(下半身外套)
+SIF CLOTHESTYPE(1, 1) == 2
+	RETURN 0
+;调教者但男人
+ACTABLE_REASON:95 = 物理障害_攻男性
+SIF TALENT:男人
+	RETURN 0
+;调教对象但飞机杯使用中
+ACTABLE_REASON:95 = 物理障害_装着(受)(Ｐホール)
+SIF TEQUIP:飞机杯
+	RETURN 0
+;调教对象的体力但0以下
+ACTABLE_REASON:95 = 物理障害_体力不足(受)
+SIF BASE:MASTER:体力 <= 0
+	RETURN 0
+;调教对象但童贞で调教者但主人不是@ぽ0422test+勝手に调整3
+;今后的条件考慮的ためこういう案もあ时いうこ和被记录@これみ
+;SIF TALENT:MASTER:童贞 && !TALENT:TARGET:主人
+;	RETURN 0
+;实行可能
+ACTABLE_REASON:95 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;后背位侍奉 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE96
+;一括管理
+SIF GLOBAL_ACTABLE(96)
+	RETURN RESULT
+;调教对象に阴茎但なく、假阴茎但ない
+ACTABLE_REASON:96 = 未持有_Ｐバンド
+SIF !PENIS(MASTER) && (TEQUIP:调教者假阴茎 || !ITEM:假阴茎)
+	RETURN 0
+;调教对象但仰向
+ACTABLE_REASON:96 = 物理障害_姿势(受)(仰面)
+SIF TFLAG:仰面 && !TEQUIP:性交奉仕中
+	RETURN 0
+;Ｖ使用中
+ACTABLE_REASON:96 = 物理障害_装着(攻)(Ｐバンド)
+SIF TEQUIP:调教者假阴茎
+	RETURN 0
+;勃起1000未满
+ACTABLE_REASON:96 = 物理障害_勃起不足(受)
+SIF TCVAR:MASTER:勃起度 < 1000 && PENIS(MASTER)
+	RETURN 0
+;推到中(いく直到解放不做ように)
+ACTABLE_REASON:96 = 解除規制_推到中
+SIF TEQUIP:推到中
+	RETURN 0
+;插入中(射精做直到抜かないように)
+ACTABLE_REASON:96 = 解除規制_性交(攻→受)(全)
+SIF (TEQUIP:性交中)
+	RETURN 0
+ACTABLE_REASON:96 = 解除規制_性交(受→攻)(Ａ)
+SIF A_SEX(MASTER)
+	RETURN 0
+;体位不可修改
+ACTABLE_REASON:96 = 物理障害_性交(受→攻)(体位)
+SIF TEQUIP:性交奉仕中 == 4
+	RETURN 0
+;不拔出那么插し替え不可
+ACTABLE_REASON:96 = 解除規制_不拔出
+SIF TFLAG:不拔出 && PREV_A_SEX(MASTER)
+	RETURN 0
+;三角木马
+ACTABLE_REASON:96 = 物理障害_捆绑(三角木马)
+SIF TEQUIP:三角木马
+	RETURN 0
+;调教者的下半身外套で妨害される
+ACTABLE_REASON:96 = 物理障害_着衣(攻)(下半身外套)
+SIF CLOTHESTYPE(0, 1) == 2
+	RETURN 0
+;调教者的下半身内衣で妨害される
+ACTABLE_REASON:96 = 物理障害_着衣(攻)(下半身内衣)
+SIF CLOTHESTYPE(0, 0) == 2
+	RETURN 0
+;调教对象的下半身外套で妨害される
+ACTABLE_REASON:96 = 物理障害_着衣(受)(下半身外套)
+SIF CLOTHESTYPE(1, 1) == 2
+	RETURN 0
+;调教者但男人
+ACTABLE_REASON:96 = 物理障害_攻男性
+SIF TALENT:男人
+	RETURN 0
+;调教对象飞机杯使用中
+ACTABLE_REASON:96 = 物理障害_装着(受)(Ｐホール)
+SIF TEQUIP:飞机杯
+	RETURN 0
+;调教对象的体力但0以下
+ACTABLE_REASON:96 = 物理障害_体力不足(受)
+SIF BASE:MASTER:体力 <= 0
+	RETURN 0
+;调教对象但童贞で调教者但主人不是@ぽ0422test+勝手に调整3
+;今后的条件考慮的ためこういう案もあ时いうこ和被记录@これみ
+;SIF TALENT:MASTER:童贞 && !TALENT:TARGET:主人
+;	RETURN 0
+;实行可能
+ACTABLE_REASON:96 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;对面座位侍奉 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE97
+;一括管理
+SIF GLOBAL_ACTABLE(97)
+	RETURN RESULT
+;调教对象に阴茎但なく、假阴茎但ない
+ACTABLE_REASON:97 = 未持有_Ｐバンド
+SIF !PENIS(MASTER) && (TEQUIP:调教者假阴茎 || !ITEM:假阴茎)
+	RETURN 0
+;调教对象但仰向
+ACTABLE_REASON:97 = 物理障害_姿势(受)(仰面)
+SIF TFLAG:仰面 && !TEQUIP:性交奉仕中
+	RETURN 0
+;Ｖ使用中
+ACTABLE_REASON:97 = 物理障害_装着(攻)(Ｐバンド)
+SIF TEQUIP:调教者假阴茎
+	RETURN 0
+;勃起1000未满
+ACTABLE_REASON:97 = 物理障害_勃起不足(受)
+SIF TCVAR:MASTER:勃起度 < 1000 && PENIS(MASTER)
+	RETURN 0
+;推到中(いく直到解放不做ように)
+ACTABLE_REASON:97 = 解除規制_推到中
+SIF TEQUIP:推到中
+	RETURN 0
+;插入中(射精做直到抜かないように)
+ACTABLE_REASON:97 = 解除規制_性交(攻→受)(全)
+SIF (TEQUIP:性交中)
+	RETURN 0
+ACTABLE_REASON:97 = 解除規制_性交(受→攻)(Ａ)
+SIF A_SEX(MASTER)
+	RETURN 0
+;体位不可修改
+ACTABLE_REASON:97 = 物理障害_性交(受→攻)(体位)
+SIF TEQUIP:性交奉仕中 == 2 || TEQUIP:性交奉仕中 == 5
+	RETURN 0
+;不拔出那么插し替え不可
+ACTABLE_REASON:97 = 解除規制_不拔出
+SIF TFLAG:不拔出 && PREV_A_SEX(MASTER)
+	RETURN 0
+;三角木马
+ACTABLE_REASON:97 = 物理障害_捆绑(三角木马)
+SIF TEQUIP:三角木马
+	RETURN 0
+;调教者的下半身外套で妨害される
+ACTABLE_REASON:97 = 物理障害_着衣(攻)(下半身外套)
+SIF CLOTHESTYPE(0, 1) == 2
+	RETURN 0
+;调教者的下半身内衣で妨害される
+ACTABLE_REASON:97 = 物理障害_着衣(攻)(下半身内衣)
+SIF CLOTHESTYPE(0, 0) == 2
+	RETURN 0
+;调教对象的下半身外套で妨害される
+ACTABLE_REASON:97 = 物理障害_着衣(受)(下半身外套)
+SIF CLOTHESTYPE(1, 1) == 2
+	RETURN 0
+;调教者但男人
+ACTABLE_REASON:97 = 物理障害_攻男性
+SIF TALENT:男人
+	RETURN 0
+;调教对象飞机杯使用中
+ACTABLE_REASON:97 = 物理障害_装着(受)(Ｐホール)
+SIF TEQUIP:飞机杯
+	RETURN 0
+;调教对象的体力但0以下
+ACTABLE_REASON:97 = 物理障害_体力不足(受)
+SIF BASE:MASTER:体力 <= 0
+	RETURN 0
+;调教对象但童贞で调教者但主人不是@ぽ0422test+勝手に调整3
+;今后的条件考慮的ためこういう案もあ时いうこ和被记录@これみ
+;SIF TALENT:MASTER:童贞 && !TALENT:TARGET:主人
+;	RETURN 0
+;实行可能
+ACTABLE_REASON:97 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;背面座位侍奉 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE98
+;一括管理
+SIF GLOBAL_ACTABLE(98)
+	RETURN RESULT
+;调教对象に阴茎但なく、假阴茎但ない
+ACTABLE_REASON:98 = 未持有_Ｐバンド
+SIF !PENIS(MASTER) && (TEQUIP:调教者假阴茎 || !ITEM:假阴茎)
+	RETURN 0
+;调教对象但仰向
+ACTABLE_REASON:98 = 物理障害_姿势(受)(仰面)
+SIF TFLAG:仰面 && !TEQUIP:性交奉仕中
+	RETURN 0
+;Ｖ使用中
+ACTABLE_REASON:98 = 物理障害_装着(攻)(Ｐバンド)
+SIF TEQUIP:调教者假阴茎
+	RETURN 0
+;勃起1000未满
+ACTABLE_REASON:98 = 物理障害_勃起不足(受)
+SIF TCVAR:MASTER:勃起度 < 1000 && PENIS(MASTER)
+	RETURN 0
+;推到中(いく直到解放不做ように)
+ACTABLE_REASON:98 = 解除規制_推到中
+SIF TEQUIP:推到中
+	RETURN 0
+;插入中(射精做直到抜かないように)
+ACTABLE_REASON:98 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:98 = 解除規制_性交(受→攻)(Ａ)
+SIF A_SEX(MASTER)
+	RETURN 0
+;体位不可修改
+ACTABLE_REASON:98 = 物理障害_性交(受→攻)(体位)
+SIF TEQUIP:性交奉仕中 == 1 || TEQUIP:性交奉仕中 == 4
+	RETURN 0
+;不拔出那么插し替え不可
+ACTABLE_REASON:98 = 解除規制_不拔出
+SIF TFLAG:不拔出 && PREV_A_SEX(MASTER)
+	RETURN 0
+;三角木马
+ACTABLE_REASON:98 = 物理障害_捆绑(三角木马)
+SIF TEQUIP:三角木马
+	RETURN 0
+;调教者的下半身外套で妨害される
+ACTABLE_REASON:98 = 物理障害_着衣(攻)(下半身外套)
+SIF CLOTHESTYPE(0, 1) == 2
+	RETURN 0
+;调教者的下半身内衣で妨害される
+ACTABLE_REASON:98 = 物理障害_着衣(攻)(下半身内衣)
+SIF CLOTHESTYPE(0, 0) == 2
+	RETURN 0
+;调教对象的下半身外套で妨害される
+ACTABLE_REASON:98 = 物理障害_着衣(受)(下半身外套)
+SIF CLOTHESTYPE(1, 1) == 2
+	RETURN 0
+;调教者但男人
+ACTABLE_REASON:98 = 物理障害_攻男性
+SIF TALENT:男人
+	RETURN 0
+;调教对象但飞机杯使用中
+ACTABLE_REASON:98 = 物理障害_装着(受)(Ｐホール)
+SIF TEQUIP:飞机杯
+	RETURN 0
+;调教对象的体力但0以下
+ACTABLE_REASON:98 = 物理障害_体力不足(受)
+SIF BASE:MASTER:体力 <= 0
+	RETURN 0
+;调教对象但童贞で调教者但主人不是@ぽ0422test+勝手に调整3
+;今后的条件考慮的ためこういう案もあ时いうこ和被记录@これみ
+;SIF TALENT:MASTER:童贞 && !TALENT:TARGET:主人
+;	RETURN 0
+;实行可能
+ACTABLE_REASON:98 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;肛交侍奉 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE99
+;一括管理
+SIF GLOBAL_ACTABLE(99)
+	RETURN RESULT
+;调教对象に阴茎但なく、假阴茎但ない
+ACTABLE_REASON:99 = 未持有_Ｐバンド
+SIF !PENIS(MASTER) && (TEQUIP:调教者假阴茎 || !ITEM:假阴茎)
+	RETURN 0
+;方针但温和で肛门性交奉仕中不是
+ACTABLE_REASON:99 = 方针不適合_回合方针(%POLICY("今")%)
+SIF IS_POLICY("今", "温和") && TEQUIP:性交奉仕中 < 6
+	RETURN 0
+;Ａ使用中
+ACTABLE_REASON:99 = 物理障害_装着(攻)(Ｐバンド)
+SIF TEQUIP:调教者假阴茎
+	RETURN 0
+;勃起1000未满
+ACTABLE_REASON:99 = 物理障害_勃起不足(受)
+SIF TCVAR:MASTER:勃起度 < 1000 && PENIS(MASTER)
+	RETURN 0
+;推到中(いく直到解放不做ように)
+ACTABLE_REASON:99 = 解除規制_推到中
+SIF TEQUIP:推到中
+	RETURN 0
+;插入中(射精做直到抜かないように)
+ACTABLE_REASON:99 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:99 = 解除規制_性交(受→攻)(Ｖ)
+SIF V_SEX(MASTER)
+	RETURN 0
+;不拔出那么插し替え不可
+ACTABLE_REASON:99 = 解除規制_不拔出
+SIF TFLAG:不拔出 && PREV_V_SEX(MASTER)
+	RETURN 0
+;三角木马
+ACTABLE_REASON:99 = 物理障害_捆绑(三角木马)
+SIF TEQUIP:三角木马
+	RETURN 0
+;调教者的下半身外套で妨害される
+ACTABLE_REASON:99 = 物理障害_着衣(攻)(下半身外套)
+SIF CLOTHESTYPE(0, 1) == 2
+	RETURN 0
+;调教者的下半身内衣で强く妨害される
+ACTABLE_REASON:99 = 物理障害_着衣(攻)(下半身内衣)
+SIF CLOTHESTYPE(0, 0)
+	RETURN 0
+;调教对象的下半身外套で妨害される
+ACTABLE_REASON:99 = 物理障害_着衣(受)(下半身外套)
+SIF CLOTHESTYPE(1, 1) == 2
+	RETURN 0
+;调教对象飞机杯使用中
+ACTABLE_REASON:99 = 物理障害_装着(受)(Ｐホール)
+SIF TEQUIP:飞机杯
+	RETURN 0
+;调教对象的体力但0以下
+ACTABLE_REASON:99 = 物理障害_体力不足(受)
+SIF BASE:MASTER:体力 <= 0
+	RETURN 0
+;调教者的Ａ感觉但2未满
+ACTABLE_REASON:99 = 条件未达_Ａ感觉不足
+SIF ABL:Ａ感觉 < 2
+	RETURN 0
+;调教对象但童贞で调教者但主人不是@ぽ0422test+勝手に调整3
+;今后的条件考慮的ためこういう案もあ时いうこ和被记录@これみ
+;SIF TALENT:MASTER:童贞 && !TALENT:TARGET:主人
+;	RETURN 0
+;实行可能
+ACTABLE_REASON:99 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;逆强奸 的实行判定
+;-----------------------------------------------------------
+@ACT_ABLE103
+;一括管理
+SIF GLOBAL_ACTABLE(103)
+	RETURN RESULT
+;调教对象に阴茎但なく、假阴茎但ない
+ACTABLE_REASON:103 = 未持有_Ｐバンド
+SIF !PENIS(MASTER) && (TEQUIP:调教者假阴茎 || !ITEM:假阴茎)
+	RETURN 0
+;勃起1000未满
+ACTABLE_REASON:103 = 物理障害_勃起不足(受)
+SIF TCVAR:MASTER:勃起度 < 1000 && PENIS(MASTER)
+	RETURN 0
+;Ｖ使用中
+ACTABLE_REASON:103 = 物理障害_装着(攻)(Ｐバンド)
+SIF TEQUIP:调教者假阴茎
+	RETURN 0
+;插入中(射精做直到抜かないように)
+ACTABLE_REASON:103 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:103 = 解除規制_性交(受→攻)(Ａ)
+SIF A_SEX(MASTER)
+	RETURN 0
+;不拔出那么插し替え不可
+ACTABLE_REASON:103 = 解除規制_不拔出
+SIF TFLAG:不拔出 && PREV_A_SEX(MASTER)
+	RETURN 0
+;三角木马
+ACTABLE_REASON:103 = 物理障害_捆绑(三角木马)
+SIF TEQUIP:三角木马
+	RETURN 0
+;调教者的下半身外套で妨害される
+ACTABLE_REASON:103 = 物理障害_着衣(攻)(下半身外套)
+SIF CLOTHESTYPE(0, 1) == 2
+	RETURN 0
+;调教者的下半身内衣で妨害される
+ACTABLE_REASON:103 = 物理障害_着衣(攻)(下半身内衣)
+SIF CLOTHESTYPE(0, 0) == 2
+	RETURN 0
+;调教者に穿墙但ない（假阳具も不可）
+IF !TALENT:穿墙 || !PENIS(TARGET)
+	;调教对象的下半身外套で妨害される
+	ACTABLE_REASON:103 = 物理障害_着衣(受)(下半身外套)
+	SIF CLOTHESTYPE(1, 1) == 2
+		RETURN 0
+ENDIF
+;调教者但男人
+ACTABLE_REASON:103 = 物理障害_攻男性
+SIF TALENT:男人
+	RETURN 0
+;调教对象但飞机杯使用中
+ACTABLE_REASON:103 = 物理障害_装着(受)(Ｐホール)
+SIF TEQUIP:飞机杯
+	RETURN 0
+;调教对象但童贞で调教者但主人不是@ぽ0422test+勝手に调整3
+;今后的条件考慮的ためこういう案もあ时いうこ和被记录@これみ
+;SIF TALENT:MASTER:童贞 && !TALENT:TARGET:主人
+;	RETURN 0
+;实行可能
+ACTABLE_REASON:103 = 
+RETURN 1

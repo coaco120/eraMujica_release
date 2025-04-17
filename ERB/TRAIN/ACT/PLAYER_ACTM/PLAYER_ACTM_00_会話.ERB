@@ -1,0 +1,888 @@
+﻿;────────────────────────────────────
+;会话 (心情0/好感1/知识2/安慰3/威胁4/衣服5/合意6/惩罚き7/大喊大叫8/嗤笑9/辱骂66)
+;────────────────────────────────────
+@ACT_M0(ARG = 0)
+;1以上那么判定被行わない
+#DIM LCOUNT, 1
+
+;関数初期化
+CALL ACT_M_INIT(0)
+
+;处理开始
+
+LOCALS = ACT_ACTM0
+
+CALL CHA_CRI_VAR, "基準値"
+CALLFORM %LOCALS%_REFERENCE
+
+CALL CHA_CRI_VAR, @"回合方针(%POLICY("今")%)"
+CALLFORM %LOCALS%_MENU
+
+CALL CHA_CRI_VAR, "调教者的素質"
+CALLFORM %LOCALS%_TALENT_T
+
+CALL CHA_CRI_VAR, "调教对象的素質"
+CALLFORM %LOCALS%_TALENT_M
+
+CALL CHA_CRI_VAR, "调教者的性別意识"
+CALLFORM %LOCALS%_GENDER_T
+
+CALL CHA_CRI_VAR, "调教对象的能力"
+CALLFORM %LOCALS%_ABL_M
+
+CALL CHA_CRI_VAR, "调教对象的快感"
+CALLFORM %LOCALS%_PLEASURE_M
+
+CALL CHA_CRI_VAR, "调教对象的反抗"
+CALLFORM %LOCALS%_RESISTANCE_M
+
+CALL CHA_CRI_VAR, "调教对象的害羞"
+CALLFORM %LOCALS%_SHYNESS_M
+
+CALL CHA_CRI_VAR, "调教对象的恐怖"
+CALLFORM %LOCALS%_FEAR_M
+
+CALL CHA_CRI_VAR, "调教对象的抑郁"
+CALLFORM %LOCALS%_DEPRESSION_M
+
+CALL CHA_CRI_VAR, "调教对象的反抗刻印"
+CALLFORM %LOCALS%_RESISTMARK_M
+
+CALL CHA_CRI_VAR, "调教对象的反抗刻印"
+CALLFORM %LOCALS%_SEXUALINFO_M
+
+CALL CHA_CRI_VAR, "调教者的罪恶感"
+CALLFORM %LOCALS%_SIN_T
+
+CALL CHA_CRI_VAR, "调教者的ALI"
+CALLFORM %LOCALS%_ALI_T
+
+CALL CHA_CRI_VAR, "调教者的理性"
+CALLFORM %LOCALS%_REASON_T
+
+CALL CHA_CRI_VAR, "调教者的兴趣"
+CALLFORM %LOCALS%_INTEREST_T
+
+CALL CHA_CRI_VAR, "调教者的焦躁"
+CALLFORM %LOCALS%_IRRITATION_T
+
+CALL CHA_CRI_VAR, "调教者的满足"
+CALLFORM %LOCALS%_SATISFACTION_T
+
+CALL CHA_CRI_VAR, @"调教者的状态(%CONDITION(TCVAR:状态变化)%)"
+CALLFORM %LOCALS%_CONDITION_T
+
+CALL CHA_CRI_VAR, "装着道具"
+CALLFORM %LOCALS%_TOOLS
+
+CALL CHA_CRI_VAR, "媚药"
+CALLFORM %LOCALS%_DRAG
+
+CALL CHA_CRI_VAR, "绳"
+CALLFORM %LOCALS%_ROPE
+
+CALL CHA_CRI_VAR, "眼罩"
+CALLFORM %LOCALS%_EYEMASK
+
+CALL CHA_CRI_VAR, "口球"
+CALLFORM %LOCALS%_GAG
+
+CALL CHA_CRI_VAR, "三角木马"
+CALLFORM %LOCALS%_HORSE
+
+CALL CHA_CRI_VAR, "野外PLAY"
+CALLFORM %LOCALS%_OUT
+
+CALL CHA_CRI_VAR, "调教对象自慰中"
+CALLFORM %LOCALS%_MASTURBATION_M
+
+CALL CHA_CRI_VAR, "调教者自慰中"
+CALLFORM %LOCALS%_MASTURBATION_T
+
+CALL CHA_CRI_VAR, "插入修正"
+CALLFORM %LOCALS%_INSERT
+
+CALL CHA_CRI_VAR, "调教对象的服装"
+CALLFORM %LOCALS%_CLOTH_M
+
+CALL CHA_CRI_VAR, "请求宽恕"
+CALLFORM %LOCALS%_PLEASE_HELP
+
+CALL CHA_CRI_VAR, "已经出现的话题"
+CALLFORM %LOCALS%_ALREADY_TALKED
+
+CALL CHA_CRI_VAR, "惩罚"
+CALLFORM %LOCALS%_OSHIOKI
+
+CALL CHA_CRI_VAR, "连续行动修正"
+CALLFORM %LOCALS%_PREV
+
+CALL CHA_CRI_VAR, "口上修正値"
+CALL ACT_ACTM_KOJO_CORRECTION_T, 0
+
+CALL CHA_CRI_VAR, "ACT修正値"
+CALLFORM %LOCALS%_CORRECTION(ARG)
+
+
+;ARG但1以上那么处理中断
+SIF ARG
+	RETURN RESULT
+
+CALL CHA_CRI_VAR, "实行判定"
+CALLFORM %LOCALS%_ABLE
+
+;────────────────────────────────────
+;最终判定
+;────────────────────────────────────
+CALL DEF_CRI_VAR("最大前者")
+LOCAL = GET_CRI_VAR("決定")
+IF LOCAL == -1
+	SIF FLAG:DEBUG
+		PRINTL (会话类ACT中不存在可执行的ACT)
+	TFLAG:ACT = -1
+	CALL ACT_MENU_RESULT(2, "会话")
+ELSE
+	TFLAG:ACT = GET_ACTNUM(RESULTS)
+ENDIF
+CALL ANA_CRI_VAR()
+
+;-------------------------------------------------------------------------
+;基準値
+;-------------------------------------------------------------------------
+@ACT_ACTM0_REFERENCE
+
+;要らないかも和思った的で試しに无效化@これみ
+[SKIPSTART]
+CALL ADD_CRI_VAR("询问今天的心情", 10)
+CALL ADD_CRI_VAR("询问对自己的感觉", 10)
+CALL ADD_CRI_VAR("谈论性的话题", 10)
+CALL ADD_CRI_VAR("温柔的安慰", 10)
+CALL ADD_CRI_VAR("严厉的威胁", 10)
+CALL ADD_CRI_VAR("请求变更服装", 0)
+CALL ADD_CRI_VAR("征求同意", 10)
+CALL ADD_CRI_VAR("宣称要进行惩罚", 10)
+CALL ADD_CRI_VAR("大喊大叫", 10)
+CALL ADD_CRI_VAR("令人毛骨悚然的笑", 10)
+CALL ADD_CRI_VAR("辱骂", 0)
+[SKIPEND]
+
+SIF TFLAG:ACT分类 == 4
+	CALL ADD_CRI_VAR("辱骂", 10)
+
+;-------------------------------------------------------------------------
+;调教方针(1=休息/2=温和/3=普通/4=强硬/5=异常)
+;-------------------------------------------------------------------------
+@ACT_ACTM0_MENU
+
+SELECTCASE TFLAG:回合方针
+	CASE 2
+		SIF !TFLAG:惩罚标志
+			CALL ADD_CRI_VAR("温柔的安慰", 3)
+	CASE 3
+		CALL ADD_CRI_VAR("询问今天的心情", 2)
+		SIF !TFLAG:惩罚标志
+			CALL ADD_CRI_VAR("询问对自己的感觉", 1)
+	CASE 4
+		CALL ADD_CRI_VAR("辱骂", 10)
+		SIF !TFLAG:惩罚标志
+			CALL ADD_CRI_VAR("严厉的威胁", 3)
+ENDSELECT
+
+;-------------------------------------------------------------
+;本日的方针
+;本日的方针(0=平时どおり/1=A开发/2=惩罚/3=强硬/4=调情/5=异常/6=野外/7=做小孩/8=休息/9=抱住/10=ご奉仕/11=宠爱)
+;-------------------------------------------------------------
+@ACT_ACTM0_POLYCY
+SELECTCASE POLICY("今日")
+	CASE "宠爱"
+		CALL ADD_CRI_VAR("询问今天的心情", -10)
+		CALL ADD_CRI_VAR("谈论性的话题", -10)
+		CALL ADD_CRI_VAR("温柔的安慰", 5)
+		CALL ADD_CRI_VAR("严厉的威胁", -10)
+		CALL ADD_CRI_VAR("宣称要进行惩罚", -10)
+		CALL ADD_CRI_VAR("大喊大叫", -10)
+		CALL ADD_CRI_VAR("令人毛骨悚然的笑", -10)
+	CASEELSE
+		;none
+ENDSELECT
+
+;-------------------------------------------------------------------------
+;调教者的素質参照
+;-------------------------------------------------------------------------
+@ACT_ACTM0_TALENT_T
+;调教者但成熟/自大
+IF TALENT:成熟
+	CALL ADD_CRI_VAR("温柔的安慰", , 1)
+	CALL ADD_CRI_VAR("大喊大叫", -4, 2)
+ELSEIF TALENT:自大
+	CALL ADD_CRI_VAR("温柔的安慰", , -2)
+	CALL ADD_CRI_VAR("大喊大叫", 1, 1)
+ENDIF
+
+;调教者但自尊心高/低
+IF TALENT:自尊心高
+	CALL ADD_CRI_VAR("询问对自己的感觉", , -2)
+	CALL ADD_CRI_VAR("温柔的安慰", , -4)
+	CALL ADD_CRI_VAR("请求变更服装", 2)
+	CALL ADD_CRI_VAR("辱骂", , 2)
+ELSEIF TALENT:自尊心低
+	CALL ADD_CRI_VAR("询问对自己的感觉", , 2)
+	CALL ADD_CRI_VAR("温柔的安慰", , 4)
+	CALL ADD_CRI_VAR("令人毛骨悚然的笑", -4)
+ENDIF
+
+;调教者但自制的/冲动的
+IF TALENT:自制的
+	CALL ADD_CRI_VAR("大喊大叫", -5)
+ELSEIF TALENT:冲动的
+	CALL ADD_CRI_VAR("大喊大叫", 4, 2)
+ENDIF
+
+;调教者但无关心/好奇心
+IF TALENT:无关心
+	CALL ADD_CRI_VAR("询问今天的心情", -5)
+	CALL ADD_CRI_VAR("询问对自己的感觉", -5)
+	CALL ADD_CRI_VAR("谈论性的话题", -5)
+ELSEIF TALENT:好奇心
+	CALL ADD_CRI_VAR("询问今天的心情", 5)
+	CALL ADD_CRI_VAR("询问对自己的感觉", 5)
+	CALL ADD_CRI_VAR("谈论性的话题", 5)
+ENDIF
+
+;调教者但缺乏感情/感情丰富
+IF TALENT:缺乏感情
+	CALL ADD_CRI_VAR("温柔的安慰", -3, 4)
+	CALL ADD_CRI_VAR("严厉的威胁", -4, 2)
+	CALL ADD_CRI_VAR("大喊大叫", -6)
+ELSEIF TALENT:感情丰富
+	CALL ADD_CRI_VAR("温柔的安慰", 4)
+	CALL ADD_CRI_VAR("严厉的威胁", 3, 2)
+	CALL ADD_CRI_VAR("大喊大叫", 3, 4)
+	CALL ADD_CRI_VAR("令人毛骨悚然的笑", , 4)
+ENDIF
+
+;调教者但乐观的/悲观的
+IF TALENT:乐观的
+	CALL ADD_CRI_VAR("询问对自己的感觉", 3)
+	CALL ADD_CRI_VAR("请求变更服装", , 2)
+	CALL ADD_CRI_VAR("征求同意", 5)
+ELSEIF TALENT:悲观的
+	CALL ADD_CRI_VAR("询问对自己的感觉", -2, 2)
+	CALL ADD_CRI_VAR("请求变更服装", , -2)
+	CALL ADD_CRI_VAR("征求同意", , -6)
+ENDIF
+
+;调教者但不越过底线
+IF TALENT:不越过底线
+	CALL ADD_CRI_VAR("询问对自己的感觉", -3)
+	CALL ADD_CRI_VAR("征求同意", -5)
+	CALL ADD_CRI_VAR("令人毛骨悚然的笑", -5)
+ENDIF
+
+;调教者但渴望关注
+IF TALENT:渴望关注
+	CALL ADD_CRI_VAR("询问对自己的感觉", , 7)
+	CALL ADD_CRI_VAR("谈论性的话题", 1, 5)
+	CALL ADD_CRI_VAR("严厉的威胁", , 6)
+	CALL ADD_CRI_VAR("宣称要进行惩罚", 3)
+	CALL ADD_CRI_VAR("大喊大叫", , 4)
+	CALL ADD_CRI_VAR("令人毛骨悚然的笑", , 4)
+ENDIF
+
+;调教者但贞操观念/不在意贞操
+IF TALENT:贞操观念
+	CALL ADD_CRI_VAR("征求同意", 7)
+ELSEIF TALENT:不在意贞操
+	CALL ADD_CRI_VAR("征求同意", -7)
+ENDIF
+
+;调教者但压抑/解放
+IF TALENT:压抑
+	CALL ADD_CRI_VAR("谈论性的话题", -10)
+	CALL ADD_CRI_VAR("征求同意", -5)
+ELSEIF TALENT:解放
+	CALL ADD_CRI_VAR("谈论性的话题", , 10)
+	CALL ADD_CRI_VAR("征求同意", , 5)
+ENDIF
+
+;调教者但羞涩/无耻
+IF TALENT:羞涩
+	CALL ADD_CRI_VAR("请求变更服装", -5)
+	CALL ADD_CRI_VAR("征求同意", -5)
+ELSEIF TALENT:无耻
+	CALL ADD_CRI_VAR("请求变更服装", 5)
+	CALL ADD_CRI_VAR("征求同意", 5)
+ENDIF
+
+;调教者但习得快/习得慢
+IF TALENT:习得快
+	CALL ADD_CRI_VAR("谈论性的话题", 5)
+ELSEIF TALENT:习得慢
+	CALL ADD_CRI_VAR("谈论性的话题", -5)
+ENDIF
+
+;调教者但献身的
+SIF TALENT:献身的
+	CALL ADD_CRI_VAR("温柔的安慰", 5)
+
+;调教者但倒错的
+IF TALENT:倒错的
+	CALL ADD_CRI_VAR("严厉的威胁", , 4)
+	CALL ADD_CRI_VAR("宣称要进行惩罚", 4)
+	CALL ADD_CRI_VAR("辱骂", , 4)
+ENDIF
+
+;调教者但虐待狂
+IF TALENT:虐待狂
+	CALL ADD_CRI_VAR("温柔的安慰", -3)
+	CALL ADD_CRI_VAR("严厉的威胁", 5)
+	CALL ADD_CRI_VAR("宣称要进行惩罚", 7)
+	CALL ADD_CRI_VAR("辱骂", 7)
+ENDIF
+
+;调教者但慎重/急躁
+IF TALENT:慎重
+	CALL ADD_CRI_VAR("征求同意", , -5)
+	CALL ADD_CRI_VAR("宣称要进行惩罚", -3)
+	CALL ADD_CRI_VAR("大喊大叫", -5)
+ELSEIF TALENT:急躁
+	CALL ADD_CRI_VAR("征求同意", , 5)
+	CALL ADD_CRI_VAR("大喊大叫", 5)
+ENDIF
+
+;调教者但坏心眼/好心眼
+IF TALENT:坏心眼
+	CALL ADD_CRI_VAR("温柔的安慰", -5)
+	CALL ADD_CRI_VAR("严厉的威胁", , 6)
+	CALL ADD_CRI_VAR("宣称要进行惩罚", 5)
+	CALL ADD_CRI_VAR("令人毛骨悚然的笑", 5)
+	CALL ADD_CRI_VAR("辱骂", 5)
+ELSEIF TALENT:好心眼
+	CALL ADD_CRI_VAR("温柔的安慰", 5)
+	CALL ADD_CRI_VAR("严厉的威胁", -5)
+	CALL ADD_CRI_VAR("宣称要进行惩罚", -5)
+ENDIF
+
+;调教者但幼稚
+IF TALENT:幼稚
+	CALL ADD_CRI_VAR("谈论性的话题", -5)
+	CALL ADD_CRI_VAR("征求同意", -3)
+	CALL ADD_CRI_VAR("大喊大叫", , 7)
+	CALL ADD_CRI_VAR("令人毛骨悚然的笑", , 4)
+ENDIF
+
+;调教者但疯狂
+IF TALENT:疯狂
+	CALL ADD_CRI_VAR("大喊大叫", , 6)
+	CALL ADD_CRI_VAR("令人毛骨悚然的笑", 1, 8)
+ENDIF
+
+;调教者但威压感
+SIF TALENT:威压感
+	CALL ADD_CRI_VAR("严厉的威胁", , 5)
+
+;调教者但魅惑
+SIF TALENT:魅惑
+	CALL ADD_CRI_VAR("询问对自己的感觉", , 5)
+
+;调教者但亲近容易/难以接近
+IF TALENT:亲近容易
+	CALL ADD_CRI_VAR("询问今天的心情", 3)
+	CALL ADD_CRI_VAR("询问对自己的感觉", 3)
+	CALL ADD_CRI_VAR("温柔的安慰", 3)
+ELSEIF TALENT:难以接近
+	CALL ADD_CRI_VAR("询问今天的心情", -3)
+	CALL ADD_CRI_VAR("询问对自己的感觉", -3)
+	CALL ADD_CRI_VAR("温柔的安慰", -3)
+ENDIF
+
+;调教者但读心能力的程度
+SIF TALENT:读心能力
+	CALL ADD_CRI_VAR("询问今天的心情", -5)
+
+;调教者但思考被读む程度的能力…って、どう见ても觉大人です。本当に(ry
+;口上侧但对应すればむしろ+修正した方但より面白くなるかもしれない
+SIF NO:TARGET == 61
+	CALL ADD_CRI_VAR("询问今天的心情", -10)
+
+;-------------------------------------------------------------------------
+;调教对象的素質参照
+;-------------------------------------------------------------------------
+@ACT_ACTM0_TALENT_M
+
+;调教对象但胆怯
+SIF TALENT:MASTER:胆怯
+	CALL ADD_CRI_VAR("温柔的安慰", , 5)
+
+;调教对象但刚毅
+SIF TALENT:MASTER:刚毅
+	CALL ADD_CRI_VAR("严厉的威胁", , 5)
+
+;调教对象但缺乏感情/感情丰富
+IF TALENT:MASTER:缺乏感情
+	CALL ADD_CRI_VAR("询问今天的心情", , 4)
+	CALL ADD_CRI_VAR("询问对自己的感觉", , 2)
+ELSEIF TALENT:MASTER:感情丰富
+	CALL ADD_CRI_VAR("询问今天的心情", , -4)
+	CALL ADD_CRI_VAR("询问对自己的感觉", , -2)
+ENDIF
+
+;调教对象但乐观的/悲观的
+IF TALENT:MASTER:乐观的
+	CALL ADD_CRI_VAR("温柔的安慰", , -4)
+	CALL ADD_CRI_VAR("严厉的威胁", , 2)
+ELSEIF TALENT:MASTER:悲观的
+	CALL ADD_CRI_VAR("温柔的安慰", , 2)
+	CALL ADD_CRI_VAR("严厉的威胁", , -4)
+ENDIF
+
+;-------------------------------------------------------------------------
+;调教者的性別的好み被参照
+;-------------------------------------------------------------------------
+@ACT_ACTM0_GENDER_T
+;调教者但双性恋
+IF TALENT:双性恋
+	CALL ADD_CRI_VAR("询问对自己的感觉", , (TALENT:男人 == TALENT:MASTER:男人) ? 2 # 0)
+ELSE
+	CALL ADD_CRI_VAR("询问对自己的感觉", (TALENT:男人 == TALENT:MASTER:男人) ? -6 # 0)
+ENDIF
+
+;调教者但恐男かつ、调教对象但男人
+IF TALENT:恐男 && TALENT:MASTER:男人
+	CALL ADD_CRI_VAR("询问对自己的感觉", -5)
+	CALL ADD_CRI_VAR("温柔的安慰", -3)
+	CALL ADD_CRI_VAR("征求同意", -5)
+ENDIF
+;-------------------------------------------------------------------------
+;调教对象的能力被参照
+;-------------------------------------------------------------------------
+@ACT_ACTM0_ABL_M
+
+;调教对象的顺从但[0→0, 5→-5]被加算(-5～0)
+CALL ADD_CRI_VAR("严厉的威胁", LINE_CALC(ABL:MASTER:顺从, "0→0,5→-5,LIMIT/-5～0"))
+
+;调教对象的欲望但[0→0, 5→5]被加算(0～7)
+CALL ADD_CRI_VAR("询问对自己的感觉", LINE_CALC(ABL:MASTER:顺从, "0→0,5→5,LIMIT/0～7"))
+
+;调教对象的露出癖但[0→0, 5→0～5]被加算(0～5)
+CALL ADD_CRI_VAR("询问对自己的感觉", , LINE_CALC(ABL:MASTER:顺从, "0→0,5→5,LIMIT/0～5"))
+
+;────────────────────────────────────
+;ゲージや状态根据变动
+;────────────────────────────────────
+;-------------------------------------
+;调教对象的快感
+;-------------------------------------
+@ACT_ACTM0_PLEASURE_M
+
+;快感和好感。快ＣＶＡＢ但高和きに主动但喜欢か询问…そういう手口か
+;调教对象的快X总计但[0→0, 6000→3, 12000→4, 18000→5, 24000→6, 30000→7]被加算(0～7)
+LOCAL = GET_REVISION_SQRT(PALAM:MASTER:快Ｃ + PALAM:MASTER:快Ｖ + PALAM:MASTER:快Ａ + PALAM:MASTER:快Ｂ, 30000, 7)
+CALL ADD_CRI_VAR("询问对自己的感觉", LIMIT(LOCAL, 0, 7))
+
+;-------------------------------------
+;调教对象的反抗
+;-------------------------------------
+@ACT_ACTM0_RESISTANCE_M
+
+;调教对象的反抗但[1500→0, 3000→1, 4500→3, 6000→5, 7500→7]被加算(0～7)
+CALL ADD_CRI_VAR("严厉的威胁", LINE_CALC(PALAM:MASTER:反抗, "3000→1,7500→7,LIMIT/0～7"))
+CALL ADD_CRI_VAR("宣称要进行惩罚", LINE_CALC(PALAM:MASTER:反抗, "3000→1,7500→7,LIMIT/0～7"))
+;调教对象的反抗但[1500→0, 3000→0～2, 4500→0～4, 6000→0～6, 7500→0～8]被加算(0～8)
+CALL ADD_CRI_VAR("大喊大叫", , LINE_CALC(PALAM:MASTER:反抗, "3000→2,7500→8,LIMIT/0～8"))
+
+;-------------------------------------
+;调教对象的害羞
+;-------------------------------------
+@ACT_ACTM0_SHYNESS_M
+
+;调教对象的害羞但[2000→0, 3000→2, 4000→4, 5000→6, 6000→8, 7000→10]被加算(0～11)
+CALL ADD_CRI_VAR("询问今天的心情", , LINE_CALC(PALAM:MASTER:害羞, "2000→0,7000→10,LIMIT/0～11"))
+
+;-------------------------------------
+;调教对象的恐怖
+;-------------------------------------
+@ACT_ACTM0_FEAR_M
+
+;调教对象的恐怖但[0→0, 2500→1, 5000→2, 7500→3]被加算(0～3)
+;(调教者的好心眼场合是倍)
+CALL ADD_CRI_VAR("温柔的安慰", LINE_CALC(PALAM:MASTER:害羞, "0→0,7500→3,LIMIT/0～3") * (TALENT:好心眼 + 1))
+
+;-------------------------------------
+;调教对象的抑郁
+;-------------------------------------
+@ACT_ACTM0_DEPRESSION_M
+
+;调教对象的抑郁但[0→0, 2500→1, 5000→2, 7500→3]被加算(0～3)
+;(调教者的好心眼场合是倍)
+CALL ADD_CRI_VAR("温柔的安慰", LINE_CALC(PALAM:MASTER:抑郁, "0→0,7500→3,LIMIT/0～3") * (TALENT:好心眼 + 1))
+
+;-------------------------------------
+;调教对象的反抗刻印
+;-------------------------------------
+@ACT_ACTM0_RESISTMARK_M
+
+;调教对象的反抗刻印但[0→0, 2→0～1, 4→1～4, 6→2～7, 8→3～10, 10→4～13]被加算(0～13)
+CALL ADD_CRI_VAR("严厉的威胁", LINE_CALC(MARK:反抗刻印, "2→0,10→4,LIMIT/0～4"), LINE_CALC(MARK:反抗刻印, "2→1,10→9,LIMIT/0～9"))
+
+;-------------------------------------
+;调教对象的性知识
+;-------------------------------------
+@ACT_ACTM0_SEXUALINFO_M
+
+;调教对象的性知识但[10→2～5, 15→1～3, 20→0～1, 25→0, 30→-5, 35→-10]被加算(-10～6)
+CALL ADD_CRI_VAR("谈论性的话题", LINE_CALC(EXP:MASTER:性知识, "10→2,20→0,25→0,35→-10,LIMIT/-10～2"), LINE_CALC(EXP:MASTER:性知识, "10→3,25→0,LIMIT/0～4"))
+
+;-------------------------------------
+;调教者的罪恶感
+;-------------------------------------
+@ACT_ACTM0_SIN_T
+
+;调教者的罪恶感但[20→0, 40→1, 60→2, 80→3]被加算(0～3)
+CALL ADD_CRI_VAR("温柔的安慰", LINE_CALC(CFLAG:罪恶感, "20→0,80→3,LIMIT/0～3"))
+;调教者的罪恶感但[0→0, 20→-1, 40→-2, 60→-3, 80→-4, 100→-5]被加算(-5～0)
+CALL ADD_CRI_VAR("严厉的威胁", LINE_CALC(CFLAG:罪恶感, "0→0,100→-5,LIMIT/-5～0"))
+CALL ADD_CRI_VAR("宣称要进行惩罚", LINE_CALC(CFLAG:罪恶感, "0→0,100→-5,LIMIT/-5～0"))
+
+;-------------------------------------
+;调教者的ALI
+;-------------------------------------
+@ACT_ACTM0_ALI_T
+
+;调教者的ALI但[-50→-6～-3, 0→0, 50→3～6]被加算(-6～6)
+CALL ADD_CRI_VAR("温柔的安慰", LINE_CALC(CFLAG:定位, "-50→-3,0→0,50→3,LIMIT/-3～3"), LINE_CALC(CFLAG:定位, "-50→-3,0→0,50→3,LIMIT/-3～3"))
+;调教者的ALI但[-50→3～6, 0→0, 50→-6～-3]被加算(-6～6)
+CALL ADD_CRI_VAR("严厉的威胁", LINE_CALC(CFLAG:定位, "-50→3,0→0,50→-3,LIMIT/-3～3"), LINE_CALC(CFLAG:定位, "-50→3,0→0,50→-3,LIMIT/-3～3"))
+;调教者的ALI但[-20→0, 0→3, 20→0]被加算(0～3)
+CALL ADD_CRI_VAR("询问今天的心情", LINE_CALC(CFLAG:定位, "-20→0,0→3,20→0,LIMIT/0～3"))
+;调教者的ALI但[-10→0, 0→2, 10→0]被加算(0～2)
+CALL ADD_CRI_VAR("询问今天的心情", LINE_CALC(CFLAG:定位, "-10→0,0→2,10→0,LIMIT/0～2"))
+
+;-------------------------------------
+;调教者的理性
+;-------------------------------------
+@ACT_ACTM0_REASON_T
+
+;调教者的理性但[0→4～8, 250→2～4, 500→0, 750→-2, 1000→-4]被加算(-4～8)
+CALL ADD_CRI_VAR("大喊大叫", LINE_CALC(BASE:理性, "0→4,1000→-4,LIMIT/-4～4"), LINE_CALC(BASE:理性, "0→4,500→0,LIMIT/0～4"))
+;调教者的理性但[0→0～8, 250→0～4, 500→0, 750→-4～0]被加算(-4～8)
+CALL ADD_CRI_VAR("令人毛骨悚然的笑", , LINE_CALC(BASE:理性, "0→8,750→-4,LIMIT/-4～8"))
+
+;-------------------------------------
+;调教者的兴趣
+;-------------------------------------
+@ACT_ACTM0_INTEREST_T
+
+;调教者的兴趣但[100→-5, 200→-4, 300→-3, 400→-2, 500→-1, 600→0]被加算(-5～0)
+CALL ADD_CRI_VAR("询问今天的心情", LINE_CALC(BASE:兴趣, "100→-5,600→0,LIMIT/-5～0"))
+CALL ADD_CRI_VAR("询问对自己的感觉", LINE_CALC(BASE:兴趣, "100→-5,600→0,LIMIT/-5～0"))
+
+;-------------------------------------
+;调教者的焦躁
+;-------------------------------------
+@ACT_ACTM0_IRRITATION_T
+
+;调教者的焦躁但[0→0, 200→1～2, 400→2～4, 600→3～6, 800→4～8, 1000→5～10]被加算(0～10)
+CALL ADD_CRI_VAR("大喊大叫", LINE_CALC(BASE:焦躁, "0→0,1000→5,LIMIT/0～5"), LINE_CALC(BASE:焦躁, "0→0,1000→5,LIMIT/0～5"))
+;调教者的焦躁但[0→0, 200→1, 400→2, 600→3, 800→4, 1000→5]被加算(0～6)
+CALL ADD_CRI_VAR("宣称要进行惩罚", LINE_CALC(BASE:焦躁, "0→0,1000→5,LIMIT/0～6"))
+
+;-------------------------------------
+;调教者的满足
+;-------------------------------------
+@ACT_ACTM0_SATISFACTION_T
+
+;调教者的满足但[0→0, 1000→-3]被加算(-3～0)
+CALL ADD_CRI_VAR("宣称要进行惩罚", LINE_CALC(BASE:满足, "0→0,1000→-3,LIMIT/-3～0"))
+CALL ADD_CRI_VAR("辱骂", LINE_CALC(BASE:满足, "0→0,1000→-3,LIMIT/-3～0"))
+;调教者的满足但[0→0, 1000→-5]被加算(-5～0)
+CALL ADD_CRI_VAR("严厉的威胁", LINE_CALC(BASE:满足, "0→0,1000→-5,LIMIT/-5～0"))
+CALL ADD_CRI_VAR("大喊大叫", LINE_CALC(BASE:满足, "0→0,1000→-5,LIMIT/-5～0"))
+
+;-------------------------------------
+;调教者的状态(0=通常/1=疲惫/2=衰弱/3=无气力/4=朦胧/5=情欲/6=愤怒/7=无聊/8=郁闷)
+;-------------------------------------
+@ACT_ACTM0_CONDITION_T
+SELECTCASE GET_CONDITION(TARGET)
+	;CASE "疲惫"
+	;CASE "衰弱"
+	CASE "无气力"
+		CALL ADD_CRI_VAR("大喊大叫", -5)
+	CASE "朦胧"
+		CALL ADD_CRI_VAR("温柔的安慰", , -4)
+		CALL ADD_CRI_VAR("严厉的威胁", , -4)
+		CALL ADD_CRI_VAR("大喊大叫", , -4)
+	CASE "情欲"
+		CALL ADD_CRI_VAR("谈论性的话题", 5)
+		CALL ADD_CRI_VAR("征求同意", 6)
+	CASE "愤怒"
+		CALL ADD_CRI_VAR("询问对自己的感觉", -3)
+		CALL ADD_CRI_VAR("谈论性的话题", -3)
+		CALL ADD_CRI_VAR("温柔的安慰", -5)
+		CALL ADD_CRI_VAR("严厉的威胁", , 2)
+		CALL ADD_CRI_VAR("宣称要进行惩罚", 3)
+		CALL ADD_CRI_VAR("大喊大叫", 5)
+		CALL ADD_CRI_VAR("辱骂", 3)
+	CASE "无聊"
+		CALL ADD_CRI_VAR("大喊大叫", , 4)
+		CALL ADD_CRI_VAR("令人毛骨悚然的笑", 6)
+		CALL ADD_CRI_VAR("辱骂", , 4)
+	CASE "郁闷"
+		CALL ADD_CRI_VAR("大喊大叫", , 4)
+		CALL ADD_CRI_VAR("令人毛骨悚然的笑", 6)
+		CALL ADD_CRI_VAR("辱骂", , 4)
+ENDSELECT
+
+;────────────────────────────────────
+;上次的行动や状況根据变动
+;────────────────────────────────────
+;-------------------------------------
+;装着道具类(震动棒,肛门震动棒,肛门拉珠,灌肠＋肛门肛塞,阴蒂夹,飞机杯,乳头夹)
+;-------------------------------------
+@ACT_ACTM0_TOOLS
+
+LOCAL = TEQUIP:震动棒 + TEQUIP:肛门震动棒 + TEQUIP:肛门拉珠 + (TEQUIP:灌肠器＋肛塞 * 3) + TEQUIP:阴蒂夹 + TEQUIP:飞机杯 + TEQUIP:乳头夹
+;装着道具类根据修正値但[0→0, 2→1, 4→2, 6→3, 8→4, 10→5]被加算(0～6)
+CALL ADD_CRI_VAR("询问今天的心情", LINE_CALC(LOCAL, "0→0,10→5,LIMIT/0～6"))
+
+;-------------------------------------
+;媚药
+;-------------------------------------
+@ACT_ACTM0_DRAG
+
+IF TEQUIP:媚药
+	CALL ADD_CRI_VAR("询问今天的心情", TEQUIP:媚药 / 2)
+	CALL ADD_CRI_VAR("询问对自己的感觉", TEQUIP:媚药)
+ENDIF
+
+;-------------------------------------
+;ＳＭ系道具(绳,眼罩,口球,三角木马)
+;-------------------------------------
+@ACT_ACTM0_ROPE
+IF TEQUIP:绳
+	CALL ADD_CRI_VAR("询问今天的心情", 1)
+	CALL ADD_CRI_VAR("严厉的威胁", 2)
+ENDIF
+
+@ACT_ACTM0_EYEMASK
+IF TEQUIP:眼罩
+	CALL ADD_CRI_VAR("询问今天的心情", 3)
+	CALL ADD_CRI_VAR("严厉的威胁", 2)
+ENDIF
+
+@ACT_ACTM0_GAG
+IF TEQUIP:口球
+	CALL ADD_CRI_VAR("询问今天的心情", -5)
+	CALL ADD_CRI_VAR("询问对自己的感觉", -10)
+	CALL ADD_CRI_VAR("征求同意", -10)
+ENDIF
+
+@ACT_ACTM0_HORSE
+IF TEQUIP:三角木马
+	CALL ADD_CRI_VAR("询问今天的心情", (TALENT:虐待狂 || TALENT:坏心眼) ? 3 # 0)
+	CALL ADD_CRI_VAR("温柔的安慰", -5)
+	CALL ADD_CRI_VAR("严厉的威胁", 3)
+	CALL ADD_CRI_VAR("令人毛骨悚然的笑", 5)
+ENDIF
+
+;-------------------------------------
+;野外PLAY中
+;-------------------------------------
+@ACT_ACTM0_OUT
+IF TEQUIP:野外PLAY
+	CALL ADD_CRI_VAR("询问今天的心情", 3)
+	CALL ADD_CRI_VAR("严厉的威胁", , 4)
+ENDIF
+
+;-------------------------------------
+;调教对象但自慰中
+;-------------------------------------
+@ACT_ACTM0_MASTURBATION_M
+IF GETBIT(TEQUIP:自慰中, 0)
+	CALL ADD_CRI_VAR("询问今天的心情", (TALENT:虐待狂 || TALENT:坏心眼) ? 8 # 2)
+	CALL ADD_CRI_VAR("请求变更服装", -5)
+ENDIF
+
+;-------------------------------------
+;调教者但自慰中
+;-------------------------------------
+@ACT_ACTM0_MASTURBATION_T
+IF GETBIT(TEQUIP:自慰中, 1)
+	CALL ADD_CRI_VAR("询问对自己的感觉", (TALENT:倒错的 || TALENT:疯狂) ? 5 # 0)
+	CALL ADD_CRI_VAR("温柔的安慰", -3)
+	CALL ADD_CRI_VAR("严厉的威胁", -3)
+	CALL ADD_CRI_VAR("宣称要进行惩罚", -5)
+	CALL ADD_CRI_VAR("大喊大叫", -5)
+	CALL ADD_CRI_VAR("令人毛骨悚然的笑", -5)
+ENDIF
+
+;-------------------------------------
+;调教者插入中
+;-------------------------------------
+@ACT_ACTM0_INSERT
+IF TEQUIP:性交中
+	CALL ADD_CRI_VAR("询问今天的心情", (TALENT:虐待狂 || TALENT:坏心眼) ? 5 # 0)
+	CALL ADD_CRI_VAR("宣称要进行惩罚", -5)
+	CALL ADD_CRI_VAR("令人毛骨悚然的笑", -5)
+ENDIF
+
+;-------------------------------------
+;衣服相关、まだまだ调整做必要但あり增加…
+;会话系是妨害度で是なく、着ているかで的判断
+;-------------------------------------
+;调教对象的服装
+;-------------------------------------
+@ACT_ACTM0_CLOTH_M
+;外套
+;调教对象但上下両方的外套被着てい时き
+IF CLOTHESTYPE(1, 1) && CLOTHESTYPE(1, 3)
+	CALL ADD_CRI_VAR("请求变更服装", 12)
+	;调教者但压抑/解放
+	IF TALENT:压抑
+		CALL ADD_CRI_VAR("请求变更服装", -4)
+	ELSEIF TALENT:解放
+		CALL ADD_CRI_VAR("请求变更服装", 4)
+	ENDIF
+;调教对象但上下どちらか的外套被着てい时き
+ELSEIF CLOTHESTYPE(1, 1) || CLOTHESTYPE(1, 3)
+	CALL ADD_CRI_VAR("请求变更服装", 10)
+	;调教者但压抑/解放
+	IF TALENT:压抑
+		CALL ADD_CRI_VAR("请求变更服装", -3)
+	ELSEIF TALENT:解放
+		CALL ADD_CRI_VAR("请求变更服装", 3)
+	ENDIF
+ENDIF
+
+;内衣
+;调教对象但上下両方的内衣被着てい时き
+IF CLOTHESTYPE(1, 0) && CLOTHESTYPE(1, 2)
+	CALL ADD_CRI_VAR("请求变更服装", 8)
+	;调教者但压抑/解放
+	IF TALENT:压抑
+		CALL ADD_CRI_VAR("请求变更服装", -4)
+	ELSEIF TALENT:解放
+		CALL ADD_CRI_VAR("请求变更服装", 4)
+	ENDIF
+;调教对象但上下どちらか的内衣被着てい时き
+ELSEIF CLOTHESTYPE(1, 0) || CLOTHESTYPE(1, 2)
+	CALL ADD_CRI_VAR("请求变更服装", 6)
+	;调教者但压抑/解放
+	IF TALENT:压抑
+		CALL ADD_CRI_VAR("请求变更服装", -3)
+	ELSEIF TALENT:解放
+		CALL ADD_CRI_VAR("请求变更服装", 3)
+	ENDIF
+ENDIF
+
+;调教对象但いずれか的外套/内衣类被着てい时き
+IF CLOTHESTYPE(1, 1) || CLOTHESTYPE(1, 3) || CLOTHESTYPE(1, 0) || CLOTHESTYPE(1, 2)
+	CALL ADD_CRI_VAR("请求变更服装", 2, 4)
+	;调教者但不越过底线
+	SIF TALENT:不越过底线
+		CALL ADD_CRI_VAR("请求变更服装", -5)
+	;调教者但倒错的
+	SIF TALENT:倒错的
+		CALL ADD_CRI_VAR("请求变更服装", -3, 4)
+	;调教者但双性恋でなく、かつ调教对象但同性
+	SIF !TALENT:双性恋 && !(TALENT:男人 ^^ TALENT:MASTER:男人)
+		CALL ADD_CRI_VAR("请求变更服装", -3)
+	;调教者但恐男かつ、调教对象但男人
+	SIF TALENT:恐男 && TALENT:MASTER:男人
+		CALL ADD_CRI_VAR("请求变更服装", -5)
+ENDIF
+
+;调教对象但COSPLAY中。飽きる直到衣服变更不做ように
+IF TEQUIP:MASTER:COSPLAY
+	;调教者的兴趣
+	SELECTCASE BASE:兴趣
+		CASE IS > 750
+			CALL ADD_CRI_VAR("请求变更服装", 0)
+		CASE IS > 500
+			CALL ADD_CRI_VAR("请求变更服装", -10)
+		CASE IS > 250
+			CALL ADD_CRI_VAR("请求变更服装", -5)
+		CASEELSE
+			CALL ADD_CRI_VAR("请求变更服装", 5)
+	ENDSELECT
+ENDIF
+
+;-------------------------------------
+;許し被乞ったかつ、调教者的状态但郁闷以外
+;-------------------------------------
+@ACT_ACTM0_PLEASE_HELP
+
+IF IS_NOWCOMNAME("请求宽恕") && TCVAR:状态变化 < 8
+	CALL ADD_CRI_VAR("严厉的威胁", -5)
+	CALL ADD_CRI_VAR("大喊大叫", -5)
+	CALL ADD_CRI_VAR("辱骂", -5)
+ENDIF
+
+;-------------------------------------
+;そんな话是もう终わった标志(1=好感,2=知识,4=安慰,8=威胁,16=合意,32=嗤笑,64=辱骂)
+;-------------------------------------
+@ACT_ACTM0_ALREADY_TALKED
+
+LOCAL = LIMIT(ABL:会话 / 2 - 5, -5, 0)
+SIF TFLAG:已经出现的话题 & 1
+	CALL ADD_CRI_VAR("询问对自己的感觉", LOCAL)
+SIF TFLAG:已经出现的话题 & 2
+	CALL ADD_CRI_VAR("谈论性的话题", LOCAL)
+SIF TFLAG:已经出现的话题 & 4
+	CALL ADD_CRI_VAR("温柔的安慰", LOCAL)
+SIF TFLAG:已经出现的话题 & 8
+	CALL ADD_CRI_VAR("严厉的威胁", LOCAL)
+SIF TFLAG:已经出现的话题 & 16
+	CALL ADD_CRI_VAR("征求同意", LOCAL)
+SIF TFLAG:已经出现的话题 & 32
+	CALL ADD_CRI_VAR("令人毛骨悚然的笑", LOCAL)
+SIF TFLAG:已经出现的话题 & 64
+	CALL ADD_CRI_VAR("辱骂", LOCAL)
+
+;-------------------------------------
+;惩罚模式
+;-------------------------------------
+@ACT_ACTM0_OSHIOKI
+
+IF TFLAG:惩罚标志
+	CALL ADD_CRI_VAR("宣称要进行惩罚", 8, 5)
+	CALL ADD_CRI_VAR("令人毛骨悚然的笑", , 7)
+	CALL ADD_CRI_VAR("辱骂", 6, 7)
+ENDIF
+
+;────────────────────────────────────
+;同じ行动连续实行的确率被ダウンし增加
+;────────────────────────────────────
+@ACT_ACTM0_PREV
+
+SELECTCASE TFLAG:前ACT
+	CASE 0 TO 9, 66
+		CALL ADD_CRI_VAR(GET_ACTNAME(TFLAG:前ACT), -3 * TFLAG:同一行动奖励, -4 * TFLAG:同一行动奖励)
+ENDSELECT
+
+;────────────────────────────────────
+;修正値計算
+;────────────────────────────────────
+@ACT_ACTM0_CORRECTION(ARG)
+#DIM LCOUNT
+
+;ARG但0以外那么修正値被計算し、以后的处理被行わない
+IF ARG
+	;66に関して是ここで計算不做
+	FOR LCOUNT, 0, 10
+		CALL ACT_M_RES_CALC(LCOUNT, GET_CRI_VAR(GET_ACTNAME(LCOUNT) + "累计"))
+	NEXT
+ELSE
+	;修正値被判定値に加算做
+	CALL ACT_ACTM_CORRECTION(0)
+ENDIF
+
+;────────────────────────────────────
+;实行不可能的判定
+;────────────────────────────────────
+@ACT_ACTM0_ABLE
+#DIM LCOUNT
+
+;不可能判定
+CALL ACT_ACTM_ABLE(0)
+

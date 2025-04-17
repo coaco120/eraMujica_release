@@ -1,0 +1,1123 @@
+﻿;==================================================
+;
+;	通用関数置き场＠参照編
+;		参照に用い、特定的数値や名称など被返すも的
+;		あるい是、状況に应じた接頭語など被返すも的
+;
+;		口上向け的も的もあったりなかったり。
+;
+;==================================================
+
+
+;==================================================
+;
+;	TALENT、其他出场人物相关的参照
+;
+;==================================================
+
+;-------------------------------------------------
+;角色间呼び名取得関数@CNAME
+;式中で使用做関数です。TARGET但引数0的角色被呼ぶ呼び名被显示し增加。省略做和MASTER
+;引数1被入れ时TARGET以外からも参照でき增加。
+;頻繁に呼ばれる的でRESULT被保護し增加。
+;こんなゴツい处理被名前呼ぶたびに行う是非关于是和りあえず知らない。まあ重くなんて那么ない和信じる
+;-------------------------------------------------
+@CNAME(ARG = -2, ARG:1 = -2)
+#FUNCTIONS
+#LOCALSIZE 1
+#LOCALSSIZE 1
+#DIM LCOUNT, 1
+#DIMS DYNAMIC 敬称对象, 100
+#DIMS DYNAMIC 敬称列表, 100
+#DIMS DYNAMIC 呼び名对象, 100
+#DIMS DYNAMIC 呼び名列表, 100
+
+;引数省略的处理
+ARG = ARG != -2 ? ARG # MASTER
+ARG:1 = ARG:1 != -2 ? ARG:1 # TARGET
+
+;基本敬称的处理
+SPLIT CSTR:(ARG:1):基本敬称, "/", 敬称对象, LOCAL
+FOR LCOUNT, 0, LOCAL
+	敬称列表:LCOUNT = %REPLACE(REPLACE(SUBSTRING(敬称对象:LCOUNT, STRFIND(敬称对象:LCOUNT, "_")+1), "名前", NAME:ARG), "呼び名", CALLNAME:ARG)%
+	敬称对象:LCOUNT = %SUBSTRING(敬称对象:LCOUNT,0, STRFIND(敬称对象:LCOUNT, "_")-1)%
+NEXT
+
+;呼び名的分类
+SPLIT CSTR:(ARG:1):称呼列表, "/", 呼び名对象, LOCAL
+FOR LCOUNT, 0, LOCAL
+	呼び名列表:LCOUNT = %REPLACE(REPLACE(SUBSTRING(呼び名对象:LCOUNT, STRFIND(呼び名对象:LCOUNT, "_")+1), "名前", NAME:ARG), "呼び名", CALLNAME:ARG)%
+	呼び名对象:LCOUNT = %SUBSTRING(呼び名对象:LCOUNT,0, STRFIND(呼び名对象:LCOUNT, "_")-1)%
+NEXT
+
+;暂时的にNAME被入れる
+LOCALS = %NAME:ARG%
+$NAMELESS_LOOP
+;呼び名对象にいる场合
+IF MATCH(呼び名对象, LOCALS)
+	FOR LCOUNT, 0, 100
+		IF 呼び名对象:LCOUNT == LOCALS
+			LOCALS = %呼び名列表:LCOUNT%
+			BREAK
+		ENDIF
+	NEXT
+;大妖精・小恶魔的场合
+ELSEIF LOCALS == "大妖精" || LOCALS == "小恶魔"
+	;そ的ま直到是呼べない的で您にしてもう一度回す
+	LOCALS = 您
+	GOTO NAMELESS_LOOP
+;基本敬称的处理
+ELSE
+	;CALLNAMEに做
+	LOCALS = %CALLNAME:ARG%
+	;敬称对象検索
+	FOR LCOUNT, 0, 100
+		SELECTCASE 敬称对象:LCOUNT
+			CASE ""
+				BREAK
+			CASE "基本"
+				LOCALS = %敬称列表:LCOUNT%
+			CASEELSE
+				SIF TALENT:ARG:(敬称对象:LCOUNT)
+					LOCALS = %敬称列表:LCOUNT%
+		ENDSELECT
+	NEXT
+ENDIF
+;RESULT被復元
+RESULT = LOCAL
+RETURNF LOCALS
+
+;-------------------------------------------------
+;阴茎判定関数@PENIS
+;式中で使用做関数です。阴茎但ある场合1被返し增加
+;引数0是对象的登录番号。しょうもない中身
+;引数的角色但いない场合0で返すようにしました
+;
+;↑的仕大人是正直どうなんだろ和思わなくもないけれど、和りあえず下限しか见てなかった的で修正@revkoishi(14/04/20)
+;-------------------------------------------------
+@PENIS(ARG)
+#FUNCTION
+RETURNF INRANGE(ARG, 0, CHARANUM - 1) ? TALENT:ARG:扶她 || TALENT:ARG:男人 # 0
+;RETURNF ARG < 0 ? 0 # TALENT:ARG:扶她 || TALENT:ARG:男人
+
+;-------------------------------------------------
+;假阴茎判定関数@PENISBAND
+;式中で使用做関数です。假阴茎使用中1被返し增加
+;破棄予定
+;-------------------------------------------------
+@PENISBAND(ARG)
+#FUNCTION
+RETURNF !(TALENT:ARG:扶她 || TALENT:ARG:男人) && ITEM:假阴茎
+
+;-------------------------------------------------
+;定位判定関数@ALI
+;式中で使用做関数です。定位但引数以上那么真になり增加
+;引数0是定位的数値。0那么ば定位正扱い
+;引数1被省略すればTARGET。指定すればそ的角色被见增加。(FLAG:主人)和指定做こ和でEV111等でも使え增加
+;-------------------------------------------------
+@ALI(ARG, ARG:1 = -2)
+#FUNCTION
+SIF ARG:1 == -2
+	ARG:1 = TARGET
+RETURNF CFLAG:(ARG:1):定位 >= ARG
+
+;-------------------------------------------------
+;好感度判定関数@FAVOR
+;式中で使用做関数です。好感度但指定以上那么真になり增加。ただし、0にした场合是条件に含みません
+;引数0是调教对象から调教者、引数1是调教者から调教对象的好感度です
+;引数2被指定した场合、调教者的代わりにそ的角色（主に助手）被见增加
+;-------------------------------------------------
+@FAVOR(ARG, ARG:1, ARG:2 = -2)
+#FUNCTION
+SIF ARG:2 == -2
+	ARG:2 = TARGET
+RETURNF (!ARG || CFLAG:(ARG:2):M好感 >= ARG) && (!ARG:1 || CFLAG:(ARG:2):好感 >= ARG:1)
+
+;-------------------------------------------------
+;好感度参照関数@FAVOR2
+;式中で使用做関数です。好感度但指定以上那么真になり增加。ただし、省略(-123456)した场合是好感度的数値自体被返し增加
+;TARGET-ASSI间的好感度是存在不做ため、引数にMASTER但含まれない场合是0で返回
+;-------------------------------------------------
+@FAVOR2(ARG, ARG:1, ARG:2 = -123456)
+#FUNCTION
+;引数不適
+SIF ARG < 0 || ARG:1 < 0 || !GROUPMATCH(MASTER, ARG, ARG:1)
+	RETURNF 0
+;閾値但ある
+IF ARG:2 != -123456
+	RETURNF ARG == MASTER ? CFLAG:(ARG:1):M好感 >= ARG:2 # CFLAG:ARG:好感 >= ARG:2
+;閾値但ない
+ELSE
+	RETURNF ARG == MASTER ? CFLAG:(ARG:1):M好感 # CFLAG:ARG:好感
+ENDIF
+
+;-------------------------------------------------
+;ベース割合算出関数@BASERATIO
+;式中で使用做関数です。ベース値但MAXBASE的何％あるか返し增加
+;引数0是登录番号、引数1是ベース番号、引数2被设定完成场合是そ的％以上那么真被返し增加
+;-------------------------------------------------
+@BASERATIO(ARG:0, ARG:1, ARG:2)
+#FUNCTION
+RETURNF ARG:2 ? BASE:(ARG:0):(ARG:1) * 100 / MAXBASE:(ARG:0):(ARG:1) >= ARG:2 # BASE:(ARG:0):(ARG:1) * 100 / MAXBASE:(ARG:0):(ARG:1)
+
+;-------------------------------------------------
+;素質検索関数@FINDTALENT
+;式中で使用做関数です。指定した素質もつ角色被検索し增加。最初に见つかった角色的登录番号被返し增加
+;居なかった场合、-1被返し增加
+;引数是字符串です。数値被使う场合是TALENTNAME:xx被引数にして呼んでください
+;-------------------------------------------------
+@FINDTALENT(ARGS)
+#FUNCTION
+#LOCALSIZE 1
+;FINDCHARA但使い想要…けど真伪判定但できない的でFOR被回す
+FOR LOCAL, 0, CHARANUM
+	SIF TALENT:LOCAL:ARGS
+		RETURNF LOCAL
+NEXT
+RETURNF -1
+
+;-------------------------------------------------
+;助手番号検索関数@ASSISNO
+;助手的誰か但指定した角色番号那么、そ的助手的登录番号被返し增加。
+;いない场合、-1になり增加
+;-------------------------------------------------
+@ASSISNO(ARG)
+#FUNCTION
+#LOCALSIZE 1
+FOR LOCAL, 0, 4
+	SIF ASSI:LOCAL >= 0 && NO:(ASSI:LOCAL) == ARG
+		RETURNF ASSI:LOCAL
+NEXT
+RETURNF -1
+;-------------------------------------------------
+;助手素質検索関数@ASSISTALENT
+;助手的誰か但指定したTALENT被引数1的値以上で持っていれば、そ的助手的登录番号被返し增加。
+;いない场合、-1になり增加
+;-------------------------------------------------
+@ASSISTALENT(ARG, ARG:1 = 1)
+#FUNCTION
+#LOCALSIZE 1
+FOR LOCAL, 0, 4
+	SIF ASSI:LOCAL >= 0 && TALENT:(ASSI:LOCAL):ARG >= ARG:1
+		RETURNF ASSI:LOCAL
+NEXT
+RETURNF -1
+
+;-------------------------------------------------
+;助手能力検索関数@ASSISABL
+;助手的誰か但指定したABL被引数1的値以上で持っていれば、そ的助手的登录番号被返し增加。
+;いない场合、-1になり增加
+;-------------------------------------------------
+@ASSISABL(ARG, ARG:1 = 1)
+#FUNCTION
+#LOCALSIZE 1
+FOR LOCAL, 0, 4
+	SIF ASSI:LOCAL >= 0 && ABL:(ASSI:LOCAL):ARG >= ARG:1
+		RETURNF ASSI:LOCAL
+NEXT
+RETURNF -1
+
+;-------------------------------------------------
+;関数名:ASSIID
+;概　要:助手ID取得関数
+;引　数:无
+;戻り値:ASSI和して扱われている助手的ID(1～3)
+;備  考:式中関数
+;ASSIに入っている角色(＝口上主)助手１か助手２か助手３か被判別做
+;助手口上で使うかも
+;-------------------------------------------------
+@ASSIID
+#FUNCTION
+#LOCALSIZE 1
+SIF ASSI < 0
+	RETURNF 0
+FOR LOCAL, 1, 4
+	SIF ASSI == ASSI:LOCAL
+		RETURNF LOCAL
+NEXT
+
+;-------------------------------------------------
+;素質判定関数@GET_TALENT
+;引数的角色但但指定したTALENT被持っていれば、TALENT的数値被返し增加。
+;いない场合、0になり增加
+;TALENT的指定是字符串で行い增加但、番号でもでき增加。そ的场合""囲みで字符串和して数字被入れるこ和
+;-------------------------------------------------
+@GET_TALENT(ARG, ARGS)
+#FUNCTION
+#LOCALSIZE 1
+IF GETNUM(TALENT, ARGS) >= 0
+	LOCAL = GETNUM(TALENT, ARGS)
+ELSE
+	LOCAL = TOINT(ARGS)
+ENDIF
+RETURNF ARG >= 0 ? TALENT:(ASSI:1):LOCAL # 0
+
+
+;-------------------------------------------------
+;関数名:ABL_TYPE
+;概　要:能力分类関数
+;引　数:ARG:0…ABL番号
+;戻り値:能力分类番号
+;       (0.非显示/1.基礎/2.感觉/3.性癖/4.中毒/5.调教/6.未分类)
+;備　考:式中関数
+;能力分类テーブル。能力的分类番号被返す
+;今的和ころ色分けにしか使っていない
+;
+;新規作成@revkoishi(14/05/26)
+;-------------------------------------------------
+@ABL_TYPE(ARG:0)
+#FUNCTION
+SELECTCASE ARG:0
+	;0.非显示(显示させない能力) ※特別な理由但无い限り是不要な枠
+	;CASE -1
+	;	RETURNF 0
+	;1.基礎
+	CASE 0 TO 2
+		RETURNF 1
+	;2.感觉
+	CASE 3 TO 6
+		RETURNF 2
+	;3.性癖
+	CASE 7 TO 11
+		RETURNF 3
+	;4.中毒
+	CASE 12 TO 16
+		RETURNF 4
+	;5.调教
+	CASE 20 TO 28
+		RETURNF 5
+ENDSELECT
+;6.未分类(これ但ある的是望ましくない)
+RETURNF 6
+
+
+;-------------------------------------------------
+;関数名:EXP_TYPE
+;概　要:経験分类関数
+;引　数:ARG:0…EXP番号
+;戻り値:経験分类番号
+;       (0.非显示/1.快乐/2.绝顶/3.状況/4.能动/5.受动/6.异常/7.未分类)
+;備　考:式中関数
+;経験分类テーブル。経験的分类番号被返す
+;今的和ころ色分けにしか使っていない
+;
+;新規作成@revkoishi(14/05/26)
+;-------------------------------------------------
+@EXP_TYPE(ARG:0)
+#FUNCTION
+SELECTCASE ARG:0
+	;0.非显示(显示させない経験) ※特別な理由但无い限り是不要な枠
+	;CASE -1
+	;	RETURNF 0
+	;1.快乐
+	CASE 0 TO 3, 21, 30, 31
+		RETURNF 1
+	;2.绝顶
+	CASE 4 TO 6, 14
+		RETURNF 2
+	;3.状況
+	CASE 7, 20, 25, 26, 32, 40, 41
+		RETURNF 3
+	;4.能动
+	CASE 8, 10, 22 TO 24, 63
+		RETURNF 4
+	;5.受动
+	CASE 11 TO 13, 51, 60 TO 62
+		RETURNF 5
+	;6.异常
+	CASE 50, 52, 53, 55
+		RETURNF 6
+ENDSELECT
+;7.未分类(これ但ある的是望ましくない)
+RETURNF 7
+
+
+;-------------------------------------------------
+;関数名:GET_SEX
+;概　要:性別取得関数
+;引　数:ARG:0…角色登录番号
+;戻り値:性別被表す字符串
+;備　考:式中関数
+;
+;GET_TALENTNAME被使用做ように变更@revkoishi(14/04/28)
+;-------------------------------------------------
+@GET_SEX(ARG)
+#FUNCTIONS
+SIF TALENT:ARG:扶她
+	RETURNF GET_TALENTNAME(ARG, GETNUM(TALENT, "扶她"))
+RETURNF @"\@ TALENT:ARG:男人 ? %GET_TALENTNAME(ARG, GETNUM(TALENT, "男人"))% # 女人 \@"
+
+
+;-------------------------------------------------
+;関数名:GET_TALENTNAME
+;概　要:素質名取得関数
+;引　数:ARG:0…角色登录番号
+;　　　:ARG:1…TALENT番号
+;戻り値:素質名
+;備　考:式中関数
+;素質的名前被返す。上位素質名的处理など被行う
+;
+;讨厌日光和读心能力的处理被追加、SQR分被注释アウト@revkoishi(14/04/20)
+;-------------------------------------------------
+@GET_TALENTNAME(ARG:0, ARG:1)
+#FUNCTIONS
+SELECTCASE ARG:1
+	;CASE 0		;处女/处女(再生)
+	;	RETURNF TALENTNAME:0 + \@ !INRANGE(TALENT:ARG:处女, 0, 1) ? (再生) # \@
+	;CASE 109	;巨乳/爆乳
+	;	RETURNF \@ TALENT:ARG:巨乳 == 2 ? 爆乳 # %TALENTNAME:109% \@
+	CASE 119	;讨厌日光/日光苦手
+		RETURNF "日光" + \@ TALENT:ARG:讨厌日光 == 2 ? 苦手 # 嫌い \@
+	CASE 132	;(读心能力) 读心能力的程度/心被读む程度的能力
+		RETURNF \@ TALENT:ARG:读心能力 == 2 ? 心 # 空気 \@ + "被读む程度的能力"
+ENDSELECT
+RETURNF TALENTNAME:(ARG:1)
+
+
+
+;-------------------------------------------------
+;関数名:TALENT_TYPE
+;概　要:素質分类関数
+;引　数:ARG…TALENT番号
+;戻り値:素質分类番号
+;       (0.非显示/1.性別/2.性格/3.体質/4.技能/5.后天素質/6.种族特性/7.未分类)
+;備　考:式中関数
+;素質分类テーブル。素質的分类番号被返す
+;素質整頓显示に用いる
+;
+;輝针城分被追加、SQR分被削除、TALENT:220～222被暫定的に非显示に@revkoishi(14/04/20)
+;-------------------------------------------------
+@TALENT_TYPE(ARG)
+#FUNCTION
+SELECTCASE ARG
+	;0.非显示(显示させない素質) ※基本的に是SQR由来枠な的で、特別な理由但无い限り是不要な枠
+	;CASE 220 TO 222	;TALENT:220～222に数据但入る问题但直った的で注释アウトで@revkoishi(14/05/19)
+	;	RETURNF 0
+	;1.性別
+	CASE 0, 1, 121, 122
+		RETURNF 1
+	;2.性格
+	CASE 10 TO 17, 20 TO 37, 63, 65, 80 TO 88, 90, 92, 93
+		RETURNF 2
+	;3.体質
+	CASE 40 TO 43, 56, 60 TO 62, 64, 70, 71, 100 TO 114, 116, 118, 119, 123 TO 126
+		RETURNF 3
+	;4.技能
+	CASE 50 TO 53, 55, 57 TO 59, 66, 91, 117, 130, 132, 133, 135
+		RETURNF 4
+	;5.后天素質
+	CASE 2, 3, 72 TO 79, 89, 131, 140
+		RETURNF 5
+	;6.种族特性
+	CASE 54, 115, 119, 134, 136 TO 138
+		RETURNF 6
+ENDSELECT
+;7.未分类(これ但ある的是望ましくない)
+RETURNF 7
+
+;-------------------------------------------------
+;関数名:TALENT_TYPENAME
+;概　要:素質分类名取得関数
+;引　数:ARG…TALENT分类番号
+;戻り値:素質分类被表す字符串
+;       (0.非显示/1.性別/2.性格/3.体質/4.技能/5.后天素質/6.种族特性/7.未分类)
+;備　考:式中関数
+;素質的分类名被返す。素質整頓显示に用いる
+;-------------------------------------------------
+@TALENT_TYPENAME(ARG)
+#FUNCTIONS
+#LOCALSSIZE 10
+SIF !STRLENS(LOCALS)
+	SPLIT "非显示/性別/性格/体質/技能/后天素質/种族特性/未分类", "/", LOCALS, LOCAL
+RETURNF LOCALS:ARG
+
+
+;-------------------------------------------------
+;主人修飾関数@TARGET_DESCRIPTION
+;式中で使用做関数です。TARGET但ど的ような状态か被描写し增加…和りあえず継续系に的み对应
+;引数是語尾。「、」「一边」「保持」「て」「一面」「た」等に对应
+;-------------------------------------------------
+@TARGET_DESCRIPTION(ARGS)
+#FUNCTIONS
+VARSET LOCALS
+;性交中(调教者插入)
+IF TEQUIP:性交中
+	IF TEQUIP:调教者假阴茎
+		LOCALS += "身上穿戴的假阴茎"
+	ELSE
+		LOCALS += @"阴茎\@ TCVAR:TARGET:高潮 ? 马上就要高潮了 # \@"
+	ENDIF
+	;体位によって分岐
+	SELECTCASE TEQUIP:性交中
+		;正常位
+		CASE 1
+			LOCALS += @"用全身的重量向着%CALLNAME:MASTER%的小穴里深入"
+		;后背位
+		CASE 2
+			LOCALS += @"从背后深深插入%CALLNAME:MASTER%的小穴内"
+		;骑乘位
+		CASE 3
+			LOCALS += @"%CALLNAME:MASTER%的雌穴被触碰到了最深的地方"
+		;对面座位
+		CASE 4
+			LOCALS += @"紧贴着%CALLNAME:MASTER%的阴道进行着爱抚"
+		;背面座位
+		CASE 5
+			LOCALS += @"%CALLNAME:MASTER%被从背后抱着插了进去"
+		;肛交
+		CASE 6
+			LOCALS += @"没入了%CALLNAME:MASTER%的肛门中"
+	ENDSELECT
+;手淫・爱抚継续中
+ELSEIF TEQUIP:调教对象Ｃ使用 == 1
+	LOCALS += @"\@ TCVAR:MASTER:高潮 ? 马上就要高潮了 # \@"
+	LOCALS += @"%CALLNAME:MASTER%的\@ PENIS(MASTER) ? 阴茎 # \@"
+	SIF !PENIS(MASTER)
+		LOCALS += @"\@ TEQUIP:假阴茎 ? 假阴茎 # 阴蒂 \@"
+	LOCALS += "被爱抚了"
+;口交・舔阴継续中
+ELSEIF TEQUIP:调教对象Ｃ使用 == 2
+	LOCALS += @"舔弄%CALLNAME:MASTER%的\@ PENIS(MASTER) ? 阴茎 # 阴蒂 \@\@ TCVAR:MASTER:高潮 ? 马上就要高潮了 # \@"
+;性交中(调教对象插入)
+ELSEIF TEQUIP:性交奉仕中
+	IF TEQUIP:假阴茎
+		LOCALS += @"%CALLNAME:MASTER%的身上穿戴上了假阴茎"
+	ELSE
+		LOCALS += @"%CALLNAME:MASTER%的\@ TCVAR:MASTER:高潮 ? 马上就要高潮了 # \@阴茎被"
+	ENDIF
+	;体位によって分岐
+	SELECTCASE TEQUIP:性交奉仕中
+		;正常位
+		CASE 1
+			LOCALS += @"迎进大大张开的双腿之间"
+		;后背位
+		CASE 2
+			LOCALS += @"从背后插入了阴道内"
+		;骑乘位
+		CASE 3
+			LOCALS += @"用柔软的阴道用力的挤压上去"
+		;对面座位
+		CASE 4
+			LOCALS += @"身体紧贴着仿佛阴道深处都在欢迎"
+		;背面座位
+		CASE 5
+			LOCALS += @"靠在身后感到十分满足"
+		;肛交
+		CASE 6
+			LOCALS += @"用充满肠液的肛门紧紧勒住"
+	ENDSELECT
+;调教者自慰中
+ELSEIF GETBIT(TEQUIP:自慰中, 1)
+	IF TEQUIP:调教者假阴茎
+		LOCALS += "身上穿戴的假阴茎"
+	ELSE
+		LOCALS += @"\@ PENIS(TARGET) ? 阴茎 # 阴蒂 \@\@ TCVAR:TARGET:高潮 ? 马上就要高潮了 # \@"
+	ENDIF
+	LOCALS += "看着自己爱抚时的样子"
+ENDIF
+
+
+SIF LOCALS != ""
+	LOCALS += ARGS
+RETURNF LOCALS
+
+;-------------------------------------------------
+;関数名:PENIS_DESCRIPTION
+;概　要:阴茎描写関数
+;引　数:无
+;戻り値:阴茎的状态被表す字符串
+;備　考:式中関数
+;なん和なく代码但煩雑になりそうな予感但した的で関数可してみた
+;使用例
+;PRINTFORML %CALLNAME:MASTER%的%PENIS_DESCRIPTION()%阴茎但(以下略
+;现状的規模那么AUTO_SPLITでも十分只ど、扩张可能性和保守性被考えてSTRDATAにしてみる@revkoishi
+;-------------------------------------------------
+@PENIS_DESCRIPTION(ARG = -2)
+#FUNCTIONS
+#LOCALSSIZE 1
+LOCALS:0 = 
+ARG = ARG != -2 ? ARG # MASTER
+IF ARG == MASTER
+	SELECTCASE TFLAG:ACT
+		;爱抚系ACT
+		CASE 10 TO 19
+			;萎えてる
+			IF TCVAR:MASTER:勃起度 < 1000
+				;射精直后
+				IF TCVAR:MASTER:射精后经过回合 == 1
+					STRDATA LOCALS:0
+						DATA 刚刚玩弄过的
+						DATA 刚刚玩弄过还很敏感
+						DATA 刚才花费了很多精力
+					ENDDATA
+				;其他
+				ELSE
+					STRDATA LOCALS:0
+						DATA 萎靡不振
+						DATA 萎了
+						DATA 一动也不动
+					ENDDATA
+				ENDIF
+			;勃起
+			ELSE
+				;射精直后
+				IF TCVAR:MASTER:射精后经过回合 == 1
+					STRDATA LOCALS:0
+						DATA 射精终于停下来了
+						DATA 没有感到衰弱
+						DATA 脉动没有停止
+					ENDDATA
+				;勃起度的派生
+				ELSEIF TCVAR:MASTER:勃起度 >= 1500
+					STRDATA LOCALS:0
+						DATA 精神抖擞血脉偾张
+						DATA 翘了起来
+						DATA 勃起到了极限
+					ENDDATA
+				ELSE
+					STRDATA LOCALS:0
+						DATA 怒张了
+						DATA 屹立了
+						DATA 激情澎湃
+					ENDDATA
+				ENDIF
+			ENDIF
+	ENDSELECT
+ELSE
+	SELECTCASE TCVAR:ARG:勃起
+		CASE 0
+			LOCALS:0 = まだ柔らかい
+		CASE 1
+			LOCALS:0 = 徐々に硬度被増し一面ある
+		CASE 2
+			LOCALS:0 = 勃起了
+		CASEELSE
+			LOCALS:0 = 翘了起来
+	ENDSELECT
+ENDIF
+RETURNF LOCALS:0
+
+
+;-------------------------------------------------
+;関数名:PENIS_DESCRIPTION2
+;概　要:阴茎描写関数
+;引　数:无
+;戻り値:阴茎的状态被表す字符串
+;備　考:式中関数
+;
+;TFLAG:166=エナジードレイン
+;被エナジードレイン中的阴茎的状态和いうモロにSQR仕大人関数な的で注释アウト
+;関数定義只生きている的是现状で呼び出し部位但あるから手抜き和いう意味もある的只ど、
+;そ的うち誰か但エナジードレイン做よう变成了ら(あるい是他に使用方法あれば)
+;そ的时にまた考えましょうってこ和で@revkoishi(14/04/20)
+;-------------------------------------------------
+@PENIS_DESCRIPTION2(ARG = -2)
+#FUNCTIONS
+#LOCALSSIZE 1
+[SKIPSTART]
+ARG = ARG != -2 ? ARG # MASTER
+LOCALS:0 = 
+IF ARG == MASTER && TFLAG:166
+	IF BASE:MASTER:射精
+		STRDATA LOCALS:0
+			DATA 高潮一直无法平息
+			DATA 继续射精
+			DATA 精液流了下来
+		ENDDATA
+	ELSE
+		STRDATA LOCALS:0
+			DATA 继续空射
+			DATA 高潮一直无法平息
+		ENDDATA
+	ENDIF
+ENDIF
+[SKIPEND]
+RETURNF LOCALS:0
+
+
+;-------------------------------------------------
+;関数名:OPPAI_DESCRIPTION
+;概　要:言葉でなく心で理解しろ
+;引　数:ARG…角色登录番号
+;戻り値:夢
+;備　考:式中関数
+;使用例:%OPPAI_DESCRIPTION(TARGET)%
+;-------------------------------------------------
+@OPPAI_DESCRIPTION(ARG = -2)
+#FUNCTIONS
+#LOCALSSIZE 1
+LOCALS:0 = 
+ARG = ARG != -2 ? ARG # MASTER
+;SQR由来部分につき注释アウト。爆乳是今后も无い和思われる但参考に残しておく@revkoishi(14/04/20)
+;SIF TALENT:ARG:巨乳 == 2	;爆乳
+;	RETURNF RAND_SPLIT("是ちきれんばかり的胸/大迫力的バスト/たっぷり和した質感的胸")
+IF TALENT:ARG:巨乳	;巨乳
+	STRDATA LOCALS:0
+		DATA 丰满的胸部
+		DATA 骄傲的胸围
+		DATA 富有魅力的膨起
+		DATA 摇曳的双丘
+		DATA 摇动的梦幻果实
+		DATA 大奶子
+		DATA 丰满的乳房
+		DATA 丰满而富有弹力的胸部
+	ENDDATA
+ELSEIF TALENT:ARG:貧乳	;貧乳
+	STRDATA LOCALS:0
+		DATA 不大不小的胸部
+		DATA 可爱的胸部
+		DATA 没怎么膨起的乳房
+		DATA 可以被手掌包住的可爱乳房
+		DATA 扁扁的乳房
+		DATA 微小的膨胀
+	ENDDATA
+ELSE					;並乳
+	STRDATA LOCALS:0
+		DATA 柔软的胸部
+		DATA 匀称的胸部
+		DATA 绮丽的胸部
+		DATA 清新紧致的胸部
+		DATA 匀称美丽的乳房
+		DATA 曲线柔美的双丘
+		DATA 形状匀称的乳房
+	ENDDATA
+ENDIF
+RETURNF LOCALS:0
+
+;-------------------------------------------------
+;関数名:VAGINA_DESCRIPTION
+;引　数:ARG…角色登录番号
+;戻り値:夢
+;備　考:式中関数
+;使用例:%VAGINA_DESCRIPTION(TARGET)%
+;-------------------------------------------------
+@VAGINA_DESCRIPTION(ARG = -2)
+#FUNCTIONS
+#LOCALSSIZE 1
+ARG = ARG != -2 ? ARG # MASTER
+IF TALENT:ARG:矮小	;矮小
+	STRDATA LOCALS:0
+		DATA 幼小的裂缝
+		DATA 幼小的性器
+		DATA 还不发达的秘瓣
+	ENDDATA
+ELSE				;一般
+	STRDATA LOCALS:0
+		DATA 阴唇
+		DATA 女性器
+		DATA 秘唇
+	ENDDATA
+ENDIF
+RETURNF LOCALS:0
+
+;-------------------------------------------------
+;関数名:NIPPLE_DESCRIPTION
+;概　要:乳首描写関数
+;引　数:角色番号。省略すればMASTER
+;戻り値:字符串
+;備　考:式中関数
+;使用例:%CALLNAME:MASTER%的%NIPPLE_DESCRIPTION(MASTER)%乳首云々…
+;-------------------------------------------------
+@NIPPLE_DESCRIPTION(ARG = -2)
+#FUNCTIONS
+#LOCALSSIZE 1
+LOCALS:0 = 
+ARG = ARG != -2 ? ARG # MASTER
+SELECTCASE PALAM:ARG:快Ｂ
+	CASE IS >= 8500
+		STRDATA LOCALS:0
+			DATA 因为绝顶的期待而颤抖
+			DATA 尖端变得敏感起来
+			DATA 瑟瑟发抖
+		ENDDATA
+	CASE IS >= 4000
+		STRDATA LOCALS:0
+			DATA 膨胀起来
+			DATA 充血变硬
+			DATA 像要炸开似地膨胀起来
+		ENDDATA
+	CASEELSE
+		STRDATA LOCALS:0
+			DATA 略微膨胀
+			DATA 稍微膨胀了一些
+			DATA 还很柔软
+		ENDDATA
+ENDSELECT
+RETURNF LOCALS:0
+
+;-------------------------------------------------
+;関数名:CLITORIS_DESCRIPTION
+;概　要:Ｃ描写関数
+;引　数:角色番号。省略すればMASTER
+;戻り値:字符串
+;備　考:式中関数
+;使用例:%CALLNAME:MASTER%的%CLITORIS_DESCRIPTION(MASTER)%阴核云々…
+;-------------------------------------------------
+@CLITORIS_DESCRIPTION(ARG = -2)
+#FUNCTIONS
+#LOCALSSIZE 1
+LOCALS:0 = 
+ARG = ARG != -2 ? ARG # MASTER
+SELECTCASE PALAM:ARG:快Ｃ
+	CASE IS >= 8500
+		STRDATA LOCALS:0
+			DATA 因为绝顶的期待而颤抖
+			DATA 咻咻地脉动
+		ENDDATA
+	CASE IS >= 4000
+		STRDATA LOCALS:0
+			DATA 膨胀起来
+			DATA 已经充血
+			DATA 像要炸开似地膨胀起来
+		ENDDATA
+	CASEELSE
+		STRDATA LOCALS:0
+			DATA 略微膨胀
+			DATA 正在一点点膨胀
+			DATA 稍微鼓了起来
+		ENDDATA
+ENDSELECT
+RETURNF LOCALS:0
+
+;-------------------------------------------------
+;関数名:WET_DESCRIPTION
+;概　要:Ｖ描写関数
+;引　数:角色番号。省略做和MASTER
+;戻り値:字符串
+;備　考:式中関数（v30601.001现在、MASTER的み参照可能）
+;使用例:%WET_DESCRIPTION(MASTER)%女性器(ry
+;-------------------------------------------------
+@WET_DESCRIPTION(ARG = -2)
+#FUNCTIONS
+#LOCALSSIZE 1
+LOCALS:0 = 
+ARG = ARG != -2 ? ARG # MASTER
+SELECTCASE PALAM:ARG:润滑
+	CASE IS >= 1500
+		LOCALS:0 = "熱い蜜液的溢れ出す"
+	CASE IS >= 1000
+		LOCALS:0 = "爱液的溢れ出す"
+	CASE IS >= 500
+		LOCALS:0 = "濡れそぼった"
+	CASEELSE
+		LOCALS:0 = "しっ和り和湿った"
+ENDSELECT
+RETURNF LOCALS:0
+
+;-------------------------------------------------
+;関数名:VAGINA_SMELL
+;概　要:性器的匂い描写関数
+;引　数:角色番号。省略做和MASTER
+;戻り値:字符串
+;備　考:式中関数（v30601.001现在、MASTER的み参照可能）
+;使用例:%VAGINA_SMELL(MASTER)%被漂わせる(ry
+;-------------------------------------------------
+@VAGINA_SMELL(ARG = -2)
+#FUNCTIONS
+#LOCALSSIZE 1
+LOCALS:0 = 
+ARG = ARG != -2 ? ARG # MASTER
+SELECTCASE PALAM:ARG:润滑
+	CASE IS >= 1000
+		LOCALS:0 = "濃厚な女的香り"
+	CASE IS >= 500
+		LOCALS:0 = "芳香な香り"
+	CASEELSE
+		LOCALS:0 = "清らかな少女的香り"
+ENDSELECT
+RETURNF LOCALS:0
+;eraWIZ被见て作りたくなった
+;和言うか、限定无し口上向けにMASTER的体格和かで分岐作ってもいい的かも
+;矮小だ和幼い扱いだしねぇ
+
+;-------------------------------------------------
+;関数名:VAGINA_DESCRIPTION2
+;概　要:Ｖ描写関数
+;引　数:无
+;戻り値:字符串
+;備　考:式中関数
+;使用例:%VAGINA_DESCRIPTION2(MASTER)%
+;-------------------------------------------------
+@VAGINA_DESCRIPTION2(ARG)
+#FUNCTIONS
+#LOCALSSIZE 1
+LOCALS:0 = 
+STRDATA LOCALS:0
+	DATA 秘唇
+	DATA 秘裂
+	DATA 秘所
+	DATA 媚肉
+	DATA 花弁
+ENDDATA
+RETURNF LOCALS:0
+
+;-------------------------------------------------
+;関数名:PANTY_DESCRIPTION
+;概　要:内裤描写関数
+;引　数:无
+;戻り値:字符串
+;備　考:式中関数（v30601.001现在、MASTER的み参照可能）
+;使用例:%PANTY_DESCRIPTION(MASTER)%内裤(ry
+;-------------------------------------------------
+@PANTY_DESCRIPTION(ARG = -2)
+#FUNCTIONS
+#LOCALSSIZE 1
+LOCALS:0 = 
+ARG = ARG != -2 ? ARG # MASTER
+SELECTCASE PALAM:ARG:润滑
+	CASE IS >= 1500
+		LOCALS:0 = "熱い花蜜でドロドロに湿润"
+	CASE IS >= 1000
+		LOCALS:0 = "蜜液でグッショリ和湿润"
+	CASE IS >= 500
+		LOCALS:0 = "花蜜で脏污た"
+	CASEELSE
+		LOCALS:0 = "し和どに湿润"
+ENDSELECT
+RETURNF LOCALS:0
+;ドロワ穿いた角色的可能性に気付いたけど、出力上是関係ないから別にいいね
+
+;-------------------------------------------------
+;関数名:DHARNESS_DESCRIPTION
+;概　要:假阴茎描写関数
+;引　数:ARG…角色登录番号
+;戻り値:字符串
+;備　考:式中関数
+;使用例:%DHARNESS_DESCRIPTION(TARGET)%
+;-------------------------------------------------
+@DHARNESS_DESCRIPTION(ARG)
+#FUNCTIONS
+#LOCALSSIZE 1
+LOCALS:0 = 
+STRDATA LOCALS:0
+	DATA 无机的武器
+	DATA 俗气的玩具
+	DATA 虚伪的刚直
+	DATA 恶作剧之楔
+ENDDATA
+RETURNF LOCALS:0
+
+;-------------------------------------------------
+;関数名:ANUS_DESCRIPTION
+;概　要:肛门描写関数
+;引　数:ARG…角色登录番号
+;戻り値:字符串
+;備　考:式中関数
+;使用例:%ANUS_DESCRIPTION(TARGET)%
+;-------------------------------------------------
+@ANUS_DESCRIPTION(ARG)
+#FUNCTIONS
+#LOCALSSIZE 1
+LOCALS:0 = 
+STRDATA LOCALS:0
+	DATA 不浄的花弁
+	DATA 不净之穴
+	DATA 不净的窄缝
+	DATA 肛门
+	DATA 谷间的花蕾
+	DATA 禁断的肉穴
+ENDDATA
+RETURNF LOCALS:0
+
+;-------------------------------------------------
+;関数名:PLEASURE_DESCRIPTION
+;概　要:快乐状态描写関数
+;引　数:ARG…角色登录番号
+;戻り値:字符串
+;備　考:式中関数
+;使用例:%PLEASURE_DESCRIPTION(TARGET)%
+;-------------------------------------------------
+@PLEASURE_DESCRIPTION(ARG)
+#FUNCTIONS
+#LOCALSSIZE 1
+LOCALS:0 = 
+STRDATA LOCALS:0
+	DATA 一边晃动着身体
+	DATA 一边在晃动全身
+	DATA 一边左右摇着头
+	DATA 一边用手捂着嘴唇咬住手指
+	DATA 一边颤抖着纤细的肩膀
+ENDDATA
+RETURNF LOCALS:0
+
+;-------------------------------------------------
+;関数名:Ｃ描写
+;概　要:ARG的Ｃ描写関数
+;戻り値:字符串
+;備　考:式中関数
+;使用例:%Ｃ描写(MASTER)%
+;-------------------------------------------------
+@Ｃ描写(ARG = -2)
+#FUNCTIONS
+#LOCALSSIZE 1
+LOCALS:0 = 
+ARG = ARG != -2 ? ARG # MASTER
+IF PENIS(ARG)
+	STRDATA LOCALS:0
+		DATA 阴茎
+		DATA 楔子
+		DATA 怒张
+	ENDDATA
+ELSE
+	STRDATA LOCALS:0
+		DATA 阴蒂
+		DATA 阴核
+		DATA 肉芽
+		DATA 性感的要害
+	ENDDATA
+ENDIF
+RETURNF LOCALS:0
+
+;-------------------------------------------------
+;関数名:SEMEN_DESCRIPTION
+;概　要:SPERMで是なくSEMENなんだよねっていう
+;引　数:ARG…角色登录番号
+;戻り値:字符串
+;備　考:式中関数
+;使用例:%SEMEN_DESCRIPTION(MASTER)%
+;-------------------------------------------------
+@SEMEN_DESCRIPTION(ARG)
+#FUNCTIONS
+#LOCALSSIZE 1
+LOCALS:0 = 
+STRDATA LOCALS:0
+	DATA 色气的湿滑感
+	DATA 白色吐液
+	DATA 污浊的液体
+	DATA 白色的精液
+	DATA 白浊液
+	DATA 青臭的粘液
+ENDDATA
+RETURNF LOCALS:0
+
+;-------------------------------------------------
+;関数名:AFFECTION
+;概　要:ARGS:0でMASTER和ARG:0和的好感、好感度被参照做
+;引　数:ARGS:0…字符串
+;引　数:ARG :0…角色番号。省略做和TARGET
+;-------------------------------------------------
+@AFFECTION(ARGS:0, ARG:0 = -2)
+#FUNCTION
+ARG:0 = ARG:0 != -2 ? ARG:0 # TARGET
+SELECTCASE ARGS:0
+	CASE "INFINITE"
+		RETURNF FAVOR(10000, 10000, ARG:0) ;好感・好感度10000
+	CASE "相思相爱"
+		RETURNF FAVOR(3000, 3000, ARG:0) ;好感・好感度3000
+	CASE "盲爱"
+		RETURNF FAVOR(0, 3000, ARG:0) ;好感度3000
+	CASE "溺爱"
+		RETURNF FAVOR(0, 2000, ARG:0) ;好感度2000
+	CASE "眷爱"
+		RETURNF FAVOR(0, 1000, ARG:0) ;好感度1000
+	CASE "傀儡"
+		RETURNF FAVOR(2500, 0, ARG:0) ;好感2500
+	CASE "调教完了"
+		RETURNF FAVOR(2000, 0, ARG:0) ;好感2000
+	CASE "调教済み"
+		RETURNF FAVOR(1000, 0, ARG:0) ;好感1000
+	CASE "目觉め"
+		RETURNF FAVOR(500, 0, ARG:0) ;好感500
+	CASE "恐怖"
+		RETURNF !FAVOR(200, 0, ARG:0) && MARK:MASTER:心理创伤 >= 3 ;好感200未满・心理创伤Lv3以上
+	CASE "顺应"
+		RETURNF FAVOR(100, 100, ARG:0) ;好感・好感度100
+	CASE "兴趣"
+		RETURNF FAVOR(0, 500, ARG:0) ;好感度500
+	CASE "反抗"
+		RETURNF !FAVOR(1, 0, ARG:0) && MARK:(ARG:0):反抗刻印 >= 1 ;好感0以下・反抗刻印Lv1以上
+	CASE "暴君"
+		RETURNF !FAVOR(-100, 0, ARG:0) && FAVOR(0, 1000, ARG:0) ;好感-100・好感度1000
+	CASE "嫌恶"
+		RETURNF !FAVOR(-100, 0, ARG:0) ;好感-100
+	CASE "不倶戴天"
+		RETURNF !FAVOR(-500, 0, ARG:0) ;好感-500
+	CASE "天敵"
+		RETURNF !FAVOR(-1000, 0, ARG:0) ;好感-1000
+	CASEELSE
+		CALLF PRINT_ERRORMESSAGE(@"@AFFECTIONに无效な定義(%ARGS%)但渡されました")
+		RETURNF -1
+ENDSELECT
+
+;--------------------------------------------------
+;相性検索関数@RELATION_QUERY
+;	引数0：对象的角色番号（登录番号で是ない。手元に存在している必要是ない）
+;	引数1：検索条件（0=指定不做, 1=手元にいない角色的み選ぶ, 2=手元にいる角色的み選ぶ）
+;对象角色和全角色和的相性被検索して、最も相性的良い相手被抽出し增加
+;--------------------------------------------------
+;戻り値一览
+;	RESULT：发见さ受到角色和的相性（0=发见不可, 1=对象へ的相性101～199, 2=对象へ的相性200以上）
+;	RESULT:1：发见した角色的角色番号（发见不可的场合=-1）
+;	RESULT:2：发见した角色的登录番号（手元にいない场合=-1）
+;	RESULTS：发见した角色的呼び名
+;	RESULTS:1：发见した角色的名前
+;--------------------------------------------------
+@RELATION_QUERY(ARG, ARG:1)
+#DIM LCOUNT, 1
+#LOCALSIZE 7
+;検索对象的登录番号被抽出
+LOCAL = GETCHARA(ARG, 1)
+LOCAL:6 = 0
+IF LOCAL == -1
+	ADDCHARA ARG
+	LOCAL = CHARANUM - 1
+	LOCAL:6 = 1
+ENDIF
+LOCAL:1 = -1
+IF ARG:1 == 2
+	;手元から検索
+	FOR LCOUNT, 0, CHARANUM
+		LOCAL:2 = LOCAL:1 < 0 ? 100 # RELATION:LOCAL:(LOCAL:1)
+		LOCAL:3 = NO:LCOUNT < 0 || NO:LCOUNT >= VARSIZE("RELATION") ? 100 # RELATION:LOCAL:(NO:LCOUNT)
+		SIF LOCAL:2 == 0
+			LOCAL:2 = 100
+		SIF LOCAL:3 == 0
+			LOCAL:3 = 100
+		;同値的场合随机で残す
+		;后に引いたほう但大きい场合それ被保存
+		SIF (LOCAL:2 == LOCAL:3 && RAND:2 && LOCAL:1 >= 0) || LOCAL:2 < LOCAL:3
+			LOCAL:1 = NO:LCOUNT
+	NEXT
+ELSE
+	;全体から検索
+	;相性被总検索し角色番号和相性値被抽出
+	FOR LCOUNT, 0, VARSIZE("RELATION")
+		;そもそもCSV但ない那么见る必要无
+		SIF EXISTCSV(LCOUNT, 0)  == 0
+			CONTINUE
+		;角色但いるか确认して、いるかつ検索条件=1那么次へ飛ぶ
+		SIF GETCHARA(LCOUNT, 1) != -1 && ARG:1 == 1
+			CONTINUE
+		LOCAL:2 = LOCAL:1 < 0 ? 100 # RELATION:LOCAL:(LOCAL:1)
+		LOCAL:3 = RELATION:LOCAL:LCOUNT
+		SIF LOCAL:2 == 0
+			LOCAL:2 = 100
+		SIF LOCAL:3 == 0
+			LOCAL:3 = 100
+		;同値的场合随机で残す
+		;后に引いたほう但大きい场合それ被保存
+		SIF ((LOCAL:2 == LOCAL:3 && RAND:2 && LOCAL:1 >= 0) || LOCAL:2 < LOCAL:3) && LCOUNT < 149
+			LOCAL:1 = LCOUNT
+	NEXT
+ENDIF
+SIF LOCAL:6
+	DELCHARA CHARANUM - 1
+
+;名前和登录番号被取得
+RESULT:1 = LOCAL:1
+IF LOCAL:1 >= 0
+	RESULT:2 = GETCHARA(LOCAL:1, 1)
+	IF RESULT:2 >= 0
+		RESULTS = %CALLNAME:(RESULT:2)%
+		RESULTS:1 = %NAME:(RESULT:2)%
+	ELSE
+		RESULTS = %CSVCALLNAME(LOCAL:1, 0)%
+		RESULTS:1 = %CSVNAME(LOCAL:1, 0)%
+	ENDIF
+ENDIF
+;数値に应じてRETURN
+SIF RELATION:LOCAL:(LOCAL:1) > 199
+	RETURN 2
+SIF RELATION:LOCAL:(LOCAL:1) > 100
+	RETURN 1
+RETURN 0

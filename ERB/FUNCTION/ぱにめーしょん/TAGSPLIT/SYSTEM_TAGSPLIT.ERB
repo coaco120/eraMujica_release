@@ -1,0 +1,433 @@
+﻿;-------------------------------------------------------------------------------
+;
+;	TAGSPLIT 関数群
+;
+;===============================================================================
+;	字符串にタグ被持たせる＆取得・解釈做
+;-------------------------------------------------------------------------------
+;	用途但制作时和乖離してきたんで注释例文整理
+;
+;-------------------------------------------------------------------------------
+;	■AUTO_SPLIT的流用でいけるか和思ったけど結局新造
+;	■发想元是偉大なるeraMegaten和IRC非匿名口上chから
+;	■勿論ライセンスフリー
+;===============================================================================
+
+
+;-------------------------------------------------------------------------------
+;	TAGSPLIT_TAGEND
+;-------------------------------------------------------------------------------
+;	0的例  = "<色_0xFFC0C0><フォント_ＭＳ 哥特式>,いろ是"
+;	1的例  = "ロングソード,<攻击力_12><価格_100><斬击属性>"
+;
+;	つまり本文但先かタグ但先か被指定しているよ
+;	用途和相談し一边使い容易方で使ってね
+;===============================================================================
+@TAGSPLIT_TAGEND()
+#FUNCTION
+; 示例用 动的に变更侍奉的是+过激非推荐+
+;	RETURNF FLAG:0
+;  ★★★★★★★★★★★★★★★どちらか选择★★★★★★★★★★★★★★★★
+;	RETURNF 0
+	RETURNF 1
+;  ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+
+
+;-------------------------------------------------------------------------------
+;	TAGSPLIT_ONE
+;-------------------------------------------------------------------------------
+;	例：LOCALS = <HOGE_100><HAGE>,いろ是
+;		PRINTFORM %TAGSPLIT_ONE(LOCALS,"HOGE")%
+;		→  "100"
+;		PRINTFORM %TAGSPLIT_ONE(LOCALS,"HAGE")%
+;		→  "HAGE"
+;-------------------------------------------------------------------------------
+;	所谓的AUTO_SPLITに最も近い
+;	返す的是プロパティ但数値だろう但なんだろう但字符串
+;===============================================================================
+@TAGSPLIT_ONE(ARGS, ARGS:1 = "")
+#FUNCTIONS
+#LOCALSIZE 1
+LOCAL = TAGSPLIT_SETLOG(ARGS,ARGS:1)
+; ARGS:1但空白的场合是 文章部分(タグ的ない部分)被返す
+IF ARGS:1 == ""
+	RETURNF TAGSPLIT_TAGBLOCS:LOCAL
+; ARGS:1但见つかった场合是プロパティ値无那么タグ的ラベル被返し、プロパティ値但ある那么値被返す
+ELSEIF LOCAL != -1
+	; 例：上的例でいう<HOGE_100>被探した→"100"但返り、<HAGE>被探した→"HAGE"但返る
+	RETURNF \@ TAGSPLIT_TAGPROPS:1 != "" ? %TAGSPLIT_TAGPROPS:1% # %TAGSPLIT_TAGPROPS:0% \@
+ENDIF
+; 见つからなかったら何も返さない
+RETURNF
+
+;-------------------------------------------------------------------------------
+;	TAGSPLIT_INT
+;-------------------------------------------------------------------------------
+;	例：LOCALS = <HOGE_100><HAGE_あいう>,いろ是
+;		LOCAL  = TAGSPLIT_INT(LOCALS,"HOGE")
+;		→  100
+;-------------------------------------------------------------------------------
+;	TAGSPLIT_ONE的返り値但数値版
+;	数値で返せる那么那么数値で返し、数値で返せない那么 1 で返し、见つからない和 0 被返す
+;	プロパティに "0" 但入ってい时见つからなかった扱いになる但、そ的动作被前提に
+;	系统被組む的是+过激非推荐+
+;	例：<ほげ_0><是げ_1>  ←ほげタグそ的も的但见つからなかった扱い
+;===============================================================================
+@TAGSPLIT_INT(ARGS, ARGS:1)
+#FUNCTION
+#LOCALSSIZE 1
+; TAGSPLIT_ONEに丸投げ、返り値字符串被次的行からTOINTかける
+LOCALS = %TAGSPLIT_ONE(ARGS,ARGS:1)%
+; 见つかった场合是数値で返せる那么那么数値で返し、数値で返せない那么「存在しているBOOLEAN」和いうこ和で 1 被返す  
+SIF LOCALS != "" && LOCALS != "0"
+	RETURNF ISNUMERIC(LOCALS) ? TOINT(LOCALS) # 1
+; 见つからなかったら何も返さない…是ず只ど0但返る仕大人
+; ※プロパティ"0"的场合是见つからない扱い和返り値但同じ
+RETURNF 0
+
+;-------------------------------------------------------------------------------
+;	TAGSPLIT_ADD
+;-------------------------------------------------------------------------------
+;	例：LOCALS = <HOGE_100><HAGE_あいう>,いろ是
+;		LOCALS = %TAGSPLIT_ADD(LOCALS,"<HAGE_かきく>")%
+;		LOCALS = %TAGSPLIT_ADD(LOCALS,"HIGE","5")%
+;		LOCALS = %TAGSPLIT_ADD(LOCALS,,"にほへ")%
+;		→  "<HOGE_100><HAGE_かきく><HIGE_5>,にほへ"
+;
+;		LOCALS = %TAGSPLIT_ADD(LOCALS,,)%	←引数両方无(第二引数无で本文指定、第三引数无で空白置き换え)
+;		→  ""								←タグご和消える
+;-------------------------------------------------------------------------------
+;	TAGSPLIT仕大人的タグ被置换したり追加したり做関数
+;	指定的タグ但无い场合是追加、ある场合是同タグ内でプロパティ値的变更被做
+;	プロパティ的记法是二种类あり、直接書いてもいいし、(HAGE的例)
+;	タグ名的み记入してARGS:2被使ってもよい(HIGE的例)。
+;	なんか后者的ほう但わかり容易かも
+;
+;	・第二引数被省略して、第三引数是入力した场合本文被置き换える
+;
+;	・第二引数和第三引数両方省略した和き是タグご和消して空字符串に做
+;	  主に配列处理用で、上み想要な例的场合是直接消せばいいんじゃないかな
+;===============================================================================
+@TAGSPLIT_ADD(ARGS,ARGS:1,ARGS:2)
+#FUNCTIONS
+#LOCALSIZE 1
+#LOCALSSIZE 1
+LOCAL = TAGSPLIT_SETLOG(ARGS,ARGS:1)
+; 上でいうTAGSPLIT_ADD(LOCALS,"<HAGE_かきく>")的例
+IF STRFIND(ARGS:1,"<") != -1 && STRFIND(ARGS:1,">") != -1 && ARGS:2 == ""
+	LOCALS = %REPLACE(ARGS:1,">","")%
+; 上でいうTAGSPLIT_ADD(LOCALS,"HIGE","5")的例
+ELSEIF ARGS:1 != ""
+	LOCALS = %"<" + ARGS:1%
+	SIF ARGS:2 != ""
+		LOCALS += "_" + ARGS:2
+ENDIF
+
+; 指定的タグ但见つからない
+IF ARGS:1 != "" && LOCAL == -1
+	; タグ前的场合是本文被一つ隣的ブロックにARRAYSHIFTして空いた和ころに插入
+	IF TAGSPLIT_TAGEND() == 0
+		ARRAYSHIFT TAGSPLIT_TAGBLOCS, 1, LOCALS, TAGSPLIT_TAGNUM-1
+	; タグ后的场合是最后に追加
+	ELSEIF TAGSPLIT_TAGEND() == 1
+		TAGSPLIT_TAGBLOCS:(TAGSPLIT_TAGNUM) = %LOCALS%
+	ENDIF
+	TAGSPLIT_TAGNUM += 1
+; 指定的タグ但见つかったらそこ被置き换え
+ELSEIF ARGS:1 != "" && LOCAL != -1
+	TAGSPLIT_TAGBLOCS:LOCAL = %LOCALS%
+; タグ的指定无→本文的置き换え
+ELSEIF ARGS:1 == ""
+	TAGSPLIT_TAGBLOCS:LOCAL = %ARGS:2%
+	; 本文置き换え但消去司令だったらタグご和消え去る
+	SIF ARGS:2 == ""
+		VARSET TAGSPLIT_TAGBLOCS
+ENDIF
+; 合成
+IF ARGS != ""
+	RETURNF TAGSPLIT_UNITE()
+ELSE
+	RETURNF
+ENDIF
+
+
+;-------------------------------------------------------------------------------
+;	TAGSPLIT_ADDINT
+;-------------------------------------------------------------------------------
+;	TAGSPLIT_ADD的第三引数数値版
+;	其他是全く一緒
+;===============================================================================
+@TAGSPLIT_ADDINT(ARGS,ARGS:1,ARG = 0)
+#FUNCTIONS
+RETURNF TAGSPLIT_ADD(ARGS,ARGS:1,TOSTR(ARG))
+
+
+;-------------------------------------------------------------------------------
+;	TAGSPLIT_DEL
+;-------------------------------------------------------------------------------
+;	例：LOCALS = <HOGE_100><HAGE_あいう>,いろ是
+;		LOCALS = %TAGSPLIT_DEL(LOCALS,"HAGE")%
+;		→  "<HOGE_100>,いろ是"
+;-------------------------------------------------------------------------------
+;	TAGSPLIT仕大人的タグ被削除做関数
+;	指定的タグ但无い场合是何も不做
+;===============================================================================
+@TAGSPLIT_DEL(ARGS,ARGS:1)
+#FUNCTIONS
+#LOCALSIZE 1
+LOCAL = TAGSPLIT_SETLOG(ARGS,ARGS:1)
+SIF LOCAL == -1
+	RETURNF ARGS
+
+; そ的部分的ブロック被消して积み上げる只
+TAGSPLIT_TAGBLOCS:LOCAL =
+; 合成してRETURNF
+RETURNF TAGSPLIT_UNITE()
+
+
+;-------------------------------------------------------------------------------
+;	TAGSPLIT_NUM
+;-------------------------------------------------------------------------------
+;	例：LOCALS = <HOGE_0xFFC0C0><HAGE>,いろ是
+;		PRINTFORM {TAGSPLIT_NUM(LOCALS,"HAGE")}
+;		→  1
+;		PRINTFORM {TAGSPLIT_NUM(LOCALS,"HOGE")}
+;		→  0
+;-------------------------------------------------------------------------------
+;	そ的タグ但何番目にある的？和いう的被返す
+;===============================================================================
+@TAGSPLIT_NUM(ARGS,ARGS:1)
+#FUNCTION
+#LOCALSIZE 1
+LOCAL = TAGSPLIT_SETLOG(ARGS,ARGS:1)
+IF LOCAL == -1
+	RETURNF LOCAL
+ELSE
+	RETURNF (TAGSPLIT_TAGEND() == 0) ? LOCAL # LOCAL - 1 
+ENDIF
+
+
+;-------------------------------------------------------------------------------
+;	TAGSPLIT_LABEL
+;-------------------------------------------------------------------------------
+;	例：LOCALS = <色_0xFFC0C0><ひみつ>,いろ是
+;		PRINTFORM %TAGSPLIT_LABEL(LOCALS,0)%
+;		→  色
+;		PRINTFORM %TAGSPLIT_LABEL(LOCALS,1)%
+;		→  ひみつ
+;-------------------------------------------------------------------------------
+;	x番目是なんてタグ？和いう的被返す
+;===============================================================================
+@TAGSPLIT_LABEL(ARGS,ARG)
+#FUNCTIONS
+#LOCALSIZE 1
+#LOCALSSIZE 1
+CALLF TAGSPLIT_SETLOG(ARGS)
+LOCAL = ARG + TAGSPLIT_TAGEND()
+SPLIT ( REPLACE(TAGSPLIT_TAGBLOCS:LOCAL,"<","") ), "_", LOCALS, LOCAL
+RETURNF LOCALS
+
+
+;-------------------------------------------------------------------------------
+;	TAGSPLIT_MERGE
+;-------------------------------------------------------------------------------
+;	例：LOCALS:0 = <A_100><B_100>,いろ是
+;		LOCALS:1 = <A_100><C_50><D_20>,いろ是
+;		PRINTFORM %TAGSPLIT_MERGE(LOCALS:0,LOCALS:1)%
+;		→  <A_200><B_100><C_50><D_20>,いろ是
+;-------------------------------------------------------------------------------
+;	引数1和引数2被マージ侍奉  
+;	タグ内部位両方和も数値的场合是加算、そう不是那么字符串加算
+;	引数2的本文是现状无視される
+;
+;	引数3に字符串指定で、字符串加算される際に区切り字符被挟んで加算される
+;===============================================================================
+@TAGSPLIT_MERGE(ARGS,ARGS:1,ARGS:2 ="")
+#FUNCTIONS
+#DIM LCOUNT,1
+#DIM RINUM,1
+#DIM RILABEL, 1
+#DIMS RITEMPS, 100
+#DIM LFNUM,1
+#DIM LFLABEL,1
+#LOCALSSIZE 3
+VARSET RITEMPS
+; ARGS:1被分割して退避场所に保護
+RILABEL = TAGSPLIT_SETLOG(ARGS:1)	;本文位置
+RINUM = TAGSPLIT_TAGNUM				;分割数
+ARRAYCOPY "TAGSPLIT_TAGBLOCS", "RITEMPS"
+; ARGS:0被分割
+LFLABEL = TAGSPLIT_SETLOG(ARGS)
+FOR LCOUNT, 0, RINUM
+	IF LCOUNT == RILABEL		; 本文
+		; 注释アウト外す和本文も加算になり增加
+		; CALLF TAGSPLIT_ADD( , ,TAGSPLIT_TAGBLOCS:LFLABEL + ARGS:2 + RITEMPS:RILABEL)
+	ELSE
+		VARSET LOCALS
+		RITEMPS:LCOUNT = %REPLACE(RITEMPS:LCOUNT,"<","")%
+		SPLIT RITEMPS:LCOUNT, "_", LOCALS
+		LOCALS:2 = %TAGSPLIT_ONE(,LOCALS)%
+		;ARGS:0に同じタグ但ある && 和もに数値で的返り値但可能
+		IF LOCALS:2 != "" && ( ISNUMERIC(LOCALS:2) && ISNUMERIC(LOCALS:1) )
+			CALLF TAGSPLIT_ADDINT( , LOCALS, TAGSPLIT_INT(,LOCALS) + TOINT(LOCALS:1) )
+		;ARGS:0に同じタグ但ある && 字符串混じってる
+		ELSEIF LOCALS:2 != ""
+			CALLF TAGSPLIT_ADD( , LOCALS, LOCALS:2 + ARGS:2 + LOCALS:1 )
+		ELSE
+			CALLF TAGSPLIT_ADD( , LOCALS, LOCALS:1)
+		ENDIF
+	ENDIF
+NEXT
+RETURNF TAGSPLIT_UNITE()
+
+
+;===============================================================================
+;	以下内部处理
+;===============================================================================
+
+;-------------------------------------------------------------------------------
+;	TAGSPLIT_SETLOG
+;-------------------------------------------------------------------------------
+;	内部处理
+;	所谓的共通的な处理和必要なSPLIT被みーんなここでやっちゃう
+;	状況によってやる必要的无い处理被細かく分岐で避けてたら当初的に比べてやたら长くなった件
+;===============================================================================
+;	TAGSPLIT_TAGEND() ==  ( タグ前 = 0/タグ后ろ = 1 )
+@TAGSPLIT_SETLOG(ARGS,ARGS:1,MODE=0)
+#FUNCTION
+#DIM LCOUNT,1
+#DIM MODE,1
+#LOCALSIZE 3
+#LOCALSSIZE 3
+VARSET LOCAL
+LOCAL:1 = RESULT
+; ARGS空白で再使用做ようにしてみる
+IF ARGS != "" || TAGSPLIT_STR == ""
+	TAGSPLIT_TAG =
+	TAGSPLIT_STR =
+	VARSET TAGSPLIT_TAGBLOCS
+	; ARGS 但ある == 本文是当然ある的で +1
+	TAGSPLIT_TAGNUM = 1
+	; ARGS的","被数えて分岐 (タグ但存在做か被见る)
+	SELECTCASE STRCOUNT(ARGS,",")
+		CASE 0	; 0 = タグ但存在せず本文しか无い
+			TAGSPLIT_STR = %ARGS%
+			TAGSPLIT_TAGBLOCS:0 = %ARGS%
+
+		CASE 1	; 1 = 正常、本文和タグ的両方但存在做
+			VARSET LOCALS
+			; ARGS被「本文和タグ群」にSPLITし、TAGSPLIT_TAGにタグ被、TAGSPLIT_STRに本文被代入
+			; 例：引数1 = "<HOGE_10><HAGE_20>,本文"  →  TAGSPLIT_NOWFORMS:(0～1) = "<HOGE_10><HAGE_20", "本文",
+			SPLIT ARGS, ",", LOCALS			
+			IF TAGSPLIT_TAGEND() == 0		; タグ前置
+				TAGSPLIT_TAG = %LOCALS:0%
+				TAGSPLIT_STR = %LOCALS:1%
+			ELSEIF TAGSPLIT_TAGEND() == 1	; タグ后置
+				TAGSPLIT_TAG = %LOCALS:1%
+				TAGSPLIT_STR = %LOCALS:0%
+			ENDIF
+
+			; レイヤ系统用例外处理  "タグ群"的み被逃但す必要但有るためここでおわり  こういう的わり和大嫌い
+			SIF ARGS:1 == "＠タグ群"
+				GOTO FROM_LAYER_SYSTEM
+
+			; "タグ群"被タグご和にSPLIT		例：タグ群= "<HOGE_10><HAGE_20>"  →  TAGSPLIT_NOWBLOCS:(0～19) = "<HOGE_10", "<HAGE_20"
+			SPLIT TAGSPLIT_TAG, ">", TAGSPLIT_TAGBLOCS						
+			; タグ数被本文的1にSPLIT分割数被プラス
+			TAGSPLIT_TAGNUM += RESULT - 1
+			
+			; タグ前置是本文被最后に配置						例：TAGSPLIT_NOWBLOCS:(0～19) = "<HOGE_10", "<HAGE_20", "本文"
+			IF TAGSPLIT_TAGEND() == 0
+				TAGSPLIT_TAGBLOCS:(TAGSPLIT_TAGNUM-1) = %TAGSPLIT_STR%
+			; タグ后置是本文被0に、タグ被1以降にずらして配置	例：TAGSPLIT_NOWBLOCS:(0～19) = "本文", "<HOGE_10", "<HAGE_20"
+			ELSEIF TAGSPLIT_TAGEND() == 1
+				ARRAYSHIFT TAGSPLIT_TAGBLOCS, 1, TAGSPLIT_STR, 0
+			ENDIF
+
+			; ----     ここ直到で本文和タグ的全要素但TAGSPLIT_TAGBLOCS配列に入っている是ず    ---- ;
+
+		CASEELSE	; "," 的数但0でも1でもない场合是错误
+			THROW %ARGS%但不正です "," 的数被确认してください {LOCAL:2}
+	ENDSELECT
+ENDIF
+
+; 探すタグ但ない场合本文的场所被返す
+IF ARGS:1 == ""
+	RESULT = LOCAL:1
+	; 本文しか无い or タグ后置是0番目
+	IF TAGSPLIT_TAGNUM == 1 ||  TAGSPLIT_TAGEND() == 1
+		RETURNF 0
+	; タグ前置是最后的配列但本文
+	ELSEIF TAGSPLIT_TAGEND() == 0
+		RETURNF TAGSPLIT_TAGNUM - 1
+	ENDIF
+; 探すタグ但ある
+ELSEIF ARGS:1 != ""
+	VARSET TAGSPLIT_NOWPROPS
+	; 探すタグ被タグ和中身にSPLIT									;	例：引数2 = "<HOGE_10>"  →  TAGSPLIT_NOWPROPS:(0～1) = "<HOGE", "10"
+	SPLIT ( REPLACE(ARGS:1,">","") ), "_", TAGSPLIT_NOWPROPS
+	; 本文しか无い的にタグ被探してる→サーチ做直到もなくある是ず但ない(速度短縮效果)
+	IF TAGSPLIT_TAGNUM == 1
+		RESULT = LOCAL:1
+		RETURNF -1
+	ENDIF
+	; 分割配列的本文被除いた部分から引数1的Sタグ要素被探す			;	例：(本文), "<HOGE_10", "<HAGE_20", (本文)から "<HOGE" 被探す
+	LOCAL = FINDELEMENT( TAGSPLIT_TAGBLOCS, TAGSPLIT_NOWPROPS:0, TAGSPLIT_TAGEND(), ( TAGSPLIT_TAGEND() == 0 ? TAGSPLIT_TAGNUM -1 # TAGSPLIT_TAGNUM ) )
+	; 见つかった场合是见つかったも的被タグ和プロパティにSPLIT		;	例：TAGSPLIT_TAGBLOCS:1 = "<HOGE_10"  →  TAGSPLIT_TAGPROPS:(0～1) = "HOGE", "10"
+	IF LOCAL != -1
+		VARSET TAGSPLIT_TAGPROPS
+		SPLIT REPLACE(TAGSPLIT_TAGBLOCS:(LOCAL),"<",""), "_", TAGSPLIT_TAGPROPS	
+	ENDIF
+ENDIF
+RESULT = LOCAL:1
+RETURNF LOCAL
+
+
+$FROM_LAYER_SYSTEM
+; SPLITで失った","被補完して返回
+TAGSPLIT_TAG = \@ TAGSPLIT_TAGEND() == 0 ? %TAGSPLIT_TAG + ","% # %"," + TAGSPLIT_TAG% \@
+RESULT = LOCAL:1
+RETURNF -2
+
+
+
+;-------------------------------------------------------------------------------
+;	TAGSPLIT_UNITE
+;-------------------------------------------------------------------------------
+;	内部处理
+;	TAGSPLIT_TAGBLOCS被积み上げる只
+;===============================================================================
+@TAGSPLIT_UNITE(ARG = 0)
+#FUNCTIONS
+#DIM LCOUNT,1
+#LOCALSIZE 1
+#LOCALSSIZE 1
+LOCALS = 
+LOCAL = -1
+FOR LCOUNT, 0, VARSIZE("TAGSPLIT_TAGBLOCS")				; 最大要素数的検索
+	SIF TAGSPLIT_TAGBLOCS:LCOUNT != ""
+		LOCAL = LCOUNT
+NEXT
+SIF LOCAL == -1											; 全空白那么何も不做(ま和める必要无)
+	RETURNF
+FOR LCOUNT, 0, LOCAL + 1
+	IF TAGSPLIT_TAGBLOCS:LCOUNT != ""
+		; タグ前本文后的场合是最后に","つけて本文
+		IF TAGSPLIT_TAGEND() == 0 && (LCOUNT == LOCAL)
+			LOCALS += "," + TAGSPLIT_TAGBLOCS:LCOUNT
+		; 本文前タグ后的场合是最初的本文語尾に","被つける
+		ELSEIF TAGSPLIT_TAGEND() == 1 && (LCOUNT == 0)
+			LOCALS += TAGSPLIT_TAGBLOCS:LCOUNT + ","
+		; どちらでもない场合是タグな的でタグ和じ">"被つける
+		ELSE
+			LOCALS += TAGSPLIT_TAGBLOCS:LCOUNT + ">"
+		ENDIF
+	ENDIF
+	SIF LCOUNT == LOCAL									; 上で探した最大要素数直到きたらおわり
+		BREAK
+NEXT
+; 引数アリで再分割してログに収めておく(再使用是实際どんなもんか)
+SIF ARG
+	CALLF TAGSPLIT_SETLOG(LOCALS)
+RETURNF LOCALS
+

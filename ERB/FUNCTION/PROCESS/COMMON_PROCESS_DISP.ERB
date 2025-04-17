@@ -1,0 +1,873 @@
+﻿;-------------------------------------------------
+;通用関数置き场
+;显示フロー、計算处理など被切り出したも的。
+;また是内部处理的な関数
+;-------------------------------------------------
+
+;-------------------------------------------------
+;显示相关
+;-------------------------------------------------
+
+;-------------------------------------------------
+;日付エフェクト的显示フロー
+;-------------------------------------------------
+@DAY_EFFECT
+REDRAW 0
+SETFONT "ＭＳ 明朝"
+FONTSTYLE 3
+;昼夜的エフェクト（右クリックでも描画做ため、ぱにめーしょん被迂回して配置参照）
+IF !GETBIT(GLOBAL, 52)
+	IF TIME
+		SETBGCOLOR 0, 0, 30
+	ELSE
+		SETBGCOLOR 20, 10, 0
+	ENDIF
+ENDIF
+CALL FULLCUTIN2(40, 17, @"%TOKANJI(FLAG:日数+1)%日目――","　","　",@"　　　　　　　　――\@ TIME ? 夜 # 昼\@。")
+FONTSTYLE 0
+SETFONT "ＭＳ 哥特式"
+REDRAW 1
+RETURN RESULT
+
+;-------------------------------------------------
+;関数名:HTML_BASE
+;概　要:BASE显示用関数
+;引　数:ARGS …BASE的名前
+;　　　 ARG:0…角色登录番号
+;       ARG:1…显示做BASE
+;       ARG:2…BAR的长さ(省略した场合32)
+;       ARG:3…真那么BASE的値被0以上に修正做
+;              (省略した场合、修正不做)
+;戻り値:无
+;-------------------------------------------------
+@HTML_BASE(ARGS, ARG:0, ARG:1, ARG:2 = 32, ARG:3)
+#FUNCTIONS
+#LOCALSIZE 2
+#LOCALSSIZE 1
+#DIM BAR_COLOR,2
+LOCALS '= ""
+;BASE根据色的指定
+;BAR_COLORに色被代入
+SELECTCASE ARG:1
+	;赤：体力・焦躁
+	CASE 0, 7
+		BAR_COLOR = 0xC07070
+		BAR_COLOR:1 = 0x502020
+	;青：理性
+	CASE 5
+		BAR_COLOR = 0x7070C0
+		BAR_COLOR:1 = 0x202050
+	;緑：气力
+	CASE 1
+		BAR_COLOR = 0x70C070
+		;无法抵抗的调教对象的场合、赤緑
+		SIF ARG == MASTER && TFLAG:无法抵抗
+			BAR_COLOR = 0xC0A040
+		BAR_COLOR:1 = 0x205020
+	;紫：兴趣
+	CASE 6
+		BAR_COLOR = 0xC070C0
+		BAR_COLOR:1 = 0x502050
+	;黄：尿意
+	CASE 4
+		BAR_COLOR = 0xC0C070
+		BAR_COLOR:1 = 0x505020
+	;青緑：满足
+	CASE 8
+		BAR_COLOR = 0x70C0C0
+		BAR_COLOR:1 = 0x205050
+	;白：母乳・射精
+	CASEELSE
+		BAR_COLOR = 0xC0C0C0
+		BAR_COLOR:1 = 0x202020
+ENDSELECT
+;BASE名显示
+LOCALS += ARGS
+LOCAL:0 = ARG:3 ? MAX(BASE:(ARG:0):(ARG:1), 0) # BASE:(ARG:0):(ARG:1)
+LOCAL:1 = MAXBASE:(ARG:0):(ARG:1)
+LOCALS += LAYER_RECTBAR(LOCAL, LOCAL:1, ARG:2 / 2, BAR_COLOR, BAR_COLOR:1, , , 30)
+LOCALS += @"({LOCAL:0, 5}/{LOCAL:1, 5})　"
+RETURNF LOCALS
+;-------------------------------------------------
+;関数名:PRINT_BASE
+;概　要:BASE显示用関数
+;引　数:ARGS …BASE的名前
+;　　　 ARG:0…角色登录番号
+;       ARG:1…显示做BASE
+;       ARG:2…BAR的长さ(省略した场合32)
+;       ARG:3…真那么BASE的値被0以上に修正做
+;              (省略した场合、修正不做)
+;戻り値:无
+;-------------------------------------------------
+@PRINT_BASE (ARGS, ARG:0, ARG:1, ARG:2 = 32, ARG:3)
+HTML_PRINT HTML_BASE(ARGS, ARG:0, ARG:1, ARG:2, ARG:3)
+
+@PRINT_BASEL(ARGS, ARG:0, ARG:1, ARG:2 = 32, ARG:3)
+CALL PRINT_BASE(ARGS, ARG:0, ARG:1, ARG:2, ARG:3)
+PRINTL 
+
+@PRINT_BASEW(ARGS, ARG:0, ARG:1, ARG:2 = 32, ARG:3)
+CALL PRINT_BASE(ARGS, ARG:0, ARG:1, ARG:2, ARG:3)
+WAIT
+
+
+;-------------------------------------------------
+;関数名:CLOTHE_SHOW
+;概　要:脱衣动画ーション関数
+;引　数:ARG:0…角色登录番号(MASTERかTARGET。省略したり妙な数値但入时TARGET)
+;　　　:ARG:1…省略做和脱衣。正に做和着衣。
+;備　考:通常関数
+;保存しておいた服装和现在的服装的差异被见て、脱いだり着たりした部位被フェード显示做
+;もうちょっ和效率的な組み方但できる気但做けど、早朝で頭回ってない的で通用化せずにやっちゃおう・・・
+;-------------------------------------------------
+@CLOTHE_SHOW(ARG:0 = -1, ARG:1)
+#LOCALSIZE 20
+#DIM LCOUNT, 2
+#DIM PRICOLOR, 1
+#DIM RED,2
+#DIM GREEN,2
+#DIM BLUE,2
+VARSET RED
+VARSET GREEN
+VARSET BLUE
+VARSET LOCAL
+
+;非显示的场合
+IF !ANIME_CONFIG("USER3")
+	CALL SHOW_EQUIP_3(1+(ARG == MASTER))
+	PRINTL
+	PRINTL
+	RETURN 0
+ENDIF
+
+LOCAL:10 = CURRENTREDRAW()
+REDRAW 0
+
+;デフォルト色でなくて是那么ない
+RESETCOLOR
+PRICOLOR = GETCOLOR()
+
+;RGBそれぞれ的ベース値、減少値被各色:0和1に代入
+RED = GETRED()
+GREEN = GETGREEN()
+BLUE = GETBLUE()
+RED:1 = MAX(1, (RED-GETRED(0x0000))/4)
+GREEN:1 = MAX(1, (GREEN-GETGREEN(0x0000))/4)
+BLUE:1 = MAX(1, (BLUE-GETBLUE(0x0000))/4)
+
+SIF ARG != MASTER
+	ARG = TARGET
+;脱いだ・着た位置被LOCALに保存
+FOR LCOUNT, 0, 10
+	LOCAL:LCOUNT = CLOTHE_SAVE(ARG, LCOUNT)
+NEXT
+
+;脱衣的场合
+IF !ARG:1
+	;脱ぐ前的服装被显示し、脱いだ位置是そ的着衣的字符数被LOCALに入れる
+	PRINTFORMD %CALLNAME:ARG%的衣服：
+	;全身外套
+	IF TEQUIP:ARG:全身外套
+		PRINTFORMD [%DRESS(ARG)%]
+	ELSEIF LOCAL:6
+		PRINTFORM [%DRESS(ARG)%]
+		LOCAL:6 = STRLENS(@"[%DRESS(ARG)%]")
+	ENDIF
+	;上半身外套
+	IF TEQUIP:ARG:上半身外套
+		PRINTFORMD [%OUTER_T(ARG)%]
+	ELSEIF LOCAL:5
+		PRINTFORM [%OUTER_T(ARG)%]
+		LOCAL:5 = STRLENS(@"[%OUTER_T(ARG)%]")
+	ENDIF
+	;下半身外套
+	IF TEQUIP:ARG:下半身外套
+		PRINTFORMD [%OUTER_B(ARG)%]
+	ELSEIF LOCAL:4
+		PRINTFORM [%OUTER_B(ARG)%]
+		LOCAL:4 = STRLENS(@"[%OUTER_B(ARG)%]")
+	ENDIF
+	;上半身内衣
+	IF TEQUIP:ARG:上半身内衣
+		PRINTFORMD [%INNER_T(ARG)%]
+	ELSEIF LOCAL:3
+		PRINTFORM [%INNER_T(ARG)%]
+		LOCAL:3 = STRLENS(@"[%INNER_T(ARG)%]")
+	ENDIF
+	;下半身内衣
+	IF TEQUIP:ARG:下半身内衣
+		PRINTFORMD [%INNER_B(ARG)%]
+	ELSEIF LOCAL:2
+		PRINTFORM [%INNER_B(ARG)%]
+		LOCAL:2 = STRLENS(@"[%INNER_B(ARG)%]")
+	ENDIF
+	;袜子
+	IF TEQUIP:ARG:袜子
+		PRINTFORMD [%SOCKS(ARG)%]
+	ELSEIF LOCAL:1
+		PRINTFORM [%SOCKS(ARG)%]
+		LOCAL:1 = STRLENS(@"[%SOCKS(ARG)%]")
+	ENDIF
+	;手套
+	IF TEQUIP:ARG:配饰
+		PRINTFORMD [%GLOVES(ARG)%]
+	ELSEIF LOCAL:0
+		PRINTFORM [%GLOVES(ARG)%]
+		LOCAL:0 = STRLENS(@"[%GLOVES(ARG)%]")
+	ENDIF
+	;COSPLAY
+	IF TEQUIP:ARG:COSPLAY
+		PRINTFORMD [%COSPLAY(ARG)%]
+	ELSEIF LOCAL:9
+		PRINTFORM [%COSPLAY(ARG)%]
+		LOCAL:9 = STRLENS(@"[%COSPLAY(ARG)%]")
+	ENDIF
+	PRINTL
+	PRINTL
+	TWAIT 100, 0
+	FOR LCOUNT, 0, 4
+		RED = MAX(0, RED-RED:1)
+		GREEN = MAX(0, GREEN-GREEN:1)
+		BLUE = MAX(0, BLUE-BLUE:1)
+		SETCOLOR RED, GREEN, BLUE
+		CLEARLINE 2
+		PRINTFORMD %CALLNAME:ARG%的衣服：
+		;全身外套
+		IF TEQUIP:ARG:全身外套
+			PRINTFORMD [%DRESS(ARG)%]
+		ELSEIF LOCAL:6
+			PRINTFORM [%DRESS(ARG)%]
+		ENDIF
+		;上半身外套
+		IF TEQUIP:ARG:上半身外套
+			PRINTFORMD [%OUTER_T(ARG)%]
+		ELSEIF LOCAL:5
+			PRINTFORM [%OUTER_T(ARG)%]
+		ENDIF
+		;下半身外套
+		IF TEQUIP:ARG:下半身外套
+			PRINTFORMD [%OUTER_B(ARG)%]
+		ELSEIF LOCAL:4
+			PRINTFORM [%OUTER_B(ARG)%]
+		ENDIF
+		;上半身内衣
+		IF TEQUIP:ARG:上半身内衣
+			PRINTFORMD [%INNER_T(ARG)%]
+		ELSEIF LOCAL:3
+			PRINTFORM [%INNER_T(ARG)%]
+		ENDIF
+		;下半身内衣
+		IF TEQUIP:ARG:下半身内衣
+			PRINTFORMD [%INNER_B(ARG)%]
+		ELSEIF LOCAL:2
+			PRINTFORM [%INNER_B(ARG)%]
+		ENDIF
+		;袜子
+		IF TEQUIP:ARG:袜子
+			PRINTFORMD [%SOCKS(ARG)%]
+		ELSEIF LOCAL:1
+			PRINTFORM [%SOCKS(ARG)%]
+		ENDIF
+		;手套
+		IF TEQUIP:ARG:配饰
+			PRINTFORMD [%GLOVES(ARG)%]
+		ELSEIF LOCAL:0
+			PRINTFORM [%GLOVES(ARG)%]
+		ENDIF
+		;COSPLAY
+		IF TEQUIP:ARG:COSPLAY
+			PRINTFORMD [%COSPLAY(ARG)%]
+		ELSEIF LOCAL:9
+			PRINTFORM [%COSPLAY(ARG)%]
+		ENDIF
+		PRINTL
+		PRINTL
+		TWAIT 100, 0
+	NEXT
+	FOR LCOUNT, 0, MAXARRAY(LOCAL)/2
+		CLEARLINE 2
+		PRINTFORMD %CALLNAME:ARG%的衣服：
+		;全身外套
+		IF TEQUIP:ARG:全身外套
+			PRINTFORMD [%DRESS(ARG)%]
+		ELSEIF LOCAL:6
+			LOCAL:6 = MAX(0, LOCAL:6-2)
+			PRINTFORM %" "*LOCAL:6%
+		ENDIF
+		;上半身外套
+		IF TEQUIP:ARG:上半身外套
+			PRINTFORMD [%OUTER_T(ARG)%]
+		ELSEIF LOCAL:5
+			LOCAL:5 = MAX(0, LOCAL:5-2)
+			PRINTFORM %" "*LOCAL:5%
+		ENDIF
+		;下半身外套
+		IF TEQUIP:ARG:下半身外套
+			PRINTFORMD [%OUTER_B(ARG)%]
+		ELSEIF LOCAL:4
+			LOCAL:4 = MAX(0, LOCAL:4-2)
+			PRINTFORM %" "*LOCAL:4%
+		ENDIF
+		;上半身内衣
+		IF TEQUIP:ARG:上半身内衣
+			PRINTFORMD [%INNER_T(ARG)%]
+		ELSEIF LOCAL:3
+			LOCAL:3 = MAX(0, LOCAL:3-2)
+			PRINTFORM %" "*LOCAL:3%
+		ENDIF
+		;下半身内衣
+		IF TEQUIP:ARG:下半身内衣
+			PRINTFORMD [%INNER_B(ARG)%]
+		ELSEIF LOCAL:2
+			LOCAL:2 = MAX(0, LOCAL:2-2)
+			PRINTFORM %" "*LOCAL:2%
+		ENDIF
+		;袜子
+		IF TEQUIP:ARG:袜子
+			PRINTFORMD [%SOCKS(ARG)%]
+		ELSEIF LOCAL:1
+			LOCAL:1 = MAX(0, LOCAL:1-2)
+			PRINTFORM %" "*LOCAL:1%
+		ENDIF
+		;手套
+		IF TEQUIP:ARG:配饰
+			PRINTFORMD [%GLOVES(ARG)%]
+		ELSEIF LOCAL:0
+			LOCAL:0 = MAX(0, LOCAL:0-2)
+			PRINTFORM %" "*LOCAL:0%
+		ENDIF
+		;COSPLAY
+		IF TEQUIP:ARG:COSPLAY
+			PRINTFORMD [%COSPLAY(ARG)%]
+		ELSEIF LOCAL:9
+			LOCAL:9 = MAX(0, LOCAL:9-2)
+			PRINTFORM %" "*LOCAL:9%
+		ENDIF
+		PRINTL
+		PRINTL
+		TWAIT 100, 0
+	NEXT
+;着衣的场合
+ELSE
+	;着る前的服装被显示し、脱いだ位置是そ的着衣的字符数被LOCALに入れる
+	PRINTFORMD %CALLNAME:ARG%的衣服：
+	;全身外套
+	IF LOCAL:6
+		LOCAL:6 = STRLENS(@"[%DRESS(ARG)%]")
+	ELSEIF TEQUIP:ARG:全身外套 
+		PRINTFORMD [%DRESS(ARG)%]
+	ENDIF
+	;上半身外套
+	IF LOCAL:5
+		LOCAL:5 = STRLENS(@"[%OUTER_T(ARG)%]")
+	ELSEIF TEQUIP:ARG:上半身外套
+		PRINTFORMD [%OUTER_T(ARG)%]
+	ENDIF
+	;下半身外套
+	IF LOCAL:4
+		LOCAL:4 = STRLENS(@"[%OUTER_B(ARG)%]")
+	ELSEIF TEQUIP:ARG:下半身外套
+		PRINTFORMD [%OUTER_B(ARG)%]
+	ENDIF
+	;上半身内衣
+	IF LOCAL:3
+		LOCAL:3 = STRLENS(@"[%INNER_T(ARG)%]")
+	ELSEIF TEQUIP:ARG:上半身内衣
+		PRINTFORMD [%INNER_T(ARG)%]
+	ENDIF
+	;下半身内衣
+	IF LOCAL:2
+		LOCAL:2 = STRLENS(@"[%INNER_B(ARG)%]")
+	ELSEIF TEQUIP:ARG:下半身内衣
+		PRINTFORMD [%INNER_B(ARG)%]
+	ENDIF
+	;袜子
+	IF LOCAL:1
+		LOCAL:1 = STRLENS(@"[%SOCKS(ARG)%]")
+	ELSEIF TEQUIP:ARG:袜子
+		PRINTFORMD [%SOCKS(ARG)%]
+	ENDIF
+	;手套
+	IF LOCAL:0
+		LOCAL:0 = STRLENS(@"[%GLOVES(ARG)%]")
+	ELSEIF TEQUIP:ARG:配饰
+		PRINTFORMD [%GLOVES(ARG)%]
+	ENDIF
+	;COSPLAY
+	IF LOCAL:9
+		LOCAL:9 = STRLENS(@"[%COSPLAY(ARG)%]")
+	ELSEIF TEQUIP:ARG:COSPLAY
+		PRINTFORMD [%COSPLAY(ARG)%]
+	ENDIF
+	PRINTL
+	PRINTL
+	TWAIT 100, 0
+	FOR LCOUNT, 0, MAXARRAY(LOCAL)/2
+		CLEARLINE 2
+		PRINTFORMD %CALLNAME:ARG%的衣服：
+		;全身外套
+		IF LOCAL:6
+			PRINTFORM %" "*MIN(LCOUNT*2, LOCAL:6)%
+		ELSEIF TEQUIP:ARG:全身外套 
+			PRINTFORMD [%DRESS(ARG)%]
+		ENDIF
+		;上半身外套
+		IF LOCAL:5
+			PRINTFORM %" "*MIN(LCOUNT*2, LOCAL:5)%
+		ELSEIF TEQUIP:ARG:上半身外套
+			PRINTFORMD [%OUTER_T(ARG)%]
+		ENDIF
+		;下半身外套
+		IF LOCAL:4
+			PRINTFORM %" "*MIN(LCOUNT*2, LOCAL:4)%
+		ELSEIF TEQUIP:ARG:下半身外套
+			PRINTFORMD [%OUTER_B(ARG)%]
+		ENDIF
+		;上半身内衣
+		IF LOCAL:3
+			PRINTFORM %" "*MIN(LCOUNT*2, LOCAL:3)%
+		ELSEIF TEQUIP:ARG:上半身内衣
+			PRINTFORMD [%INNER_T(ARG)%]
+		ENDIF
+		;下半身内衣
+		IF LOCAL:2
+			PRINTFORM %" "*MIN(LCOUNT*2, LOCAL:2)%
+		ELSEIF TEQUIP:ARG:下半身内衣
+			PRINTFORMD [%INNER_B(ARG)%]
+		ENDIF
+		;袜子
+		IF LOCAL:1
+			PRINTFORM %" "*MIN(LCOUNT*2, LOCAL:1)%
+		ELSEIF TEQUIP:ARG:袜子
+			PRINTFORMD [%SOCKS(ARG)%]
+		ENDIF
+		;手套
+		IF LOCAL:0
+			PRINTFORM %" "*MIN(LCOUNT*2, LOCAL:0)%
+		ELSEIF TEQUIP:ARG:配饰
+			PRINTFORMD [%GLOVES(ARG)%]
+		ENDIF
+		;COSPLAY
+		IF LOCAL:9
+			PRINTFORM %" "*MIN(LCOUNT*2, LOCAL:9)%
+		ELSEIF TEQUIP:ARG:COSPLAY
+			PRINTFORMD [%COSPLAY(ARG)%]
+		ENDIF
+		PRINTL
+		PRINTL
+		TWAIT 100, 0
+	NEXT
+	SETCOLOR 0x000000
+	RED = GETRED()
+	GREEN = GETGREEN()
+	BLUE = GETBLUE()
+	FOR LCOUNT, 0, 4
+		RED = MIN(GETRED(PRICOLOR), RED+RED:1)
+		GREEN = MIN(GETGREEN(PRICOLOR), GREEN+GREEN:1)
+		BLUE = MIN(GETBLUE(PRICOLOR), BLUE+BLUE:1)
+		SETCOLOR RED, GREEN, BLUE
+		CLEARLINE 2
+		PRINTFORMD %CALLNAME:ARG%的衣服：
+		;全身外套
+		IF LOCAL:6
+			PRINTFORM [%DRESS(ARG)%]
+		ELSEIF TEQUIP:ARG:全身外套 
+			PRINTFORMD [%DRESS(ARG)%]
+		ENDIF
+		;上半身外套
+		IF LOCAL:5
+			PRINTFORM [%OUTER_T(ARG)%]
+		ELSEIF TEQUIP:ARG:上半身外套
+			PRINTFORMD [%OUTER_T(ARG)%]
+		ENDIF
+		;下半身外套
+		IF LOCAL:4
+			PRINTFORM [%OUTER_B(ARG)%]
+		ELSEIF TEQUIP:ARG:下半身外套
+			PRINTFORMD [%OUTER_B(ARG)%]
+		ENDIF
+		;上半身内衣
+		IF LOCAL:3
+			PRINTFORM [%INNER_T(ARG)%]
+		ELSEIF TEQUIP:ARG:上半身内衣
+			PRINTFORMD [%INNER_T(ARG)%]
+		ENDIF
+		;下半身内衣
+		IF LOCAL:2
+			PRINTFORM [%INNER_B(ARG)%]
+		ELSEIF TEQUIP:ARG:下半身内衣
+			PRINTFORMD [%INNER_B(ARG)%]
+		ENDIF
+		;袜子
+		IF LOCAL:1
+			PRINTFORM [%SOCKS(ARG)%]
+		ELSEIF TEQUIP:ARG:袜子
+			PRINTFORMD [%SOCKS(ARG)%]
+		ENDIF
+		;手套
+		IF LOCAL:0
+			PRINTFORM [%GLOVES(ARG)%]
+		ELSEIF TEQUIP:ARG:配饰
+			PRINTFORMD [%GLOVES(ARG)%]
+		ENDIF
+		;COSPLAY
+		IF LOCAL:9
+			PRINTFORM [%COSPLAY(ARG)%]
+		ELSEIF TEQUIP:ARG:COSPLAY
+			PRINTFORMD [%COSPLAY(ARG)%]
+		ENDIF
+		;全身外套
+		IF TEQUIP:ARG:全身外套
+			PRINTFORMD [%DRESS(ARG)%]
+		ELSEIF LOCAL:6
+			PRINTFORM [%DRESS(ARG)%]
+		ENDIF
+		PRINTL
+		PRINTL
+		TWAIT 100, 0
+	NEXT
+ENDIF
+CLEARLINE 2
+;結果、现在的服装
+PRINTFORMD %CALLNAME:ARG%的衣服：
+;全身外套
+IF TEQUIP:ARG:全身外套 
+	PRINTFORMD [%DRESS(ARG)%]
+ENDIF
+;上半身外套
+IF TEQUIP:ARG:上半身外套
+	PRINTFORMD [%OUTER_T(ARG)%]
+ENDIF
+;下半身外套
+IF TEQUIP:ARG:下半身外套
+	PRINTFORMD [%OUTER_B(ARG)%]
+ENDIF
+;上半身内衣
+IF TEQUIP:ARG:上半身内衣
+	PRINTFORMD [%INNER_T(ARG)%]
+ENDIF
+;下半身内衣
+IF TEQUIP:ARG:下半身内衣
+	PRINTFORMD [%INNER_B(ARG)%]
+ENDIF
+;袜子
+IF TEQUIP:ARG:袜子
+	PRINTFORMD [%SOCKS(ARG)%]
+ENDIF
+;手套
+IF TEQUIP:ARG:配饰
+	PRINTFORMD [%GLOVES(ARG)%]
+ENDIF
+;COSPLAY
+IF TEQUIP:ARG:COSPLAY
+	PRINTFORMD [%COSPLAY(ARG)%]
+ENDIF
+REDRAW LOCAL:10
+PRINTL
+PRINTL
+RESETCOLOR
+
+
+;-------------------------------------------------
+;関数名:POSE_SHOW
+;概　要:姿势变化动画ーション関数
+;引　数:
+;備　考:通常関数
+;保存しておいた服装和现在的服装的差异被见て、脱いだり着たりした部位被フェード显示做
+;もうちょっ和效率的な組み方但できる気但做けど、早朝で頭回ってない的で通用化せずにやっちゃおう・・・
+;-------------------------------------------------
+@POSE_SHOW
+#LOCALSIZE 20
+#DIM LCOUNT, 2
+#DIM PRICOLOR, 1
+#DIM RED,2
+#DIM GREEN,2
+#DIM BLUE,2
+#DIMS M上回合的姿势, 1
+#DIMS M本回合的姿势, 1
+#DIMS T上回合的姿势, 1
+#DIMS T本回合的姿势, 1
+VARSET RED
+VARSET GREEN
+VARSET BLUE
+VARSET LOCAL
+
+
+;调教对象
+SELECTCASE TCVAR:MASTER:姿势
+	CASE 1
+		M本回合的姿势 = 仰面
+	CASE 2
+		M本回合的姿势 = 坐着
+	CASE 3
+		M本回合的姿势 = 趴着
+	CASE 4
+		M本回合的姿势 = 站立
+	CASE 10
+		M本回合的姿势 = 跪着
+	CASEELSE
+		M本回合的姿势 = 轻松的姿势
+ENDSELECT
+SELECTCASE TCVAR:MASTER:上回合的姿势
+	CASE 1
+		M上回合的姿势 = 仰面
+	CASE 2
+		M上回合的姿势 = 坐着
+	CASE 3
+		M上回合的姿势 = 趴着
+	CASE 4
+		M上回合的姿势 = 站立
+	CASE 10
+		M上回合的姿势 = 跪着
+	CASEELSE
+		M上回合的姿势 = 轻松的姿势
+ENDSELECT
+;主人
+SELECTCASE TCVAR:MASTER:位置上下
+	CASE 1
+		T本回合的姿势 = %CALLNAME:MASTER%的上
+	CASE 2
+		T本回合的姿势 = %CALLNAME:MASTER%的下
+	CASEELSE
+		SELECTCASE TCVAR:MASTER:位置前后
+			CASE 1
+				T本回合的姿势 = %CALLNAME:MASTER%的正面
+			CASE 2
+				T本回合的姿势 = %CALLNAME:MASTER%的背后
+			CASE 3
+				T本回合的姿势 = 背对着%CALLNAME:MASTER%
+			CASEELSE
+				T本回合的姿势 = 正在观察%CALLNAME:MASTER%
+		ENDSELECT
+ENDSELECT
+SELECTCASE TCVAR:MASTER:上次的位置上下
+	CASE 1
+		T上回合的姿势 = %CALLNAME:MASTER%的上
+	CASE 2
+		T上回合的姿势 = %CALLNAME:MASTER%的下
+	CASEELSE
+		SELECTCASE TCVAR:MASTER:上次的位置前后
+			CASE 1
+				T上回合的姿势 = %CALLNAME:MASTER%的正面
+			CASE 2
+				T上回合的姿势 = %CALLNAME:MASTER%的背后
+			CASE 3
+				T上回合的姿势 = 背对着%CALLNAME:MASTER%
+			CASEELSE
+				T上回合的姿势 = 正在观察%CALLNAME:MASTER%
+		ENDSELECT
+ENDSELECT
+
+;非显示的场合
+IF !ANIME_CONFIG("USER3")
+	PRINTFORMDL 现在的姿势：[%CALLNAME:MASTER%：%M本回合的姿势%][%CALLNAME%：%T本回合的姿势%]
+	PRINTL
+	RETURN 0
+ENDIF
+
+LOCAL:12 = CURRENTREDRAW()
+REDRAW 0
+
+;デフォルト色でなくて是那么ない
+RESETCOLOR
+PRICOLOR = GETCOLOR()
+
+;RGBそれぞれ的ベース値、減少値被各色:0和1に代入
+RED = GETRED()
+GREEN = GETGREEN()
+BLUE = GETBLUE()
+RED:1 = MAX(1, (RED-GETRED(0x0000))/4)
+GREEN:1 = MAX(1, (GREEN-GETGREEN(0x0000))/4)
+BLUE:1 = MAX(1, (BLUE-GETBLUE(0x0000))/4)
+
+;も和的姿势被显示做
+PRINTFORMDL 现在的姿势：[%CALLNAME:MASTER%：%M上回合的姿势%][%CALLNAME%：%T上回合的姿势%]
+PRINTL 
+
+;姿势的变化但あるかないか被LOCAL:0~1
+;变化した字符数被LOCAL:10~11に保存做
+IF M上回合的姿势 != M本回合的姿势
+	LOCAL:0 = 1
+	LOCAL:10 = STRLENS(M本回合的姿势)-STRLENS(M上回合的姿势)
+ENDIF
+IF T上回合的姿势 != T本回合的姿势
+	LOCAL:1 = 1
+	LOCAL:11 = STRLENS(T本回合的姿势)-STRLENS(T上回合的姿势)
+ENDIF
+;どちらも变わっていない那么返回。念的ため
+IF !LOCAL:0 && !LOCAL:1
+	RETURN 0
+ENDIF
+TWAIT 300, 0
+
+;变化的あった部位被フェードアウト侍奉
+FOR LCOUNT, 0, 4
+	RED = MAX(0, RED-RED:1)
+	GREEN = MAX(0, GREEN-GREEN:1)
+	BLUE = MAX(0, BLUE-BLUE:1)
+	SETCOLOR RED, GREEN, BLUE
+	CLEARLINE 2
+	PRINTFORMD 现在的姿势：[%CALLNAME:MASTER%：
+	;调教对象
+	IF LOCAL:0
+		PRINTFORM %M上回合的姿势%
+	ELSE
+		PRINTFORMD %M上回合的姿势%
+	ENDIF
+	PRINTFORMD ][%CALLNAME%：
+	;调教者
+	IF LOCAL:1
+		PRINTFORM %T上回合的姿势%
+	ELSE
+		PRINTFORMD %T上回合的姿势%
+	ENDIF
+	PRINTDL ]
+	PRINTL
+	TWAIT 100, 0
+NEXT
+;枠的成型
+FOR LCOUNT, 0, MAX(ABS(LOCAL:10), ABS(LOCAL:11))
+	CLEARLINE 2
+	PRINTFORMD 现在的姿势：[%CALLNAME:MASTER%：
+	;调教对象
+	IF !LOCAL:0
+		PRINTFORMD %M本回合的姿势%
+	ELSEIF ABS(LOCAL:10) <= LCOUNT
+		PRINTFORMD %" "*(STRLENS(M本回合的姿势))%
+	ELSEIF LOCAL:10 < 0
+		PRINTFORMD %" "*(STRLENS(M上回合的姿势)-LCOUNT-1)%
+	ELSE
+		PRINTFORMD %" "*(STRLENS(M上回合的姿势)+LCOUNT+1)%
+	ENDIF
+	PRINTFORMD ][%CALLNAME%：
+	;调教者
+	IF !LOCAL:1
+		PRINTFORMD %T本回合的姿势%
+	ELSEIF ABS(LOCAL:11) <= LCOUNT
+		PRINTFORMD %" "*(STRLENS(T本回合的姿势))%
+	ELSEIF LOCAL:11 < 0
+		PRINTFORMD %" "*(STRLENS(T上回合的姿势)-LCOUNT-1)%
+	ELSE
+		PRINTFORMD %" "*(STRLENS(T上回合的姿势)+LCOUNT+1)%
+	ENDIF
+	PRINTDL ]
+	PRINTL
+	TWAIT 100, 0
+NEXT
+;本回合的姿势被显示
+SETCOLOR 0x000000
+RED = GETRED()
+GREEN = GETGREEN()
+BLUE = GETBLUE()
+FOR LCOUNT, 0, 4
+	RED = MIN(GETRED(PRICOLOR), RED+RED:1)
+	GREEN = MIN(GETGREEN(PRICOLOR), GREEN+GREEN:1)
+	BLUE = MIN(GETBLUE(PRICOLOR), BLUE+BLUE:1)
+	SETCOLOR RED, GREEN, BLUE
+	CLEARLINE 2
+	PRINTFORMD 现在的姿势：[%CALLNAME:MASTER%：
+	;调教对象
+	IF LOCAL:0
+		PRINTFORM %M本回合的姿势%
+	ELSE
+		PRINTFORMD %M本回合的姿势%
+	ENDIF
+	PRINTFORMD ][%CALLNAME%：
+	;调教者
+	IF LOCAL:1
+		PRINTFORM %T本回合的姿势%
+	ELSE
+		PRINTFORMD %T本回合的姿势%
+	ENDIF
+	PRINTDL ]
+	PRINTL
+	TWAIT 100, 0
+NEXT
+CLEARLINE 2
+;結果、现在的姿势
+PRINTFORMDL 现在的姿势：[%CALLNAME:MASTER%：%M本回合的姿势%][%CALLNAME%：%T本回合的姿势%]
+REDRAW LOCAL:12
+PRINTW
+RESETCOLOR
+
+;--------------------------------------------------
+;３クリック待机@WAIT_3
+;字符串引数是バー记号。省略做和「…」
+;字符串引数1是フッタ。「。」和かいれればいい和おもう的
+;--------------------------------------------------
+@WAIT_3(ARGS = "…", ARGS:1)
+PRINTL  
+PRINTFORMDW 　%ARGS*3+ARGS:1%
+PRINTFORMDW 　%ARGS*2+ARGS:1%
+PRINTFORMDW 　%ARGS+ARGS:1%
+PRINTL  
+
+;WAIT_3的TWAIT版
+@TWAIT_3(ARGS = "…", ARGS:1)
+PRINTL
+PRINTFORMDL 　%ARGS*3+ARGS:1%
+TWAIT 500, 0
+PRINTFORMDL 　%ARGS*2+ARGS:1%
+TWAIT 500, 0
+PRINTFORMDL 　%ARGS+ARGS:1%
+TWAIT 500, 0
+PRINTL
+
+;--------------------------------------------------
+;WAIT3_ZWEI
+;ARG是省略可。伪に做和间的空行无
+;字符串引数是バー记号。省略做和「・」
+;字符串引数1是フッタ。使わない気是做
+;基本的にDIGEST、また是OP/ED等でALIGNMENT CENTER时で的使用被想定
+;--------------------------------------------------
+@WAIT3_ZWEI(ARG = 1, ARGS = "・", ARGS:1)
+PRINTL
+FONTSTYLE 1
+PRINTFORMDW %ARGS + ARGS:1%
+SIF ARG
+	PRINTL
+PRINTFORMDW %ARGS + ARGS:1%
+SIF ARG
+	PRINTL
+PRINTFORMDW %ARGS + ARGS:1%
+FONTSTYLE 0
+PRINTL
+
+;WAIT_3_ZWEI的TWAIT版
+@TWAIT3_ZWEI(ARG = 1, ARGS = "・", ARGS:1)
+PRINTL
+FONTSTYLE 1
+PRINTFORMDL %ARGS + ARGS:1%
+TWAIT 800, 0
+SIF ARG
+	PRINTL
+PRINTFORMDL %ARGS + ARGS:1%
+TWAIT 800, 0
+SIF ARG
+	PRINTL
+PRINTFORMDL %ARGS + ARGS:1%
+TWAIT 900, 0
+FONTSTYLE 0
+PRINTL
+
+;--------------------------------------------------
+;TWAIT1
+;字符串引数是バー记号。省略做和「―」
+;字符串引数1是フッタ。省略做和「。」
+;--------------------------------------------------
+@TWAIT1(ARGS = "―", ARGS:1 = "。")
+PRINTL
+TWAIT 500, 0
+PRINTFORMDL %ARGS*2 + ARGS:1%
+TWAIT 500, 0
+PRINTL
+
+
+;-------------------------------------------------------------------------------
+;	KOMEIJI_FUNCTIONS由来関数群是最新的関数和差し替えられました。
+;	最新的関数是KOMEIJI_FUNCTIONSフォルダにあり增加。
+;	
+;	PRINT_CR系			→	HTMLPRINT系被使用してください
+;	PRINT_HEART系		→	HTMLPRINT系被使用してください
+;	PRINT_RAINBOW系		→	新しいPRINT_RAINBOW系被使用してください
+;-------------------------------------------------------------------------------

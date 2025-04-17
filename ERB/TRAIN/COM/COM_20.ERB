@@ -1,0 +1,83 @@
+﻿;────────────────────────────────────
+;020,摆动腰部（快ＣＶＡ修正、乐趣、达成）
+;────────────────────────────────────
+@COM20
+;主动但責める侧的场合（性交奉仕、骑乘位等で腰被使って感じ侍奉）
+IF SEX_INITIATIVE(MASTER)
+	;COM分类
+	CALL SET_COMGRO("积极的服从")
+	;达成SOURCE増加
+	SOURCE:MASTER:达成 += (CFLAG:MASTER:调教等级 + 5) * (GET_ABL(MASTER, "奉仕精神") + 50) + (GET_ABL(MASTER, "技巧") + 50) * 20 / 100
+	;依存度变化
+	CALL ADD_DEPEND(+5, +3)
+;主动但責められる侧的场合（逆强奸、性交系等で迎え腰被使って快感被むさぼる、乳交や素股で快感被寻求）
+ELSE
+	;COM分类
+	CALL SET_COMGRO("接受")
+	;乐趣SOURCE増加
+	SOURCE:MASTER:乐趣 += 250 + SOURCE:MASTER:快Ｃ / 3 + SOURCE:MASTER:快Ｖ / 3 + SOURCE:MASTER:快Ａ / 3 + (CFLAG:MASTER:调教等级 + 1) * (GET_ABL(MASTER, "技巧") + 10) * 1
+	;依存度变化
+	CALL ADD_DEPEND(+4, +8)
+ENDIF
+;COM印象
+CALL SET_COMIMP("好印象大")
+;忍耐标志解消
+TCVAR:MASTER:忍耐 = 0
+RETURN 1
+
+;────────────────────────────────────
+;021,射进里面！（达成、乐趣、积极的服从）
+;────────────────────────────────────
+@COM21
+LOCAL = (CFLAG:M好感 - 500) / 20
+LOCAL = LIMIT(LOCAL, 1, 200)
+;达成SOURCE増加
+SOURCE:MASTER:达成 += 100 + LOCAL * (SOURCE:MASTER:快Ｃ + SOURCE:MASTER:快Ｖ + SOURCE:MASTER:快Ａ) / 1000
+;乐趣SOURCE増加
+IF TEQUIP:性交中 == 6
+	SOURCE:MASTER:乐趣 += 100 + SOURCE:MASTER:快Ａ / 4 + SOURCE:快Ｃ / 3 + (CFLAG:MASTER:调教等级 + 1) * (GET_ABL(MASTER, "技巧") + 10) * CFLAG:M好感 / 1500
+ELSE
+	SOURCE:MASTER:乐趣 += 250 + SOURCE:MASTER:快Ｖ / 2 + SOURCE:快Ｃ / 3 + (CFLAG:MASTER:调教等级 + 1) * (GET_ABL(MASTER, "技巧") + 10) * CFLAG:M好感 / 1000
+ENDIF
+;调教对象但男人もしく是Ａ性交中
+IF TALENT:MASTER:男人 || TEQUIP:性交中 == 6
+	;派生：Ａに出して
+	TFLAG:REACT派生 = 1
+ELSE
+	;派生：Ｖに出して
+	TFLAG:REACT派生 = 0
+ENDIF
+;COM分类
+CALL SET_COMGRO("接受")
+;COM印象
+CALL SET_COMIMP("好印象大")
+;忍耐标志解消
+TCVAR:MASTER:忍耐 = 0
+;依存度变化
+CALL ADD_DEPEND(+10, +10)
+RETURN 1
+
+;────────────────────────────────────
+;022,不要中出！（反抗、恐怖、哀求、惩罚点数）
+;────────────────────────────────────
+@COM22
+;反抗、恐怖SOURCE増加
+SOURCE:MASTER:反抗 += 300 + (MARK:反抗刻印 + 5) * 50
+SOURCE:MASTER:恐怖 += (100 + SOURCE:MASTER:快Ｖ / 2 + SOURCE:MASTER:快Ａ / 10) * (MARK:MASTER:心理创伤 + 10) / 10
+;願い被聞き入れるか的チェック。かなりアバウト
+IF BASE:满足 / 100 + CFLAG:定位 / 10 + (CFLAG:M好感 - 500) / 100 > BASE:焦躁 / 100 + RAND:5
+	;COM分类
+	CALL SET_COMGRO("请求宽恕")
+	;派生：中に出さない
+	TFLAG:REACT派生 = 0
+ELSE
+	;惩罚点数加算
+	TFLAG:惩罚点数 += 1 + RAND:3 + BASE:焦躁 / 200
+	;派生：中に出す
+	TFLAG:REACT派生 = 1
+ENDIF
+;COM印象
+CALL SET_COMIMP("恶印象小")
+;依存度变化
+CALL ADD_DEPEND(0, -10)
+RETURN 1

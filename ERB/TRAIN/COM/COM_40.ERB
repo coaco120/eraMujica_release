@@ -1,0 +1,101 @@
+﻿;────────────────────────────────────
+;040,拒绝执行（反抗、惩罚点数）
+;────────────────────────────────────
+@COM40
+;反抗SOURCE増加
+IF CFLAG:MASTER:调教等级 < 10
+	SOURCE:MASTER:反抗 += 250 + MARK:屈服刻印 * (10 - CFLAG:MASTER:调教等级) * 20
+ELSE
+	SOURCE:MASTER:反抗 += 200
+ENDIF
+;惩罚点数加算
+TFLAG:惩罚点数 += BASE:焦躁 / 100 + MARK:反抗刻印 + 1
+;COM分类
+CALL SET_COMGRO("拒绝")
+;COM印象
+CALL SET_COMIMP("恶印象大")
+;依存度变化
+CALL ADD_DEPEND(-2, -4)
+RETURN 1
+
+
+;────────────────────────────────────
+;041,消极的执行（屈从、消极的服从、惩罚点数）
+;────────────────────────────────────
+@COM41
+;屈从SOURCE増加
+SOURCE:MASTER:屈从 += 100 + CFLAG:MASTER:调教等级 * (50 + GET_ABL(MASTER, "顺从")) * (50 + GET_ABL(MASTER, "奉仕精神") * 2) * MARK:屈服刻印 / 100
+;消极判定
+LOCAL = (BASE:焦躁 / 150 + BASE:兴趣 / 150 - CFLAG:定位 / 10) * (11 - MARK:屈服刻印) / 10 + RAND:3
+IF LOCAL > 0
+	;惩罚点数加算
+	TFLAG:惩罚点数 += LOCAL
+	;派生：消极的な的但気に入らない
+	TFLAG:REACT派生 = 1
+	;COM印象
+	CALL SET_COMIMP("恶印象小")
+	;依存度变化
+	CALL ADD_DEPEND(-5, 0)
+ELSE
+	;派生：消极的只どいいか
+	TFLAG:REACT派生 = 0
+	;COM印象
+	CALL SET_COMIMP("好印象小")
+	;依存度变化
+	CALL ADD_DEPEND(-3, +2)
+ENDIF
+;COM分类
+CALL SET_COMGRO("消极的服从")
+RETURN 1
+
+
+;────────────────────────────────────
+;042,积极的执行（达成、积极的服从）
+;────────────────────────────────────
+@COM42
+;达成SOURCE増加
+SOURCE:MASTER:达成 += (CFLAG:MASTER:调教等级 + 5) * (GET_ABL(MASTER, "奉仕精神") + 50) + (GET_ABL(MASTER, "技巧") + 50) * 20 / 100
+;COM分类
+CALL SET_COMGRO("积极的服从")
+;COM印象
+CALL SET_COMIMP("好印象大")
+;忍耐标志解消
+TCVAR:MASTER:忍耐 = 0
+;依存度变化
+CALL ADD_DEPEND(+4, +2)
+RETURN 1
+
+
+;────────────────────────────────────
+;043,充满爱意的执行（达成、乐趣、积极的服从）
+;────────────────────────────────────
+@COM43
+;达成、乐趣SOURCE増加
+SOURCE:MASTER:达成 += (CFLAG:M好感 + 500) * (GET_ABL(MASTER, "奉仕精神") + 10) * (GET_ABL(MASTER, "技巧") + 10) / 10000
+SOURCE:MASTER:乐趣 += (CFLAG:M好感 + 100) * (GET_TRAINLV(TARGET) + 10) / 50
+;COM分类
+CALL SET_COMGRO("积极的服从")
+;COM印象
+CALL SET_COMIMP("好印象大")
+;忍耐标志解消
+TCVAR:MASTER:忍耐 = 0
+;依存度变化
+CALL ADD_DEPEND(+6, +10)
+RETURN 1
+
+
+;────────────────────────────────────
+;044,冷淡的执行（达成、淡然的服从）
+;────────────────────────────────────
+@COM44
+;达成SOURCE増加
+SOURCE:MASTER:达成 += (CFLAG:MASTER:调教等级 + 5) * (GET_ABL(MASTER, "奉仕精神") + 50) + (GET_ABL(MASTER, "技巧") + 50) * 20 / 120
+;COM分类
+CALL SET_COMGRO("淡然的服从")
+;COM印象
+CALL SET_COMIMP("好印象小")
+;忍耐标志解消
+TCVAR:MASTER:忍耐 = 0
+;依存度变化
+CALL ADD_DEPEND(+2, -2)
+RETURN 1

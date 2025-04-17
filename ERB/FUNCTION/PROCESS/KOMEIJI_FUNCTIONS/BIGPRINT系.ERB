@@ -1,0 +1,112 @@
+﻿;-------------------------------------------------
+;BIGPRINT系関数
+;-------------------------------------------------
+;・本当にフォントサイズ被变えているわけで是ない。实際变えられないし
+;・ちょっ和したトリック。BIGPRINT系的基本处理でもある
+;・もしか做和显示結果是環境に依存做かもしれない
+;　古いXPしか无くて詳細なテスト是できない的。ごめんね
+;・一部记号但いい感じに出せなかったり做的で确认必須
+;・キーワード"D"被作る予定是无い。どうしても和いう方是GETDEFCOLOR()被使用してください
+;・え？ マック？ 私是オニポテ但食べ想要です
+;-------------------------------------------------
+;阁下但使うかもしれない、オススメ出来ない字符
+;・"…" → 小さく"..."和出力される。"･･･" か "・・・"でそれっぽく
+;・"///" → BIGで是小さく出力される。UNICODE(0x2571) * 3でそれっぽくなる
+;　SMALLでもUNICODE(0x2571) * 3和做か、问题ない那么そ的ま直到も…？
+;・"!?" → 小さく出力される。BIGで是"！？"和做他ない
+;　SMALLでも"！？"和做か、问题ない那么そ的ま直到も…？
+;・其他半角(英数、特に记号) → 和りあえず出力してみて不自然に那么ないか确认した方但よい
+;　';'や':'是小さく出力され、'*'是形但变化做。'\'是バックスラッシュになる
+;-------------------------------------------------
+
+;-------------------------------------------------
+;関数名:BIGPRINT(L|W)
+;概　要:オオキイPRINT関数
+;引　数:ARGS:0…显示字符串。FORM字符串被渡す场合是""的前に@被付けてください
+;　　　 ARG:0 …[省略可]字符的显示色。省略した场合是SETCOLOR的指定そ的まま
+;　　　 ARGS:1…[省略可]字符串的显示位置。(LEFT/左/CENTER/中央/RIGHT/右)的いずれか被指定可
+;　　　         省略した场合是、ALIGNMENT的指定そ的まま。大字符小字符的区別是しません
+;戻り値:无(多分RESULT保護)
+;備　考:\n根据改行是たぶんできません
+;スゴイ・オオキイです…///
+;和いい一面基本的な实态是フォント被Raaviに变えている只
+;Raavi是XP/Vista/7/8に是標準で入ってい时思われるフォント。ごあんしんください
+;下的行和潰し合い被做こ和但あった的で、安全的ために2行分使う＆REDRAWで控制
+;な的で\n和か入れ时きっ和おかしくなる
+;行间も気变成了的で狭めたかった但、これ是SMALLPRINTL被使っても变化无し
+;行间に関して是諦めてください
+;スゴイ・オオキイ声で罵られてみ想要阁下に
+;-------------------------------------------------
+@BIGPRINTL(ARGS:0, ARG:0 = -1, ARGS:1)
+#LOCALSSIZE 2
+#LOCALSIZE 2
+LOCAL:0 = GETCOLOR()
+LOCALS:0 = %CURRENTALIGN()%
+SETCOLOR ARG:0 < 0 ? LOCAL:0 # (ARG:0 & 0xFFFFFF)
+CALL ALIGNMENTS(ARGS:1)
+IF CHKFONT("Raavi")
+	LOCAL:1 = CURRENTREDRAW()
+	LOCALS:1 = %GETFONT()%
+	REDRAW 0
+	SETFONT "Raavi"
+	PRINTSL " " + ARGS:0 + " "
+	SETFONT LOCALS:1
+	PRINTL 
+	REDRAW LOCAL:1
+ELSE
+	PRINTSL ARGS:0
+ENDIF
+CALL ALIGNMENTS(LOCALS:0)
+SETCOLOR LOCAL:0
+RETURN RESULT
+
+@BIGPRINTW(ARGS:0, ARG:0 = -1, ARGS:1)
+CALL BIGPRINTL(ARGS:0, ARG:0, ARGS:1)
+WAIT
+RETURN RESULT
+
+
+;-------------------------------------------------
+;関数名:SMALLPRINT(|L|W)
+;概　要:チイサイPRINT関数
+;引　数:ARGS:0…显示字符串。FORM字符串被渡す场合是""的前に@被付けてください
+;　　　 ARG:0 …[省略可]字符的显示色。省略した场合是SETCOLOR的指定そ的まま
+;　　　 ARGS:1…[省略可]字符串的显示位置。(LEFT/左/CENTER/中央/RIGHT/右)的いずれか被指定可
+;　　　         省略した场合是、ALIGNMENT的指定そ的まま。大字符小字符的区別是しません
+;　　　         ※キーワード"L""W"被使用不做场合是ARGS:1被指定做こ和是出来ません
+;戻り値:无(多分RESULT保護)
+;ファハハハハハ！ アカチャン……スゴイ・チイサイ！
+;和いい一面实态是フォント被Estrangelo Edessaに变えている只
+;Estrangelo Edessa是XP/Vista/7/8に是標準で入ってい时思われるフォント。ごあんしんください
+;实是特別变わった事是していない的只ど、和りあえずBIGPRINT(L|W)和设置で
+;スゴイ・チイサイ声で囁か受到い阁下に
+;-------------------------------------------------
+@SMALLPRINT(ARGS:0, ARG:0 = -1)
+#LOCALSIZE 1
+#LOCALSSIZE 1
+LOCAL:0 = GETCOLOR()
+SETCOLOR ARG:0 < 0 ? LOCAL:0 # (ARG:0 & 0xFFFFFF)
+IF CHKFONT("Estrangelo Edessa")
+	LOCALS:0 = %GETFONT()%
+	SETFONT "Estrangelo Edessa"
+	PRINTS " " + ARGS:0 + " "
+	SETFONT LOCALS:0
+ELSE
+	PRINTS ARGS:0
+ENDIF
+SETCOLOR LOCAL:0
+RETURN RESULT
+
+@SMALLPRINTL(ARGS:0, ARG:0 = -1, ARGS:1)
+#LOCALSSIZE 1
+LOCALS:0 = %CURRENTALIGN()%
+CALL ALIGNMENTS(ARGS:1)
+CALL SMALLPRINT(ARGS:0, ARG:0)
+PRINTL 
+CALL ALIGNMENTS(LOCALS:0)
+RETURN RESULT
+
+@SMALLPRINTW(ARGS:0, ARG:0 = -1, ARGS:1)
+CALL SMALLPRINTL(ARGS:0, ARG:0, ARGS:1)
+WAIT
+RETURN RESULT

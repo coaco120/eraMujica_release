@@ -1,0 +1,187 @@
+﻿;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+
+;		羞耻系メッセージ
+
+;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+
+;────────────────────────────────────
+;040,自慰
+;────────────────────────────────────
+;★反应前★
+@TRAIN_MESSAGE_40
+PRINTFORML %CALLNAME:TARGET%在%TARGET_DESCRIPTION("保持、")%%CALLNAME:MASTER%
+PRINTFORML 命令展现出自己的动作…
+
+;☆反应后☆
+@TRAIN_MESSAGE2_40
+;反应但容纳
+IF IS_COMGRONAME("消极的服从/淡然的服从/积极的服从/接受")
+	IF ME_PLAYER(1) == 9                ;顔射自慰绝顶
+		PRINTFORML %CALLNAME:MASTER%一边捋着自己的阴茎一边告诉对方马上要射了、
+		PRINTFORML %CALLNAME:TARGET%是命令在马眼前伸出舌头，让其直到飞进嘴里…
+		RETURN 2
+	ELSEIF IS_COMGRONAME("积极的服从/接受")
+		IF TCVAR:MASTER:高潮 && TCVAR:MASTER:焦虑度 < 2         ;高潮状态で焦虑终了/无し
+			IF PENIS(MASTER)                      ;调教对象に阴茎あり
+				PRINTFORML %CALLNAME:MASTER%一边捋着自己的阴茎一边告诉对方马上要射了、
+			ELSEIF TEQUIP:假阴茎            ;调教对象但穿上假阴茎中
+				PRINTFORML %CALLNAME:MASTER%在假阴茎的底部刺激疯狂阴核的同时告诉说很快就要绝顶了、
+			ELSE                                  ;其他
+				PRINTFORML %CALLNAME:MASTER%玩弄自己阴核的同时告诉对方快要绝顶了、
+			ENDIF
+			PRINTFORML %CALLNAME:TARGET%一边低声说着着下流的话一人でイくように命じた…
+		ELSEIF TEQUIP:假阴茎                                    ;调教对象但穿上假阴茎中
+			PRINTFORML %CALLNAME:MASTER%握着假阴茎，像男人那样自慰起来…
+		ELSE                                                          ;其他
+			PRINTFORML %CALLNAME:MASTER%兴奋地看着%CALLNAME:TARGET%的视线的同时自慰起来…
+		ENDIF
+		RETURN 2
+	ELSEIF IS_COMGRONAME("淡然的服从")
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%若无其事地自慰着…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME:MASTER%完全不在意%CALLNAME%的视线、
+				PRINTFORML 开始尽可能地像往常一样自慰…
+			CASE "无理被した行动"
+				IF COMCOR_POSI()                  ;实是まんざらでもない
+					PRINTFORML %CALLNAME:MASTER%一边为了不让别人看到自己的感受而努力忍耐着声音和表情、
+					PRINTFORML 装做和平时一样开始自慰…
+				ELSE                              ;实是嫌
+					PRINTFORML 拼命忍受着被%CALLNAME%侵犯的耻辱的同时、
+					PRINTFORML %CALLNAME:MASTER%若无其事的自慰了…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+	ELSEIF IS_COMGRONAME("消极的服从")
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行动"
+				PRINTFORML %CALLNAME:MASTER%虽然感到羞耻，但却无法违抗%CALLNAME%
+				PRINTFORML 没办法只好开始自慰了…
+			CASE "无理的ない行动"
+				PRINTFORML %CALLNAME:TARGET%一直凝视着满脸羞耻地自慰着的%CALLNAME:MASTER%…
+			CASE "无理被した行动"
+				IF COMCOR_POSI()                  ;实是感受いい
+					PRINTFORML %CALLNAME:MASTER%强忍着害羞的样子开始自慰了、
+					PRINTFORML 用自己的手指得到了快乐，拼命隐藏着淫乱的表情…
+				ELSE                              ;实是嫌
+					PRINTFORML 被看到手淫时的羞耻使得%CALLNAME:MASTER%的脸一下子变得通红、
+					PRINTFORML 当%CALLNAME%开始催促时，才勉勉强强地开始了自慰…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+	ENDIF
+;反应但拒绝
+ELSE
+	IF PALAM:MASTER:害羞 > PALAM:MASTER:反抗      ;害羞先行
+		PRINTFORML %CALLNAME:MASTER%由于害羞无法按照%CALLNAME:TARGET%的命令进行自慰，对此%CALLNAME:TARGET%似乎很不满…
+	ELSE                                          ;反抗先行
+		PRINTFORML %CALLNAME:MASTER%因为讨厌没有回应%CALLNAME:TARGET%的要求。%CALLNAME:TARGET%对此好像很不满…
+	ENDIF
+	;拒绝扱いである那么ばRESULT是1で良い気但做的で变えてみる@/L
+	RETURN 1
+ENDIF
+
+;────────────────────────────────────
+;041,打开小穴
+;────────────────────────────────────
+;★反应前★
+@TRAIN_MESSAGE_41
+PRINTFORML %CALLNAME:TARGET%在%TARGET_DESCRIPTION("一面、")%%CALLNAME:MASTER%的旁边
+PRINTFORML 想要左右拨开仔细观察下里面…
+
+;☆反应后☆
+@TRAIN_MESSAGE2_41
+SELECTCASE COMGRONAME(TFLAG:REACT分类)
+	CASE "接受"
+		PRINTFORML %CALLNAME:MASTER%顺从%CALLNAME:TARGET%的意愿，自己左右张开了阴唇…
+	CASE "积极的服从", "淡然的服从"
+		PRINTFORML %CALLNAME:MASTER%为了让%CALLNAME:TARGET%更容易看到而抬起腰，自己左右张开了阴唇…
+	CASE "请求宽恕"
+		PRINTFORML %CALLNAME:TARGET%不顾乞求原谅的%CALLNAME:MASTER%，张开阴唇观察着小穴深处…
+	CASE "消极的服从"
+		PRINTFORML %CALLNAME:TARGET%不顾一脸不情愿的%CALLNAME:MASTER%，张开阴唇观察着小穴深处…
+ENDSELECT
+RETURN 2
+
+;────────────────────────────────────
+;042,展示自慰
+;────────────────────────────────────
+;★反应前★
+@TRAIN_MESSAGE_42
+PRINTFORML %CALLNAME:TARGET%在%TARGET_DESCRIPTION("一边、")%%CALLNAME:MASTER%
+PRINTFORML 展示似的自己在对方眼前开始自慰了…
+
+;☆反应后☆
+@TRAIN_MESSAGE2_42
+;COM但保持心情舒畅/感到害羞/开始自慰あたりに限定される的でSELECTCOM分岐被设けてもいい的かも知れない
+;むしろ现状的REACT分类だ和接受/消极的服从以外是无駄になる场合但多いように思う
+SELECTCASE COMGRONAME(TFLAG:REACT分类)
+	CASE "接受", "积极的服从"
+		PRINTFORML %CALLNAME:MASTER%气喘吁吁地凝视着%CALLNAME:TARGET%的痴态…
+	CASE "淡然的服从"
+		PRINTFORML %CALLNAME:MASTER%默默地欣赏着%CALLNAME%的自慰…
+	CASE "请求宽恕"
+		PRINTFORML %CALLNAME:MASTER%背过脸拼命压抑着欲望…
+	CASE "消极的服从"
+		PRINTFORML %CALLNAME:MASTER%背过脸拼命压抑着欲望…
+ENDSELECT
+RETURN 2
+
+;────────────────────────────────────
+;043,羞耻PLAY
+;────────────────────────────────────
+@TRAIN_MESSAGE_43
+IF TFLAG:ACT派生 == 0         ;开始时
+	PRINTFORML %CALLNAME:TARGET%把%CALLNAME:MASTER%带到镜子前…
+ELSE                          ;终了时
+	PRINTFORML %CALLNAME:TARGET%带着%CALLNAME:MASTER%离开了镜子前…
+ENDIF
+
+;────────────────────────────────────
+;044,野外PLAY
+;────────────────────────────────────
+@TRAIN_MESSAGE_44
+IF TFLAG:ACT派生 == 0         ;开始时
+	PRINTFORML %NAME:TARGET%给%CALLNAME:MASTER%戴上项圈带出去了…
+ELSE                          ;终了时
+	PRINTFORML %NAME:TARGET%带着%CALLNAME:MASTER%回到了房间…
+ENDIF
+
+;────────────────────────────────────
+;045,放尿
+;────────────────────────────────────
+;★反应前★
+@TRAIN_MESSAGE_45
+PRINTFORML %CALLNAME:TARGET%在%TARGET_DESCRIPTION("保持、")%%CALLNAME:MASTER%
+PRINTFORML 命令当场放尿…
+
+;☆反应后☆
+@TRAIN_MESSAGE2_45
+;反应但容纳
+IF IS_COMGRONAME("消极的服从/淡然的服从/积极的服从/接受")
+	SELECTCASE COMGRONAME(TFLAG:REACT分类)
+		CASE "接受"
+			PRINTFORML %CALLNAME:MASTER%按照%CALLNAME:TARGET%说的那样，当场放尿了…
+		CASE "消极的服从"
+			PRINTFORML %CALLNAME:MASTER%无法按照%CALLNAME:TARGET%的命令进行放尿…
+		CASEELSE
+			PRINTFORML %CALLNAME:MASTER%毫无羞耻心可言的放尿了…
+	ENDSELECT
+	RETURN 2
+;其他反应那么拒绝扱い
+ELSE
+	IF PALAM:MASTER:害羞 > PALAM:MASTER:反抗                ;害羞先行
+		PRINTFORML %CALLNAME:MASTER%由于害羞不能按照%CALLNAME:TARGET%的命令放尿。对此%CALLNAME:TARGET%好像很不满…
+	ELSE                                                    ;反抗先行
+		PRINTFORML %CALLNAME:MASTER%因为讨厌没有回应%CALLNAME:TARGET%的要求。%CALLNAME:TARGET%对此好像很不满…
+	ENDIF
+	;拒绝扱いである那么ばRESULT是1で良い気但做的で变えてみる@/L
+	RETURN 1
+ENDIF
+
+;────────────────────────────────────
+;046,COSPLAY
+;────────────────────────────────────
+;@TRAIN_MESSAGE_46
+;未实装です…すみません…(Str.csvより)

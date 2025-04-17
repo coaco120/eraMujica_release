@@ -1,0 +1,350 @@
+﻿
+;────────────────────────────────────
+;道具生成处理
+;※ARG是要求偏差(0被基準に大きいほどこ的种別で魔力被消费した但る)
+;────────────────────────────────────
+@MAKE_TOOLS()
+#LOCALSSIZE 50
+#DIM LCOUNT
+#DIM 可用魔力
+
+;こ的価格被上回る道具但存在做和破綻做
+LOCAL = 1000000
+FOR LCOUNT, 0, 50
+	SIF ITEMNAME:LCOUNT != "" && ITEM:LCOUNT == 0
+		LOCAL = MIN(LOCAL, ITEMPRICE:LCOUNT)
+NEXT
+;使用可能魔力判定
+可用魔力 = MAKE_TOOLS_MP_ABLE()
+
+SIF FLAG:DEBUG
+	PRINTFORML 『道具生成处理』(可用魔力：{可用魔力})
+
+;買えないか、買える道具但もう无い那么帰る
+IF 可用魔力 < LOCAL || LOCAL == 1000000
+	IF FLAG:DEBUG
+		IF LOCAL == 1000000
+			PRINTFORMW 不存在可以购入的道具！
+		ELSE
+			PRINTFORMW 当前可用魔力不足(还有{LOCAL - 可用魔力})
+		ENDIF
+	ENDIF
+	RETURN RESULT
+ENDIF
+
+;变数被初期化
+CALL SET_CRI_VAR
+SPLIT "跳蛋/震动棒/Ａ拉珠/Ｐバンド//////自定义//Ａ震动棒/Ｃキャプ/Ｂキャプ/Ｐホール//////Ｅマスク/鞭/绳////////ギャグ/针/灌肠/三角木马///////大镜//项圈", "/", LOCALS
+FOR LCOUNT, 0, 50
+	IF ITEMNAME:LCOUNT != "" && ITEM:LCOUNT == 0
+		CALL SET_CRI_VAR, ITEMNAME:LCOUNT, 1
+		CALL SET_CRI_VAR, LOCALS:LCOUNT, 1, 1
+	ENDIF
+NEXT
+
+;------------------------------------------
+;修正处理
+;------------------------------------------
+
+LOCALS = MAKE_TOOLS
+
+CALL CHA_CRI_VAR, "调教对象但处女"
+CALLFORM %LOCALS%_MAIDEN_M
+
+CALL CHA_CRI_VAR, "危険な道具"
+CALLFORM %LOCALS%_RISK
+
+CALL CHA_CRI_VAR, "責め具"
+CALLFORM %LOCALS%_TORMENT
+
+CALL CHA_CRI_VAR, "调教对象的Ｃ感觉"
+CALLFORM %LOCALS%_C_M
+
+CALL CHA_CRI_VAR, "调教对象的Ｖ感觉"
+CALLFORM %LOCALS%_V_M
+
+CALL CHA_CRI_VAR, "调教对象的Ａ感觉"
+CALLFORM %LOCALS%_A_M
+
+CALL CHA_CRI_VAR, "调教对象的Ｂ感觉"
+CALLFORM %LOCALS%_B_M
+
+CALL CHA_CRI_VAR, "积极性"
+CALLFORM %LOCALS%_POSITIVELY_T
+
+CALL CHA_CRI_VAR, "虐待狂受虐"
+CALLFORM %LOCALS%_SM
+
+CALL CHA_CRI_VAR, "道具单体判定"
+CALLFORM %LOCALS%_TOOL
+
+CALL CHA_CRI_VAR, "调教者的疯狂"
+CALLFORM %LOCALS%_INSANE
+
+CALL CHA_CRI_VAR, "価格根据修正"
+CALLFORM %LOCALS%_PRICE
+
+CALL CHA_CRI_VAR, "实行判定"
+CALLFORM %LOCALS%_ABLE
+
+;------------------------------------------
+;生成判定
+;------------------------------------------
+
+LOCAL:2 = 0
+
+$MAKE_TOOLS
+
+;购入状況根据判定(既に持有、魔力不足)
+;判定处理
+FOR LCOUNT, 0, 50
+	IF ITEMNAME:LCOUNT == "" || ITEM:LCOUNT > 0
+		CALL DIM_CRI_VAR(ITEMNAME:LCOUNT, -999)
+		CONTINUE
+	ENDIF
+	LOCAL = GET_CRI_VAR(ITEMNAME:LCOUNT + "累计")
+	IF LOCAL < 0
+		LOCAL = ITEMPRICE:LCOUNT * (10 + ABS(LOCAL)) / 10
+	ELSE
+		LOCAL = ITEMPRICE:LCOUNT * 10 / (10 + ABS(LOCAL))
+	ENDIF
+	SIF LOCAL > 可用魔力
+		CALL DIM_CRI_VAR(ITEMNAME:LCOUNT, -999)
+NEXT
+
+CALL DEF_CRI_VAR("最大前者")
+LOCAL = GET_CRI_VAR("決定")
+LOCALS = %RESULTS%
+CALL ANA_CRI_VAR()
+IF LOCAL != -1 && ITEMPRICE:LOCALS <= CFLAG:魔力
+	LOCAL = CFLAG:魔力
+	CFLAG:魔力 -= ITEMPRICE:LOCALS
+	可用魔力 -= ITEMPRICE:LOCALS
+	ITEM:LOCALS = 1
+	;錬成时口上呼び出し
+	;CALL KOJO_EVENT(110, XX)
+	;CALL VOIDLINE_IF(RESULT)
+	SKIPDISP 0
+	PRINTFORML %CALLNAME%炼成了%LOCALS%
+	PRINTFORMW 魔力({LOCAL} → {CFLAG:魔力})
+	IF FLAG:自动模式 > 0 && FLAG:自动模式显示设定 == 1
+		SKIPDISP 1
+	ENDIF
+	LOCAL:2++
+	SIF FLAG:DEBUG
+		PRINTFORML (可用魔力：{可用魔力})
+	GOTO MAKE_TOOLS
+ENDIF
+
+SIF FLAG:DEBUG
+	PRINTW 
+
+RETURN RESULT
+
+;------------------------------------------
+;调教对象但处女
+;------------------------------------------
+@MAKE_TOOLS_MAIDEN_M
+
+IF TALENT:MASTER:处女
+	;素質によって作用的方向被決定
+	LOCAL = TALENT:坏心眼 - TALENT:好心眼 - TALENT:胆怯 + TALENT:MASTER:不在意贞操 - TALENT:MASTER:贞操观念
+	;素質によって作用的强度被決定
+	LOCAL = LOCAL * POWER(2, -TALENT:幼稚 + 12) / 1024
+	CALL ADD_CRI_VAR("震动棒"        , LOCAL)
+	CALL ADD_CRI_VAR("假阴茎"  , LOCAL)
+ENDIF
+
+;------------------------------------------
+;危険な道具
+;------------------------------------------
+@MAKE_TOOLS_RISK
+;LOCALに是リスク被代入
+LOCAL = 1 + TALENT:MASTER:妊娠
+;素質によって作用的方向被決定
+LOCAL = LOCAL * (TALENT:急躁 - TALENT:慎重 - TALENT:胆怯 - TALENT:成熟 + TALENT:冲动的 - TALENT:自制的)
+;素質によって作用的强度被決定
+LOCAL = LOCAL * POWER(2, TALENT:MASTER:怕疼 - TALENT:MASTER:耐痛 + 12) / 1024
+CALL ADD_CRI_VAR("跳蛋"      , LOCAL)
+CALL ADD_CRI_VAR("震动棒"        , LOCAL * 2)
+CALL ADD_CRI_VAR("肛门拉珠"  , LOCAL * 3)
+CALL ADD_CRI_VAR("假阴茎"  , LOCAL * 3)
+CALL ADD_CRI_VAR("肛门震动棒"  , LOCAL * 2)
+CALL ADD_CRI_VAR("阴蒂夹"  , LOCAL)
+CALL ADD_CRI_VAR("乳头夹", LOCAL)
+CALL ADD_CRI_VAR("飞机杯"    , LOCAL)
+CALL ADD_CRI_VAR("眼罩"    , LOCAL)
+CALL ADD_CRI_VAR("鞭"            , LOCAL * 4)
+CALL ADD_CRI_VAR("绳"            , LOCAL * 3)
+CALL ADD_CRI_VAR("口球"  , LOCAL)
+CALL ADD_CRI_VAR("针"            , LOCAL * 5)
+CALL ADD_CRI_VAR("灌肠套装"    , LOCAL * 3)
+CALL ADD_CRI_VAR("三角木马"      , LOCAL * 8)
+CALL ADD_CRI_VAR("大镜"          , LOCAL)
+CALL ADD_CRI_VAR("项圈"          , LOCAL)
+
+;------------------------------------------
+;責め具
+;------------------------------------------
+@MAKE_TOOLS_TORMENT
+;素質によって作用的方向被決定
+LOCAL = TALENT:MASTER:倒错的 + TALENT:MASTER:隶属 + TALENT:虐待狂
+;素質によって作用的强度被決定
+LOCAL = LOCAL * POWER(2, TALENT:MASTER:怕疼 - TALENT:MASTER:耐痛 + TALENT:MASTER:恋慕 + 12) / 1024
+CALL ADD_CRI_VAR("眼罩"    , LOCAL)
+CALL ADD_CRI_VAR("鞭"            , LOCAL * 3)
+CALL ADD_CRI_VAR("绳"            , LOCAL * 3)
+CALL ADD_CRI_VAR("口球"  , LOCAL * 2)
+CALL ADD_CRI_VAR("针"            , LOCAL * 5)
+CALL ADD_CRI_VAR("灌肠套装"    , LOCAL * 4)
+CALL ADD_CRI_VAR("三角木马"      , LOCAL * 8)
+CALL ADD_CRI_VAR("大镜"          , LOCAL)
+CALL ADD_CRI_VAR("项圈"          , LOCAL * 2)
+
+;------------------------------------------
+;调教对象的Ｃ感觉
+;------------------------------------------
+@MAKE_TOOLS_C_M
+;素質によって作用的方向被決定
+LOCAL = TALENT:MASTER:Ｃ敏感 - TALENT:MASTER:Ｃ钝感 + TALENT:MASTER:淫核／淫茎
+;素質によって作用的强度被決定
+LOCAL = LOCAL * POWER(2, TALENT:坦率 + 12) / 1024
+CALL ADD_CRI_VAR("跳蛋"      , LOCAL)
+CALL ADD_CRI_VAR("阴蒂夹"  , LOCAL)
+CALL ADD_CRI_VAR("飞机杯"    , LOCAL)
+
+;------------------------------------------
+;调教对象的Ｖ感觉
+;------------------------------------------
+@MAKE_TOOLS_V_M
+;素質によって作用的方向被決定
+LOCAL = TALENT:MASTER:Ｖ敏感 - TALENT:MASTER:Ｖ钝感 + TALENT:MASTER:淫壶 + TALENT:MASTER:易湿 - TALENT:MASTER:不易湿
+;素質によって作用的强度被決定
+LOCAL = LOCAL * POWER(2, TALENT:坦率 + 12) / 1024
+CALL ADD_CRI_VAR("震动棒"        , LOCAL)
+CALL ADD_CRI_VAR("假阴茎"  , LOCAL)
+
+;------------------------------------------
+;调教对象的Ａ感觉
+;------------------------------------------
+@MAKE_TOOLS_A_M
+;素質によって作用的方向被決定
+LOCAL = TALENT:MASTER:Ａ敏感 - TALENT:MASTER:Ａ钝感 + TALENT:MASTER:淫尻
+;素質によって作用的强度被決定
+LOCAL = LOCAL * POWER(2, TALENT:坦率 + 12) / 1024
+CALL ADD_CRI_VAR("肛门拉珠"  , LOCAL)
+CALL ADD_CRI_VAR("假阴茎"  , LOCAL)
+CALL ADD_CRI_VAR("肛门震动棒"  , LOCAL)
+CALL ADD_CRI_VAR("灌肠套装"    , LOCAL)
+
+;------------------------------------------
+;调教对象的Ｂ感觉
+;------------------------------------------
+@MAKE_TOOLS_B_M
+;素質によって作用的方向被決定
+LOCAL = TALENT:MASTER:Ｂ敏感 - TALENT:MASTER:Ｂ钝感 + TALENT:MASTER:淫乳
+;素質によって作用的强度被決定
+LOCAL = LOCAL * POWER(2, TALENT:坦率 + 12) / 1024
+CALL ADD_CRI_VAR("乳头夹", LOCAL)
+
+;------------------------------------------
+;积极性
+;------------------------------------------
+@MAKE_TOOLS_POSITIVELY_T
+;素質によって作用的方向被決定
+LOCAL = TALENT:献身的 - TALENT:被动
+;作用的强度被決定
+LOCAL = LOCAL * POWER(2, 0)
+CALL ADD_CRI_VAR("跳蛋"      , LOCAL * 2)
+CALL ADD_CRI_VAR("震动棒"        , LOCAL * 2)
+CALL ADD_CRI_VAR("肛门拉珠"  , LOCAL * 2)
+CALL ADD_CRI_VAR("假阴茎"  , LOCAL * 4)
+CALL ADD_CRI_VAR("肛门震动棒"  , LOCAL * 2)
+CALL ADD_CRI_VAR("阴蒂夹"  , LOCAL)
+CALL ADD_CRI_VAR("乳头夹", LOCAL)
+CALL ADD_CRI_VAR("飞机杯"    , LOCAL)
+CALL ADD_CRI_VAR("眼罩"    , LOCAL)
+CALL ADD_CRI_VAR("鞭"            , LOCAL * 2)
+CALL ADD_CRI_VAR("绳"            , LOCAL * 3)
+CALL ADD_CRI_VAR("口球"  , LOCAL)
+CALL ADD_CRI_VAR("针"            , LOCAL * 3)
+CALL ADD_CRI_VAR("灌肠套装"    , LOCAL * 2)
+CALL ADD_CRI_VAR("三角木马"      , LOCAL * 3)
+CALL ADD_CRI_VAR("大镜"          , LOCAL)
+CALL ADD_CRI_VAR("项圈"          , LOCAL)
+
+;------------------------------------------
+;虐待狂受虐
+;------------------------------------------
+@MAKE_TOOLS_SM
+;素質によって作用的方向被決定
+LOCAL = TALENT:虐待狂
+;素質によって作用的强度被決定
+LOCAL = LOCAL * POWER(2, TALENT:MASTER:怕疼 - TALENT:MASTER:耐痛 + TALENT:MASTER:恋慕 + 12) / 1024
+CALL ADD_CRI_VAR("鞭"            , LOCAL * 2)
+CALL ADD_CRI_VAR("绳"            , LOCAL * 3)
+CALL ADD_CRI_VAR("口球"  , LOCAL)
+CALL ADD_CRI_VAR("针"            , LOCAL * 3)
+CALL ADD_CRI_VAR("灌肠套装"    , LOCAL * 2)
+CALL ADD_CRI_VAR("三角木马"      , LOCAL * 3)
+
+;------------------------------------------
+;道具单体判定
+;------------------------------------------
+@MAKE_TOOLS_TOOL
+CALL ADD_CRI_VAR("假阴茎"  , TALENT:好色 * 4)
+CALL ADD_CRI_VAR("绳"            , TALENT:擅长捆绑 * 4)
+CALL ADD_CRI_VAR("针"            , TALENT:东方不败 * 4)
+CALL ADD_CRI_VAR("项圈"          , TALENT:渴望关注 * 4)
+
+;------------------------------------------
+;调教者的疯狂
+;------------------------------------------
+@MAKE_TOOLS_INSANE
+#DIM LCOUNT
+IF TALENT:疯狂
+	FOR LCOUNT, 0, 50
+		IF ITEMNAME:LCOUNT != ""
+			CALL MUL_CRI_VAR(ITEMNAME:LCOUNT, -50, 100)
+		ENDIF
+	NEXT
+ENDIF
+
+;------------------------------------------
+;価格根据修正
+;------------------------------------------
+@MAKE_TOOLS_PRICE
+#DIM LCOUNT
+FOR LCOUNT, 0, 50
+	IF ITEMNAME:LCOUNT != ""
+		LOCAL = GET_CRI_VAR(ITEMNAME:LCOUNT + "累计")
+		IF LOCAL > 0
+			CALL MUL_CRI_VAR(ITEMNAME:LCOUNT, 100 * POWER(2, 10 + TALENT:冲动的 - TALENT:自制的 + TALENT:渴望关注) / ITEMPRICE:LCOUNT)
+		ELSEIF LOCAL < 0
+			CALL MUL_CRI_VAR(ITEMNAME:LCOUNT, 100 * ITEMPRICE:LCOUNT / POWER(2, 10 + TALENT:冲动的 - TALENT:自制的 + TALENT:渴望关注))
+		ENDIF
+	ENDIF
+NEXT
+
+;------------------------------------------
+;实行判定
+;------------------------------------------
+@MAKE_TOOLS_ABLE
+;调教者に阴茎但有れば假阴茎是不要
+SIF PENIS(TARGET)
+	CALL DIM_CRI_VAR("假阴茎"  , -999)
+;调教对象に阴茎但无ければオナホ是不要
+SIF !PENIS(MASTER)
+	CALL DIM_CRI_VAR("飞机杯"    , -999)
+;自定义道具是未对应
+CALL DIM_CRI_VAR("自定义道具"  , -999)
+
+;------------------------------------------
+;使用可能魔力判定
+;------------------------------------------
+@MAKE_TOOLS_MP_ABLE()
+#FUNCTION
+;魔力不足基準设定
+RETURNF LIMIT(CFLAG:魔力 * (8 + MANAGE_MP_PROP() + TALENT:道具使) * 10 / 100, 0, CFLAG:魔力)
+
+

@@ -1,0 +1,117 @@
+﻿;────────────────────────────────────
+;写真的価値被計算
+;────────────────────────────────────
+@SELL_PHOTO
+
+;得点被以下的条件で加算していく
+VARSET LOCAL
+
+;快Ｘ * 5
+LOCAL += (CUP:MASTER:快Ｃ + CUP:MASTER:快Ｖ + CUP:MASTER:快Ａ + CUP:MASTER:快Ｂ) * 5
+;Ｘ绝顶 * 1500
+LOCAL += (NOWEX:MASTER:Ｃ绝顶 + NOWEX:MASTER:Ｖ绝顶 + NOWEX:MASTER:Ａ绝顶 + NOWEX:MASTER:Ｂ绝顶) * 1500
+;喷乳+射精 * 1000、放尿 * 450
+LOCAL += (NOWEX:MASTER:喷乳 + NOWEX:MASTER:射精) * 1000 + NOWEX:MASTER:放尿 * 450
+;润滑 / 10
+LOCAL += CUP:MASTER:润滑 / 10
+;欲望
+;自制心+4、冲动的-3、否定快感+3、承认快感-2
+;最大で-5される的で正に保つために+6
+LOCAL += CUP:MASTER:欲望 * (6 + TALENT:MASTER:自制的 * 4 - TALENT:MASTER:冲动的 * 3 + TALENT:MASTER:否定快感 * 3 - TALENT:MASTER:承认快感 * 2)
+;屈服
+;刚毅+3、反抗的+2、胆怯-2、坦率-1、自尊心高+3、自尊心低-2
+;最大で-3される的で正に保つために+4
+LOCAL += CUP:MASTER:屈服 * (4 + TALENT:MASTER:刚毅 * 3 + TALENT:MASTER:反抗的 * 2 - TALENT:MASTER:胆怯 * 2 - TALENT:MASTER:坦率 + TALENT:MASTER:自尊心高 * 3 - TALENT:MASTER:自尊心低 * 2)
+;恐怖
+;缺乏感情-1、感情丰富+2
+;最大で-1只ど、全体修正是+5
+LOCAL += CUP:MASTER:恐怖 * (5 - TALENT:MASTER:缺乏感情 + TALENT:MASTER:感情丰富 * 2)
+;恭顺
+;反抗的+2、坦率-1、自大+3、成熟-1
+;最大で-2只ど、全体修正是+5
+LOCAL += CUP:MASTER:恭顺 * (5 + TALENT:MASTER:反抗的 * 2 - TALENT:MASTER:坦率 + TALENT:MASTER:自大 * 3 - TALENT:MASTER:成熟)
+;反抗
+;3 + 反抗刻印 / 3
+LOCAL += CUP:MASTER:反抗 * (3 + MARK:反抗刻印 / 3)
+;痛苦
+;调教者但虐待狂い和二倍
+LOCAL += CUP:MASTER:痛苦 * (1 + TALENT:虐待狂)
+;害羞
+;羞涩+5、无耻-5
+;最大で-5される的で正に保つために+6
+LOCAL += CUP:MASTER:害羞 * (6 + TALENT:MASTER:羞涩 * 5 - TALENT:MASTER:无耻 * 5)
+;不快 * 3
+LOCAL += CUP:MASTER:不快 * 3
+;抑郁 * 3
+LOCAL += CUP:MASTER:抑郁 * 2
+
+;以后修正处理
+
+;(助手技巧+1) * (助手性交技能+调教等级+1) * (100+调教对象被写経験) 被かけて 10000 で割る
+LOCAL *= (ABL:ASSI:技巧 + 1) * (ABL:ASSI:性交 + CFLAG:ASSI:调教等级 + 1) * (100 + EXP:MASTER:被写経験) / 10000
+
+;助手但写真被新聞的记事にした场合
+;露出,逃脱SOURCE被足し、助手技巧+7被かけて6で割る
+SIF TFLAG:助手SPACT == 100
+	LOCAL = (LOCAL + SOURCE:MASTER:露出 + SOURCE:MASTER:逃脱) * (7 + ABL:ASSI:技巧) / 6
+
+PRINT 本次摄影所得点数：
+PRINTVL LOCAL
+;全く得点被獲得できなかった场合
+IF LOCAL == 0
+	PRINTL 本次摄影以完全的失败结束了…
+	PRINTFORML %CALLNAME:ASSI%可能是太不习惯调教了
+;CFLAG:MASTER:合意 = 撮影基準値
+;撮影基準値未满で是魔力是得られない
+ELSEIF LOCAL < CFLAG:MASTER:合意
+	PRINTL 这次的摄影好像不像上次那样顺利
+;撮影基準値被满たす和
+ELSE
+	;400 + 基準値的1/5 + 调教等级的二乗(+α)*20 被基準値に加算
+	CFLAG:MASTER:合意 += 400 + CFLAG:MASTER:合意 / 5 + (CFLAG:MASTER:调教等级 + 1) * (CFLAG:MASTER:调教等级 + 2) * 20
+	PRINTL 这次的拍摄好像很好。连魔力都渗透出来了…
+	;本次得点的1/4的魔力被得る
+	PRINTFORMW %CALLNAME%得到了{LOCAL / 4}的魔力
+	CFLAG:魔力 += LOCAL / 4
+	PRINTL 
+ENDIF
+
+;────────────────────────────────────
+;ミルク的価値被計算
+;────────────────────────────────────
+@SELL_MILK
+;调教时间、Ｂ绝顶、喷乳*3、献身的*2、魅惑*5、调教等级的总計被魔力和して得る
+LOCAL = TFLAG:调教时间 + EX:MASTER:Ｂ绝顶 + EX:MASTER:喷乳 * 3 + TALENT:MASTER:献身的 * 2 + TALENT:MASTER:魅惑 * 5 + CFLAG:MASTER:调教等级
+CFLAG:魔力 += LOCAL
+PRINTFORML 从%CALLNAME:MASTER%中挤出的牛奶{LOCAL}之中的魔力被%CALLNAME%给吸收了
+
+;调教时间设置
+TFLAG:调教时间 = 0
+
+;────────────────────────────────────
+;母乳体質取得的チェック
+;────────────────────────────────────
+@MILK_CHECK
+
+;基準値被生成
+VARSET LOCAL
+;快Ｂ/100的平方根被加算(0-5)
+LOCAL:1 = SQRT(CUP:MASTER:快Ｂ / 100)
+LOCAL += LIMIT(LOCAL:1, 0, 5)
+;调教对象Ｂ経験/4的平方根被加算(0-5)
+LOCAL:1 = SQRT(EXP:MASTER:Ｂ経験 / 4)
+LOCAL += LIMIT(LOCAL:1, 0, 5)
+
+;(基準値+调教时间)但(12+(0-4)-调教对象献身的-幼稚*2)被上回れば
+IF LOCAL + TFLAG:调教时间 > 12 + RAND:5 - TALENT:MASTER:献身的 - TALENT:幼稚 * 2
+	;母乳体質取得
+	TALENT:MASTER:母乳体質 = 1
+	PRINTFORMW %CALLNAME:MASTER%流出了母乳
+	;母乳ゲージ被新设(MAX10000)
+	MAXBASE:MASTER:母乳 = 10000
+	;调教时间设置
+	TFLAG:调教时间 = 0
+ELSE
+	;调教时间经过
+	TFLAG:调教时间 += 1
+ENDIF

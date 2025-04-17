@@ -1,0 +1,14 @@
+﻿;────────────────────────────────────
+;助手的特殊能力的チェック。特定的助手和行动的組み合わせによって特殊能力行动に变化し增加
+;────────────────────────────────────
+@GET_SP_ASSIACTNUM, ARG
+#FUNCTION
+SELECTCASE CSVCALLNAME(NO:ARG, 0)
+	CASE "文", "羽立"
+		;写真被撮る＝＞刊登在报纸上
+		SIF NOWASSIACTNAME(ARG) == "拍摄写真"
+			RETURNF GET_ASSIACTNUM("刊登在报纸上")
+		SIF NOWASSIACTNAME(ARG) == "刊登在报纸上"
+			RETURNF GET_ASSIACTNUM("拍摄写真")
+ENDSELECT
+RETURNF -1

@@ -1,0 +1,54 @@
+﻿@SYSTEM_TITLE
+LOADGLOBAL
+CALLF ANIME_CONFIG("SET", GLOBAL)
+SAVEGLOBAL
+LOADGLOBAL
+
+REDRAW 0
+CLEARLINE 1
+RESULT  = 1
+LOCAL:2 = LINECOUNT
+
+DO
+	FOR LOCAL:1, 0, 126
+		CLEARLINE LINECOUNT - LOCAL:2
+		FOR LOCAL:0, 0, 41
+			HTML_PRINT "<p align='center'><img src='rev" + TOSTR(LOCAL:1, "000") + TOSTR(LOCAL:0, "00") + "'></p>"
+		NEXT
+		$START
+		ALIGNMENT CENTER
+		CUSTOMDRAWLINE ━
+		;DRAWLINE
+		CALL HTMLPRINTL(@"%HTMLFONT(@"<b>%HTMLSTYLE(@"eramujica Яeverse ver1.1.0", 2)%</b>", "Courier New", )%")
+		PRINTL
+		CALL HTMLPRINTL(@"%HTMLFONT(@"<b>Ave Mujica - 初祥初逆调教文字游戏</b>", "Courier New")%")  
+		PRINTL
+		CALL HTMLPRINTL(@"%HTMLFONT(@"<b>%HTMLSTYLE(@"RH", 2)%</b>", "Courier New")%")
+		CALL HTMLPRINTL(@"%HTMLFONT(@"<b>(2025.4)</b>", "Courier New")%")
+		PRINTL
+		CALL HTMLPRINTL(@"%HTMLFONT(@"这是基于erakanon以及eratohoЯeverse1.2.14基础上开发改造的逆调教SLG游戏", "Courier New", , 9)%")  
+		CUSTOMDRAWLINE ━
+		CALL HTMLPRINTL(@"%HTMLBUTTON("[0]  ＮＥＷ ＧＡＭＥ", "0", "开始")%")
+		CALL HTMLPRINTL(@"%HTMLBUTTON(" [1] ＬＯＡＤ ＧＡＭＥ", "1", "数据加载")%")
+		CALL HTMLPRINTL(@"%HTMLBUTTON(" [2]     ＩＮＦＯ     ", "2", "更新内容")%")
+		ALIGNMENT LEFT
+		CALL INPUTINT(0, 1, 2)
+		CUSTOMDRAWLINE ━
+		SELECTCASE RESULT
+			CASE 0
+				RESETDATA
+				ADDCHARA 0
+				BEGIN FIRST
+			CASE 1
+				CALL TITLE_LOADGAME
+				BEGIN TITLE
+			CASE 2
+				CALL TITLE_INFO
+				BEGIN TITLE
+			;CASE 3
+			;	CALL CREDIT_TITLE
+		ENDSELECT
+		GOTO START
+	NEXT
+LOOP RESULT
+REDRAW 1

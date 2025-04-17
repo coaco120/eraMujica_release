@@ -1,0 +1,418 @@
+﻿;==================================================
+;
+;	通用関数置き场＠便利関数編
+;		演算や命令、組み込み関数的扩张にあたるも的
+;
+;		おおよそバリアント被問わず使えるも的但多いです
+;
+;==================================================
+
+;-------------------------------------------------------------------------------
+;	DATAMENUパッチ由来関数群
+;-------------------------------------------------------------------------------
+
+;-------------------------------------------------------------------------------
+;	DATAMENUで使用している自作関数群的ため的マジックナンバー
+;-------------------------------------------------------------------------------
+;===============================================================================
+; PLAY时间被TIME:x的どこに保存做的か
+; 和りあえずTIME:1
+@SAVETIME()
+#FUNCTION
+RETURNF 1
+
+; 画面幅
+@WIDTH(ARG)
+#FUNCTION
+RETURNF PRINTCPERLENGTH() * PRINTCPERLINE() + ARG
+
+; PRINTC的字符数
+@PRINTCPERLENGTH(ARG)
+#FUNCTION
+RETURNF 27 + ARG
+
+; 行頭空白 Rev和いうこ和で統一感的ため0
+@BULLETSPACE(ARG)
+#FUNCTION
+RETURNF 0 + ARG
+
+;-------------------------------------------------------------------------------
+;	FORM構文扩张(式中関数)
+;-------------------------------------------------------------------------------
+;	通常FORM構文和的違い
+;	字符串的字符数但宽容字符数被超え时バッサリカット 
+;	例 "芙兰朵露",10 → 芙兰ド..	(ぱ的人的被ぱクリんくしょん)
+;	CENTER位置但可能
+;===============================================================================
+;	ARGS = 字符串	ARG = 宽容字符数
+;	ARG:1 = 0:右寄せ(RIGHT) / 1:左寄せ(LEFT) / 2:中央寄せ(CENTER)
+@FORMCELL(ARGS, ARG, ARG:1)
+#FUNCTIONS
+#LOCALSIZE 2
+#LOCALSSIZE 1
+ARG = !ARG ? PRINTCPERLENGTH() # ARG
+; 字符数但宽容字符数オーバー
+LOCALS = \@ STRLENS(ARGS) > ARG ? %SUBSTRING(ARGS,0,ARG-2) + ".."% # %SUBSTRING(ARGS,0,ARG)% \@
+SELECTCASE ARG:1
+	; 右寄せ
+	CASE 0
+		RETURNF @"%LOCALS,ARG,RIGHT%"
+	; 左寄せ
+	CASE 1
+		RETURNF @"%LOCALS,ARG,LEFT%"
+	; 中央寄せ
+	CASE 2
+		LOCAL = LIMIT((ARG - STRLENS(LOCALS)) / 2, 0, ARG)
+		LOCAL:1 = LIMIT((ARG - STRLENS(LOCALS)) % 2, 0, 1)
+		RETURNF @"%(" " * LOCAL) + LOCALS + (" " * (LOCAL + LOCAL:1))%"
+ENDSELECT
+
+;-------------------------------------------------------------------------------
+;	对话窗口显示PRINT_DIALOG
+;-------------------------------------------------------------------------------
+;	枠1是指令和同时に使うこ和被想定
+;	例  CALL PRINT_DIALOG("おぜう大人クンカクンカし增加か？",1,1,1) 
+;	───────────────────────────
+;		おぜう大人被クンカクンカし增加か？
+;	------------------------------------------------------
+;
+;	枠2是ユーザーに知らせる对话窗口に使うこ和被想定
+;	例  CALL PRINT_DIALOG("芙兰            ",2,2,0) 
+;	    CALL PRINT_DIALOG("      酱      ",0,2,0) 
+;	    CALL PRINT_DIALOG("            ウフフ",0,2,2) 
+;	┌─────────────────────────┐
+;	│  芙兰                                          │
+;	│        酱                                    │
+;	│              ウフフ                              │
+;	└─────────────────────────┘
+;
+;===============================================================================
+;	ARGS = 表題
+;	ARG:0, ARG:1, ARG:2, それぞれ 上枠, 左右枠, 下枠  
+;	数値是枠タイプ	1=─和-- / 2=罫線枠 / 0=无
+@PRINT_DIALOG(ARGS, ARG:0, ARG:1, ARG:2)
+#LOCALSIZE 2
+#LOCALSSIZE 1
+LOCAL = WIDTH(-4)
+LOCAL:1 = RESULT
+IF ARG:0 > 0
+	CALL NEWLINE 
+	SELECTCASE ARG:0
+		CASE 1
+			CALL EX_DRAWLINE("─", )
+		CASE 2
+			ALIGNMENT CENTER
+			PRINTFORML ┌%"─" * (LOCAL / 2)%┐
+	ENDSELECT
+ENDIF
+ALIGNMENT CENTER
+IF ARGS != ""
+	SELECTCASE ARG:1
+		CASE 1
+			PRINTFORML %FORMCELL(ARGS,LOCAL,1)%
+		CASE 2
+			PRINTFORML │  %FORMCELL(ARGS,LOCAL-6,1), LOCAL-2, LEFT%│
+	ENDSELECT
+ENDIF
+IF ARG:2 > 0
+	SELECTCASE ARG:2
+		CASE 1
+			CALL EX_DRAWLINE(, 0x808080 )
+		CASE 2
+			PRINTFORMW └%"─" * (LOCAL / 2)%┘
+	ENDSELECT
+ENDIF
+ALIGNMENT LEFT
+CALL NEWLINE
+RETURN LOCAL:1
+
+;-------------------------------------------------------------------------------
+;	新しい行に改行做
+;-------------------------------------------------------------------------------
+;	例  CALL NEWLINE
+;
+;	DRAWLINE前や、PRINTCで並べたりした场合に最后にこれ打っ和けば安心
+;	既に新しい行的场合是何も不做
+;	引数に数値入れれば改行后そ的分只空白
+;===============================================================================
+@NEWLINE(ARG)
+#LOCALSIZE 1
+; RESULT値被退避
+LOCAL = RESULT
+; 新しい行不是场合に改行被入れる
+SIF !LINEISEMPTY()
+	PRINTL 
+; 自动整形指令按键用
+CALL POSITION_C(-1)
+; 空白引数あり(BULLETSPACE用)
+SIF ARG > 0
+	PRINTFORM % " " * ARG %
+; RESULT値被戻す
+RETURN LOCAL
+
+;-------------------------------------------------------------------------------
+;	扩张DRAWLINE
+;-------------------------------------------------------------------------------
+;	例  CALL EX_DRAWLINE(UNICODE(0xAF) + UNICODE(0x2D) + UNICODE(0x5F) + UNICODE(0x2D), 0xFFFF00)
+;
+;	引数ひ和つめ是DRAWLINE被構成做字符串变数、何も入れない场合"----"所謂普通的
+;	引数ふたつめ是DRAWLINE被描画做字符色、何も入れない场合そ的まま
+;===============================================================================
+@EX_DRAWLINE(ARGS = "-", ARG = -1)
+#LOCALSIZE 3
+VARSET LOCAL, -1
+LOCAL = RESULT
+; LINE色但指定されている场合 LOCAL:1に指定字符色、LOCAL:2に现在的字符色被保存
+IF RANGE(ARG, 0, 0xFFFFFF)
+	LOCAL:1 = ARG
+	LOCAL:2 = GETCOLOR()
+ENDIF
+; 常に新しい行で
+CALL NEWLINE
+; 指定色に变更
+SIF LOCAL:1 != -1
+	SETCOLOR LOCAL:1
+; 描画
+DRAWLINEFORM %ARGS%
+; 字符色戻し 
+SIF LOCAL:1 != -1
+	SETCOLOR LOCAL:2
+RETURN LOCAL
+
+;-------------------------------------------------------------------------------
+;	ページセレクタ
+;-------------------------------------------------------------------------------
+;	例  CALL PRINT_PAGESELECT(现在ページ,最大ページ)
+;
+;	…ARGSでタグ指定できてもいいけどどうしよっかな
+;	100ページ被超える场合10ページ前/后但出てき增加
+;===============================================================================
+;	ARG = 现在ページ  ARG:1 = 最大ページ  ARG:2 = VARSIZE(理論的最大値,最小1000)
+;	ARG:3 = 宽容做字符数  ARG:4 = -1那么DRAWLINE不做
+@PRINT_PAGESELECT(ARG, ARG:1, ARG:2, ARG:3, ARG:4)
+#LOCALSIZE 4
+LOCAL:3 = RESULT
+; 引数但无かったら抜ける
+SIF !ARG:1
+	RETURN LOCAL:3
+ARG:3 = !ARG:3 ? PRINTCPERLENGTH() # ARG:3
+; 最小1000
+LOCAL = ARG:2 < 1000 ? 1000 # POWER(10,STRLENS(@"{ARG:2}")-1)
+; ケタ算出
+LOCAL:1 = STRLENS(@"{LOCAL}")
+LOCAL:2 = ARG:3 - (6 + LOCAL:1)
+CALL NEWLINE
+
+SIF ARG:4 != -1
+	CALL EX_DRAWLINE(, 0x808080 )
+; 10ページ前
+SIF ARG:1 >= 100
+	CALL PRINTC_COMMAND(LOCAL+11, UNICODE(0x25C0) + FORMCELL("10ページ前",LOCAL:2,2), LOCAL:1)
+
+	CALL PRINTC_COMMAND(LOCAL+1,  UNICODE(0x25C0) + FORMCELL("上一页",LOCAL:2,2), LOCAL:1)
+	CALL PRINTC_COMMAND(LOCAL+3,  UNICODE(0x25B6) + FORMCELL("下一页",LOCAL:2,2), LOCAL:1)
+; 10ページ后
+SIF ARG:1 >= 100
+	CALL PRINTC_COMMAND(LOCAL+13, UNICODE(0x25B6) + FORMCELL("10ページ后",LOCAL:2,2), LOCAL:1)
+; 现在ページタグ
+CALL PRINTC_PLAIN(@"(PAGE.{ARG + 1}/{ARG:1 + 1})")
+RETURN LOCAL:3
+
+;-------------------------------------------------------------------------------
+;	ページめくりTURNPAGE(式中関数)
+;-------------------------------------------------------------------------------
+;	例	次に1ページめくり想要
+;		现在ページ = TURNPAGE(现在ページ,+1,最小ページ,最大ページ)
+;	例	前に10ページめくり想要
+;		现在ページ = TURNPAGE(现在ページ,-10,最小ページ,最大ページ)
+;===============================================================================
+;	NOWP = 现在ページ  VARP = 増減数  MINP = 最小ページ  MAXP = 最大ページ
+@TURNPAGE(NOWP, VARP, MINP, MAXP)
+#FUNCTION
+#DIM NOWP, 1
+#DIM VARP, 1
+#DIM MINP, 1
+#DIM MAXP, 1
+;状況的にありえない和思うけど増減数但0もしく是増減数 > (最大ページ - 最小ページ) 是何も不做
+IF VARP == 0 || (VARP < 0 ? VARP * -1 # VARP ) > (MAXP - MINP)
+	RETURNF NOWP
+;上一页へ(VARP被负数和して計算)
+ELSEIF VARP < 0
+	RETURNF NOWP + VARP >= MINP ? NOWP + VARP # NOWP + MAXP + (VARP + 1) - MINP
+;下一页へ(VARP被正数和して計算)
+ELSEIF VARP > 0
+	RETURNF NOWP + VARP <= MAXP ? NOWP + VARP # NOWP - MAXP + (VARP - 1) + MINP
+ENDIF
+
+;-------------------------------------------------------------------------------
+;	[ 99] - こういう指令表记 (式中関数)
+;-------------------------------------------------------------------------------
+;	例  PRINTBUTTON @"%PRINT_COMMANDF(99,"こういう按键表记")%",99
+;===============================================================================
+;	ARG = [番号]  ARGS = 字符串  ARG:1 = []内スペース  ARG:2 = 全体字符数
+@PRINT_COMMANDF(ARG, ARGS, ARG:1 = 3, ARG:2)
+#FUNCTIONS
+#LOCALSSIZE 1
+; ARG初期値に变数式中使えないみ想要な的で PRINTC的最大字符数(27)
+ARG:2 = !ARG:2 ? PRINTCPERLENGTH() # ARG:2
+; |<--          26         -->|
+;  [ xx] - こんな感じに整形   
+LOCALS = [%TOSTR(ARG), ARG:1, RIGHT%] - %FORMCELL(ARGS, ARG:2 - (5+ARG:1), 1)%
+RETURNF @"%@"%SUBSTRING(LOCALS,0,ARG:2)%",ARG:2,LEFT%"
+
+;-------------------------------------------------------------------------------
+;	自动位置整形机能付き指令表记PRINTC_COMMAND
+;-------------------------------------------------------------------------------
+;	上的奴的自动改行机能付加、CALL被並べる只でほぼPRINTBUTTONC和同じ使い方但できる
+;===============================================================================
+;	ARG = [番号]  ARGS = 字符串  ARG:1 = []内スペース  ARG:2 = 全体字符数
+;	ARG:3 = いくつで改行
+@PRINTC_COMMAND(ARG, ARGS, ARG:1 = 3, ARG:2 = -1, ARG:3 = -1)
+#LOCALSIZE 1
+#DIM LENGTH, 1
+#DIM LINE, 1
+LOCAL = RESULT
+; ARG初期値に变数式中使えないみ想要な的で, LENGTH = PRINTC的字符数() LINE = PRINTC被並べる数(4)
+LENGTH = (ARG:2 == -1 ? PRINTCPERLENGTH() # ARG:2)
+LINE   = (ARG:3 == -1 ? PRINTCPERLINE()  # ARG:3)
+; 新しい行的场合初期处理
+SIF LINEISEMPTY()
+	CALL POSITION_C(0, LINE)
+; 显示
+PRINTBUTTON @"%PRINT_COMMANDF(ARG, ARGS, ARG:1, LENGTH)%", ARG
+; 一つ進める
+CALL POSITION_C(+1, LINE)
+RETURN LOCAL
+
+;-------------------------------------------------------------------------------
+;	自动位置整形机能付き通常表记
+;-------------------------------------------------------------------------------
+;	上的奴的PRINTFORMC版(按键化不做)
+;===============================================================================
+;	ARGS = 字符串  ARG = 全体字符数  ARG:1 = いくつで改行
+@PRINTC_PLAIN(ARGS, ARG, ARG:1)
+#LOCALSIZE 1
+ARG = !ARG ? PRINTCPERLENGTH() # ARG
+SIF LINEISEMPTY()
+	CALL POSITION_C(0,ARG:1)
+PRINTFORM %FORMCELL(ARGS,ARG,1)%
+CALL POSITION_C(+1,ARG:1)
+RETURN RESULT
+
+;-------------------------------------------------------------------------------
+;	↑↑和↑的やつ的位置保存用関数
+;-------------------------------------------------------------------------------
+;	内部处理
+;===============================================================================
+;	ARG = 位置(-1で初期化、0で初期化和改行、1以上で位置にPLUS)
+;	ARG:1 = いくつで改行
+@POSITION_C(ARG, ARG:1 = -1)
+#DIM POSITION_C, 1
+#DIM PERLINE, 1
+PERLINE = ARG:1 == -1 ? PRINTCPERLINE() # ARG:1
+SELECTCASE ARG
+	CASE IS < 0
+		POSITION_C = 0
+	CASE 0
+		CALL NEWLINE(BULLETSPACE())
+		POSITION_C = 0
+	CASE IS > 0
+		POSITION_C += ARG
+		IF POSITION_C >= PERLINE
+			PRINTL
+			POSITION_C =0
+		ENDIF
+ENDSELECT
+
+;-------------------------------------------------------------------------------
+;	非常によく使う[返回]被関数化
+;-------------------------------------------------------------------------------
+;	例  CALL PRINT_RETURN
+;===============================================================================
+;	ARGS = 返回的タグ  ARG = 引数(指定不做和-1)  ARG:1 = []内スペース
+@PRINT_RETURN(ARGS = "返回", ARG = -1, ARG:1 = 3)
+#LOCALSIZE 1
+LOCAL = RESULT
+; 薄色でDRAWLINE
+CALL EX_DRAWLINE(, 0x808080 )
+; 指令处理
+CALL PRINTC_COMMAND(ARG, ARGS, ARG:1)
+RETURN LOCAL
+
+;-------------------------------------------------------------------------------
+;	选择肢(最大12択)
+;-------------------------------------------------------------------------------
+;	例  CALL PRINT_CHOICE(0,"是",1, "否",2,) ※返回无的Y/N
+;		PANCTIONや紅魔館的関数的構文被参考にしました
+;===============================================================================
+;	ARG == 0/1「返回」被使うか  ARGS:x == 选择肢的文章  ARG:x == RESULT値
+@PRINT_CHOICE(ARG, ARGS:1,ARG:1, ARGS:2,ARG:2, ARGS:3,ARG:3, ARGS:4,ARG:4, ARGS:5,ARG:5, ARGS:6,ARG:6, ARGS:7,ARG:7, ARGS:8,ARG:8, ARGS:9,ARG:9, ARGS:10,ARG:10, ARGS:11,ARG:11, ARGS:12,ARG:12)
+#LOCALSIZE 1
+#LOCALSSIZE 1
+CALL POSITION_C(-1)
+FOR LOCAL, 0, 13
+	; タグ文但无い场合是除外
+	IF ARGS:LOCAL == ""
+		CONTINUE
+	; 番号但无くてタグ文但あ时き是文章的み
+	ELSEIF !ARG:LOCAL
+		CALL PRINTC_PLAIN(ARGS:LOCAL)
+	; 両方ある
+	ELSE
+		CALL PRINTC_COMMAND(ARG:LOCAL,ARGS:LOCAL,2)
+	ENDIF
+NEXT
+; [-1] - 返回 的有无
+SIF ARG
+	CALL PRINT_RETURN(,,2)
+$INPUT_LOOP
+INPUT
+SIF (ARG && RESULT == -1) || GROUPMATCH(RESULT, ARG:1, ARG:2, ARG:3, ARG:4, ARG:5, ARG:6, ARG:7, ARG:8, ARG:9, ARG:10, ARG:11, ARG:12)
+	RETURN RESULT
+CLEARLINE 1
+GOTO INPUT_LOOP
+
+;-------------------------------------------------------------------------------
+;	PLAY时间的計算/显示PLAYTIME(式中関数)	
+;-------------------------------------------------------------------------------
+;	引数是SET/GETで使用做(机能してる的是GET和それ以外只ど)
+;	商用ゲームによくある、いかにPLAYER但人生被无駄にした的か和いうヤツ
+;	初回是LOCALに时间保持、次回からLOCALに时间但保持されていれば差分被
+;	TIME:SAVETIME()に加算して、LOCAL更新
+;
+;	例  @EVENTFIRST 和 @EVENTLOAD で
+;		CALLF PLAYTIME("SET")
+;	    还有是使い想要和ころ(INFOやSAVEINFOあたり)で
+;		%PLAYTIME("GET")%
+;===============================================================================
+;	LOCAL = GETSECOND暂时保存用  TIME:SAVETIME() = 经过时间(秒)
+@PLAYTIME(ARGS)
+#FUNCTIONS
+#LOCALSIZE 1
+#DIM HOUR,1
+#DIM MINUTES,1
+#DIM SECOND,1
+IF LOCAL > GETSECOND()
+	TIME:SAVETIME() = 36000000
+ELSE
+	SIF LOCAL > 0
+		TIME:SAVETIME() += (GETSECOND() - LOCAL)
+	LOCAL = GETSECOND()
+	SELECTCASE ARGS
+		CASE "SET"
+			RETURNF 
+		CASE "GET"
+			;时
+			HOUR = TIME:SAVETIME() /360
+			;分
+			MINUTES = TIME:SAVETIME() / 60 % 60
+			;秒
+			SECOND = TIME:SAVETIME() % 60
+			IF TIME:SAVETIME() < 3600000
+				RETURNF @"\@ HOUR < 10 ? 0 # \@{HOUR}:\@ MINUTES < 10 ? 0 # \@{MINUTES}:\@ SECOND < 10 ? 0 # \@{SECOND}"
+			ELSE
+				RETURNF "999:59:59"
+			ENDIF
+	ENDSELECT
+ENDIF
+

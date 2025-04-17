@@ -1,0 +1,928 @@
+﻿;────────────────────────────────────
+;震动棒など付けっぱ无事项的チェック
+;ここで是COM选择前的加算处理被行う
+;────────────────────────────────────
+@EQUIP_CHECK
+;インフレ仕大人
+;ABL和GET_ABL()和的对应、だい想要元値的10倍程度、100被超えない値
+;	ABL	A
+;	0	0
+;	1	16.67
+;	2	28.57
+;	3	37.5
+;	4	44.44
+;	5	50
+;	6	54.55
+;	7	58.33
+;	8	61.54
+;	9	64.29
+;	10	66.67
+
+;────────────────────────────────────
+;润滑液（润滑追加）
+;────────────────────────────────────
+IF TEQUIP:润滑液
+	IF PALAM:MASTER:润滑 < 500
+		CUP:MASTER:润滑 += 200
+	ELSEIF PALAM:MASTER:润滑 < 1200
+		CUP:MASTER:润滑 += 100
+	ELSEIF PALAM:MASTER:润滑 < 2500
+		CUP:MASTER:润滑 += 50
+	ELSE
+		CUP:MASTER:润滑 += 10
+	ENDIF
+ENDIF
+
+;────────────────────────────────────
+;媚药（欲望追加、理性）
+;────────────────────────────────────
+IF TEQUIP:媚药
+	IF PALAM:MASTER:欲望 < 1000
+		CUP:MASTER:欲望 += 500
+		DOWNBASE:MASTER:理性 += 25
+	ELSEIF PALAM:MASTER:欲望 < 2000
+		CUP:MASTER:欲望 += 250
+		DOWNBASE:MASTER:理性 += 50
+	ELSEIF PALAM:MASTER:欲望 < 3000
+		CUP:MASTER:欲望 += 150
+		DOWNBASE:MASTER:理性 += 100
+	ELSE
+		CUP:MASTER:欲望 += 50
+		TCVAR:MASTER:这回合的勃起 += 200
+	ENDIF
+ENDIF
+
+;────────────────────────────────────
+;震动棒装着中（快Ｖ、中毒充足、心理创伤）
+;────────────────────────────────────
+IF TEQUIP:震动棒 && !IS_NOWACTNAME("震动棒")
+	A = 100 * (2 + ITEM:9 + TALENT:道具使) / 2
+	SOURCE:MASTER:快Ｖ += A
+	SIF ABL:MASTER:Ｖ感觉 > 2
+		SOURCE:MASTER:中毒充足 += GET_ABL(MASTER, "Ｖ感觉") * (GET_ABL(MASTER, "Ｖ感觉") - 20) * (ITEM:9 + 1) / 10 + A / 5
+	SIF CFLAG:MASTER:心理创伤 == 21
+		SOURCE:MASTER:心理创伤 += 20 + GET_ABL(TARGET, "道具") + ITEM:9 * 100 + (TALENT:道具使 + 1) * GET_ABL(TARGET, "技巧") * GET_ABL(TARGET, "道具") / 20
+	TCVAR:MASTER:前列腺刺激 += 1
+	
+	;装備时に破れるんだから念的ため只ど。
+	;MASTER但处女那么、处女丧失但起こる
+	TCVAR:MASTER:处女丧失 = TALENT:MASTER:处女
+ENDIF
+
+;────────────────────────────────────
+;肛门震动棒装着中（快Ａ、逃脱、中毒充足）
+;────────────────────────────────────
+IF TEQUIP:肛门震动棒 && !IS_NOWACTNAME("肛门震动棒")
+	A = 100 * (2 + ITEM:9 + TALENT:道具使) / 2
+	SOURCE:MASTER:快Ａ += A
+	;経験不足
+	IF EXP:MASTER:Ａ経験 < 1
+		SOURCE:MASTER:逃脱 += 1500
+	ELSEIF EXP:MASTER:Ａ経験 < 6
+		SOURCE:MASTER:逃脱 += 800 - EXP:MASTER:Ａ経験 * 100
+	ELSEIF EXP:MASTER:Ａ経験 < 11
+		SOURCE:MASTER:逃脱 += 200 - EXP:MASTER:Ａ経験 * 15
+	ELSEIF EXP:MASTER:Ａ経験 < 21
+		SOURCE:MASTER:逃脱 += 40 - EXP:MASTER:Ａ経験 * 2
+	ENDIF
+	SIF ABL:MASTER:Ａ感觉 > 2
+		SOURCE:MASTER:中毒充足 += (GET_ABL(MASTER, "Ａ感觉") + 1) * (GET_ABL(MASTER, "Ａ感觉") - 20) * (ITEM:9 + 1) / 4 + A / 5
+	SIF TALENT:MASTER:男人
+		TCVAR:MASTER:前列腺刺激 += 1
+ENDIF
+
+;────────────────────────────────────
+;肛门拉珠装着中（快Ａ、逃脱、中毒充足）
+;────────────────────────────────────
+IF TEQUIP:肛门拉珠 && !IS_NOWACTNAME("肛门拉珠")
+	A = 30 * (2 + ITEM:9 + TALENT:道具使 + TEQUIP:肛门拉珠) / 3
+	SOURCE:MASTER:快Ａ += A
+	;経験不足
+	IF EXP:MASTER:Ａ経験 < 1
+		SOURCE:MASTER:逃脱 += 500
+	ELSEIF EXP:MASTER:Ａ経験 < 6
+		SOURCE:MASTER:逃脱 += 300 - EXP:MASTER:Ａ経験 * 20
+	ELSEIF EXP:MASTER:Ａ経験 < 11
+		SOURCE:MASTER:逃脱 += 90 - EXP:MASTER:Ａ経験 * 6
+	ELSEIF EXP:MASTER:Ａ経験 < 21
+		SOURCE:MASTER:逃脱 += 20 - EXP:MASTER:Ａ経験 * 2
+	ENDIF
+	SIF ABL:MASTER:Ａ感觉 > 2
+		SOURCE:MASTER:中毒充足 += (GET_ABL(MASTER, "Ａ感觉") + 10) * (GET_ABL(MASTER, "Ａ感觉") - 20) / 4 + A / 5
+ENDIF
+
+;────────────────────────────────────
+;灌肠＋肛门肛塞装着中
+;────────────────────────────────────
+IF TEQUIP:灌肠器＋肛塞 && !IS_NOWACTNAME("灌肠套装")
+	A = 20 * (CFLAG:MASTER:调教等级 + 1) + (GET_ABL(MASTER, "技巧") - 30) * GET_ABL(MASTER, "受虐气质") * (TALENT:道具使 + TALENT:MASTER:抖Ｍ + TEQUIP:灌肠器＋肛塞) * 30 / 100
+	SIF A < 0
+		A = 0
+	B = 200 + TEQUIP:灌肠器＋肛塞 * 100
+	SOURCE:MASTER:快Ａ += A
+	SOURCE:MASTER:疼痛 += B
+	SOURCE:MASTER:捆绑 += 50 + TEQUIP:灌肠器＋肛塞 * 100
+	C = A / 2 + B / 2 - CFLAG:MASTER:调教等级 * 20 - GET_ABL(MASTER, "受虐气质") * 10
+	SIF C < 0
+		C = 0
+	SOURCE:MASTER:逃脱 += C
+	SIF ABL:MASTER:受虐气质 > 3
+		SOURCE:MASTER:中毒充足 += (GET_ABL(MASTER, "受虐气质") - 30) * GET_ABL(MASTER, "Ａ感觉") * 25 * A / 10000
+
+ENDIF
+
+
+
+;阴蒂夹・飞机杯非電动化的為注释アウト
+
+[SKIPSTART]
+
+;────────────────────────────────────
+;阴蒂夹装着中（快Ｃ、中毒充足）
+;────────────────────────────────────
+IF TEQUIP:阴蒂夹 && !IS_NOWACTNAME("Ｃ道具爱抚")
+	A = 100 * (2 + ITEM:9 + TALENT:道具使) / 2
+	SOURCE:MASTER:快Ｃ += A
+	SIF ABL:MASTER:Ｃ感觉 > 1
+		SOURCE:MASTER:中毒充足 += GET_ABL(MASTER, "Ｃ感觉") * (GET_ABL(MASTER, "Ｃ感觉") - 10) * (ITEM:9 + 1) / 5 + A / 5
+ENDIF
+
+;────────────────────────────────────
+;飞机杯装着中（快Ｃ、中毒充足）
+;────────────────────────────────────
+IF TEQUIP:飞机杯 && !IS_NOWACTNAME("Ｃ道具爱抚")
+	A = 150 * (2 + ITEM:9 + TALENT:道具使) / 2
+	SOURCE:MASTER:快Ｃ += A
+	SIF ABL:MASTER:Ｃ感觉 > 1
+		SOURCE:MASTER:中毒充足 += GET_ABL(MASTER, "Ｃ感觉") * (GET_ABL(MASTER, "Ｃ感觉") - 10) * (ITEM:9 + 1) / 5 + A / 5
+	TCVAR:MASTER:这回合的勃起 += 100
+ENDIF
+
+
+[SKIPEND]
+
+
+;────────────────────────────────────
+;乳头夹装着中（快Ｂ、中毒充足）
+;────────────────────────────────────
+IF TEQUIP:乳头夹 && !IS_NOWACTNAME("乳头夹")
+	A = 100 * (2 + ITEM:9 + TALENT:道具使) / 2
+	SOURCE:MASTER:快Ｂ += A
+	SIF ABL:MASTER:Ｂ感觉 > 2
+		SOURCE:MASTER:中毒充足 += (GET_ABL(MASTER, "Ｂ感觉") - 10) * (GET_ABL(MASTER, "Ｂ感觉") - 20) * (ITEM:9 + 1) * 35 / 100 + A / 5
+	TCVAR:MASTER:这回合的勃起 += 30
+ENDIF
+
+;────────────────────────────────────
+;绳子紧绑中（捆绑、中毒充足）
+;────────────────────────────────────
+IF TEQUIP:绳
+	A = 200 + (GET_ABL(MASTER, "Ｃ感觉") / 10 + GET_TRAINLV(TARGET)) * (GET_ABL(TARGET, "技巧") + 10) * (TALENT:擅长捆绑 * 3 + 2) / 2
+	SOURCE:MASTER:捆绑 += A
+	SOURCE:MASTER:中毒充足 += GET_ABL(MASTER, "受虐气质") * (GET_ABL(MASTER, "捆绑中毒") - 10) * (GET_ABL(MASTER, "捆绑中毒") + 10) * A / 100000
+	TCVAR:MASTER:这回合的勃起 += (GET_ABL(MASTER, "受虐气质") - 20) * 3
+ENDIF
+
+;────────────────────────────────────
+;眼罩装着中（捆绑、中毒充足、心理创伤）
+;────────────────────────────────────
+IF TEQUIP:眼罩 && !IS_NOWACTNAME("眼罩")
+	A = 100 + (GET_ABL(TARGET, "施虐") / 10 + GET_TRAINLV(TARGET)) * (GET_ABL(TARGET, "技巧") + 10) * (TALENT:擅长捆绑 + 2) / 2
+	B = 0
+	SOURCE:MASTER:捆绑 += A
+	SIF ABL:MASTER:捆绑中毒 > 1
+		B = GET_ABL(MASTER, "受虐气质") * (GET_ABL(MASTER, "捆绑中毒") - 10) * (GET_ABL(MASTER, "捆绑中毒") + 10) * A / 100000
+	SOURCE:MASTER:中毒充足 += B
+	C = A / 2 - B
+	SIF C > 0
+		SOURCE:MASTER:心理创伤 += C
+	SIF CFLAG:MASTER:心理创伤 == 64
+		TIMES SOURCE:MASTER:心理创伤 , 1.50
+	TCVAR:MASTER:这回合的勃起 += (GET_ABL(MASTER, "受虐气质") - 20) * 2
+ENDIF
+
+;────────────────────────────────────
+;口球装着中（捆绑、中毒充足、心理创伤）
+;────────────────────────────────────
+IF TEQUIP:口球 && !IS_NOWACTNAME("口球")
+	A = 350 + (GET_ABL(TARGET, "施虐") / 10 + GET_TRAINLV(TARGET)) * 10 * (TALENT:擅长捆绑 + 1)
+	B = 0
+	SOURCE:MASTER:捆绑 += A
+	SIF ABL:MASTER:捆绑中毒 > 1
+		B = GET_ABL(MASTER, "受虐气质") * (GET_ABL(MASTER, "捆绑中毒") - 10) * (GET_ABL(MASTER, "捆绑中毒") + 10) * A / 100000
+	SOURCE:MASTER:中毒充足 += B
+	C = A / 2 - B
+	SIF C > 0
+		SOURCE:MASTER:心理创伤 += C
+	SIF CFLAG:MASTER:心理创伤 == 65
+		TIMES SOURCE:MASTER:心理创伤 , 1.50
+	TCVAR:MASTER:这回合的勃起 += (GET_ABL(MASTER, "受虐气质") - 20)
+ENDIF
+
+;────────────────────────────────────
+;三角木马骑乘中（快Ｖ、情爱逆、疼痛、捆绑、逃脱、中毒充足、心理创伤）
+;────────────────────────────────────
+IF TEQUIP:三角木马
+	A = 0
+	B = 1000 + GET_ABL(TARGET, "施虐") * GET_ABL(TARGET, "技巧") / 2 + GET_TRAINLV(TARGET) * (TALENT:虐待狂 * 3 + 2) * 20
+	C = 50 + (MARK:反抗刻印 + 1) * (GET_ABL(TARGET, "技巧") + 10) 
+	D = 1800 + B / 2 - CFLAG:MASTER:调教等级 * 50 - GET_ABL(MASTER, "受虐气质") * 20 - GET_ABL(MASTER, "痛苦中毒") * 60
+	E = 0
+	F = 0
+	G = 0
+	SIF ABL:MASTER:受虐气质 > 3
+		A = (GET_ABL(MASTER, "受虐气质") - 30) * GET_ABL(MASTER, "痛苦中毒") * (TALENT:MASTER:抖Ｍ + 2) / 2
+	SOURCE:MASTER:快Ｖ += A
+	SOURCE:MASTER:疼痛 += B
+	SOURCE:MASTER:捆绑 += C
+	SIF D < 0
+		D = 0
+	SOURCE:MASTER:逃脱 += D
+	SIF ABL:MASTER:痛苦中毒 > 3
+		E = GET_ABL(MASTER, "受虐气质") * (GET_ABL(MASTER, "痛苦中毒") - 30) * (GET_ABL(MASTER, "痛苦中毒") + 10) * B / 80000
+	SOURCE:MASTER:中毒充足 += E
+	F = B / 2 + C / 5 - E
+	SOURCE:MASTER:心理创伤 += F
+	SIF CFLAG:MASTER:心理创伤 == 67
+		TIMES SOURCE:MASTER:心理创伤 , 1.50
+	G = E - B - D - F
+	SIF G < 0
+		SOURCE:MASTER:情爱 += G
+	TCVAR:MASTER:这回合的勃起 += (GET_ABL(MASTER, "受虐气质") - 20) * 5
+	;装備时に破れるんだから念的ため只ど。
+	;MASTER但处女那么、处女丧失但起こる
+	TCVAR:MASTER:处女丧失 = TALENT:MASTER:处女
+ENDIF
+;────────────────────────────────────
+;顔面骑乘中（快Ｃ、中毒充足）
+;────────────────────────────────────
+IF TEQUIP:顔面骑乘
+	SOURCE:MASTER:不洁 += 100
+	SOURCE:快Ｃ += 150 +ACT_TO(TARGET, 1) * GET_ABL(MASTER, "顺从") * ( 3 + TALENT:MASTER:舌使 + TALENT:MASTER:猫舌) / 500
+ENDIF
+;────────────────────────────────────
+;顔面骑乘肛门（快Ｃ、中毒充足）
+;────────────────────────────────────
+IF TEQUIP:顔面骑乘肛门
+	SOURCE:MASTER:不洁 += 300
+	SOURCE:快Ａ += 150 +ACT_TO(TARGET, 3) * GET_ABL(MASTER, "顺从") * ( 3 + TALENT:MASTER:舌使 + TALENT:MASTER:猫舌) / 500
+ENDIF
+;────────────────────────────────────
+;野外PLAY中（捆绑、露出、逃脱、心理创伤）
+;────────────────────────────────────
+IF TEQUIP:野外PLAY && !IS_NOWACTNAME("野外PLAY")
+	SOURCE:MASTER:捆绑 += 50 + MARK:反抗刻印 * 15
+	SOURCE:MASTER:露出 += 300
+	SIF TEQUIP:自慰中 != 2
+		SOURCE:MASTER:露出 += TEQUIP:自慰中 * 200
+	A = 150 + SOURCE:MASTER:捆绑 - GET_ABL(MASTER, "露出癖") * 3 - CFLAG:MASTER:调教等级 * 10
+	B = TALENT:MASTER:胆怯 * 150 - TALENT:MASTER:无关心 * 50 + TALENT:MASTER:压抑 * 150 - TALENT:MASTER:解放 * 50 + TALENT:MASTER:羞涩 * 250 - TALENT:MASTER:无耻 * 150
+	IF A > 0
+		SOURCE:MASTER:逃脱 += A
+		B += A
+	ENDIF
+	SIF B > 0
+		SOURCE:MASTER:心理创伤 += B
+	SIF CFLAG:MASTER:心理创伤 == 44
+		TIMES SOURCE:MASTER:心理创伤 , 1.50
+		TCVAR:MASTER:这回合的勃起 += GET_ABL(MASTER, "露出癖") * 5
+ENDIF
+
+;────────────────────────────────────
+;羞耻PLAY中（露出）
+;────────────────────────────────────
+IF TEQUIP:大镜 && !IS_NOWACTNAME("羞耻PLAY")
+	SOURCE:MASTER:露出 += 200
+	SIF TEQUIP:自慰中 != 2
+		SOURCE:MASTER:露出 += TEQUIP:自慰中 * 150
+		TCVAR:MASTER:这回合的勃起 += GET_ABL(MASTER, "露出癖") * 3
+ENDIF
+
+;────────────────────────────────────
+;调教对象但自慰中（快Ｃ、快Ｖ、快Ａ、快Ｂ、性行动、露出、逃脱、中毒充足）
+;────────────────────────────────────
+;こ的回合で自慰的命令被出した场合是拒绝される可能性但ある的で处理被后回しし增加
+IF (TEQUIP:自慰中 == 1 || TEQUIP:自慰中 == 3) && !IS_NOWACTNAME("自慰")
+	A = 20 + GET_ABL(MASTER, "欲望") * (GET_ABL(MASTER, "技巧") + 10) * CFLAG:MASTER:调教等级 / 50 + GET_ABL(MASTER, "技巧") * 25 * (TALENT:MASTER:灵巧的指尖 + 1) / 10
+	B = 0
+	C = 0
+	D = 0
+	E = A
+	;震动棒使用
+	IF TEQUIP:震动棒
+		B = 50 + GET_ABL(MASTER, "欲望") * (CFLAG:MASTER:调教等级 + 1) / 2 + (TALENT:MASTER:道具使 + 1) * GET_ABL(MASTER, "技巧") * (ITEM:9 + 1) * 3
+		SOURCE:MASTER:快Ｖ += B
+		TIMES A , 0.80
+		;扶她是Ｖ刺激で强制勃起
+		IF TALENT:MASTER:扶她
+			IF !TCVAR:MASTER:需要强制勃起
+				TCVAR:MASTER:这回合的勃起 += 300
+			ELSE
+				TCVAR:MASTER:勃起度 += 200
+			ENDIF
+		ENDIF
+	ENDIF
+	;肛门震动棒使用
+	IF TEQUIP:肛门震动棒 && ABL:MASTER:Ａ感觉 > 1
+		C = (GET_ABL(MASTER, "欲望") + 10) * (CFLAG:MASTER:调教等级 + 1) * 6 / 10 + (TALENT:MASTER:道具使 + 1) * GET_ABL(MASTER, "技巧") * (ITEM:9 + 1) * 25 / 10
+		SOURCE:MASTER:快Ａ += C
+		TIMES E , 0.60
+		;男人是Ａ刺激で强制勃起
+		IF TALENT:MASTER:男人
+			IF !TCVAR:MASTER:需要强制勃起
+				TCVAR:MASTER:这回合的勃起 += 300
+			ELSE
+				TCVAR:MASTER:勃起度 += 200
+			ENDIF
+		ENDIF
+	ENDIF
+	SOURCE:MASTER:快Ｃ += A
+	SIF TALENT:MASTER:男人 == 0
+		SOURCE:MASTER:快Ｂ += E
+	SOURCE:MASTER:性行动 += 50 + GET_ABL(MASTER, "技巧") * 2 + CFLAG:MASTER:调教等级 * 10 + TEQUIP:震动棒 * 50 + TEQUIP:肛门震动棒 * 50
+	D = 150 + GET_TRAINLV(TARGET) * 10 + TEQUIP:野外PLAY * 200 + TEQUIP:大镜 * 150 + A / 2 + B / 3 + C / 3 + E / 2
+	SOURCE:MASTER:露出 += D
+	SOURCE:MASTER:逃脱 += D / 2 - GET_ABL(MASTER, "露出癖") * 2 - CFLAG:MASTER:调教等级 * 10
+	SOURCE:MASTER:中毒充足 += (A + E + B + C + D) * (50 + GET_ABL(MASTER, "自慰中毒")) / 500
+	TCVAR:MASTER:这回合的勃起 += 100
+ENDIF
+
+;────────────────────────────────────
+;调教者但自慰中（逃脱、欲望追加、快ｃ、快ｖ、快ｂ）
+;────────────────────────────────────
+IF TEQUIP:自慰中 > 1 && !IS_NOWACTNAME("展示自慰")
+	A = 50 + GET_ABL(TARGET, "欲望") * GET_ABL(TARGET, "技巧") * GET_TRAINLV(TARGET) / 50 + GET_ABL(MASTER, "技巧") * 25 * (TALENT:MASTER:灵巧的指尖 + 1) / 10
+	B = A
+	C = 0
+	;震动棒使用
+	IF ITEM:跳蛋 && TALENT:处女 == 0 && TALENT:男人 == 0
+		C = 50 + GET_ABL(TARGET, "欲望") * (GET_TRAINLV(TARGET) + 1) / 2 + (TALENT:道具使 + 1) * GET_ABL(TARGET, "技巧") * (ITEM:9 + 1) * 3
+		TIMES A , 0.80
+	ENDIF
+	D = A + B + C
+	SOURCE:快Ｃ += A
+	SOURCE:快Ｖ += C
+	SIF TALENT:男人 == 0
+		SOURCE:快Ｂ += B
+	;调教等级和欲望被见る
+	IF CFLAG:MASTER:调教等级 < 1 || ABL:MASTER:欲望 < 1
+		TIMES D , 0.10
+	ELSEIF CFLAG:MASTER:调教等级 < 3 || ABL:MASTER:欲望 < 2
+		TIMES D , 0.25
+	ELSEIF CFLAG:MASTER:调教等级 < 5 || ABL:MASTER:欲望 < 3
+		TIMES D , 0.40
+	ELSEIF CFLAG:MASTER:调教等级 < 8 || ABL:MASTER:欲望 < 4
+		TIMES D , 0.60
+	ELSEIF CFLAG:MASTER:调教等级 < 11 || ABL:MASTER:欲望 < 5
+		TIMES D , 0.85
+	ENDIF
+	CUP:MASTER:欲望 += D / 5
+	;逃脱的計算、调教的プログレスに应じて軽減
+	D -= GET_ABL(MASTER, "露出癖") * 15 / 10 - CFLAG:MASTER:调教等级 * 5
+	SIF D > 0
+		SOURCE:MASTER:逃脱 += D
+	TCVAR:MASTER:这回合的勃起 += 50
+ENDIF
+
+;────────────────────────────────────
+;调教者插入中（快Ｃ、快Ｖ、快Ａ、接触、情爱、性行动、疼痛、露出、逃脱、中毒充足、心理创伤、快ｃ、快ｖ）
+;────────────────────────────────────
+;こ的回合的行动も性交那么ACT_APPLY.ERBで处理し增加。会话や胸爱抚など插入し一边行う行动只ここ被见增加
+IF TEQUIP:性交中 && TFLAG:ACT分类 != 3
+	A = 0
+	B = 0
+	C = 0
+	IF TEQUIP:性交中 == 1
+		A = (300 +ACT_FROM(TARGET, 5) * 3 / 2) / 2
+		B = (200 +ACT_TO(TARGET, 5) * 3 / 2) / 2
+		;润滑不足
+		IF PALAM:MASTER:润滑 < 100 && TEQUIP:润滑液 < 3
+			TIMES A , 0.60
+			TIMES B , 0.80
+			C += 500
+		ELSEIF PALAM:MASTER:润滑 < 250 && TEQUIP:润滑液 < 2
+			TIMES A , 0.75
+			TIMES B , 0.90
+			C += 200
+		ELSEIF PALAM:MASTER:润滑 < 500 && TEQUIP:润滑液 < 1
+			TIMES A , 0.90
+			TIMES B , 0.95
+			C += 100
+		ENDIF
+		;経験不足
+		IF EXP:MASTER:Ｖ経験 < 2
+			TIMES A , 0.30
+			C += 1000
+			SOURCE:MASTER:逃脱 += 1000
+		ELSEIF EXP:MASTER:Ｖ経験 < 6 && EXP:MASTER:性交経験 < 5
+			TIMES A , 0.80
+			C += 150
+			SOURCE:MASTER:逃脱 += 250
+		ELSEIF EXP:MASTER:Ｖ経験 < 11 && EXP:MASTER:性交経験 < 9
+			TIMES A , 0.95
+			C += 50
+			SOURCE:MASTER:逃脱 += 50
+		ENDIF
+		SOURCE:MASTER:快Ｖ += A
+		SOURCE:快Ｃ += B
+		SOURCE:MASTER:接触 += 250 + GET_TRAINLV(TARGET) * 10
+		SOURCE:MASTER:性行动 += 100 + GET_TRAINLV(TARGET) * 2
+		SOURCE:MASTER:疼痛 += C
+		IF CFLAG:MASTER:心理创伤 == 30
+			SOURCE:MASTER:心理创伤 += SOURCE:MASTER:接触
+			TIMES SOURCE:MASTER:心理创伤 , 1.50
+		ENDIF
+		SOURCE:MASTER:情爱 += A / 5 - SOURCE:MASTER:心理创伤 - C
+		SIF SOURCE:MASTER:情爱 > 0 && ABL:MASTER:Ｖ感觉 > 2
+			SOURCE:MASTER:中毒充足 += GET_ABL(MASTER, "Ｖ感觉") * (GET_ABL(MASTER, "Ｖ感觉") - 20) * SOURCE:MASTER:情爱 / 100 + A / 5
+		SOURCE:MASTER:情爱 += SOURCE:MASTER:中毒充足 / 5
+	ELSEIF TEQUIP:性交中 == 2
+		A = (300 +ACT_FROM(TARGET, 5) * 3 / 2) / 2
+		B = (300 +ACT_TO(TARGET, 5)) / 2
+		;润滑不足
+		IF PALAM:MASTER:润滑 < 100 && TEQUIP:润滑液 < 3
+			TIMES A , 0.50
+			TIMES B , 0.60
+			C += 750
+		ELSEIF PALAM:MASTER:润滑 < 250 && TEQUIP:润滑液 < 2
+			TIMES A , 0.70
+			TIMES B , 0.80
+			C += 400
+		ELSEIF PALAM:MASTER:润滑 < 500 && TEQUIP:润滑液 < 1
+			TIMES A , 0.85
+			TIMES B , 0.95
+			C += 150
+		ENDIF
+		;経験不足
+		IF EXP:MASTER:Ｖ経験 < 2
+			TIMES A , 0.30
+			C += 1200
+			SOURCE:MASTER:逃脱 += 1500
+		ELSEIF EXP:MASTER:Ｖ経験 < 6 && EXP:MASTER:性交経験 < 5
+			TIMES A , 0.70
+			C += 350
+			SOURCE:MASTER:逃脱 += 750
+		ELSEIF EXP:MASTER:Ｖ経験 < 11 && EXP:MASTER:性交経験 < 9
+			TIMES A , 0.90
+			C += 90
+			SOURCE:MASTER:逃脱 += 250
+		ENDIF
+		SOURCE:MASTER:快Ｖ += A
+		SOURCE:快Ｃ += B
+		SOURCE:MASTER:接触 += 200 + GET_TRAINLV(TARGET) * 10
+		SOURCE:MASTER:性行动 += 90 + GET_TRAINLV(TARGET) * 2
+		SOURCE:MASTER:疼痛 += C
+		IF CFLAG:MASTER:心理创伤 == 31
+			SOURCE:MASTER:心理创伤 += SOURCE:MASTER:接触
+			TIMES SOURCE:MASTER:心理创伤 , 1.50
+		ENDIF
+		SOURCE:MASTER:情爱 += A / 7 - SOURCE:MASTER:心理创伤
+		SIF SOURCE:MASTER:情爱 > 0 && ABL:MASTER:Ｖ感觉 > 2
+			SOURCE:MASTER:中毒充足 += GET_ABL(MASTER, "Ｖ感觉") * (GET_ABL(MASTER, "Ｖ感觉") - 20) * SOURCE:MASTER:情爱 / 100 + A / 5
+		SOURCE:MASTER:情爱 += SOURCE:MASTER:中毒充足 / 7
+	ELSEIF TEQUIP:性交中 == 3
+		A = (100 +ACT_FROM(TARGET, 5) * 2) / 2
+		B = (100 +ACT_TO(TARGET, 5) * 2) / 2
+		;润滑不足
+		IF PALAM:MASTER:润滑 < 100 && TEQUIP:润滑液 < 3
+			TIMES A , 0.60
+			TIMES B , 0.65
+			C += 500
+		ELSEIF PALAM:MASTER:润滑 < 250 && TEQUIP:润滑液 < 2
+			TIMES A , 0.80
+			TIMES B , 0.80
+			C += 200
+		ELSEIF PALAM:MASTER:润滑 < 500 && TEQUIP:润滑液 < 1
+			TIMES A , 0.95
+			TIMES B , 0.90
+			C += 50
+		ENDIF
+		;経験不足
+		IF EXP:MASTER:Ｖ経験 < 2
+			TIMES A , 0.35
+			C += 700
+			SOURCE:MASTER:逃脱 += 1200
+		ELSEIF EXP:MASTER:Ｖ経験 < 6 && EXP:MASTER:性交経験 < 5
+			TIMES A , 0.75
+			C += 200
+			SOURCE:MASTER:逃脱 += 700
+		ELSEIF EXP:MASTER:Ｖ経験 < 11 && EXP:MASTER:性交経験 < 9
+			TIMES A , 0.95
+			C += 30
+			SOURCE:MASTER:逃脱 += 150
+		ENDIF
+		SOURCE:MASTER:快Ｖ += A
+		SOURCE:快Ｃ += B
+		SOURCE:MASTER:接触 += 200 + CFLAG:MASTER:调教等级 * 10
+		SOURCE:MASTER:性行动 += 90 + CFLAG:MASTER:调教等级 * 2
+		SOURCE:MASTER:疼痛 += C
+		IF CFLAG:MASTER:心理创伤 == 32
+			SOURCE:MASTER:心理创伤 += SOURCE:MASTER:接触
+			TIMES SOURCE:MASTER:心理创伤 , 1.50
+		ENDIF
+		SOURCE:MASTER:情爱 += A / 5 - SOURCE:MASTER:心理创伤 - C
+		SIF SOURCE:MASTER:情爱 > 0 && ABL:MASTER:Ｖ感觉 > 2
+			SOURCE:MASTER:中毒充足 += GET_ABL(MASTER, "Ｖ感觉") * (GET_ABL(MASTER, "Ｖ感觉") - 20) * SOURCE:MASTER:情爱 / 100 + A / 5
+		SOURCE:MASTER:情爱 += SOURCE:MASTER:中毒充足 / 7 + SOURCE:MASTER:性行动 / 5
+	ELSEIF TEQUIP:性交中 == 4
+		A = (100 +ACT_FROM(TARGET, 5)) / 2
+		B = (100 +ACT_TO(TARGET, 5) * 2 / 3) / 2
+		;润滑不足
+		IF PALAM:MASTER:润滑 < 100 && TEQUIP:润滑液 < 3
+			TIMES A , 0.60
+			TIMES B , 0.60
+			C += 500
+		ELSEIF PALAM:MASTER:润滑 < 250 && TEQUIP:润滑液 < 2
+			TIMES A , 0.75
+			TIMES B , 0.75
+			C += 200
+		ELSEIF PALAM:MASTER:润滑 < 500 && TEQUIP:润滑液 < 1
+			TIMES A , 0.90
+			TIMES B , 0.90
+			C += 100
+		ENDIF
+		;経験不足
+		IF EXP:MASTER:Ｖ経験 < 2
+			TIMES A , 0.30
+			C += 1200
+			SOURCE:MASTER:逃脱 += 1200
+		ELSEIF EXP:MASTER:Ｖ経験 < 6 && EXP:MASTER:性交経験 < 5
+			TIMES A , 0.80
+			C += 250
+			SOURCE:MASTER:逃脱 += 350
+		ELSEIF EXP:MASTER:Ｖ経験 < 11 && EXP:MASTER:性交経験 < 9
+			TIMES A , 0.95
+			C += 50
+			SOURCE:MASTER:逃脱 += 100
+		ENDIF
+		SOURCE:MASTER:快Ｖ += A
+		SOURCE:快Ｃ += B
+		SOURCE:MASTER:接触 += 400 + GET_TRAINLV(TARGET) * 8 + CFLAG:MASTER:调教等级 * 8
+		SOURCE:MASTER:性行动 += 130 + GET_TRAINLV(TARGET) * 2 + CFLAG:MASTER:调教等级 * 2
+		SOURCE:MASTER:疼痛 += C
+		IF CFLAG:MASTER:心理创伤 == 33
+			SOURCE:MASTER:心理创伤 += SOURCE:MASTER:接触
+			TIMES SOURCE:MASTER:心理创伤 , 1.50
+		ENDIF
+		SOURCE:MASTER:情爱 += A / 4 - SOURCE:MASTER:心理创伤 - C * 2
+		SIF SOURCE:MASTER:情爱 > 0 && ABL:MASTER:Ｖ感觉 > 2
+			SOURCE:MASTER:中毒充足 += GET_ABL(MASTER, "Ｖ感觉") * (GET_ABL(MASTER, "Ｖ感觉") - 20) * SOURCE:MASTER:情爱 / 100 + A / 5
+		SOURCE:MASTER:情爱 += SOURCE:MASTER:中毒充足 / 5
+	ELSEIF TEQUIP:性交中 == 5
+		A = (50 +ACT_FROM(TARGET, 5)) / 2
+		B = (150 +ACT_TO(TARGET, 5) / 2) / 2
+		;润滑不足
+		IF PALAM:MASTER:润滑 < 100 && TEQUIP:润滑液 < 3
+			TIMES A , 0.50
+			TIMES B , 0.55
+			C += 750
+		ELSEIF PALAM:MASTER:润滑 < 250 && TEQUIP:润滑液 < 2
+			TIMES A , 0.70
+			TIMES B , 0.75
+			C += 400
+		ELSEIF PALAM:MASTER:润滑 < 500 && TEQUIP:润滑液 < 1
+			TIMES A , 0.85
+			TIMES B , 0.90
+			C += 150
+		ENDIF
+		;経験不足
+		IF EXP:MASTER:Ｖ経験 < 2
+			TIMES A , 0.30
+			C += 1250
+			SOURCE:MASTER:逃脱 += 1600
+		ELSEIF EXP:MASTER:Ｖ経験 < 6 && EXP:MASTER:性交経験 < 5
+			TIMES A , 0.70
+			C += 380
+			SOURCE:MASTER:逃脱 += 800
+		ELSEIF EXP:MASTER:Ｖ経験 < 11 && EXP:MASTER:性交経験 < 9
+			TIMES A , 0.90
+			C += 100
+			SOURCE:MASTER:逃脱 += 350
+		ENDIF
+		SOURCE:MASTER:快Ｖ += A
+		SOURCE:快Ｃ += B
+		SOURCE:MASTER:接触 += 500 + GET_TRAINLV(TARGET) * 10
+		SOURCE:MASTER:性行动 += 150 + GET_TRAINLV(TARGET) * 2
+		SOURCE:MASTER:疼痛 += C
+		;乱れ牡丹的处理
+		SIF TEQUIP:大镜
+			SOURCE:MASTER:露出 += 200 + A / 5
+		IF CFLAG:MASTER:心理创伤 == 34
+			SOURCE:MASTER:心理创伤 += SOURCE:MASTER:接触
+			TIMES SOURCE:MASTER:心理创伤 , 1.50
+		ENDIF
+		SOURCE:MASTER:情爱 += A / 7 - SOURCE:MASTER:心理创伤
+		SIF SOURCE:MASTER:情爱 > 0 && ABL:MASTER:Ｖ感觉 > 2
+			SOURCE:MASTER:中毒充足 += GET_ABL(MASTER, "Ｖ感觉") * (GET_ABL(MASTER, "Ｖ感觉") - 20) * SOURCE:MASTER:情爱 / 100 + A / 5
+		SOURCE:MASTER:情爱 += SOURCE:MASTER:中毒充足 / 7
+	ELSEIF TEQUIP:性交中 == 6
+		A = (300 +ACT_FROM(TARGET, 6) * 2) / 2
+		B = (500 +ACT_TO(TARGET, 6) * 2) / 2
+		;润滑不足
+		IF PALAM:MASTER:润滑 < 100 && TEQUIP:润滑液 < 3
+			TIMES A , 0.40
+			TIMES B , 0.30
+			C += 1500
+		ELSEIF PALAM:MASTER:润滑 < 250 && TEQUIP:润滑液 < 2
+			TIMES A , 0.65
+			TIMES B , 0.55
+			C += 900
+		ELSEIF PALAM:MASTER:润滑 < 500 && TEQUIP:润滑液 < 1
+			TIMES A , 0.80
+			TIMES B , 0.75
+			C += 250
+		ENDIF
+		;経験不足
+		IF EXP:MASTER:Ａ経験 < 2
+			TIMES A , 0.40
+			C += 1500
+			SOURCE:MASTER:逃脱 += 2500
+			SOURCE:MASTER:心理创伤 += 1000
+		ELSEIF EXP:MASTER:Ａ経験 < 6 && EXP:MASTER:性交経験 < 11
+			TIMES A , 0.55
+			C += 1000
+			SOURCE:MASTER:逃脱 += 1500
+			SOURCE:MASTER:心理创伤 += 500
+		ELSEIF EXP:MASTER:Ａ経験 < 13 && EXP:MASTER:性交経験 < 21
+			TIMES A , 0.70
+			C += 600
+			SOURCE:MASTER:逃脱 += 500
+			SOURCE:MASTER:心理创伤 += 100
+		ELSEIF EXP:MASTER:Ａ経験 < 26 && EXP:MASTER:性交経験 < 31
+			TIMES A , 0.85
+			C += 200
+			SOURCE:MASTER:逃脱 += 150
+		ENDIF
+		SOURCE:MASTER:快Ａ += A
+		SOURCE:快Ｃ += B
+		SOURCE:MASTER:接触 += 200 + GET_TRAINLV(TARGET) * 10
+		SOURCE:MASTER:性行动 += 40 + GET_TRAINLV(TARGET) * 2
+		SOURCE:MASTER:疼痛 += C
+		IF CFLAG:MASTER:心理创伤 == 35
+			SOURCE:MASTER:心理创伤 += SOURCE:MASTER:接触 + SOURCE:MASTER:逃脱
+			TIMES SOURCE:MASTER:心理创伤 , 1.50
+		ENDIF
+		SOURCE:MASTER:情爱 += A / 5 - C / 5 - SOURCE:MASTER:心理创伤 / 5
+		SIF SOURCE:MASTER:情爱 > 0 && ABL:MASTER:Ａ感觉 > 4
+			SOURCE:MASTER:中毒充足 += (GET_ABL(MASTER, "Ａ感觉") + 10) * (GET_ABL(MASTER, "Ａ感觉") - 30) * SOURCE:MASTER:情爱 / 100 + A / 5
+		SOURCE:MASTER:情爱 += SOURCE:MASTER:中毒充足 / 5
+	ENDIF
+TFLAG:Ｖ使用中 = 2
+
+ENDIF
+;────────────────────────────────────
+;调教对象插入中（快Ｃ、快Ｖ、快Ａ、接触、情爱、性行动、疼痛、露出、逃脱、中毒充足、心理创伤、快ｃ、快ｖ）
+;────────────────────────────────────
+;こ的回合的行动も性交那么ACT_APPLY.ERBで处理し增加。会话や胸爱抚など插入し一边行う行动只ここ被见增加
+IF TEQUIP:性交奉仕中 && TFLAG:ACT分类 != 10
+	A = 0
+	B = 0
+	C = 0
+	IF TEQUIP:性交奉仕中 == 1
+		A = 100 +ACT_FROM(TARGET, 7) * 3 / 2
+		B = 300 +ACT_TO(TARGET, 7) * 3 / 2
+		;润滑不足
+		IF PALAM:MASTER:润滑 < 100 && TEQUIP:润滑液 < 3
+			TIMES A , 0.60
+			TIMES B , 0.80
+			C += 500
+		ELSEIF PALAM:MASTER:润滑 < 250 && TEQUIP:润滑液 < 2
+			TIMES A , 0.75
+			TIMES B , 0.90
+			C += 200
+		ELSEIF PALAM:MASTER:润滑 < 500 && TEQUIP:润滑液 < 1
+			TIMES A , 0.90
+			TIMES B , 0.95
+			C += 100
+		ENDIF
+		SOURCE:MASTER:快Ｃ += B
+		SOURCE:快Ｖ += A
+		SOURCE:MASTER:接触 += 250 + GET_TRAINLV(TARGET) * 10
+		SOURCE:MASTER:性行动 += 100 + GET_TRAINLV(TARGET) * 2
+		SOURCE:MASTER:情爱 += B / 5 - SOURCE:MASTER:心理创伤 - C
+		SIF SOURCE:MASTER:情爱 > 0 && ABL:MASTER:Ｃ感觉 > 2
+			SOURCE:MASTER:中毒充足 += GET_ABL(MASTER, "Ｃ感觉") * (GET_ABL(MASTER, "Ｃ感觉") - 20) * SOURCE:MASTER:情爱 / 100 + B / 5
+		SOURCE:MASTER:情爱 += SOURCE:MASTER:中毒充足 / 5
+	ELSEIF TEQUIP:性交奉仕中 == 2
+		A = 300 +ACT_FROM(TARGET, 7)
+		B = 300 +ACT_TO(TARGET, 7) * 3 / 2
+		;润滑不足
+		IF PALAM:MASTER:润滑 < 100 && TEQUIP:润滑液 < 3
+			TIMES A , 0.60
+			TIMES B , 0.80
+			C += 500
+		ELSEIF PALAM:MASTER:润滑 < 250 && TEQUIP:润滑液 < 2
+			TIMES A , 0.75
+			TIMES B , 0.90
+			C += 200
+		ELSEIF PALAM:MASTER:润滑 < 500 && TEQUIP:润滑液 < 1
+			TIMES A , 0.90
+			TIMES B , 0.95
+			C += 100
+		ENDIF
+		SOURCE:MASTER:快Ｃ += B
+		SOURCE:快Ｖ += A
+		SOURCE:MASTER:接触 += 200 + GET_TRAINLV(TARGET) * 10
+		SOURCE:MASTER:性行动 += 90 + GET_TRAINLV(TARGET) * 2
+		SOURCE:MASTER:情爱 += B / 7 - SOURCE:MASTER:心理创伤 - C
+		SIF SOURCE:MASTER:情爱 > 0 && ABL:MASTER:Ｃ感觉 > 2
+			SOURCE:MASTER:中毒充足 += GET_ABL(MASTER, "Ｃ感觉") * (GET_ABL(MASTER, "Ｃ感觉") - 20) * SOURCE:MASTER:情爱 / 100 + B / 5
+		SOURCE:MASTER:情爱 += SOURCE:MASTER:中毒充足 / 7
+	ELSEIF TEQUIP:性交奉仕中 == 3
+		A = 300 + 2 *ACT_FROM(TARGET, 7)
+		B = 100 +ACT_TO(TARGET, 7) * 2
+		;润滑不足
+		IF PALAM:MASTER:润滑 < 100 && TEQUIP:润滑液 < 3
+			TIMES A , 0.70
+			TIMES B , 0.80
+			C += 500
+		ELSEIF PALAM:MASTER:润滑 < 250 && TEQUIP:润滑液 < 2
+			TIMES A , 0.80
+			TIMES B , 0.90
+			C += 200
+		ELSEIF PALAM:MASTER:润滑 < 500 && TEQUIP:润滑液 < 1
+			TIMES A , 0.90
+			TIMES B , 0.95
+			C += 100
+		ENDIF
+		SOURCE:MASTER:快Ｃ += B
+		SOURCE:快Ｖ += A
+		SOURCE:MASTER:接触 += 200 + GET_TRAINLV(TARGET) * 10
+		SOURCE:MASTER:性行动 += 40 + GET_TRAINLV(TARGET) * 2
+		SOURCE:MASTER:情爱 += B / 5 - SOURCE:MASTER:心理创伤 - C
+		SIF SOURCE:MASTER:情爱 > 0 && ABL:MASTER:Ｃ感觉 > 2
+			SOURCE:MASTER:中毒充足 += GET_ABL(MASTER, "Ｃ感觉") * (GET_ABL(MASTER, "Ｃ感觉") - 20) * SOURCE:MASTER:情爱 / 100 + B / 5
+		SOURCE:MASTER:情爱 += SOURCE:MASTER:中毒充足 / 5
+	ELSEIF TEQUIP:性交奉仕中 == 4
+		A = 300 +ACT_FROM(TARGET, 7)
+		B = 50 +ACT_TO(TARGET, 4) / 2
+		;润滑不足
+		IF PALAM:MASTER:润滑 < 100 && TEQUIP:润滑液 < 3
+			TIMES A , 0.60
+			TIMES B , 0.65
+			C += 500
+		ELSEIF PALAM:MASTER:润滑 < 250 && TEQUIP:润滑液 < 2
+			TIMES A , 0.80
+			TIMES B , 0.80
+			C += 200
+		ELSEIF PALAM:MASTER:润滑 < 500 && TEQUIP:润滑液 < 1
+			TIMES A , 0.90
+			TIMES B , 0.95
+			C += 100
+		ENDIF
+		SOURCE:MASTER:快Ｃ += B
+		SOURCE:快Ｖ += A
+		SOURCE:MASTER:接触 += 200 + GET_TRAINLV(TARGET) * 10
+		SOURCE:MASTER:性行动 += 40 + GET_TRAINLV(TARGET) * 2
+		SOURCE:MASTER:情爱 += B / 5 - SOURCE:MASTER:心理创伤 - C
+		SIF SOURCE:MASTER:情爱 > 0 && ABL:MASTER:Ｃ感觉 > 2
+			SOURCE:MASTER:中毒充足 += GET_ABL(MASTER, "Ｃ感觉") * (GET_ABL(MASTER, "Ｃ感觉") - 20) * SOURCE:MASTER:情爱 / 100 + B / 5
+		SOURCE:MASTER:情爱 += SOURCE:MASTER:中毒充足 / 5
+	ELSEIF TEQUIP:性交奉仕中 == 5
+		A = 100 +ACT_FROM(TARGET, 7)
+		B = 50 +ACT_TO(TARGET, 1)
+		;润滑不足
+		IF PALAM:MASTER:润滑 < 100 && TEQUIP:润滑液 < 3
+			TIMES A , 0.50
+			TIMES B , 0.55
+			C += 500
+		ELSEIF PALAM:MASTER:润滑 < 250 && TEQUIP:润滑液 < 2
+			TIMES A , 0.70
+			TIMES B , 0.75
+			C += 200
+		ELSEIF PALAM:MASTER:润滑 < 500 && TEQUIP:润滑液 < 1
+			TIMES A , 0.85
+			TIMES B , 0.90
+			C += 100
+		ENDIF
+		SOURCE:MASTER:快Ｃ += B
+		SOURCE:快Ｖ += A
+		SOURCE:MASTER:接触 += 200 + GET_TRAINLV(TARGET) * 10
+		SOURCE:MASTER:性行动 += 40 + GET_TRAINLV(TARGET) * 2
+		;乱れ牡丹的处理
+		SIF TEQUIP:大镜
+			SOURCE:MASTER:露出 += 200 + A / 5
+		SOURCE:MASTER:情爱 += B / 7 - SOURCE:MASTER:心理创伤 - C
+		SIF SOURCE:MASTER:情爱 > 0 && ABL:MASTER:Ｃ感觉 > 2
+			SOURCE:MASTER:中毒充足 += GET_ABL(MASTER, "Ｃ感觉") * (GET_ABL(MASTER, "Ｃ感觉") - 20) * SOURCE:MASTER:情爱 / 100 + B / 5
+		SOURCE:MASTER:情爱 += SOURCE:MASTER:中毒充足 / 7
+	ELSEIF TEQUIP:性交奉仕中 == 6
+		A = 500 +ACT_FROM(TARGET, 8) * 2
+		B = 300 +ACT_TO(TARGET, 8) * 2
+		;润滑不足
+		IF PALAM:MASTER:润滑 < 100 && TEQUIP:润滑液 < 3
+			TIMES A , 0.30
+			TIMES B , 0.40
+			C += 1500
+		ELSEIF PALAM:MASTER:润滑 < 250 && TEQUIP:润滑液 < 2
+			TIMES A , 0.55
+			TIMES B , 0.65
+			C += 900
+		ELSEIF PALAM:MASTER:润滑 < 500 && TEQUIP:润滑液 < 1
+			TIMES A , 0.75
+			TIMES B , 0.80
+			C += 250
+		ENDIF
+		SOURCE:快Ａ += A
+		SOURCE:MASTER:快Ｃ += B
+		SOURCE:MASTER:接触 += 200 + GET_TRAINLV(TARGET) * 10
+		SOURCE:MASTER:性行动 += 40 + GET_TRAINLV(TARGET) * 2
+		SOURCE:MASTER:情爱 += A / 5 - C / 5 - SOURCE:MASTER:心理创伤 / 5
+		SIF SOURCE:MASTER:情爱 > 0 && ABL:MASTER:Ａ感觉 > 4
+			SOURCE:MASTER:中毒充足 += (GET_ABL(MASTER, "Ａ感觉") + 10) * (GET_ABL(MASTER, "Ａ感觉") - 30) * SOURCE:MASTER:情爱 / 100 + A / 5
+		SOURCE:MASTER:情爱 += SOURCE:MASTER:中毒充足 / 5
+	ENDIF
+ENDIF
+IF TEQUIP:性交中 == 6
+	SIF TALENT:MASTER:男人
+		TCVAR:MASTER:前列腺刺激 += 1
+ELSEIF TEQUIP:性交中
+		TCVAR:MASTER:前列腺刺激 += 1
+ENDIF
+SIF TEQUIP:性交中 || TEQUIP:性交奉仕中
+	PALAM:MASTER:润滑 += 50
+	
+;────────────────────────────────────
+;触手调教中（未实装）
+;────────────────────────────────────
+
+;────────────────────────────────────
+;C爱抚中（暫定）
+;────────────────────────────────────
+IF TEQUIP:调教对象Ｃ使用
+	SOURCE:MASTER:快Ｃ += 40 +ACT_FROM(TARGET, 1) * (2 + TALENT:灵巧的指尖) / 10
+	SOURCE:MASTER:接触 += 50 + GET_TRAINLV(TARGET) * 3
+	SOURCE:MASTER:性行动 += 30 + SOURCE:MASTER:快Ｃ / 20
+	SOURCE:MASTER:情爱 += SOURCE:MASTER:接触 / 4 + GET_ABL(TARGET, "奉仕精神") * 3
+	TCVAR:MASTER:这回合的勃起 += 20 + (GET_ABL(TARGET, "技巧") + GET_ABL(TARGET, "爱抚") + TALENT:灵巧的指尖 * 50) / 2
+ENDIF
+
+
+;────────────────────────────────────
+;震动棒など付けっぱ无事项的チェック２
+;快SOURCE計算直前に呼ぶ的で乗算的处理是こちらで
+;────────────────────────────────────
+@EQUIP_CHECK2
+
+;────────────────────────────────────
+;媚药（快ＣＶＡＢ）
+;────────────────────────────────────
+IF TEQUIP:媚药
+	IF TALENT:调合知识
+		TIMES SOURCE:MASTER:快Ｃ , 1.30
+		TIMES SOURCE:MASTER:快Ｖ , 1.30
+		TIMES SOURCE:MASTER:快Ａ , 1.30
+		TIMES SOURCE:MASTER:快Ｂ , 1.30
+	ELSE
+		TIMES SOURCE:MASTER:快Ｃ , 1.15
+		TIMES SOURCE:MASTER:快Ｖ , 1.15
+		TIMES SOURCE:MASTER:快Ａ , 1.15
+		TIMES SOURCE:MASTER:快Ｂ , 1.15
+	ENDIF
+ENDIF
+
+;阴蒂夹・飞机杯装备中是快Ｃ但上升做
+;ただし爱抚者的技巧・爱抚技能但上但るほど差是小さくなる（道具技能で相殺做）
+IF TEQUIP:阴蒂夹 || TEQUIP:飞机杯
+	;爱抚者被代入
+	SELECTCASE MC_PLAYER()
+		CASE 1
+			LOCAL = MASTER
+		CASE 2
+			LOCAL = TARGET
+		CASE 4
+			LOCAL = ASSI:1
+		CASE 8
+			LOCAL = ASSI:2
+		CASE 16
+			LOCAL = ASSI:3
+		CASEELSE
+			LOCAL = -1
+	ENDSELECT
+	IF LOCAL >= 0
+		SOURCE:MASTER:快Ｃ *= 100+((MAX(50/MAX(ABL:LOCAL:技巧+ABL:LOCAL:爱抚-(ABL:LOCAL:道具*2), 1), 5)*(ITEM:自定义道具+1)))
+	ELSE
+		SOURCE:MASTER:快Ｃ *= 100+(30*(ITEM:自定义道具+1))
+	ENDIF
+	SOURCE:MASTER:快Ｃ /= 100
+ENDIF
+
+;假阴茎装备中是快Ｃ但快Ｖに变换
+;变换率…快Ｃ被20％にし、残り的値にＶ感觉+1/Ｃ感觉+1被掛けて２で割って快Ｖに加算做
+IF TEQUIP:假阴茎
+	SOURCE:MASTER:快Ｖ += (SOURCE:MASTER:快Ｃ*8*(((ABL:MASTER:Ｖ感觉+1)*100)/(ABL:MASTER:Ｃ感觉+1)))/2000
+	TIMES SOURCE:MASTER:快Ｃ, 0.20
+	IF ITEM:自定义道具
+		TIMES SOURCE:MASTER:快Ｃ, 1.20
+		TIMES SOURCE:MASTER:快Ｖ, 1.20
+	ENDIF
+ENDIF
+IF TEQUIP:调教者假阴茎
+	SOURCE:快Ｖ += (SOURCE:快Ｃ*8*(((ABL:Ｖ感觉+1)*100)/(ABL:Ｃ感觉+1)))/2000
+	TIMES SOURCE:快Ｃ, 0.20
+	IF ITEM:自定义道具
+		TIMES SOURCE:快Ｃ, 1.20
+		TIMES SOURCE:快Ｖ, 1.20
+	ENDIF
+ENDIF
+

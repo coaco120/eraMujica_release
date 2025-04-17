@@ -1,0 +1,169 @@
+﻿@ASSI_TRAIN_VARIATION, ARG, ARG:1
+TCVAR:ARG:助手ACT派生 = 0
+SELECTCASE GET_ASSIACTNAME(ARG:1)
+	;爱抚→手淫
+	CASE "用手爱抚"
+		SIF PENIS(MASTER)
+			TCVAR:ARG:助手ACT派生 = 1
+	;舔阴→口交
+	CASE "用口爱抚"
+		SIF PENIS(MASTER)
+			TCVAR:ARG:助手ACT派生 = 1
+	;貝あわせ→素股
+	CASE "素股"
+		SIF PENIS(MASTER)
+			TCVAR:ARG:助手ACT派生 = 1
+	;跳蛋, 飞机杯
+	CASE "Ｃ道具"
+		SIF PENIS(MASTER) && ITEM:飞机杯 > 0
+			TCVAR:ARG:助手ACT派生 = 1
+	;连续交合
+	CASE "逆强奸"
+		SIF TFLAG:助手连续交合 == 1
+			TCVAR:ARG:助手ACT派生 = 1
+	;胸爱抚
+	CASE "胸爱抚"
+		SIF TALENT:MASTER:男人
+			TCVAR:ARG:助手ACT派生 = 1
+	;舔乳头→乳首甘噛み		和りあえず枠只设ける。条件是どうしようか@/L
+	;CASE "舔乳头"
+	;	SIF 0
+	;		TCVAR:ARG:助手ACT派生 = 1
+ENDSELECT
+
+
+;助手行动但決まったらここから行动的メッセージ被呼び出し增加。
+@ASSI_TRAIN_MESSAGE, ARG
+SELECTCASE NOWASSIACTNAME(ARG)
+	;爱抚→手淫
+	CASE "用手爱抚"
+		IF TFLAG:助手ACT派生 == 1
+			PRINTFORML %CALLNAME:ARG%开始爱抚%PENIS_DESCRIPTION()%%CALLNAME:MASTER%的男性器…
+		ELSE
+			PRINTFORML %CALLNAME:ARG%开始爱抚%CALLNAME:MASTER%的身体…
+		ENDIF
+	;舔阴→口交
+	CASE "用口爱抚"
+		IF TFLAG:助手ACT派生 == 1
+			PRINTFORML %CALLNAME:ARG%开始用嘴爱抚%PENIS_DESCRIPTION()%%CALLNAME:MASTER%的男性器…
+		ELSE
+			PRINTFORML %CALLNAME:ARG%开始用嘴爱抚%CALLNAME:MASTER%的秘唇…
+		ENDIF
+	;貝あわせ→素股
+	CASE "素股"
+		IF TFLAG:助手ACT派生 == 1
+			PRINTFORML %CALLNAME:ARG%开始用%PENIS_DESCRIPTION()%%CALLNAME:MASTER%的男性器在自己的股间摩擦…
+		ELSE
+			PRINTFORML %CALLNAME:ARG%把两个人的性器重叠在一起开始摩擦…
+		ENDIF
+	;乳交
+	CASE "进行乳交"
+		PRINTFORML %CALLNAME:ARG%用自己的胸夹着%PENIS_DESCRIPTION()%%CALLNAME:MASTER%的男性器开始摩擦…
+	;足交
+	CASE "进行足交"
+		PRINTFORML %CALLNAME:ARG%开始用自己的脚摩擦%PENIS_DESCRIPTION()%%CALLNAME:MASTER%的男性器…
+	;跳蛋, 飞机杯
+	CASE "Ｃ道具"
+		IF TFLAG:助手ACT派生 == 1
+			PRINTFORML %CALLNAME:ARG%在%CALLNAME:MASTER%的男性器用飞机杯进行撸动…
+		ELSE
+			PRINTFORML %CALLNAME:ARG%把震动的跳蛋按到了%CALLNAME:MASTER%的秘唇上…
+		ENDIF
+	;逆强奸
+	CASE "逆强奸"
+		IF TFLAG:助手ACT派生 == 1
+			PRINTFORML %CALLNAME:ARG%在%CALLNAME:MASTER%上喘息…
+		ELSE
+			PRINTFORML %CALLNAME:ARG%强行将%CALLNAME:MASTER%的阴茎引入了小穴的深处，紧咬着开始扭起腰来…
+		ENDIF
+	;肛门爱抚
+	CASE "肛门爱抚"
+		PRINTFORML %CALLNAME:ARG%开始爱抚%CALLNAME:MASTER%的肛门…
+	;舔肛门
+	CASE "舔肛门"
+		PRINTFORML %CALLNAME:ARG%开始认真地舔起%CALLNAME:MASTER%的肛门…
+	;肛门跳蛋
+	CASE "肛门跳蛋"
+		PRINTFORML %CALLNAME:ARG%把震动的跳蛋按到了%CALLNAME:MASTER%的肛门上…
+	;肛门震动棒
+	CASE "肛门震动棒"
+		PRINTFORML %CALLNAME:ARG%将插在%CALLNAME:MASTER%身上的肛门震动器拔了出来…
+	;肛交
+	CASE "肛交"
+	PRINTFORML %CALLNAME:ARG%插入%CALLNAME:MASTER%的肛门后开始动起腰来…
+	;胸爱抚
+	CASE "胸爱抚"
+		IF TFLAG:助手ACT派生 == 1
+			PRINTFORML %CALLNAME:ARG%用手指玩弄了%CALLNAME:MASTER%的乳头…
+		ELSE
+			PRINTFORML %CALLNAME:ARG%开始爱抚%CALLNAME:MASTER%的胸部…
+		ENDIF
+	;舔乳头
+	CASE "舔乳头"
+		IF TFLAG:助手ACT派生 == 1
+			PRINTFORML %CALLNAME:ARG%用牙齿咬了%CALLNAME:MASTER%的乳头…
+		ELSE
+			PRINTFORML %CALLNAME:ARG%开始吸%CALLNAME:MASTER%的乳头…
+		ENDIF
+	;玩弄乳头
+	CASE "玩弄乳头"
+		PRINTFORML %CALLNAME:ARG%把把震动的跳蛋按在了%CALLNAME:MASTER%的乳头上…
+	;手指插入
+	CASE "手指插入"
+		PRINTFORML %CALLNAME:ARG%将手指插入%CALLNAME:MASTER%的秘唇中，来回搅动起来…
+	;震动棒
+	CASE "震动棒"
+		PRINTFORML %CALLNAME:ARG%把插在%CALLNAME:MASTER%身上的震动器拔了下来…
+	;性交
+	CASE "性交"
+		PRINTFORML %CALLNAME:ARG%贯穿了%CALLNAME:MASTER%的秘唇扭动起腰来…
+	;接吻
+	CASE "接吻"
+		PRINTFORML %CALLNAME:ARG%靠近%CALLNAME:MASTER%的脸将嘴唇重叠在一起…
+	;顔面骑乘
+	CASE "顔面骑乘"
+		IF TEQUIP:性交奉仕中 == 3
+			PRINTFORML %CALLNAME:ARG%跨在%CALLNAME:MASTER%的脸上摩擦着阴唇的同时和%CALLNAME:TARGET%互相纠缠着舌头…
+		ELSE
+			PRINTFORML %CALLNAME:ARG%跨在%CALLNAME:MASTER%的脸上用阴唇摩擦着…
+		ENDIF
+	;舔足侍奉
+	CASE "舔足侍奉"
+		PRINTFORML %CALLNAME:ARG%命令%CALLNAME:MASTER%舔自己的脚…
+	;卖弄自慰
+	CASE "卖弄自慰"
+		PRINTFORML %CALLNAME:ARG%为了让%CALLNAME:MASTER%看到，在其眼前开始自慰…
+	;辱骂
+	CASE "辱骂"
+		PRINTFORML %CALLNAME:ARG%像是挑衅似的对着%CALLNAME:MASTER%的痴态发出了声音…
+	;拍摄写真
+	CASE "拍摄写真"
+		PRINTFORM %CALLNAME:ARG%拿着照相机，拍下了%CALLNAME:MASTER%
+		IF PALAM:MASTER:快Ｃ + PALAM:MASTER:快Ｖ + PALAM:MASTER:快Ａ + PALAM:MASTER:快Ｂ + PALAM:MASTER:欲望 > 1500
+			PRINT 凌乱
+		ELSEIF PALAM:MASTER:恐怖 + PALAM:MASTER:痛苦 + PALAM:MASTER:不快 + PALAM:MASTER:抑郁 > 1000
+			PRINT 悲惨
+		ELSEIF !(TEQUIP:MASTER:下半身外套 || TEQUIP:MASTER:上半身外套 || TEQUIP:MASTER:全身外套)
+			PRINT 不成体统
+		ENDIF
+		PRINTL 的身姿被漂亮的记录下来…
+	;与调教者接吻
+	CASE "与调教者接吻"
+		PRINTFORML %CALLNAME:ARG%像是在展示似的对着%CALLNAME:MASTER%将舌头和%CALLNAME:TARGET%缠在了一起…
+	;展露痴态
+	CASE "展露痴态"
+		PRINTFORML %CALLNAME:ARG%凝视着%CALLNAME:MASTER%的痴态…
+	;把头踩在脚下
+	CASE "把头踩在脚下"
+		PRINTFORML %CALLNAME:ARG%踩在了%CALLNAME:MASTER%的头上…
+	;------------------------------
+	;SP活动ション
+	;------------------------------
+	CASE "刊登在报纸上"
+		PRINTFORML %CALLNAME:ARG%用照相机拍下了%CALLNAME:MASTER%的样子、
+		PRINTFORML 以那个为素材开始写报道了...
+ENDSELECT
+WAIT
+RESULT = 0
+CALL KOJO_ACT_ASSI
+RETURN RESULT

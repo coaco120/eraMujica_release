@@ -1,0 +1,135 @@
+﻿
+;────────────────────────────────────
+;调教者行动基本处理(反应前)
+;
+;调教者行动に应じて参数被变动侍奉
+;ここで设定さ受到値被基にさらに修正但行われる点に注意
+;────────────────────────────────────
+@ACTION_APPLY
+
+;调教项目毎的基本处理被呼び出し
+TRYCALLFORM ACTION_APPLY_{TFLAG:ACT}
+
+;────────────────────────────────────
+;调教者行动基本处理(反应后)
+;
+;迟延さ受到调教者行动的实行。调教对象的反抗や願いでキャンセルされる行动もここで处理
+;ここで设定さ受到値被基にさらに修正但行われる点に注意
+;ここ的处理で旁白被发生しなかったら0被返す（后に通用旁白但呼び出される）
+;────────────────────────────────────
+@ACTION_APPLY2
+
+[SKIPSTART]
+;反应但随心所欲であれば处理中断
+SIF IS_NOWCOMNAME("随心所欲")
+	RETURN 0
+[SKIPEND]
+
+;LOCALS初期化
+VARSET LOCALS
+
+;拒绝处理呼び出し
+
+;ACT分类但性交系か性交中に、REACT分类但发狂系だった场合
+IF (TFLAG:ACT分类 == 3 || TEQUIP:性交中) && IS_COMGRONAME("发狂")
+	;性交的キャンセル处理被呼び出し
+	LOCALS = CANCEL_INSERT_TO_M
+;ACT分类但性交奉仕系か性交奉仕中に、REACT分类但发狂系だった场合		逆レ的场合是抵抗できないように@/L
+ELSEIF (TFLAG:ACT分类 == 10 || TEQUIP:性交奉仕中) && IS_COMGRONAME("发狂") && !IS_NOWACTNAME("逆强奸")
+	;性交奉仕的キャンセル处理被呼び出し
+	LOCALS = CANCEL_INSERT_TO_T
+;绳/眼罩/口球装着中に、REACT分类但请求宽恕系だった场合
+ELSEIF (TEQUIP:绳 || TEQUIP:眼罩 || TEQUIP:口球) && IS_COMGRONAME("请求宽恕")
+	;捆绑キャンセル处理被呼び出し
+	LOCALS = CANCEL_TEQUIP_RESTRAINT
+;三角木马使用中に、REACT分类但请求宽恕系だった场合
+ELSEIF TEQUIP:三角木马 && IS_COMGRONAME("请求宽恕")
+	;三角木马キャンセル处理被呼び出し
+	LOCALS = CANCEL_TEQUIP_W_HORSE
+;--------------------------------------------------------------
+;不自然な动作被做ため、キャンセル处理被一部抹消
+;そ的うちCOM「帰り想要」被作ろうか和思い增加。作ったら公共便所も含めて可以ね
+
+[SKIPSTART]
+
+;野外PLAY中に、REACT分类但请求宽恕系だった场合
+ELSEIF TEQUIP:野外PLAY && IS_COMGRONAME("请求宽恕")
+	;野外PLAYキャンセル处理被呼び出し
+	LOCALS = CANCEL_TEQUIP_OUTDOOR
+;大镜使用中に、REACT分类但请求宽恕系だった场合
+ELSEIF TEQUIP:大镜 && IS_COMGRONAME("请求宽恕")
+	;大镜キャンセル处理被呼び出し
+	LOCALS = CANCEL_TEQUIP_MIRROR
+;COSPLAY中に、REACT分类但请求宽恕系だった场合
+ELSEIF TEQUIP:MASTER:COSPLAY && IS_COMGRONAME("请求宽恕")
+	;COSPLAYキャンセル处理被呼び出し
+	LOCALS = CANCEL_TEQUIP_COSPLAY
+
+[SKIPEND]
+
+;抹消ここ直到
+;--------------------------------------------------------------
+;特殊ACT处理呼び出し
+;(特殊状态变化处理被行わない)
+
+;ACT但公共肉便器PLAY的场合
+ELSEIF IS_NOWACTNAME("公共肉便器PLAY")
+;ACT但服被脱いで/服被着て的场合
+ELSEIF IS_NOWACTNAME("请求变更服装")
+;ACT但稍作休息的场合
+ELSEIF IS_NOWACTNAME("稍作休息")
+;ACT但喝营养剂的场合
+ELSEIF IS_NOWACTNAME("喝营养剂")
+;ACT但进行治疗的场合
+ELSEIF IS_NOWACTNAME("进行治疗")
+
+;特殊状态变化处理的呼び出し
+
+;调教对象自慰中、高潮状态で焦虑终了/无し
+ELSEIF GETBIT(TEQUIP:自慰中, 0) && TCVAR:MASTER:高潮 && TCVAR:MASTER:焦虑度 < 2
+	;自慰绝顶处理被呼び出し
+	LOCALS = ONANIE_EX
+ENDIF
+
+;特殊处理但存在すれば
+IF LOCALS != ""
+	;特殊处理的呼び出し处理
+	CALLFORM %LOCALS%
+	;特殊处理的旁白呼び出し
+	CALLFORM %LOCALS%_MESSAGE
+ENDIF
+
+;特殊处理但拒绝处理で无ければ
+IF !STRCOUNT(LOCALS, "CANCEL")
+	;拒绝处理修正値減衰
+	CALLF CANCEL_TEQUIP_COUNT()
+	;调教项目单独处理的呼び出し处理
+	TRYCALLFORM ACTION_APPLY2_{TFLAG:ACT}
+	;调教项目毎的旁白被呼び出し
+	CALL TRAIN_MESSAGE2
+ENDIF
+
+;反应但发狂系だった场合、姿势被起立、位置被设置
+IF IS_COMGRONAME("发狂")
+	TCVAR:MASTER:REACT姿势变化 = 1
+	TCVAR:MASTER:上回合的姿势 = TCVAR:MASTER:姿势
+	TCVAR:MASTER:上次的位置前后 = TCVAR:MASTER:位置前后
+	TCVAR:MASTER:上次的位置上下 = TCVAR:MASTER:位置上下
+	TCVAR:MASTER:姿势 = 4
+	TCVAR:MASTER:位置前后 = 0
+	TCVAR:MASTER:位置上下 = 0
+ENDIF
+RETURN RESULT
+
+;────────────────────────────────────
+;调教者行动基本处理(行动毎)
+;
+;反应前、反应后的修正被一部位にま和めた
+;
+;メモ
+;	强制脱衣：调教者但调教对象被脱但す　自主脱衣：调教者但主动的衣服被脱ぐ
+;	需要强制勃起：调教对象的精根但尽き果てた状态。
+;	　　　　　　这回合的勃起标志被无视（通常的条件で是勃起不做）
+;	　　　　　　强制勃起效果但ある场合、勃起度に直接加算做
+;────────────────────────────────────
+;ACT分类毎に文件被切り分け。单独的文件是ACT_APPLYフォルダへ移设@/L

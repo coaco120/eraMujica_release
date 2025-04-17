@@ -1,0 +1,1211 @@
+﻿@DAILY_LIFE
+#DIM ASSIGNEE, 4
+#DIM CONCILIATOR
+#DIM LCOUNT
+#DIM PICK
+#DIM PROBABILITY
+
+;自动时发生不做
+SIF FLAG:自动模式 > 0
+	RETURN 0
+;２人いない和发生不做
+SIF CAPACITY() < 2
+	RETURN 0
+
+;角色番号参照用变数被设置
+DAILY_TARGET    = -1
+DAILY_SUBTARGET = -1
+
+;反抗除去事件
+CONCILIATOR = -1
+FOR LCOUNT, 1, CHARANUM
+	IF CFLAG:LCOUNT:反抗除去 && MARK:LCOUNT:反抗刻印
+		CONCILIATOR = LCOUNT
+		BREAK
+	ENDIF
+NEXT
+
+;ASSIGNEE:0～3に角色登录番号被代入、候補但いなければ-1
+VARSET ASSIGNEE, -1
+LCOUNT = 0
+WHILE LCOUNT < MIN(CAPACITY() - 1, VARSIZE("ASSIGNEE"))
+	PICK = 1 + RAND:(CHARANUM - 1)
+	;専用奴隶修正…SQR用的处理につき注释アウト
+	;SIF CFLAG:MASTER:15 == 4 && RAND:3 && !CFLAG:PICK:302
+	;	CONTINUE
+	SIF CFLAG:PICK:暂时退避 !| MATCH(PICK, ASSIGNEE)
+		ASSIGNEE:(LCOUNT++) = PICK
+WEND
+SIF CONCILIATOR < 0 && ASSIGNEE:0 < 0
+	RETURN 0
+
+;日常(调教对象交流)
+
+;大まかな事件种別(事件但増えてきたら選別方法被变える必要但ある)
+;现在、スキンシップ67％、日常33％。
+;定位变动是未实装。
+PROBABILITY = RAND:50
+;定位变动事件（选择式にして、定位控制的一助和し想要）
+;日常（调教道具補充なんかも入受到い）
+;スキンシップ（さ受到い）
+;介抱
+
+RESULT = 0
+DRAWLINE
+;FLAG:13  1调教后　2精力0　3休息一次　4失神了）
+IF FLAG:日常控制 == 4
+	;介抱
+	CALL DAILY_LIFE_NURSING
+ELSE
+	;屈服刻印*5％で实行（Reverse的屈服刻印是调教对象で是なく调教者毎に管理され增加）
+	IF PERCENT(MARK:TARGET:屈服刻印 * 5)
+		;反抗除去
+		IF CONCILIATOR >= 0
+			TRYCALL DAILY_LIFE_4(CONCILIATOR)
+		;スキンシップ系
+		ELSEIF PROBABILITY < 33 && FLAG:日常
+			TRYCALL DAILY_LIFE_1(ASSIGNEE:0, ASSIGNEE:1, ASSIGNEE:2, ASSIGNEE:3)
+		;日常系
+		ELSEIF PROBABILITY < 66 && FLAG:日常
+			TRYCALL DAILY_LIFE_2(ASSIGNEE:0, ASSIGNEE:1, ASSIGNEE:2, ASSIGNEE:3)
+		;定位变动
+		ELSE
+			TRYCALL DAILY_LIFE_3(ASSIGNEE:0, ASSIGNEE:1, ASSIGNEE:2, ASSIGNEE:3)
+		ENDIF
+	ENDIF
+ENDIF
+
+;日常(调教者等单独)
+;※当前正在调教者限定。そ的うち助手も
+
+;现在SANDBOX限定机能
+SIF FLAG:模式 != 1
+	RETURN RESULT
+;※介抱发生时に是起こらない
+SIF FLAG:日常控制 == 4
+	RETURN RESULT
+
+;能力上升
+TRYCALL DAILY_LIFE_A(TARGET)
+RETURN RESULT
+
+
+;────────────────────────────────────
+;介抱
+;────────────────────────────────────
+@DAILY_LIFE_NURSING(ARG, ARG:1)
+CALL WAIT3_ZWEI(-1)
+;疲労で调教中止变成了场合
+IF BASE:MASTER:体力 + BASE:MASTER:气力 > 600
+	PRINTFORML %CALLNAME%将疲惫不堪的%CALLNAME:MASTER%直接送到卧室
+	CALL KOJO_EVENT(201, 1)
+	PRINTFORML %CALLNAME:MASTER%的脸上露出的\@ TALENT:好心眼 || ALI(0) ? 担心 # 不满 \@表情被看到了…
+;失神で调教中止变成了场合
+ELSE
+	PRINTFORML 当%CALLNAME:MASTER%醒来时\@ TALENT:好心眼 || ALI(0) ? 露出担心的表情 # \@和%CALLNAME:TARGET%对视了
+	CALL KOJO_EVENT(201, 0)
+	PRINTFORMW 在调教中失去意识的%CALLNAME:MASTER%被送到了自己的卧室并受到了照顾…
+ENDIF
+RETURN 1
+
+;────────────────────────────────────
+;スキンシップ（各种的性経験但入り增加）
+;────────────────────────────────────
+;@DAILY_LIFE_1_0～から随机で選ぶ　RETURN 0され时再抽選、RETURN 1(0以外)で抽選から抜ける
+@DAILY_LIFE_1(ARG, ARG:1, ARG:2, ARG:3)
+#DIM LCOUNT
+;口上用に对象角色的番号被入れる
+DAILY_TARGET = ARG
+;10回試行做
+FOR LCOUNT, 0, 10
+	LOCAL = RAND:10
+	RESULT = 0
+	;封印されていない场合
+	SIF STRFIND(CSTR:ARG:封印日常, @"/1_{LOCAL}/") == -1
+		TRYCALLFORM DAILY_LIFE_1_{LOCAL}(ARG, ARG:1, ARG:2, ARG:3)
+	SIF RESULT
+		RETURN RESULT
+NEXT
+RETURN 0
+
+;────────────────────────────────────
+;スキンシップ0
+;────────────────────────────────────
+;ARG～ARG:4是对象和なる角色的番号
+@DAILY_LIFE_1_0(ARG, ARG:1, ARG:2, ARG:3)
+PRINTFORML 站在厨房里的%CALLNAME:MASTER%发觉了从背后传来的甜蜜的吐息
+PRINTFORMW …%CALLNAME:ARG%
+;调教对象但男人的场合もしく是1/2的确率
+IF TALENT:MASTER:男人 || !RAND:2
+	;202, 0-0（股间まさぐり）
+	CALL KOJO_EVENT(202, 0, ARG)
+	PRINTFORMW %CALLNAME:ARG%将身体紧贴在%CALLNAME:MASTER%的背上开始摸索双腿之间…
+	LOCAL = 1
+ELSE
+	;202, 0-1（乳房まさぐり）
+	CALL KOJO_EVENT(202, 1, ARG)
+	PRINTFORMW %CALLNAME:ARG%从背后抱住%CALLNAME:MASTER%揉了揉胸部…
+	LOCAL = 2
+ENDIF
+;ARG的屈服刻印4以上かつ相关做刻印被取得済である场合
+{
+IF MARK:ARG:屈服刻印 > 4 && 
+	((PENIS(MASTER) && GETBITAND(CFLAG:ARG:刻印, 2, 3, 12, 19)) || 
+	(!PENIS(MASTER) && GETBITAND(CFLAG:ARG:刻印, 3, 6, 12, 15)))
+}
+	PRINT [0] - 无视　
+	PRINT [1] - 委身
+	CALL INPUTINT(0, 1)
+;条件被满たさない场合是RESULTに0被入れる
+ELSE
+	RESULT = 0
+ENDIF
+SELECTCASE RESULT
+	;无视
+	CASE 0
+		;202, 0-2（无視したら諦めて出て行った）
+		CALL KOJO_EVENT(202, 2, ARG)
+		PRINTFORMW %CALLNAME:ARG%固执的爱抚着但%CALLNAME:MASTER%决定无视她于是只好放弃离开…
+		;调教对象但男人的场合。そう不是场合是1/2的确率
+		IF LOCAL == 1
+			;MASTER的経験増加和内容的显示
+			EXP:MASTER:Ｃ経験 += 1
+			PRINTL Ｃ経験 +1
+			;ARG的経験増加和内容的显示
+			EXP:ARG:手淫経験 += 1 
+			PRINTFORML （%CALLNAME:ARG%）手淫経験 +1
+		;其他
+		ELSE
+			;MASTER的経験増加和内容的显示
+			EXP:MASTER:Ｂ経験 += 1
+			PRINTL Ｂ経験 +1
+			;ARG的経験増加和内容的显示
+			EXP:ARG:手淫経験 += 1 
+			PRINTFORML （%CALLNAME:ARG%）手淫経験 +1
+		ENDIF
+		;平时定位的減少。"平时"但"平时定位"であ时见た只で判る人但どれ只いるだろう？ 居るわけないわそんなもんｗ
+		CFLAG:ARG:平时 -= 100
+		;平时定位但-999以下那么-999に调整
+		SIF CFLAG:ARG:平时 < -999
+			CFLAG:ARG:平时 = -999
+		;ムラムラ増加
+		CFLAG:ARG:起兴 += 1
+		PRINTFORML （%CALLNAME:ARG%）起兴 +1
+	;委身
+	CASE 1
+		;202 0-3（身被ゆだねて"股间/乳房"でイかされ）
+		CALL KOJO_EVENT(202, 2+LOCAL, ARG)
+		PRINTFORMW 当确认%CALLNAME:MASTER%不会抵抗时%CALLNAME:ARG%露出了得意的笑容将其引导向绝顶…
+		;调教对象但男人的场合、男人以外的场合是1/2的确率
+		IF LOCAL == 1
+			;调教对象に阴茎あり
+			IF PENIS(MASTER)
+				;调教对象に下半身内衣あり
+				IF TEQUIP:MASTER:下半身内衣
+					PRINTL 
+					;202, 0-5（ぱんつお着替えさ命令くれました）
+					CALL KOJO_EVENT(202, 5, ARG)
+					PRINTFORML %CALLNAME:ARG%脱掉了被精液沾满的%CALLNAME:MASTER%的内衣
+					PRINTFORMW 换上了新的内衣…
+				ENDIF
+				;MASTER的経験増加和内容的显示
+				EXP:MASTER:Ｃ経験 += 5
+				PRINTL Ｃ経験 +5
+				EXP:MASTER:绝顶経験 += 1
+				PRINTL 绝顶経験 +1
+				EXP:MASTER:射精経験 += 1
+				PRINTL 射精経験 +1
+				;ARG的経験増加和内容的显示
+				EXP:ARG:精液経験 += 1 
+				PRINTFORML （%CALLNAME:ARG%）精液経験 +1
+				EXP:ARG:手淫経験 += 1 
+				PRINTFORML （%CALLNAME:ARG%）手淫経験 +1
+				EXP:ARG:高潮経験 += 1
+				PRINTFORML （%CALLNAME:ARG%）高潮経験 +1
+				BASE:MASTER:射精 -= 300
+				;MASTER的精力0的场合
+				SIF FLAG:日常控制 == 2
+					TCVAR:MASTER:空射精数 += 1
+			;调教对象に阴茎无
+			ELSE
+				;调教对象に下半身内衣あり
+				IF TEQUIP:MASTER:下半身内衣
+					PRINTL 
+					;202, 0-5（ぱんつお着替えさ命令くれました）
+					CALL KOJO_EVENT(202, 5, ARG)
+					PRINTFORML %CALLNAME:ARG%脱掉了%CALLNAME:MASTER%沾满爱液的内衣
+					PRINTFORMW 换上了新的内衣…
+				ENDIF
+				;MASTER的経験増加和内容的显示
+				EXP:MASTER:Ｃ経験 += 5
+				PRINTL Ｃ経験 +5
+				EXP:MASTER:绝顶経験 += 1
+				PRINTL 绝顶経験 +1
+				;ARG的経験増加和内容的显示
+				EXP:ARG:手淫経験 += 1 
+				PRINTFORML （%CALLNAME:ARG%）手淫経験 +1
+				EXP:ARG:高潮経験 += 1
+				PRINTFORML （%CALLNAME:ARG%）高潮経験 +1
+			ENDIF
+		;其他
+		ELSE
+			;MASTER的経験増加和内容的显示
+			EXP:MASTER:Ｂ経験 += 5
+			PRINTL Ｂ経験 +5
+			EXP:MASTER:绝顶経験 += 1
+			PRINTL 绝顶経験 +1
+			;ARG的経験増加和内容的显示
+			EXP:ARG:手淫経験 += 1 
+			PRINTFORML （%CALLNAME:ARG%）手淫経験 +1
+			EXP:ARG:高潮経験 += 1
+			PRINTFORML （%CALLNAME:ARG%）高潮経験 +1
+		ENDIF
+		;ムラムラ解消
+		CFLAG:ARG:起兴 = 0
+ENDSELECT
+WAIT
+RETURN 1
+
+;────────────────────────────────────
+;スキンシップ1
+;────────────────────────────────────
+@DAILY_LIFE_1_1(ARG, ARG:1, ARG:2, ARG:3)
+;男人是考えたくない但和りあえず排除
+SIF TALENT:ARG:男人
+	RETURN 0
+
+PRINTFORMW 在食堂休息的时候%CALLNAME:ARG%拿来了茶壶和装着点心的盘子坐在了旁边
+;203, 1-0（お紅茶いか但？）
+CALL KOJO_EVENT(203, 0, ARG)
+PRINTFORML 和%CALLNAME:ARG%一边喝着红茶一边谈笑，渐渐地从身体中涌出了情欲…
+;203, 1-1（媚药で起兴乳房気になる）
+CALL KOJO_EVENT(203, 1, ARG)
+IF TALENT:ARG:巨乳
+	PRINTFORMW 眼睛离不开坐在旁边的%CALLNAME:ARG%那丰盈的胸口
+;EQUIP:86ってなんだろう？
+;ELSEIF EQUIP:ARG:86 == 2
+;	PRINTFORMW 即使隔着衣服也能清晰看到的乳头轮廓让人不禁在意
+ELSE
+	PRINTFORMW 从没有防备的衣服的缝隙中隐约可见的乳头令人无法移开目光
+ENDIF
+
+;屈服刻印4以上かつ相关做刻印被取得済みである场合
+{
+IF MARK:ARG:屈服刻印 > 4 && 
+	((PENIS(MASTER) && GETBITAND(CFLAG:ARG:刻印, 2, 3, 12, 19)) || 
+	(PENIS(MASTER) && GETBITAND(CFLAG:ARG:刻印, 3, 12)))
+}
+	;203, 1-2（乳房看到つけられました）
+	CALL KOJO_EVENT(203, 2, ARG)
+	{
+	PRINTFORMW 被%CALLNAME:ARG%注意到了目光\@ TALENT:ARG:羞涩 || TALENT:ARG:清楚 
+		? 恥ずかしそうに # \@胸部是只て%CALLNAME:MASTER%的目的前に差し出した…
+	}
+	PRINT [0] - 客气　
+	PRINT [1] - 我开动了
+	CALL INPUTINT(0, 1)
+	SELECTCASE RESULT
+		;客气
+		CASE 0
+			;203, 1-3（あわてて逃げました）
+			CALL KOJO_EVENT(203, 3, ARG)
+			PRINTFORMW 察觉到这一点的%CALLNAME:MASTER%想办法找了个理由从食堂出去了。
+			CFLAG:ARG:平时 -= 100
+			SIF CFLAG:ARG:平时 < -999
+				CFLAG:ARG:平时 = -999
+			;ムラムラ増加
+			CFLAG:ARG:起兴 += 1
+			PRINTFORML （%CALLNAME:ARG%）起兴 +1
+			;WAIT和RETURN是终端で
+		;我开动了
+		CASE 1
+			;203, 1-4（むしゃぶりついてご奉仕したらご褒美にぱいずりor舔阴でイかされちゃいました）
+			CALL KOJO_EVENT(203, 4, ARG)
+			PRINTFORML %CALLNAME:ARG%在梦中被%CALLNAME:MASTER%侍奉的十分满足
+			;调教对象に阴茎但あれば乳交
+			IF PENIS(MASTER)
+				PRINTFORMW 像是奖赏似的，用被唾液浸湿的胸部\@TALENT:貧乳 ? 摩擦阴茎 # 夹住阴茎\@、被刺激到射精…
+				;MASTER的経験増加和内容的显示
+				EXP:MASTER:Ｃ経験 += 5
+				PRINTL Ｃ経験 +5
+				EXP:MASTER:绝顶経験 += 1
+				PRINTL 绝顶経験 +1
+				EXP:MASTER:射精経験 += 1
+				PRINTL 射精経験 +1
+				EXP:MASTER:口淫経験 += 1
+				PRINTL 口淫経験 +1
+				;ARG的経験増加和内容的显示
+				EXP:ARG:Ｂ経験 += 5
+				PRINTFORML （%CALLNAME:ARG%）Ｂ経験 +5
+				EXP:ARG:精液経験 += 1
+				PRINTFORML （%CALLNAME:ARG%）精液経験 +1
+				EXP:ARG:口淫経験 += 1
+				PRINTFORML （%CALLNAME:ARG%）口淫経験 +1
+				EXP:ARG:高潮経験 += 1
+				PRINTFORML （%CALLNAME:ARG%）高潮経験 +1
+				;BASE:射精但減少
+				BASE:MASTER:射精 -= 300
+				;精力奖励
+				SIF FLAG:日常控制 == 2
+					TCVAR:MASTER:空射精数 += 1
+			;调教对象に阴茎无的场合是舔阴
+			ELSE
+				PRINTFORMW %CALLNAME:MASTER%仿佛是奖赏般充满了爱液的的秘所被舌头玩弄到绝顶
+				;MASTER的経験増加和内容的显示
+				EXP:MASTER:Ｃ経験 += 5
+				PRINTL Ｃ経験 +5
+				EXP:MASTER:绝顶経験 += 1
+				PRINTL 绝顶経験 +1
+				EXP:MASTER:口淫経験 += 1
+				PRINTL 口淫経験 +1
+				EXP:MASTER:奉仕快乐経験 += 1
+				PRINTL 奉仕快乐経験 +1
+				;ARG的経験増加和内容的显示
+				EXP:ARG:Ｂ経験 += 5
+				PRINTFORML （%CALLNAME:ARG%）Ｂ経験 +5
+				EXP:ARG:口淫経験 += 1 
+				PRINTFORML （%CALLNAME:ARG%）口淫経験 +1
+				EXP:ARG:高潮経験 += 1
+				PRINTFORML （%CALLNAME:ARG%）高潮経験 +1
+			ENDIF
+			[SKIPSTART]
+			//これ直到是スキンシップによって刻印被取得したりしなかったりしていた
+			//そもそも日常で刻印的取得是望ましくない和考える的で封印做方向で。和いうか(基本的に)发生时点数弹くように
+			;勃起
+			SIF !GETBIT(CFLAG:ARG:刻印, 2) && PENIS(MASTER)
+				CALL DAILY_MARK_CHECK_GET("勃起")
+			;快C被1000以上与えた
+			SIF !GETBIT(CFLAG:ARG:刻印, 3)
+				CALL DAILY_MARK_CHECK_GET("快Ｃ")
+			;C绝顶
+			SIF !GETBIT(CFLAG:ARG:刻印, 12)
+				CALL DAILY_MARK_CHECK_GET("Ｃ绝顶")
+			;射精
+			SIF !GETBIT(CFLAG:ARG:刻印, 19) && PENIS(MASTER)
+				CALL DAILY_MARK_CHECK_GET("射精")
+			[SKIPEND]
+			;ムラムラ被设置
+			CFLAG:ARG:起兴 = 0
+			;何かあってもよさそうな気但したけど蛇足な気も做的で
+			;PRINTFORML （%CALLNAME:ARG%）スッキリ…
+	ENDSELECT
+;条件被满たさない场合
+ELSE
+	;203, 1-3（あわてて逃げました）
+	CALL KOJO_EVENT(203, 3, ARG)
+	PRINTFORMW 察觉到这一点的%CALLNAME:MASTER%就这样结束对话走出了餐厅。
+	;ムラムラ増加
+	CFLAG:ARG:起兴 += 1
+	PRINTFORML （%CALLNAME:ARG%）起兴 +1
+	;WAIT和RETURN是终端でま和めて实行做ように
+ENDIF
+WAIT
+RETURN 1
+
+;────────────────────────────────────
+;スキンシップ2
+;────────────────────────────────────
+@DAILY_LIFE_1_2(ARG, ARG:1, ARG:2, ARG:3)
+;【屈服:11】接吻被未取得那么キャンセル
+SIF !GETBIT(CFLAG:ARG:刻印, 11)
+	RETURN 0
+;204, 2-0（廊下で主人に呼び停止られました）实際に是主人不是场合もある的でアレなんです但、まぁ別にいいや感もある的で…
+CALL KOJO_EVENT(204, 0, ARG)
+PRINTFORMW %CALLNAME:MASTER%在走廊里走着，被%CALLNAME:ARG%从背后叫住了
+{
+PRINTFORML %CALLNAME:ARG%笑眯眯地靠近%CALLNAME:MASTER%、\@ TALENT:ARG:羞涩 || TALENT:ARG:清楚 
+	? 少ためらい一边 # 不意に\@%CALLNAME:MASTER%的頭被つかんで
+}
+;204, 2-1（いきなりちゅぅ）
+CALL KOJO_EVENT(204, 1, ARG)
+PRINTFORMW 夺走了嘴唇…
+PRINTL
+;204, 2-2（数分后满足してばいばい）
+CALL KOJO_EVENT(204, 2, ARG)
+PRINTFORML %CALLNAME:ARG%在%CALLNAME:MASTER%的嘴里蹂躏了几分钟后就满足了
+PRINTFORMW 留下安心的%CALLNAME:MASTER%离开了…
+;MASTER和ARG的経験増加和内容的显示
+EXP:MASTER:接吻経験 += 1
+EXP:ARG:接吻経験 += 1 
+PRINTFORML （二人）接吻経験 +1
+;ムラムラ解消
+CFLAG:ARG:起兴 = 0
+WAIT
+RETURN 1
+
+;────────────────────────────────────
+;スキンシップ3
+;────────────────────────────────────
+@DAILY_LIFE_1_3(ARG, ARG:1, ARG:2, ARG:3)
+;调教对象但男人那么キャンセル（男人的场合でも乳头被責められる的なも的但あっても良い気是做けど、和りあえずこ的まま）
+SIF TALENT:MASTER:男人
+	RETURN 0
+;【屈服:6】で弹いても良い気も做けど、別にいいような気もした的でなにも不做
+
+;205, 3-0（いきなり背中から抱きつか受到なう）
+CALL KOJO_EVENT(205, 0, ARG)
+PRINTFORMW %CALLNAME:MASTER%在走廊里走着的时候，从背后受到了%CALLNAME:ARG%的袭击
+;205, 3-1（乳房揉まれてるなう）
+CALL KOJO_EVENT(205, 1, ARG)
+IF TALENT:MASTER:貧乳
+	PRINTFORMW %CALLNAME:ARG%从背后抱住%CALLNAME:MASTER%，抚摸着平坦的胸部……
+ELSE
+	PRINTFORML %CALLNAME:ARG%从背后抱住%CALLNAME:MASTER%，把手伸进了领口
+	PRINTFORMW 揉起了胸部…
+ENDIF
+PRINTL
+;205, 3-2（满足していなくなったお…）
+CALL KOJO_EVENT(205, 2, ARG)
+PRINTFORML %CALLNAME:ARG%享受了一会儿%CALLNAME:MASTER%的喘息声
+PRINTFORMW 留下安心的%CALLNAME:MASTER%离开了…
+;MASTER和ARG的経験増加和内容的显示
+EXP:MASTER:Ｂ経験 += 3
+PRINTL Ｂ経験 +3
+EXP:ARG:手淫経験 += 1 
+PRINTFORML （%CALLNAME:ARG%）手淫経験 +1
+CFLAG:ARG:起兴 = 0
+WAIT
+RETURN 1
+
+;────────────────────────────────────
+;スキンシップ4
+;────────────────────────────────────
+@DAILY_LIFE_1_4(ARG, ARG:1, ARG:2, ARG:3)
+;调教对象に阴茎无那么キャンセル
+SIF !PENIS(MASTER)
+	RETURN 0
+;屈服刻印5以下もしく是相关做刻印未取得的场合是キャンセル
+;屈服刻印 > 4和GETBITANDで记述被統一し想要和こだったけど(面倒になって)やめ
+SIF MARK:ARG:屈服刻印 < 5 || !GETBITOR(CFLAG:ARG:刻印, 2, 3, 12, 19, 28)
+	RETURN 0
+;206, 4-0（お食事ご一緒いいかしら？）
+CALL KOJO_EVENT(206, 0, ARG)
+PRINTFORMW 在%CALLNAME:MASTER%吃饭的时候，%CALLNAME:ARG%询问可以和他拼桌吗
+PRINT [0] - 有讨厌的预感　
+PRINT [1] - 那就一起吃吧
+CALL INPUTINT(0, 1)
+SELECTCASE RESULT
+	;有讨厌的预感
+	CASE 0
+		;206, 4-1（マッハで食って逃げました）
+		CALL KOJO_EVENT(206, 1, ARG)
+		PRINTFORMW %CALLNAME:MASTER%用猛烈的气势吃完剩下的菜后慌慌张张地从食堂逃了出去
+		CFLAG:ARG:平时 -= 100
+		SIF CFLAG:ARG:平时 < -999
+			CFLAG:ARG:平时 = -999
+		;ムラムラ増加
+		CFLAG:ARG:起兴 += 1
+		PRINTFORML （%CALLNAME:ARG%）起兴 +1
+	;那就一起吃吧
+	CASE 1
+		;206, 4-2（テーブル的下でしゃぶられて增加）
+		CALL KOJO_EVENT(206, 2, ARG)
+		PRINTFORML %CALLNAME:MASTER%欣然答应，在准备分菜的时候%CALLNAME:ARG%
+		PRINTFORMW 偷偷潜入桌子下，用熟练的手势取出肉棒开始舔弄…
+		;206, 4-3（どくんどくん）
+		CALL KOJO_EVENT(206, 3, ARG)
+		PRINTFORML 快感瞬间爆发出来射进了%CALLNAME:ARG%的嘴里
+		PRINTFORMW 敏感的阴茎被吸弄着仿佛在催促下一发精液
+		;206, 4-4（倍プッシュだ）
+		CALL KOJO_EVENT(206, 4, ARG)
+		PRINTFORMW 最后、%CALLNAME:MASTER%直到用餐结束都在被榨取着精液…
+		;MASTER的経験増加和内容的显示
+		EXP:MASTER:Ｃ経験   += 10
+		PRINTL Ｃ経験 +10
+		EXP:MASTER:绝顶経験 += 3
+		PRINTL 绝顶経験 +3
+		EXP:MASTER:射精経験 += 3
+		PRINTL 射精経験 +3
+		;ARG的経験増加和内容的显示
+		EXP:ARG:精液経験   += 3
+		PRINTFORML （%CALLNAME:ARG%）精液経験 +3
+		EXP:ARG:口淫経験   += 3
+		PRINTFORML （%CALLNAME:ARG%）口淫経験 +3
+		EXP:ARG:高潮経験 += 3
+		PRINTFORML （%CALLNAME:ARG%）高潮経験 +3
+		;MASTER的BASE:射精但減少
+		BASE:MASTER:射精 -= 600
+		;精力奖励
+		SIF FLAG:日常控制 == 2
+			TCVAR:MASTER:空射精数 += 2
+		;ムラムラ解消
+		CFLAG:ARG:起兴 = 0
+ENDSELECT
+WAIT
+RETURN 1
+
+;────────────────────────────────────
+;スキンシップ5
+;────────────────────────────────────
+@DAILY_LIFE_1_5(ARG, ARG:1, ARG:2, ARG:3)
+;调教对象に阴茎但なければキャンセル
+SIF !PENIS(MASTER)
+	RETURN 0
+;调教对象但童贞那么キャンセル
+SIF TALENT:MASTER:童贞
+	RETURN 0
+;ARG但虐待狂持ち那么キャンセル
+SIF TALENT:ARG:虐待狂
+	RETURN 0
+;-------------------------------------------------
+;虐待狂用的分岐被何か考えてもいいかもしれない和か考える
+;  舔阴やリミング被强要さ受到り、TALENTやITEM被参照して(假阳具等で)やられる展开も良い
+;    まぁ后で时间的ある时に考え时いうこ和で(2014/11/24)
+;-------------------------------------------------
+;屈服刻印但5以下那么キャンセル
+SIF MARK:ARG:屈服刻印 < 5
+	RETURN 0
+;これら的刻印被取得していない场合是キャンセル
+SIF !GETBITOR(CFLAG:ARG:刻印, 3, 12, 19)
+	RETURN 0
+;207, 5-0（お皿洗い被手伝ってくれるようです）
+CALL KOJO_EVENT(207, 0, ARG)
+PRINTFORML 当%CALLNAME:MASTER%想洗东西的时候，%CALLNAME:ARG%把盘子端了过来
+PRINTFORMW ……好像是在帮我
+PRINT [0] - 客气　
+PRINT [1] - 拜托你了
+CALL INPUTINT(0, 1)
+SELECTCASE RESULT
+	;客气
+	CASE 0
+		;207, 5-1（お断りし增加）
+		CALL KOJO_EVENT(207, 1, ARG)
+		PRINTFORMW %CALLNAME:MASTER%果断拒绝了%CALLNAME:ARG%的请求一个人收拾了要洗的东西
+		CFLAG:ARG:起兴 += 1
+		PRINTFORML （%CALLNAME:ARG%）起兴 +1
+		;WAIT和RETURN是终端でおこなう
+	;拜托你了
+	CASE 1
+		;207, 5-2（一緒に頑张って终わらせました）
+		CALL KOJO_EVENT(207, 2, ARG)
+		PRINTFORML 多亏了%CALLNAME:ARG%的帮忙，才能比平时早结束
+		PRINTFORM 最后把盘子放到架子上的话
+		;ARG但清楚、羞涩、贞操观念、不越过底线、处女
+		IF TALENT:ARG:清楚 || TALENT:ARG:羞涩 || TALENT:ARG:贞操观念 || TALENT:ARG:不越过底线 || TALENT:ARG:处女
+			PRINTFORMW %CALLNAME:ARG%用炽热的目光注视着什么…
+			;207, 5-3（おくちに希望なーオーラ）
+			CALL KOJO_EVENT(207, 3, ARG)
+			PRINTFORML %CALLNAME:MASTER%默默点头，%CALLNAME:ARG%高兴地跪下
+			PRINTFORMW 从股间取出阴茎开始吸吮
+			;207, 5-4（おいしかったです）
+			CALL KOJO_EVENT(207, 4, ARG)
+			PRINTFORML 将%CALLNAME:MASTER%射出的精液美味地吞下
+			PRINTFORMW 留下下次再帮你的话就离开了…
+			;MASTER的経験増加和内容的显示
+			EXP:MASTER:Ｃ経験 += 5
+			PRINTL Ｃ経験 +5
+			EXP:MASTER:绝顶経験 += 1
+			PRINTL 绝顶経験 +1
+			EXP:MASTER:射精経験 += 1
+			PRINTL 射精経験 +1
+			;ARG的経験増加和内容的显示
+			EXP:ARG:精液経験 += 1 
+			PRINTFORML （%CALLNAME:ARG%）精液経験 +1
+			EXP:ARG:口淫経験 += 1 
+			PRINTFORML （%CALLNAME:ARG%）口淫経験 +1
+			EXP:ARG:高潮経験 += 1
+			PRINTFORML （%CALLNAME:ARG%）高潮経験 +1
+			BASE:MASTER:射精 -= 300
+			;口内射精
+			;SIF !GETBIT(CFLAG:ARG:刻印, 28)
+		;Ａ性交に派生
+		ELSEIF ABL:ARG:Ａ感觉 > 3 && RAND:(LIMIT(10 - ABL:ARG:Ａ感觉, 3, 10)) == 0
+			PRINTFORMW %CALLNAME:ARG%理所当然地要求劳动的代价
+			;207, 5-5（お手伝いしたんだからお尻犯せよ）
+			CALL KOJO_EVENT(207, 5, ARG)
+			PRINTFORML %CALLNAME:ARG%把%CALLNAME:MASTER%的阴茎含在嘴里做好了准备
+			PRINTFORMW 站着打开屁股，回应期待般的展示出肛门
+			PRINTL
+			;207, 5-6（お尻でヤってしまいました）
+			CALL KOJO_EVENT(207, 6, ARG)
+			PRINTFORML %CALLNAME:MASTER%被%CALLNAME:ARG%的肛门强烈的挤压着
+			PRINTFORMW 无计可施，被榨取了大量的精液…
+			;MASTER的経験増加和内容的显示
+			;***************************
+			EXP:MASTER:Ｃ経験 += 5                          ;调教对象Ｃ経験
+			PRINTL Ｃ経験 +5
+			EXP:MASTER:性交経験 += 1                        ;调教对象性交経験
+			PRINTL 性交経験 +1
+			EXP:MASTER:绝顶経験 += 1                        ;调教对象绝顶経験
+			PRINTL 绝顶経験 +1
+			EXP:MASTER:射精経験 += 3                        ;调教对象射精経験
+			PRINTL 射精経験 +3
+			;ARG的経験増加和内容的显示
+			;***************************
+			EXP:ARG:Ａ経験 += 1                             ;ARGＡ経験
+			PRINTFORML （%CALLNAME:ARG%）Ａ経験 +1
+			EXP:ARG:性交経験 += 1                           ;ARG性交経験
+			PRINTFORML （%CALLNAME:ARG%）性交経験 +1
+			EXP:ARG:精液経験 += 3                           ;ARG精液経験
+			PRINTFORML （%CALLNAME:ARG%）精液経験 +3
+			EXP:ARG:高潮経験 += 1                         ;ARG高潮経験
+			PRINTFORML (%CALLNAME:ARG%)高潮経験 +1
+			BASE:MASTER:射精 -= 500
+			[SKIPSTART]
+			;性交
+			SIF !GETBIT(CFLAG:ARG:刻印, 30)
+			;扭腰
+			SIF !GETBIT(CFLAG:ARG:刻印, 31)
+			;肛交（进攻）
+			SIF !GETBIT(CFLAG:ARG:刻印, 47)
+			;肛门へ射精
+			SIF !GETBIT(CFLAG:ARG:刻印, 41)
+			[SKIPEND]
+		;Ｖ性交に派生
+		ELSE
+			PRINTFORMW %CALLNAME:ARG%理所当然地要求劳动的代价
+			;207, 5-7（謝礼是小穴穴銀行に突っ込んでくれ）
+			CALL KOJO_EVENT(207, 7, ARG)
+			PRINTFORML %CALLNAME:ARG%把%CALLNAME:MASTER%的阴茎含在嘴里做好了准备
+			PRINTFORMW 向着左右打开了湿润的秘所引诱着%CALLNAME:MASTER%的阴茎
+			PRINTL
+			;207, 5-8（确かに受け取った）
+			CALL KOJO_EVENT(207, 8, ARG)
+			PRINTFORML %CALLNAME:MASTER%沉迷于%CALLNAME:ARG%带来的快感
+			PRINTFORMW 无计可施，被榨取了大量的精液…
+			;MASTER的経験増加和内容的显示
+			;***************************
+			EXP:MASTER:Ｃ経験 += 5                          ;调教对象Ｃ経験
+			PRINTL Ｃ経験 +5
+			EXP:MASTER:性交経験 += 1                        ;调教对象性交経験
+			PRINTL 性交経験 +1
+			EXP:MASTER:绝顶経験 += 1                        ;调教对象绝顶経験
+			PRINTL 绝顶経験 +1
+			EXP:MASTER:射精経験 += 3                        ;调教对象射精経験
+			PRINTL 射精経験 +3
+			;ARG的経験増加和内容的显示
+			;***************************
+			EXP:ARG:Ｖ経験 += 1                             ;ARGＶ経験
+			PRINTFORML （%CALLNAME:ARG%）Ｖ経験 +1
+			EXP:ARG:性交経験 += 1                           ;ARG性交経験
+			PRINTFORML （%CALLNAME:ARG%）性交経験 +1
+			EXP:ARG:精液経験 += 3                           ;ARG精液経験
+			PRINTFORML （%CALLNAME:ARG%）精液経験 +3
+			EXP:ARG:高潮経験 += 1                         ;ARG高潮経験
+			PRINTFORML （%CALLNAME:ARG%）高潮経験 +1
+			BASE:MASTER:射精 -= 500
+			[SKIPSTART]
+			;性交
+			SIF !GETBIT(CFLAG:ARG:刻印, 30)
+			;扭腰
+			SIF !GETBIT(CFLAG:ARG:刻印, 31)
+			;小穴内射精
+			SIF !GETBIT(CFLAG:ARG:刻印, 25)
+			[SKIPEND]
+		ENDIF
+		;精力奖励
+		SIF FLAG:日常控制 == 2
+			TCVAR:MASTER:空射精数 += 1
+		;ムラムラ解消
+		CFLAG:ARG:起兴 = 0
+ENDSELECT
+WAIT
+RETURN 1
+
+;スキンシップ6
+@DAILY_LIFE_1_6(ARG, ARG:1, ARG:2, ARG:3)
+;昼间那么キャンセル
+SIF !TIME
+	RETURN 0
+;屈服刻印5以下那么キャンセル
+SIF MARK:ARG:屈服刻印 < 5
+	RETURN 0
+;相关做刻印未取得时キャンセル
+{
+SIF PENIS(MASTER) && 
+	(!GETBITOR(CFLAG:ARG:刻印, 2, 3, 12, 19, 20, 33, 49) || 
+	!PENIS(MASTER) && !GETBITOR(CFLAG:ARG:刻印, 3, 5, 6, 12, 14, 15, 37))
+}
+	RETURN 0
+;208, 6-0（お风呂场强襲）
+CALL KOJO_EVENT(208, 0, ARG)
+PRINTFORML %CALLNAME:MASTER%在浴室里洗着身体\@ TALENT:ARG:羞涩 || TALENT:ARG:清楚 ? 用毛巾遮住了身体的 # 全裸的 \@%CALLNAME:ARG%突然闯了进来
+PRINTFORMW 嘴上说着要来帮忙搓背
+;208, 6-1（背中被流し增加泡踊り）
+CALL KOJO_EVENT(208, 1, ARG)
+PRINTFORML 虽然有着不好的预感，但%CALLNAME:MASTER%还是背过身来，对着%CALLNAME:ARG%展露出自己的身体
+PRINTFORMW 把肥皂弄起泡，抱了过来…
+PRINTL
+;调教对象に阴茎有り
+IF PENIS(MASTER)
+	PRINTFORMW %CALLNAME:ARG%一边用胸部摩擦着%CALLNAME:MASTER%的后背，一边抚摩着身体的各个角落
+	;208, 6-2（大棒棒是触ってあげない）
+	CALL KOJO_EVENT(208, 2, ARG)
+	PRINTFORML 随着这种行为逐渐升级\@ TALENT:MASTER:男人 ? 阴嚢 # 秘唇 \@和肛门也逐渐落入魔爪
+	PRINTFORMW 完全不去触摸%CALLNAME:MASTER%的阴茎
+	PRINT [0] - 忍耐　
+	PRINT [1] - 拜托你了
+	CALL INPUTINT(0, 1)
+	SELECTCASE RESULT
+		;忍耐
+		CASE 0
+			;208, 6-4（忍耐してたら焦らす的面倒变成了ようです）
+			CALL KOJO_EVENT(208, 4, ARG)
+			PRINTFORML 也许是比%CALLNAME:MASTER%先到了极限，%CALLNAME:ARG%抱在了背上
+		;拜托你了
+		CASE 1
+			;208, 6-3（高潮！）
+			CALL KOJO_EVENT(208, 3, ARG)
+			PRINTFORML 当%CALLNAME:MASTER%用快要哭出来的声音恳求的时候，%CALLNAME:ARG%就一直抱在背后
+	ENDSELECT
+	PRINTFORMW 握住阴茎一口气摆弄起来…
+	;208, 6-5（どくんどくん）
+	CALL KOJO_EVENT(208, 5, ARG)
+	PRINTFORML 被这种焦虑感折磨的快要受不了的%CALLNAME:MASTER%的阴茎一眨眼就升天了
+	PRINTFORMW 像坏掉的水龙头一样四处飞洒着精液…
+	;MASTER的経験増加和内容的显示
+	EXP:MASTER:Ｃ経験 += 3
+	PRINTL Ｃ経験 +3
+	EXP:MASTER:绝顶経験 += 1
+	PRINTL 绝顶経験 +1
+	EXP:MASTER:射精経験 += 3
+	PRINTL 射精経験 +3
+	;ARG的経験増加和内容的显示
+	EXP:ARG:精液経験 += 3
+	PRINTFORML （%CALLNAME:ARG%）精液経験 +3
+	EXP:ARG:手淫経験 += 1 
+	PRINTFORML （%CALLNAME:ARG%）手淫経験 +1
+	EXP:ARG:高潮経験 += 2
+	PRINTFORML （%CALLNAME:ARG%）高潮経験 +2
+	BASE:MASTER:射精 -= 500
+	;精力奖励
+	SIF FLAG:日常控制 == 2
+		TCVAR:MASTER:空射精数 += 1
+	[SKIPSTART]
+	;焦虑PLAY
+	SIF !GETBIT(CFLAG:ARG:刻印, 33)
+	;高潮！
+	SIF RESULT == 1 && !GETBIT(CFLAG:ARG:刻印, 49)
+	;大量射精
+	SIF !GETBIT(CFLAG:ARG:刻印, 20)
+	[SKIPEND]
+;调教对象に阴茎无し
+ELSE
+	;208, 6-6（全身ぬるぬる感受いい？）
+	CALL KOJO_EVENT(208, 6, ARG)
+	PRINTFORMW %CALLNAME:ARG%一边用胸部摩擦着%CALLNAME:MASTER%的后背，一边抚摩着身体的各个角落
+	PRINTFORML 随着行为逐渐升级，直指进入了肛门和性器的深处
+	;208, 6-7（びくんびくん）
+	CALL KOJO_EVENT(208, 7, ARG)
+	PRINTFORMW %CALLNAME:MASTER%在%CALLNAME:ARG%的怀抱中达到了无数次的绝顶…
+	;MASTER的経験増加和内容的显示
+	EXP:MASTER:Ｃ経験 += 1
+	PRINTL Ｃ経験 +1
+	EXP:MASTER:Ａ経験 += 1
+	PRINTL Ａ経験 +1
+	EXP:MASTER:Ｂ経験 += 1
+	PRINTL Ｂ経験 +1
+	EXP:MASTER:绝顶経験 += 3
+	PRINTL 绝顶経験 +3
+	;ARG的経験増加和内容的显示
+	EXP:ARG:手淫経験 += 3 
+	PRINTFORML （%CALLNAME:ARG%）手淫経験 +3
+	EXP:ARG:高潮経験 += 3
+	PRINTFORML （%CALLNAME:ARG%）高潮経験 +3
+	;多重绝顶
+	;SIF !GETBIT(CFLAG:ARG:300, 37)
+ENDIF
+;ムラムラ解消
+CFLAG:ARG:起兴 = 0
+WAIT
+RETURN 1
+
+;────────────────────────────────────
+;スキンシップ7
+;────────────────────────────────────
+@DAILY_LIFE_1_7(ARG, ARG:1, ARG:2, ARG:3)
+;震动棒被持有していない场合是キャンセル
+SIF !ITEM:震动棒
+	RETURN 0
+;调教对象に阴茎无し的场合是キャンセル（大棒棒的无い相手に口交的練习是ないだろｗ 的な感じで）
+SIF !PENIS(MASTER)
+	RETURN 0
+PRINTFORMW %CALLNAME:ARG%的房间里似乎能听到什么水声
+;209, 7-0（震动棒で口交的練习）
+CALL KOJO_EVENT(209, 0, ARG)
+PRINTFORMW 从半开着的门往里走去，%CALLNAME:ARG%正一脸认真的样子用舌头舔着模仿男性生殖器的震动棒。
+PRINTL 
+;清楚・羞涩
+IF TALENT:ARG:清楚 || TALENT:ARG:羞涩
+	;209, 7-1（！　何见てる的！？）
+	CALL KOJO_EVENT(209, 1, ARG)
+	PRINTFORML %CALLNAME:ARG%虽然暂时埋头于这一行为，但很快就注意到了%CALLNAME:MASTER%的视线
+	PRINTFORMW 红着脸把%CALLNAME:MASTER%赶出去了…
+ELSE
+	;209, 7-2（あら…試してみる？）
+	CALL KOJO_EVENT(209, 2, ARG)
+	PRINTFORML %CALLNAME:ARG%虽然暂时埋头于这一行为，但很快就注意到了%CALLNAME:MASTER%的视线
+	PRINTFORMW 把嘴巴嘟起成猥亵的形状诱惑过来…
+ENDIF
+;ARG的経験増加和内容的显示
+EXP:ARG:口淫経験 += 3 
+PRINTFORML （%CALLNAME:ARG%）口淫経験 +3
+WAIT
+RETURN 1
+
+;────────────────────────────────────
+;スキンシップ8
+;────────────────────────────────────
+@DAILY_LIFE_1_8(ARG, ARG:1, ARG:2, ARG:3)
+;二人目但选择されていない那么キャンセル
+SIF ARG:1 < 0
+	RETURN 0
+;昼那么キャンセル
+SIF !TIME
+	RETURN 0
+;引数的百的位以降に２人目的角色名被入れる
+LOCAL = ARG:1*100
+;口上用に２人目的角色的登录番号被入れる
+DAILY_SUBTARGET = ARG:1
+;210, 8-0（二人でお风呂场强襲）
+CALL KOJO_EVENT(210, 0, ARG)
+PRINTFORML 当%CALLNAME:MASTER%洗澡的时候，%CALLNAME:ARG%和%CALLNAME:(ARG:1)%进来了
+;210 8-1（二人で洗いっこ）
+CALL KOJO_EVENT(210, 1, ARG)
+PRINTFORMW 两人在%CALLNAME:MASTER%的眼前暴露出富有有魅力的肢体，快乐地互相清洗着身体…
+;相关做刻印被取得している必要但ある。ARG:1直到见る的是面倒な的で忘れるこ和に
+{
+IF MARK:ARG:屈服刻印 > 4 && MARK:(ARG:1):屈服刻印 > 4 && 
+	((PENIS(MASTER) && GETBITAND(CFLAG:ARG:刻印, 1, 2, 3, 12, 19, 20)) || 
+	(!PENIS(MASTER) && GETBITAND(CFLAG:ARG:刻印, 1, 3, 6, 12, 15)))
+}
+	PRINT [0] - 仔细欣赏　
+	PRINT [1] - 混入其中
+	CALL INPUTINT(0, 1)
+;条件から漏受到らRESULTに0被入れる
+ELSE
+	RESULT = 0
+ENDIF
+SELECTCASE RESULT
+	;仔细欣赏
+	CASE 0
+		PRINTFORML 可能是因为被%CALLNAME:MASTER%看到而兴奋，两人的行为渐渐大胆起来
+		;210 8-2（见られてエスカレート）
+		CALL KOJO_EVENT(210, 2, ARG)
+		PRINTFORM 涂抹了肥皂的温热的身体紧紧缠绕在一起
+		IF TALENT:ARG:扶她 && TALENT:(ARG:1):扶她
+			PRINTFORMW 从两个人的阴茎中不断放出的白浊液装饰着彼此的身体…
+		ELSEIF TALENT:ARG:扶她 || TALENT:(ARG:1):扶她
+			PRINTFORMW 把白浊液和爱液互相涂抹在身体上…
+		ELSE
+			PRINTFORMW 从两人的秘所中爱液不断溢出……
+		ENDIF
+		PRINTL 
+		;210, 8-3（的ぼ命令しまいました）
+		CALL KOJO_EVENT(210, 3, ARG)
+		PRINTFORMW %CALLNAME:MASTER%从浴缸里出来时已经浑身发热了
+		;ARG的経験増加和内容的显示
+		EXP:ARG:Ｃ経験 += 3
+		PRINTFORML （%CALLNAME:ARG%）Ｃ経験 +3
+		EXP:ARG:Ｂ経験 += 3
+		PRINTFORML （%CALLNAME:ARG%）Ｂ経験 +3
+		EXP:ARG:绝顶経験 += 3
+		PRINTFORML （%CALLNAME:ARG%）绝顶経験 +3
+		IF TALENT:ARG:扶她
+			EXP:ARG:射精経験 += 3
+			PRINTFORML （%CALLNAME:ARG%）射精経験 +3
+		ENDIF
+		IF TALENT:(ARG:1):扶她 || TALENT:ARG:扶她
+			EXP:ARG:精液経験 += 3
+			PRINTFORML （%CALLNAME:ARG%）精液経験 +3
+		ENDIF
+		PRINTL
+		;ARG:1的経験増加和内容的显示
+		EXP:(ARG:1):Ｃ経験 += 3
+		PRINTFORML （%CALLNAME:(ARG:1)%）Ｃ経験 +3
+		EXP:(ARG:1):Ｂ経験 += 3
+		PRINTFORML （%CALLNAME:(ARG:1)%）Ｂ経験 +3
+		EXP:(ARG:1):绝顶経験 += 3
+		PRINTFORML （%CALLNAME:(ARG:1)%）绝顶経験 +3
+		IF TALENT:(ARG:1):扶她
+			EXP:(ARG:1):射精経験 += 3
+			PRINTFORML （%CALLNAME:(ARG:1)%）射精経験 +3
+		ENDIF
+		IF TALENT:ARG:扶她 || TALENT:(ARG:1):扶她
+			EXP:(ARG:1):精液経験 += 3
+			PRINTFORML （%CALLNAME:(ARG:1)%）精液経験 +3
+		ENDIF
+		;和りあえず二人で愉しんだ的でムラムラ解消
+		CFLAG:ARG:起兴 = 0
+		CFLAG:(ARG:1):起兴 = 0
+		WAIT
+		RETURN 1
+	;混入其中
+	CASE 1
+		;210, 8-4（混ぜてもらってぬるぬるまっ和）
+		CALL KOJO_EVENT(210, 4, ARG)
+		PRINTFORML %CALLNAME:ARG%被彻底迷住牵起了%CALLNAME:MASTER%的手
+		PRINTFORMW 仰躺在垫子上，%CALLNAME:(ARG:1)%在上面涂上了大量的肥皂
+		;210, 8-5（二人でそーぷぷれい）
+		CALL KOJO_EVENT(210, 5, ARG)
+		IF PENIS(MASTER)
+			PRINTFORML 完全准备好的两个人和%CALLNAME:MASTER%身体的所有部分紧紧贴在一起
+			PRINTFORML 抱过来了
+			PRINTFORML 在紧贴着的身体的缝隙中释放出的精液进一步驱使着两人的欲望，不久就萎靡起来
+			PRINTFORMW 下一次的射精即将到来…
+			PRINTFORMW %CALLNAME:MASTER%射精了好几次，直到两个人满意为止…
+		ELSE
+			PRINTFORMW %CALLNAME:MASTER%和两个人把身体缠绕在一起，互相重复着绝顶…
+		ENDIF
+		;MASTER的経験増加和内容的显示
+		EXP:MASTER:Ｃ経験 += 3
+		PRINTL Ｃ経験 +3
+		EXP:MASTER:Ｂ経験 += 3
+		PRINTL Ｂ経験 +3
+		EXP:MASTER:绝顶経験 += 3
+		PRINTL 绝顶経験 +3
+		IF PENIS(MASTER)
+			EXP:MASTER:射精経験 += 3
+			PRINTL 射精経験 +3
+		ENDIF
+		IF PENIS(ARG) || PENIS(ARG:1) || PENIS(MASTER)
+			EXP:MASTER:精液経験 += 3
+			PRINTL 精液経験 +3
+		ENDIF
+		PRINTL
+		;ARG的経験増加和内容的显示
+		EXP:ARG:Ｃ経験 += 3
+		PRINTFORML （%CALLNAME:ARG%）Ｃ経験 +3
+		EXP:ARG:Ｂ経験 += 3
+		PRINTFORML （%CALLNAME:ARG%）Ｂ経験 +3
+		EXP:ARG:绝顶経験 += 3
+		PRINTFORML （%CALLNAME:ARG%）绝顶経験 +3
+		IF TALENT:ARG:扶她
+			EXP:ARG:射精経験 += 3
+			PRINTFORML （%CALLNAME:ARG%）射精経験 +3
+		ENDIF
+		IF PENIS(ARG) || PENIS(ARG:1) || PENIS(MASTER)
+			EXP:ARG:精液経験 += 3
+			PRINTFORML （%CALLNAME:ARG%）精液経験 +3
+		ENDIF
+		PRINTL
+		;ARG:1的経験増加和内容的显示
+		EXP:(ARG:1):Ｃ経験 += 3
+		PRINTFORML （%CALLNAME:(ARG:1)%）Ｃ経験 +3
+		EXP:(ARG:1):Ｂ経験 += 3
+		PRINTFORML （%CALLNAME:(ARG:1)%）Ｂ経験 +3
+		EXP:(ARG:1):绝顶経験 += 3
+		PRINTFORML 绝顶経験 +3(%CALLNAME:(ARG:1)%)
+		IF TALENT:(ARG:1):扶她
+			EXP:(ARG:1):射精経験 += 3
+			PRINTFORML （%CALLNAME:(ARG:1)%）射精経験 +3
+		ENDIF
+		IF PENIS(ARG) || PENIS(ARG:1) || PENIS(MASTER)
+			EXP:(ARG:1):精液経験 += 3
+			PRINTFORML （%CALLNAME:(ARG:1)%）精液経験 +3
+		ENDIF
+		BASE:MASTER:射精 -= 900
+		CFLAG:ARG:起兴     = 0
+		CFLAG:(ARG:1):起兴 = 0
+ENDSELECT
+;精力奖励
+SIF FLAG:日常控制 == 2
+	TCVAR:MASTER:空射精数 += 3
+WAIT
+RETURN 1
+
+;────────────────────────────────────
+;スキンシップ9
+;────────────────────────────────────
+@DAILY_LIFE_1_9(ARG, ARG:1, ARG:2, ARG:3)
+;昼那么キャンセル
+SIF !TIME
+	RETURN 0
+PRINTFORML %CALLNAME:MASTER%洗完澡想换衣服的时候，小心翼翼地只脱下了内衣。
+PRINTFORML 但纵观更衣室也找不到可以用来替代的东西
+PRINTFORMW %CALLNAME:MASTER%没办法，只好在不穿内衣的情况下直接穿上衣服了
+PRINTFORML ……悉悉索索
+PRINTL
+;211, 9-0（お风呂上り的ーぱんえんかうん和）
+CALL KOJO_EVENT(211, 0, ARG)
+PRINTFORML 一出更衣室，%CALLNAME:ARG%就好像在等着一样
+PRINTFORMW 慌慌张张张地从前面经过，%CALLNAME:ARG%的视线紧紧缠绕在胸前和胯股之间
+;211, 9-1（ガン见されて增加）
+CALL KOJO_EVENT(211, 1, ARG)
+PRINTFORML 感觉就像是被透过衣服看透了一样，因为害羞身体变得滚烫起来
+PRINTFORMW %CALLNAME:MASTER%快步从那个地方逃走了……
+;211, 9-2（风邪ひかないようにね）
+CALL KOJO_EVENT(211, 2, ARG)
+;何但しか的旁白但あった方但いいだろうか？
+
+[SKIPSTART]
+//日常で的刻印处理是清除做方向で
+;裸にむか受到
+IF !GETBIT(CFLAG:ARG:300, 1)
+	PRINTFORML 屈服点数+1
+	CFLAG:ARG:屈服P1 += 1
+	SETBIT CFLAG:ARG:刻印 , 1
+ENDIF
+[SKIPEND]
+RETURN 1
+
+;────────────────────────────────────
+;日常（好感度上升、其他温和な経験など）
+;────────────────────────────────────
+@DAILY_LIFE_2(ARG, ARG:1, ARG:2, ARG:3)
+#DIM LCOUNT
+;口上用に对象角色的番号被入れる
+DAILY_TARGET = ARG
+;10回試行做
+FOR LCOUNT, 0, 10
+	LOCAL = RAND:2
+	RESULT = 0
+	;封印されていない场合
+	SIF STRFIND(CSTR:ARG:封印日常, @"/2_{LOCAL}/") == -1
+		TRYCALLFORM DAILY_LIFE_2_{LOCAL}(ARG, ARG:1, ARG:2, ARG:3)
+	SIF RESULT
+		RETURN RESULT
+NEXT
+RETURN 0
+
+;────────────────────────────────────
+;日常0
+;────────────────────────────────────
+@DAILY_LIFE_2_0(ARG, ARG:1, ARG:2, ARG:3)
+;212, 日常0-0（お茶是か但？）
+CALL KOJO_EVENT(212, 0, ARG)
+PRINTFORMW 在饭厅休息的时候%CALLNAME:ARG%拿来了茶壶和装着点心的盘子坐在了旁边
+;212, 日常0-1（乐しいお茶想要むでした）
+CALL KOJO_EVENT(212, 1, ARG)
+PRINTFORML %CALLNAME:MASTER%和%CALLNAME:ARG%一边喝着红茶一边谈笑，度过了快乐的时光
+;MASTER和ARG的経験増加和内容的显示
+EXP:MASTER:会话経験 += 5
+EXP:ARG:会话経験    += 5
+PRINTL （二人）会话経験 +5
+CFLAG:ARG:M好感 += 100
+CFLAG:ARG:好感  += 100
+PRINTL （二人）好感度上升
+WAIT
+RETURN 1
+
+;────────────────────────────────────
+;日常1
+;────────────────────────────────────
+@DAILY_LIFE_2_1(ARG, ARG:1, ARG:2, ARG:3)
+;夜那么キャンセル
+SIF TIME
+	RETURN 0
+;季节但夏か冬那么キャンセル
+SIF GROUPMATCH(FLAG:季节, 1, 3) > 0
+	RETURN 0
+;旁白→口上显示的顺不是和どうにも那么ない感但ある的で、显示タイミング被变えてみる
+;	和思ったけどどうなんだろう感但无きにしもあらず
+PRINTFORMW 路过的时候，在院子里\@ TALENT:ARG:讨厌日光 ? 在背阴 # 太阳下 \@的地方发现了%CALLNAME:ARG%……
+;213, 1-0（お昼寝发见）
+CALL KOJO_EVENT(213, 0, ARG)
+PRINTFORML %CALLNAME:ARG%蜷缩在地上铺着的毛毯上睡着了
+;213, 1-1（ごゆっくりどうぞ）
+CALL KOJO_EVENT(213, 1, ARG)
+WAIT
+RETURN 1
+
+;────────────────────────────────────
+;定位变动
+;────────────────────────────────────
+@DAILY_LIFE_3_0(ARG)
+$SELECTER
+LOCAL = RAND:10
+TRYCALLFORM DAILY_LIFE_3_{LOCAL}(ARG, ARG:1, ARG:2, ARG:3)
+SIF !RESULT
+	GOTO SELECTER
+RETURN RESULT
+
+;────────────────────────────────────
+;反抗除去（反抗刻印被持った调教者的定位但高くな时发生）
+;────────────────────────────────────
+@DAILY_LIFE_4(ARG)
+;封印されていれば返回但…これ被封印做？
+SIF STRFIND(CSTR:ARG:封印日常, @"/4_0/") != -1
+	RETURN 0
+;口上用に对象角色的番号被入れる
+DAILY_TARGET = ARG
+LOCAL = MARK:ARG:反抗刻印 > 10 - MARK:ARG:5 ? 10 - MARK:ARG:5 # MARK:ARG:反抗刻印 - 1
+MARK:ARG:反抗刻印 = LOCAL
+CFLAG:ARG:反抗除去 = 0
+;214, 反抗除去（懐柔さ受到ようです）
+CALL KOJO_EVENT(214, 0, ARG)
+PRINTL
+PRINTFORML 因为感受到了%CALLNAME:ARG%的温柔，%CALLNAME:MASTER%的反抗心变弱了
+PRINTFORML 反抗刻印{LOCAL}变成了
+WAIT
+RETURN 1
+
+;────────────────────────────────────
+;能力上升
+;────────────────────────────────────
+@DAILY_LIFE_A(ARG)
+#LOCALSIZE 10
+#LOCALSSIZE 10
+#DIM LCOUNT
+#DIM LNUM
+#DIM LRES
+#DIM LTEMP
+
+;现在的事件数
+LNUM = 1
+
+;LOCAL等初期化
+VARSET LOCAL
+VARSET LOCALS
+
+;修正値读み出し
+SPLIT CSTR:日常能力上升, "/", LOCALS
+FOR LCOUNT, 0, LNUM
+	LOCAL:LCOUNT = TOINT(LOCALS:LCOUNT)
+NEXT
+
+;修正値計算处理
+
+;一括加算(10被加算)
+FOR LCOUNT, 0, LNUM
+	LOCAL:LCOUNT += 10
+NEXT
+
+;单独加算
+LOCAL:0 += (TALENT:ARG:回复慢 - TALENT:ARG:回复快) * 5
+
+;基準値设定(これ被超えて初めて实行される)
+LTEMP = LNUM * 20 + (TALENT:ARG:被动 - TALENT:ARG:献身的) * 5
+
+;修正値書き込み
+CSTR:日常能力上升 = 
+FOR LCOUNT, 0, LNUM
+	CSTR:日常能力上升 += @"/{LOCAL:LCOUNT}"
+NEXT
+CSTR:日常能力上升 = %SUBSTRING(CSTR:日常能力上升, 1)%
+
+;修正値によって处理被选择
+CALL DAILY_LIFE_A_0(ARG, LRES)
+
+;RESULT被返す
+RETURN RESULT
+
+;能力上升处理
+;※ARG被切り替えるこ和で对象者被变更でき时思う
+@DAILY_LIFE_A_0(ARG, ARG:1)
+;调教对象读心能力によって得られる情报量但变わる
+
+SELECTCASE ARG:1
+	;何もしなかった……
+	CASE -1
+		RETURN 0
+	;性知识向上
+	CASE 0
+		SIF TALENT:MASTER:读心能力 == 2
+			PRINTFORML %CALLNAME:ARG%似乎是通过读书来提高性知识的……
+		LOCAL = RAND:MAX(3 + TALENT:ARG:习得快 - TALENT:ARG:习得慢, 2)
+		EXP:ARG:性知识 += LOCAL
+		SIF TALENT:MASTER:读心能力 == 2
+			PRINTFORML （%CALLNAME:ARG%）性知识+{LOCAL}
+ENDSELECT
+IF TALENT:MASTER:读心能力 == 1
+	PRINTFORML %CALLNAME:ARG%好像在没看到的时候做了什么……
+ENDIF
+SIF ARG:1 >= 0 && TALENT:MASTER:读心能力 > 0
+	WAIT
+SIF ARG:1 >= 0
+	RETURN 1
+RETURN 0
+
+;@DAILY_MARK_CHECK_GET(ARGS:0)
+	;日常事件で刻印的处理做那么これあった方但よさそう。でも基本的に是やらない方向で

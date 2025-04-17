@@ -1,0 +1,448 @@
+﻿;────────────────────────────────────
+;爱抚、性交等的継续、解除、处理
+;────────────────────────────────────
+@SHOW_TOUCH
+FOR LOCAL, 1, CHARANUM
+	SIF LOCAL != TARGET
+		CONTINUE
+	SELECTCASE TEQUIP:LOCAL:接触Ｐ
+		CASE 3
+			PRINT 进行手淫 
+		CASE 4
+			PRINT 进行口交 
+		CASE 6
+			PRINT 逆强奸 
+		CASE 7
+			PRINT 逆肛交 
+		CASE 8
+			PRINT 进行足交 
+	ENDSELECT
+	SELECTCASE TEQUIP:LOCAL:接触Ｃ
+		CASE 1
+			PRINT 素股 
+		CASE 3
+			PRINT 阴蒂爱抚 
+		CASE 4
+			PRINT 舔阴 
+	ENDSELECT
+	SELECTCASE TEQUIP:LOCAL:接触指
+		CASE 1
+			PRINT 手淫 
+		CASE 5
+			PRINT 相互揉胸 
+	ENDSELECT
+	SELECTCASE TEQUIP:LOCAL:接触口
+		CASE 1
+			PRINT 口交 
+		CASE 2
+			PRINT 侍奉舔阴 
+		CASE 4
+			PRINT 接吻 
+		CASE 5
+			PRINT 吸乳头 
+		CASE 7
+			PRINT 肛门奉仕 
+	ENDSELECT
+	SELECTCASE TEQUIP:LOCAL:接触胸
+		CASE 1
+			PRINT 乳交 
+		CASE 3
+			PRINT 胸爱抚 
+		CASE 4
+			PRINT 舔乳头 
+	ENDSELECT
+	SELECTCASE TEQUIP:LOCAL:接触小穴
+		CASE 1
+			PRINT 性交 
+		CASE 3
+			PRINT 插入手指 
+	ENDSELECT
+	SELECTCASE TEQUIP:LOCAL:接触Ａ
+		CASE 1
+			PRINT 肛交 
+		CASE 3
+			PRINT 肛门爱抚 
+		CASE 4
+			PRINT 舔肛门 
+	ENDSELECT
+	SELECTCASE TEQUIP:LOCAL:接触足
+		CASE 1
+			PRINT 足交 
+	ENDSELECT
+	PRINTFORML (%CALLNAME:LOCAL%)
+NEXT
+PRINTL 
+
+
+;------------------------------------------------------------------
+;接触情报的取得、旁白显示
+;------------------------------------------------------------------
+@TOUCH_SUCCESSION
+VARSET LOCAL
+
+;性交状态保存
+LOCAL:0 = TEQUIP:性交中
+LOCAL:1 = TEQUIP:性交奉仕中
+;Ｃ使用状态保存
+LOCAL:2 = TEQUIP:调教对象Ｃ使用
+
+SELECTCASE TFLAG:ACT
+	;会话系现状維持
+	CASE 0 TO 4, 9	
+	;爱抚/进行手淫
+	CASE 10
+		;手淫
+		IF TFLAG:ACT派生 == 1
+			CALL TOUCH_SET("指", "Ｐ")
+			;调教对象插入被解除
+			TEQUIP:性交奉仕中 = 0
+		;爱抚
+		ELSEIF !TFLAG:ACT派生
+			CALL TOUCH_SET("指", "Ｃ")
+		ENDIF
+	;胸爱抚/吸乳头/乳的揉み合い
+	CASE 11
+		;吸乳头
+		IF TFLAG:ACT派生 == 1
+			CALL TOUCH_SET("口", "Ｂ")
+		;乳的揉み合い
+		ELSEIF TFLAG:ACT派生 == 2
+			CALL TOUCH_SET("指", "Ｂ")
+			CALL TOUCH_SET("Ｂ", "指")
+		;其他
+		ELSE
+			CALL TOUCH_SET("指", "Ｂ")
+		ENDIF
+	;舔阴/进行口交
+	CASE 12
+		IF TFLAG:ACT派生
+			CALL TOUCH_SET("口", "Ｐ")
+		ELSE
+			CALL TOUCH_SET("口", "Ｃ")
+		ENDIF
+		;插入解除
+		CALL SEX_SET()
+		;胸
+		TEQUIP:接触胸 = TEQUIP:接触胸 == 4 ? 0  # TEQUIP:接触胸
+	;肛门爱抚
+	CASE 13
+		CALL TOUCH_SET("指", "Ａ")
+	;舔肛门
+	CASE 14
+		CALL TOUCH_SET("口", "Ａ")
+		;插入解除
+		CALL SEX_SET()
+	;接吻
+	CASE 15
+		CALL TOUCH_SET("口", "口")
+	;貝あわせ/素股做
+	CASE 16
+		IF TFLAG:ACT派生
+			CALL TOUCH_SET("Ｃ", "Ｐ")
+		ELSE
+			CALL TOUCH_SET("Ｃ", "Ｃ")
+		ENDIF
+		;插入解除
+		CALL SEX_SET()
+	;进行乳交
+	CASE 17
+		CALL TOUCH_SET("Ｂ", "Ｐ")
+		;插入解除
+		CALL SEX_SET()
+	;进行足交
+	CASE 18
+		CALL TOUCH_SET("足", "Ｐ")
+		;插入解除
+		CALL SEX_SET()
+	;跳蛋
+	CASE 20
+		IF PENIS(MASTER)
+			CALL TOUCH_SET("指", "Ｐ")
+		ELSE
+			CALL TOUCH_SET("指", "Ｃ")
+		ENDIF
+		;调教对象插入被解除
+		TEQUIP:性交奉仕中 = 0
+	;性交系是排他设定になる
+	;正常位
+	CASE 30
+		CALL TOUCH_SET("Ｐ", "Ｖ", 1)
+	;后背位
+	CASE 31
+		CALL TOUCH_SET("Ｐ", "Ｖ", 1)
+	;骑乘位
+	CASE 32
+		CALL TOUCH_SET("Ｐ", "Ｖ", 1)
+	;对面座位
+	CASE 33
+		CALL TOUCH_SET("Ｐ", "Ｖ", 1)
+	;背面座位
+	CASE 34
+		CALL TOUCH_SET("Ｐ", "Ｖ", 1)
+	;肛门
+	CASE 35
+		CALL TOUCH_SET("Ｐ", "Ａ", 1)
+	;逆强奸
+	CASE 103
+		CALL TOUCH_SET("Ｖ", "Ｐ", 1)
+	;手淫/爱抚强制
+	CASE 50
+		;手淫
+		IF TFLAG:ACT派生
+			CALL TOUCH_SET("Ｐ", "指")
+			;调教者插入被解除
+			TEQUIP:性交中 = 0
+		;爱抚
+		ELSE
+			CALL TOUCH_SET("Ｃ", "指")
+		ENDIF
+	;口交チオ/舔阴强制
+	CASE 51
+		IF TFLAG:ACT派生
+			CALL TOUCH_SET("Ｐ", "口")
+		ELSE
+			CALL TOUCH_SET("Ｃ", "口")
+		ENDIF
+		;插入解除
+		CALL SEX_SET()
+	;乳交
+	CASE 52
+		;手根据Ｃ爱抚被解除
+		CALL TOUCH_SET("Ｐ", "指", 2)
+		CALL TOUCH_SET("Ｐ", "Ｂ")
+		CALL TOUCH_SET("Ｐ", "口")
+		;插入解除
+		CALL SEX_SET()
+	;素股
+	CASE 53
+		;调教对象的下半身接触被解除
+		CALL TOUCH_SET("Ｃ", , 2)
+		CALL TOUCH_SET("Ｐ", , 2)
+		CALL TOUCH_SET("Ａ", , 2)
+		CALL TOUCH_SET("Ｖ", , 2)
+		CALL TOUCH_SET("Ｐ", "Ｃ")
+		;插入解除
+		CALL SEX_SET()
+	;足交
+	CASE 54
+		CALL TOUCH_SET("Ｐ", "足", 1)
+		;插入解除
+		CALL SEX_SET()
+	;强制舔足
+	CASE 55
+		CALL TOUCH_SET("足", "口", 1)
+		;插入解除
+		CALL SEX_SET()
+	;深喉
+	CASE 56
+		CALL TOUCH_SET("Ｐ", "口", 1)
+		;插入解除
+		CALL SEX_SET()
+	;强制胸爱抚
+	CASE 57
+		;调教者的口接触被解除
+		CALL TOUCH_SET(, "口", 2)
+		IF TFLAG:ACT派生
+			CALL TOUCH_SET("Ｂ", "口")
+		ELSE
+			CALL TOUCH_SET("Ｂ", "指")
+		ENDIF
+	;打屁股
+	CASE 60
+		;调教者的口接触被解除
+		CALL TOUCH_SET(, "口", 2)
+	;正常位侍奉
+	CASE 95
+		CALL TOUCH_SET("Ｖ", "Ｐ", 1)
+	;后背位侍奉
+	CASE 96
+		CALL TOUCH_SET("Ｖ", "Ｐ", 1)
+	;对面座位侍奉
+	CASE 97
+		CALL TOUCH_SET("Ｖ", "Ｐ", 1)
+	;背面座位侍奉
+	CASE 98
+		CALL TOUCH_SET("Ｖ", "Ｐ", 1)
+	;肛交侍奉
+	CASE 99
+		CALL TOUCH_SET("Ａ", "Ｐ", 1)
+	CASEELSE
+		CALL TOUCH_SET(, , 1)
+ENDSELECT
+IF TEQUIP:顔面骑乘
+	IF TALENT:男人
+		CALL TOUCH_SET("Ｐ", "口")
+	ELSE
+		CALL TOUCH_SET("Ｃ", "口")
+	ENDIF
+ELSEIF TEQUIP:顔面骑乘肛门
+	CALL TOUCH_SET("Ａ", "口")
+ENDIF
+
+;性交的设置
+CALL SEX_SET(TOSTR(TFLAG:ACT))
+
+IF TEQUIP:MASTER:接触Ｃ == 3 || TEQUIP:MASTER:接触Ｐ == 3
+	TEQUIP:调教对象Ｃ使用 = 1
+ELSEIF TEQUIP:MASTER:接触Ｃ == 4 || TEQUIP:MASTER:接触Ｐ == 4
+	TEQUIP:调教对象Ｃ使用 = 2
+ELSE
+	TEQUIP:调教对象Ｃ使用 = 0
+ENDIF
+
+SIF !TEQUIP:性交中
+	TEQUIP:接触Ｐ = 0
+IF !TEQUIP:性交奉仕中
+	TEQUIP:接触小穴 = 0
+	TEQUIP:接触Ａ = 0
+ENDIF
+
+;性交状态但解除さ受到场合、旁白显示
+IF LOCAL:1 > TEQUIP:性交奉仕中 && !TEQUIP:性交奉仕中
+	PRINTFORMW %CALLNAME:TARGET%解放了%CALLNAME:MASTER%的\@ TEQUIP:假阴茎 ? 假阴茎 # 阴茎 \@…
+	PRINTL 
+ELSEIF LOCAL:0 > TEQUIP:性交中 && !TEQUIP:性交中
+	PRINTFORMW %CALLNAME:TARGET%从%CALLNAME:MASTER%体内抽出了\@ TEQUIP:调教者假阴茎 ? 假阴茎 # 阴茎 \@…
+	PRINTL 
+ENDIF
+
+;Ｃ使用状态但解除さ受到场合、旁白显示
+IF LOCAL:2 == 2 && !TEQUIP:调教对象Ｃ使用
+	PRINTFORMW %CALLNAME:TARGET%让嘴离开了%CALLNAME:MASTER%的股间，抬起了脸…
+	PRINTL 
+ELSEIF LOCAL:2 == 1 && !TEQUIP:调教对象Ｃ使用
+	PRINTFORMW %CALLNAME:TARGET%的手离开了%CALLNAME:MASTER%的\@ PENIS(MASTER) ? 阴茎 # 阴蒂 \@…
+	PRINTL 
+ENDIF
+
+
+;-----------------------------------------------------------------------
+;MASTER和TARGET的接触部位被设定做
+;-----------------------------------------------------------------------
+@TOUCH_SET(ARGS:0, ARGS:1, ARG)
+#DIM LCOUNT
+#DIM T接触
+#DIM M接触
+#DIM 占有界限
+#LOCALSIZE 1
+;ARGS:0 TARGET的接触部位(1=阴茎 2=阴蒂 3=指 4=口 5=胸 6=小穴 7=肛门 8=足)
+;ARGS:1 MASTER的接触部位(1=阴茎 2=阴蒂 3=指 4=口 5=胸 6=小穴 7=肛门 8=足)
+;ARG 1那么设置して指定した接触被追加做。2那么指定した接触被解除做。こ的时候、ARGS:0・ARGS:1被省略したらそれぞれすべて被解除做
+T接触 = TOUCH_PART(ARGS:0)
+M接触 = TOUCH_PART(ARGS:1)
+
+;ARG但1的场合、全接触TEQUIP设置
+IF ARG == 1
+	VARSET TEQUIP:MASTER:0, 0, 101, 109
+	VARSET TEQUIP:TARGET:0, 0, 101, 109
+ENDIF
+
+;ARG但2的场合、省略さ受到TEQUIP的设置
+;MASTER的特定的部位和接触しているTARGET的接触部位被设置
+IF !T接触 && M接触 && ARG == 2
+	FOR LCOUNT, 1, 8
+		TEQUIP:(100 + LCOUNT) = TEQUIP:(100 + LCOUNT) == M接触 ? 0 # TEQUIP:(100 + LCOUNT)
+	NEXT
+	TEQUIP:MASTER:(M接触+100) = 0
+	RETURN 0
+;TARGET的特定的部位和接触しているMASTER的接触部位被设置
+ELSEIF T接触 && !M接触 && ARG == 2
+	FOR LCOUNT, 1, 8
+		TEQUIP:MASTER:(100 + LCOUNT) = TEQUIP:MASTER:(100 + LCOUNT) == T接触 ? 0 # TEQUIP:MASTER:(100 + LCOUNT)
+	NEXT
+	TEQUIP:(T接触+100) = 0
+	RETURN 0
+ENDIF
+
+;足是呼ばれ时キャンセル做
+TEQUIP:接触足 = 0
+
+;T接触但不正那么处理中断
+SIF T接触 < 1
+	RETURN 0
+
+;指(手)是二本ある的で占有界限被2に
+IF M接触 == 3
+	占有界限 = 2
+;其他的占有界限是1
+ELSE
+	占有界限 = 1
+ENDIF
+
+;全接触TEQUIPに对して处理
+FOR LCOUNT, 1, 8
+	;足那么キャンセル做
+	SIF TEQUIP:MASTER:(100 + LCOUNT) == 8
+		TEQUIP:MASTER:(100 + LCOUNT) = 0
+	;TARGET的指定部位但既に使用されていた场合
+	IF TEQUIP:MASTER:(100 + LCOUNT) == M接触
+		;解除的场合
+		IF ARG == 2
+			TEQUIP:MASTER:(100 + LCOUNT) = 0
+		;设置的场合
+		ELSE
+			;占有界限被減算
+			占有界限 --
+			;新たに加わる指定被含め、界限未满那么接触解除
+			SIF 占有界限 < 1
+				TEQUIP:MASTER:(100 + LCOUNT) = 0
+		ENDIF
+	ENDIF
+NEXT
+
+;解除的场合
+IF ARG == 2
+	TEQUIP:(T接触+100) = TEQUIP:(T接触+100) == M接触 ? 0 # TEQUIP:(T接触+100)
+;设置的场合
+ELSE
+	;新たに接触指定被加える
+	TEQUIP:(T接触+100) = M接触
+	TEQUIP:MASTER:(M接触+100) = T接触
+ENDIF
+
+@TOUCH(ARG, ARG:1, ARG:2)
+;ARG MASTER的部位被占有中的TARGET:X的部位(1=阴茎 2=阴蒂 3=指 4=口 5=胸 6=小穴 7=肛门)
+;ARG:1 MASTER的部位(1=阴茎 2=阴蒂 3=指 4=口 5=胸 6=小穴 7=肛门)
+;ARG:2 真那么上次合的履历被见る
+;戻り値 MASTER的部位被占有中的TARGET:X但いる那么そ的角色番号被返す
+;MASTER_POSE(4, 1, 1)那么上次合(第3引数)に誰か但MASTER的阴茎(第2引数)被口(第1引数)で占有していた场合、そ的角色番号被返す
+#FUNCTION
+ARG:2 = ARG:2 ? 1 # 0
+FOR LOCAL, 1, CHARANUM
+	SIF TEQUIP:LOCAL:(100 + ARG + 10 * ARG:2) == ARG:1
+		RETURNF LOCAL
+NEXT
+
+
+;-------------------------------------------------
+;関数名:TOUCH_PART
+;概　要:接触部位字符串→数値变换関数
+;引　数:ARGS:0…接触部位被表す字符串(部位名か部位番号)
+;戻り値:接触部位被表す数値
+;備　考:式中関数
+;-------------------------------------------------
+@TOUCH_PART(ARGS:0)
+#FUNCTION
+#LOCALSIZE 1
+SELECTCASE ARGS:0
+	CASE "Ｐ", "阴茎"
+		LOCAL:0 = 1
+	CASE "Ｃ", "阴蒂"
+		LOCAL:0 = 2
+	CASE "指", "手"
+		LOCAL:0 = 3
+	CASE "口", "舌"
+		LOCAL:0 = 4
+	CASE "Ｂ", "胸"
+		LOCAL:0 = 5
+	CASE "Ｖ", "小穴"
+		LOCAL:0 = 6
+	CASE "Ａ", "肛门"
+		LOCAL:0 = 7
+	CASE "足"
+		LOCAL:0 = 8
+	CASEELSE
+		LOCAL:0 = TOINT(ARGS:0)
+		LOCAL:0 = INRANGE(LOCAL:0, 1, 8) ? LOCAL:0 # 0
+ENDSELECT
+RETURNF LOCAL:0

@@ -1,0 +1,216 @@
+﻿;-------------------------------------------------------------------------------
+;
+;	TAGPRINT関数群
+;
+;===============================================================================
+;	タグ被使用した色・フォント・スタイル・按键化自由自在な显示用関数
+;	レイヤー用に作ったけど別にレイヤーじゃなくても使え增加
+;	CALL TAGPRINT(LOCALS)
+;	CALL TAGPRINTL(LOCALS)
+;	CALL TAGPRINTW(LOCALS)	和直接叩いてね
+;-------------------------------------------------------------------------------
+;	■区切り字符
+;	  デフォルトで"#"です但ARGS:1で变更但可能的的で、见容易的被使ってください
+;	  以下"#"で说明し增加
+;
+;	  ブロックＡ#← ここ →#ブロックＣ  ※左的例的区切り字符で区切ら受到部分被1ブロック
+;
+;	  こ的ブロック内でフォント被变えたり色被变えたりしてい增加
+;	  ブロック是1字符から可能で、1行あたり100ブロック直到使用可能
+;-------------------------------------------------------------------------------
+;	■字符串的仕大人是タグ方式
+;	  <COLOR_0xFFFF00><FONT_ＭＳ 明朝><BUTTON_いろ是>,いろ是にほへ和#
+;	  こ的例で是"いろ是にほへ和"被 赤色・フォント明朝・按键値"いろ是" で显示し增加
+;
+;	■使用できるタグ
+;		<COLOR_XX>	<色_XX> 			字符串的色被变えて显示、プロパティ是16進RGB(追记すれば短縮可能)
+;										も和に戻し想要时<COLOR><色>等プロパティ无しで宣言
+;		<FONT_XX>	<フォント_XX> 		字符串的フォント被变えて显示、プロパティ是フォント名(追记すれば短縮可能)
+;										も和に戻し想要时<FONT><フォント>等プロパティ无しで宣言
+;		<STYLE_XX>	<スタイル_XX>		字符串的スタイル 0～0x0F的BIT积算 ( 1 = 太字  2 = 斜体  4 = 打ち消し線  8 = 下線 )
+;										も和に戻し想要时<STYLE><スタイル>等プロパティ无しで宣言
+;		<BUTTON_XX>	<按键_XX>			字符串的按键化、プロパティ是返り値(RESULTS)
+;
+;	・プロパティ的XX是字符串、Y是数値
+;	・日英表记被无理やり両对应させた的で、同一ブロック内で同时に使わないでね
+;	・タグ的顺番是適当でOK、当然使わない的是省いてOK
+;	・いろ是にほへ和,<COLOR_0xFFFF00><FONT_ＭＳ 明朝><BUTTON_いろ是>#  こういう形式も可能
+;	  对应侍奉に是SYSTEM_TAGSPLIT.ERB的 @TAGSPLIT_TAGEND()関数的返り値被0から1に变えてください
+;-------------------------------------------------------------------------------
+;	■色和フォント是短縮表记但可能
+;	  <色_赤>和か<FONT_明朝>和かやり想要那么こ的文件的下部にある
+;	  AUTOSETCOLOR/FONTに追加してご使用ね但い增加
+;===============================================================================
+@TAGPRINT(ARGS, ARGS:1)
+#LOCALSIZE 4
+#LOCALSSIZE 2
+#DIM LCOUNT,1
+SIF ARGS == ""
+	RETURN RESULT
+VARSET LOCAL
+; RESULT退避
+LOCAL = RESULT, RESULT:1, RESULT:2
+; 区切り字符被设置
+CALL SET_NEST_SEPARATOR(ARGS:1)
+; ブロックご和に分割
+SPLIT ARGS, NEST_SEPARATOR, TAGPRINT_NEST
+; 1ブロックずつ
+FOR LCOUNT , 0 , RESULT
+	; 空那么何も不做
+	SIF TAGPRINT_NEST:LCOUNT == ""
+		CONTINUE
+	; 字符串设置
+	LOCALS = %TAGSPLIT_ONE(TAGPRINT_NEST:LCOUNT)%
+	; 色タグ
+	LOCALS:1 = %TAGSPLIT_ONE(,"COLOR") + TAGSPLIT_ONE(,"色")%
+	SIF LOCALS:1 != ""
+		CALL AUTOSETCOLOR( LOCALS:1 )
+	; フォントタグ
+	LOCALS:1 = %TAGSPLIT_ONE(,"FONT") + TAGSPLIT_ONE(,"フォント")%
+	SIF LOCALS:1 != ""
+		CALL AUTOSETFONT( LOCALS:1 )
+	; スタイルタグ
+	LOCALS:1 = %TAGSPLIT_ONE(,"STYLE") + TAGSPLIT_ONE(,"スタイル")%
+	SIF LOCALS:1 != ""
+		CALL AUTOSETSTYLE( LOCALS:1 )
+	; 按键タグ
+	LOCALS:1 = %TAGSPLIT_ONE(,"BUTTON") + TAGSPLIT_ONE(,"按键")%
+	IF LOCALS:1 != ""
+		PRINTBUTTON LOCALS, LOCALS:1
+	ELSE
+		PRINTFORM %LOCALS%
+	ENDIF
+	CALL AUTOSETCOLOR_SYS(-1)
+	CALL AUTOSETFONT( "RESET" )		;	重さ的5割以上是こいつだぁぁぁぁ
+	CALL AUTOSETSTYLE( "RESET" )
+NEXT
+RESULT = LOCAL, LOCAL:1, LOCAL:2
+RETURN RESULT
+
+@TAGPRINTL(ARGS,ARGS:1)
+CALL TAGPRINT(ARGS,ARGS:1)
+PRINTL 
+RETURN RESULT
+
+@TAGPRINTW(ARGS,ARGS:1)
+CALL TAGPRINT(ARGS,ARGS:1)
+WAITANYKEY
+RETURN RESULT
+
+@SET_NEST_SEPARATOR(ARGS)
+IF (NEST_SEPARATOR != "" ) && (ARGS != "")
+	NEST_SEPARATOR = %ARGS%
+ELSE
+	NEST_SEPARATOR = #
+ENDIF
+RETURN RESULT
+
+;-------------------------------------------------------------------------------
+;	TAGPRINTで使用した小関数
+;-------------------------------------------------------------------------------
+;	AUTOSETCOLOR(ARGS) 
+;	ARGSに放り込んだ字符串被解釈してSETCOLOR、RESETで色被戻す。
+;-------------------------------------------------------------------------------
+;	AUTOSETFONT(ARGS)
+;	ARGSに放り込んだ字符串被解釈してSETFONT、RESETでフォント戻す。
+;-------------------------------------------------------------------------------
+;===============================================================================
+@AUTOSETCOLOR(ARGS = "RESET")
+#LOCALSIZE 1
+LOCAL = RESULT
+IF ISNUMERIC(ARGS)
+	CALL AUTOSETCOLOR_SYS(TOINT(ARGS))
+ELSE
+	SELECTCASE ARGS
+		CASE "","RESET","COLOR","色"		; 初期化
+			CALL AUTOSETCOLOR_SYS(-1)
+		CASE "赤"							; --- "赤"和かやり想要场合こんな感じで追加すべし  ---
+			CALL AUTOSETCOLOR_SYS(0xFF0000)
+		CASE "緑"
+			CALL AUTOSETCOLOR_SYS(0x00FF00)
+		CASE "青"
+			CALL AUTOSETCOLOR_SYS(0x0000FF)
+		CASE "黄"
+			CALL AUTOSETCOLOR_SYS(0xFFFF00)
+		CASE "水"
+			CALL AUTOSETCOLOR_SYS(0x00FFFF)
+		CASE "紫"
+			CALL AUTOSETCOLOR_SYS(0xFF00FF)
+	ENDSELECT
+ENDIF
+RETURN RESULT
+
+;-------------------------------------------------------------------------------
+@AUTOSETCOLOR_SYS(ARG = -1)
+#DIM LCOLOR,1
+#LOCALSIZE 1
+SELECTCASE ARG
+	CASE 0 TO 0xFFFFFF						; 现在色退避した上で变更
+		LCOLOR = GETCOLOR()
+		SETCOLOR ARG
+		LOCAL = 1
+	CASE -1									; 引数无しで戻す
+		IF LOCAL == 1
+			SIF LCOLOR == GETDEFBGCOLOR()	; 万但一最初に-1で呼んでしまった场合真っ黒になるため避けておく
+				LCOLOR = GETDEFCOLOR()
+			;SIF GETCOLOR() != LCOLOR
+				SETCOLOR LCOLOR
+			LOCAL = 0
+		ENDIF
+ENDSELECT
+
+
+;-------------------------------------------------------------------------------
+;===============================================================================
+@AUTOSETFONT(ARGS = "RESET")
+#LOCALSIZE 2
+#DIMS LFONTS,1
+LOCAL = RESULT
+IF GROUPMATCH(ARGS, "","RESET","FONT","フォント")
+	; 变更されてない那么即返回
+	IF LOCAL:1 == 0
+		RETURN LOCAL
+	ELSE
+		SIF CHKFONT(LFONTS)
+			SETFONT LFONTS
+		LOCAL:1 = 0
+	ENDIF
+ELSE
+	$RESTART
+	SELECTCASE ARGS
+		CASE "哥特式"						; 短縮させ想要场合こんなかんじで追加すべし
+			ARGS = "ＭＳ 哥特式"
+			GOTO RESTART
+		CASE "明朝"
+			ARGS = "ＭＳ 明朝"
+			GOTO RESTART
+		CASEELSE
+			IF CHKFONT(ARGS)
+				LFONTS = %GETFONT()%
+				SETFONT ARGS
+				LOCAL:1 = 1
+			ENDIF
+	ENDSELECT
+ENDIF
+RETURN LOCAL
+
+
+;-------------------------------------------------------------------------------
+;===============================================================================
+@AUTOSETSTYLE(ARGS = "RESET")
+#LOCALSIZE 2
+#DIM LSTYLE,1
+LOCAL = RESULT
+IF GROUPMATCH(ARGS,"","RESET","STYLE","スタイル")
+	IF LOCAL:1 == 0
+		RETURN LOCAL
+	ELSE
+		FONTSTYLE LSTYLE
+		LOCAL:1 = 0
+	ENDIF
+ELSEIF ISNUMERIC(ARGS)
+	LSTYLE = GETSTYLE()
+	FONTSTYLE TOINT(ARGS)
+	LOCAL:1 = 1
+ENDIF
+RETURN LOCAL

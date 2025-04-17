@@ -1,0 +1,350 @@
+﻿
+;────────────────────────────────────
+;技能取得・放棄处理
+;※ARG是要求偏差(0被基準に大きいほどこ的种別で魔力被消费した但る)
+;────────────────────────────────────
+@GAIN_TALENT_AI()
+#DIM LCOUNT
+#DIM 技能数
+#DIM 可用魔力
+#DIMS 全技能名
+#DIMS 技能名, 15
+#DIMS 决定类别
+
+;取得(放棄)可能技能被技能名に格納做
+全技能名 = 调合知识/魅惑/禁忌的知识/道具使/撮影技能/舌使/灵巧的指尖/擅长捆绑/虐待狂/脏污无視/终端
+SPLIT 全技能名, "/", 技能名
+
+;技能关于的解说@これみ_201205
+;『调合知识』
+;媚药・润滑液的药效上升、また休息系营养剤ACT的回復量上升
+;『魅惑』
+;调教对象的肯定的行动に对做障壁但低くなる、また好感度上升も大きくなる
+;『禁忌的知识』
+;休息系营养剤ACT的回復量上升程度。当前正在不遇
+;『道具使』
+;全般的な道具效果的上升、また道具カスタマイズ但可能に
+;『撮影技能』
+;撮影助手ACT但可能になる
+;『舌使』
+;舌被使用做行动的效果但高まる
+;『灵巧的指尖』
+;指被使用做行动的效果但高まる
+;『擅长捆绑』
+;绳被使用做行动的效果但高まる。それ只
+;『虐待狂』
+;痛苦被与えるこ和に对して抵抗但なくなり、效果も上但り增加
+;『脏污无視』
+;脏污根据デメリット被軽減。当前正在若干不遇
+
+;技能数被カウント
+技能数 = FINDELEMENT(技能名, "终端")
+
+;こ的価格被上回る技能但存在做和破綻做
+LOCAL = 1000000
+FOR LCOUNT, 0, 技能数
+	SIF TALENT:(技能名:LCOUNT) == 0 && 技能名:LCOUNT != "虐待狂"
+		LOCAL = MIN(LOCAL, GAIN_TALENT_V(技能名:LCOUNT, 0))
+NEXT
+;使用可能魔力判定
+可用魔力 = GAIN_TALENT_MP_ABLE()
+
+SIF FLAG:DEBUG
+	PRINTFORML 『技能取得处理』(可用魔力：{可用魔力})
+
+;買えないか、買える道具但もう无い那么帰る
+IF 可用魔力 < LOCAL || LOCAL == 1000000
+	IF FLAG:DEBUG
+		IF LOCAL == 1000000
+			PRINTFORMW 不存在可取得的技能！
+		ELSE
+			PRINTFORMW 当前可用魔力不足(还有{LOCAL - 可用魔力})
+		ENDIF
+	ENDIF
+	RETURN RESULT
+ENDIF
+
+;变数被初期化
+CALL SET_CRI_VAR
+FOR LCOUNT, 0, 技能数
+	SIF TALENT:(技能名:LCOUNT) == 0 && 技能名:LCOUNT != "虐待狂"
+		CALL SET_CRI_VAR, 技能名:LCOUNT, 1
+NEXT
+
+;------------------------------------------
+;修正处理
+;------------------------------------------
+
+LOCALS = GAIN_TALENT
+
+CALL CHA_CRI_VAR, "调教者的素質"
+CALLFORM %LOCALS%_TALENT_T
+
+CALL CHA_CRI_VAR, "调教对象的素質"
+CALLFORM %LOCALS%_TALENT_M
+
+CALL CHA_CRI_VAR, "调教者的疯狂"
+CALLFORM %LOCALS%_INSANE(全技能名)
+
+CALL CHA_CRI_VAR, "価格根据修正"
+CALLFORM %LOCALS%_PRICE(全技能名)
+
+CALL CHA_CRI_VAR, "实行判定"
+CALLFORM %LOCALS%_ABLE
+
+;------------------------------------------
+;取得判定
+;------------------------------------------
+
+LOCAL:2 = 0
+
+$GAIN_TALENT
+
+;取得状況根据判定(既に取得、魔力不足)
+;判定处理
+FOR LCOUNT, 0, 技能数
+	IF TALENT:(技能名:LCOUNT) == 1 && 技能名:LCOUNT != "虐待狂"
+		CALL DIM_CRI_VAR(技能名:LCOUNT, -999)
+		CONTINUE
+	ENDIF
+	LOCAL = GET_CRI_VAR(技能名:LCOUNT + "累计")
+	IF LOCAL < 0
+		LOCAL = GAIN_TALENT_V(技能名:LCOUNT, 0) * (10 + ABS(LOCAL)) / 10
+	ELSE
+		LOCAL = GAIN_TALENT_V(技能名:LCOUNT, 0) * 10 / (10 + ABS(LOCAL))
+	ENDIF
+	SIF LOCAL > 可用魔力
+		CALL DIM_CRI_VAR(技能名:LCOUNT, -999)
+NEXT
+
+CALL DEF_CRI_VAR("最大前者")
+LOCAL = GET_CRI_VAR("決定")
+决定类别 = %RESULTS%
+CALL ANA_CRI_VAR()
+IF LOCAL != -1 && GAIN_TALENT_V(决定类别, 0) <= CFLAG:魔力
+	LOCAL = CFLAG:魔力
+	CFLAG:魔力 -= GAIN_TALENT_V(决定类别, 0)
+	可用魔力 -= GAIN_TALENT_V(决定类别, 0)
+	TALENT:决定类别 = 1
+	;錬成时口上呼び出し
+	;CALL KOJO_EVENT(110, XX)
+	;CALL VOIDLINE_IF(RESULT)
+	SKIPDISP 0
+	PRINTFORMW %CALLNAME%取得了[%决定类别%]
+	PRINTFORMW 魔力({LOCAL} → {CFLAG:魔力})
+	IF FLAG:自动模式 > 0 && FLAG:自动模式显示设定 == 1
+		SKIPDISP 1
+	ENDIF
+	LOCAL:2++
+	SIF FLAG:DEBUG
+		PRINTFORML (可用魔力：{可用魔力})
+	GOTO GAIN_TALENT
+ENDIF
+
+SIF FLAG:DEBUG
+	PRINTW 
+
+RETURN RESULT
+
+;-------------------------------------------------------------------------
+;调教者的素質参照
+;-------------------------------------------------------------------------
+@GAIN_TALENT_TALENT_T
+
+;调教者但自尊心高/低
+IF TALENT:自尊心高
+	CALL ADD_CRI_VAR("脏污无視", -6)
+ELSEIF TALENT:自尊心低
+	CALL ADD_CRI_VAR("脏污无視", 6)
+ENDIF
+
+;调教者但无关心/好奇心
+IF TALENT:无关心
+	CALL ADD_CRI_VAR("调合知识", -6)
+	CALL ADD_CRI_VAR("禁忌的知识", -6)
+	CALL ADD_CRI_VAR("道具使", -6)
+	CALL ADD_CRI_VAR("撮影技能", -6)
+ELSEIF TALENT:好奇心
+	CALL ADD_CRI_VAR("调合知识", 6)
+	CALL ADD_CRI_VAR("禁忌的知识", 6)
+	CALL ADD_CRI_VAR("道具使", 6)
+	CALL ADD_CRI_VAR("撮影技能", 6)
+ENDIF
+
+;调教者但压抑/解放
+IF TALENT:压抑
+	CALL ADD_CRI_VAR("虐待狂", TALENT:虐待狂 ? 6 # -6)
+ELSEIF TALENT:解放
+	CALL ADD_CRI_VAR("虐待狂", TALENT:虐待狂 ? -6 # 6)
+ENDIF
+
+;调教者但献身的
+SIF TALENT:献身的
+	CALL ADD_CRI_VAR("脏污无視", 3)
+	
+;-------------------------------------------------------------------------
+;调教对象的素質参照
+;-------------------------------------------------------------------------
+@GAIN_TALENT_TALENT_M
+
+;调教对象但反抗的/坦率
+IF TALENT:MASTER:反抗的
+	CALL ADD_CRI_VAR("魅惑", 6)
+	CALL ADD_CRI_VAR("擅长捆绑", 3)
+	CALL ADD_CRI_VAR("虐待狂", 3)
+ELSEIF TALENT:MASTER:坦率
+	CALL ADD_CRI_VAR("魅惑", -6)
+	CALL ADD_CRI_VAR("擅长捆绑", -3)
+	CALL ADD_CRI_VAR("虐待狂", -3)
+ENDIF
+
+;调教对象但无关心/好奇心
+IF TALENT:MASTER:无关心
+	CALL ADD_CRI_VAR("道具使", -3)
+ELSEIF TALENT:MASTER:好奇心
+	CALL ADD_CRI_VAR("道具使", 3)
+ENDIF
+
+;调教对象但缺乏感情/感情丰富
+IF TALENT:MASTER:缺乏感情
+	CALL ADD_CRI_VAR("调合知识", 3)
+ELSEIF TALENT:MASTER:感情丰富
+	CALL ADD_CRI_VAR("调合知识", -3)
+ENDIF
+
+;调教对象但渴望关注
+SIF TALENT:MASTER:渴望关注
+	CALL ADD_CRI_VAR("撮影技能", 6)
+
+;调教对象但贞操观念/不在意贞操
+IF TALENT:MASTER:贞操观念
+	CALL ADD_CRI_VAR("魅惑", 6)
+ELSEIF TALENT:MASTER:不在意贞操
+	CALL ADD_CRI_VAR("魅惑", -3)
+ENDIF
+
+;调教对象但压抑/解放
+IF TALENT:MASTER:压抑
+	CALL ADD_CRI_VAR("魅惑", 3)
+ELSEIF TALENT:MASTER:解放
+	CALL ADD_CRI_VAR("魅惑", -3)
+ENDIF
+
+;调教对象但羞涩/无耻
+IF TALENT:MASTER:羞涩
+	CALL ADD_CRI_VAR("撮影技能", 6)
+ELSEIF TALENT:MASTER:无耻
+	CALL ADD_CRI_VAR("撮影技能", -6)
+ENDIF
+
+;调教对象但怕疼/耐痛
+IF TALENT:MASTER:怕疼
+	CALL ADD_CRI_VAR("擅长捆绑", 6)
+	CALL ADD_CRI_VAR("虐待狂", 6)
+ELSEIF TALENT:MASTER:耐痛
+	CALL ADD_CRI_VAR("擅长捆绑", -3)
+	CALL ADD_CRI_VAR("虐待狂", -3)
+ENDIF
+
+;调教对象但易湿/不易湿
+IF TALENT:MASTER:易湿
+	CALL ADD_CRI_VAR("调合知识", 6)
+	CALL ADD_CRI_VAR("舌使", 3)
+ELSEIF TALENT:MASTER:不易湿
+	CALL ADD_CRI_VAR("调合知识", -6)
+	CALL ADD_CRI_VAR("舌使", -3)
+ENDIF
+
+;调教对象但药毒耐性
+SIF TALENT:MASTER:药毒耐性
+	CALL ADD_CRI_VAR("调合知识", -9)
+
+;调教对象但自慰し容易
+SIF TALENT:MASTER:自慰し容易
+	CALL ADD_CRI_VAR("擅长捆绑", 3)
+
+;调教对象但承认快感/否定快感
+IF TALENT:MASTER:承认快感
+	CALL ADD_CRI_VAR("魅惑", -3)
+ELSEIF TALENT:MASTER:否定快感
+	CALL ADD_CRI_VAR("魅惑", 3)
+ENDIF
+
+;调教对象但抖Ｍ
+IF TALENT:MASTER:抖Ｍ
+	CALL ADD_CRI_VAR("擅长捆绑", 3)
+	CALL ADD_CRI_VAR("虐待狂", 3)
+ENDIF
+
+;调教对象但倒错的
+SIF TALENT:MASTER:倒错的
+	CALL ADD_CRI_VAR("虐待狂", 6)
+
+;调教对象但回复快/回复慢
+IF TALENT:MASTER:回复快
+	CALL ADD_CRI_VAR("调合知识", -6)
+ELSEIF TALENT:MASTER:回复慢
+	CALL ADD_CRI_VAR("调合知识", 6)
+ENDIF
+
+;------------------------------------------
+;调教者的疯狂
+;------------------------------------------
+@GAIN_TALENT_INSANE(ARGS)
+#DIM LCOUNT
+#DIM 技能数
+#DIMS 技能名, 15
+
+SIF !TALENT:疯狂
+	RETURN 0
+
+;取得(放棄)可能技能被技能名に格納做
+SPLIT ARGS, "/", 技能名
+
+;技能数被カウント
+技能数 = FINDELEMENT(技能名, "终端")
+
+FOR LCOUNT, 0, 技能数
+	SIF TALENT:(技能名:LCOUNT) == 0 && 技能名:LCOUNT != "虐待狂"
+		CALL MUL_CRI_VAR(技能名:LCOUNT, -50, 100)
+NEXT
+
+;------------------------------------------
+;価格根据修正
+;------------------------------------------
+@GAIN_TALENT_PRICE(ARGS)
+#DIM LCOUNT
+#DIM 技能数
+#DIMS 技能名, 15
+
+;取得(放棄)可能技能被技能名に格納做
+SPLIT ARGS, "/", 技能名
+
+;技能数被カウント
+技能数 = FINDELEMENT(技能名, "终端")
+
+FOR LCOUNT, 0, 技能数
+	LOCAL = GET_CRI_VAR(技能名:LCOUNT + "累计")
+	IF LOCAL > 0
+		CALL MUL_CRI_VAR(技能名:LCOUNT, 100 * POWER(2, 10 + TALENT:冲动的 - TALENT:自制的 + TALENT:渴望关注) / GAIN_TALENT_V(技能名:LCOUNT, 0))
+	ELSEIF LOCAL < 0
+		CALL MUL_CRI_VAR(技能名:LCOUNT, 100 * GAIN_TALENT_V(技能名:LCOUNT, 0) / POWER(2, 10 + TALENT:冲动的 - TALENT:自制的 + TALENT:渴望关注))
+	ENDIF
+NEXT
+
+;------------------------------------------
+;实行判定
+;------------------------------------------
+@GAIN_TALENT_ABLE
+
+;现仕大人で是虐待狂素質付けたり外したり被繰り返しかねない的で
+CALL DIM_CRI_VAR("虐待狂", -999)
+CALL DIM_CRI_VAR("着衣PLAY喜欢", -999)
+
+;------------------------------------------
+;使用可能魔力判定
+;------------------------------------------
+@GAIN_TALENT_MP_ABLE()
+#FUNCTION
+;魔力不足基準设定
+RETURNF LIMIT(CFLAG:魔力 * (8 + MANAGE_MP_PROP() + TALENT:习得快 - TALENT:习得慢) * 10 / 100, 0, CFLAG:魔力)

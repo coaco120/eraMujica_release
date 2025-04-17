@@ -1,0 +1,40 @@
+﻿;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+;
+;	Module		:AUTO_SPLIT.ERB
+;	Facility	:引数和して渡さ受到ARGSから、特定的字符串ARGS:1で区切った场合的ARG番目的字符串被返す関数@AUTO_SPLIT
+;
+;	Licence		:ライセンスフリー。
+;
+;	Modification Data:
+;
+;	Edit	Date			Author					Reason
+;	001		2011/09/25		Ｎ鳥					新規作成
+;	002		2013/01/09		ぱ。					RESULT的保護
+;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+;
+;@AUTO_SPLIT
+;ARGS   操作做字符串
+;ARGS:1 ARGS被区切る字符串
+;ARG 　 ARGS被区切った后で、操作做部位。ARGS:2但指定されている场合、发见したARGS:2的场所+ARG番目的字符串被返す。
+;ARGS:2 検索做字符串
+;================================================
+@AUTO_SPLIT(ARGS , ARGS:1 , ARG = 0 , ARGS:2 = "")
+#FUNCTIONS
+#LOCALSSIZE 200
+#LOCALSIZE 2
+VARSET LOCALS
+SPLIT ARGS , ARGS:1 , LOCALS , LOCAL:1
+IF ARGS:2 != ""
+	LOCAL = FINDELEMENT(LOCALS , ARGS:2 , , , 1)
+	IF LOCAL != -1
+		SIF ARG + LOCAL < 0
+			PRINTFORML 错误：函数@AUTO_SPLIT在第{LOCAL}个的字符串中发现%ARGS:2%第三参数{ARG}的指定不正确。
+		RETURNF LOCALS:(LOCAL + ARG)
+	ELSE
+		RETURNF
+	ENDIF
+ELSE
+	SIF ARG < 0
+		PRINTFORML 错误：函数@AUTO_SPLIT的第三参数作为{ARG}被交付
+	RETURNF LOCALS:ARG
+ENDIF

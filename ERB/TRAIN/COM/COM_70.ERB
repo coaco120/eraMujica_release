@@ -1,0 +1,93 @@
+﻿;爱抚系反应指令群
+;────────────────────────────────────
+;070,高潮！
+;────────────────────────────────────
+@COM70
+;逃脱SOURCE減少
+TIMES SOURCE:MASTER:逃脱 , 0.70
+;心理创伤化減速
+TIMES SOURCE:MASTER:心理创伤 , 0.80
+;屈从、达成、乐趣SOURCE増加
+SOURCE:MASTER:屈从 += 50 + (MARK:MASTER:快乐刻印 + 1) * (SOURCE:MASTER:快Ｃ + SOURCE:MASTER:快Ｖ + SOURCE:MASTER:快Ａ + SOURCE:MASTER:快Ｂ) * CFLAG:MASTER:调教等级 / 200
+SOURCE:MASTER:达成 += 100 + (CFLAG:MASTER:调教等级 + 5) * (SOURCE:MASTER:快Ｃ + SOURCE:MASTER:快Ｖ + SOURCE:MASTER:快Ａ + SOURCE:MASTER:快Ｂ) / 100
+SOURCE:MASTER:乐趣 += 100 + SOURCE:MASTER:快Ｃ / 25 + SOURCE:MASTER:快Ｖ / 25 + SOURCE:MASTER:快Ａ / 25 + SOURCE:MASTER:快Ｂ / 25
+;修正値初期化
+VARSET LOCAL
+;素質修正値设定
+LOCAL = (CFLAG:好感 / 500) + TALENT:好色 - TALENT:清楚 + TALENT:献身的 - TALENT:被动
+LOCAL = LIMIT(LOCAL, 1, 5)
+;施虐修正値设定
+;3<=(LOCAL:1)<=8
+SIF TALENT:虐待狂
+	LOCAL:1 += 1
+SIF TALENT:坏心眼
+	LOCAL:1 += 1
+IF ABL:施虐 >= ABL:爱抚
+	LOCAL:1 += 1
+ELSE
+	LOCAL:1 -= 1
+ENDIF
+SIF TALENT:好心眼
+	LOCAL:1 -= 1
+LOCAL:1 += 5
+;素質によって焦虑终了
+IF RAND:LOCAL > 0
+	TCVAR:MASTER:焦虑度 = 1
+	;施虐修正によって焦虑延长
+	IF RAND:(LOCAL:1) >= RAND:5
+		;技巧によって期间決定
+		LOCAL:2 = ABL:技巧 / 5 + 2
+		SIF LOCAL:2 > 4
+			LOCAL:2 = 4
+		TCVAR:MASTER:焦虑度 += LOCAL:2
+	ENDIF
+ENDIF
+IF TCVAR:MASTER:焦虑度 == 1
+	;派生：高潮あげる
+	TFLAG:REACT派生 = 1
+ELSEIF TCVAR:MASTER:焦虑度 > 1
+	;派生：高潮あげない
+	TFLAG:REACT派生 = 2
+ELSE
+	;派生：「ふーん」
+	TFLAG:REACT派生 = 0
+ENDIF
+;高潮状态へ移行
+TCVAR:MASTER:用于控制高潮行为 = 1
+;COM分类
+CALL SET_COMGRO("接受")
+;COM印象
+CALL SET_COMIMP("好印象大")
+;依存度变化
+CALL ADD_DEPEND(+10, +6)
+RETURN 1
+
+
+;────────────────────────────────────
+;071,接吻
+;────────────────────────────────────
+@COM71
+;达成、乐趣SOURCE増加
+SOURCE:MASTER:情爱 += 35 + CFLAG:M好感 / 40 + GET_ABL(MASTER, "奉仕精神") * 3
+SOURCE:MASTER:达成 += (CFLAG:M好感 + 500) * (GET_ABL(MASTER, "奉仕精神") + 10) * (GET_ABL(MASTER, "技巧") + 10) / 10000
+SOURCE:MASTER:乐趣 += (CFLAG:M好感 + 100) * (GET_TRAINLV(TARGET) + 10) / 50
+;COM分类
+CALL SET_COMGRO("积极的服从")
+;COM印象
+CALL SET_COMIMP("好印象大")
+;忍耐标志解消
+TCVAR:MASTER:忍耐 = 0
+;ACT但接吻不是场合的脏污移动
+IF !IS_NOWACTNAME("接吻")
+	IF IS_NOWACTNAME("强制舔足")
+		;脏污的移动
+		CALL MOVE_STAIN("足", TARGET, "口", MASTER)
+	ELSE
+		;脏污的移动
+		CALL MOVE_STAIN("口", TARGET, "口", MASTER)
+	ENDIF
+ENDIF
+;依存度变化
+CALL ADD_DEPEND(+5, +10)
+RETURN 1
+;接吻経験追加是@EXP_CHECKで行う

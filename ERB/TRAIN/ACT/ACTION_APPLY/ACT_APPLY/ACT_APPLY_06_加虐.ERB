@@ -1,0 +1,327 @@
+﻿;────────────────────────────────────
+;060,打屁股（Ｓ/Ｎ/Ｈ/Ａ）[罰]（接触、疼痛、中毒充足）
+;────────────────────────────────────
+@ACTION_APPLY_60
+;调教者虐待狂素質、技巧、施虐、调教等级に应じて疼痛SOURCE増加
+SOURCE:MASTER:疼痛 = 80 * (TALENT:虐待狂 + 1) + GET_ABL(TARGET, "技巧") * (GET_ABL(TARGET, "施虐") + 10) * 15 / 100 + (GET_ABL(TARGET, "技巧") / 10 + GET_TRAINLV(TARGET) + 1) * (TALENT:虐待狂 * 3 + 1) * (10 + TALENT:虐待狂)
+;疼痛SOURCEに应じて接触SOURCE増加
+SOURCE:MASTER:接触 = 200 + SOURCE:MASTER:疼痛 / 10
+;调教对象受虐气质、痛苦中毒、疼痛SOURCEに应じて中毒充足SOURCE増加
+SOURCE:MASTER:中毒充足 = GET_ABL(MASTER, "受虐气质") * (GET_ABL(MASTER, "痛苦中毒") - 10) * (GET_ABL(MASTER, "痛苦中毒") + 10) * SOURCE:MASTER:疼痛 / 100000
+;中毒充足SOURCE但负的値被和らないよう调整
+SOURCE:MASTER:中毒充足 = SOURCE:MASTER:中毒充足 < 0 ? 0 # SOURCE:MASTER:中毒充足
+;顔面骑乘系解除
+CALL FACESITTING_SET(0)
+;调教者自慰被中断
+TEQUIP:自慰中 &= ~2
+;调教者受虐气质に应じて勃起度上升
+TCVAR:MASTER:这回合的勃起 += 50 + (GET_ABL(MASTER, "受虐气质") - 20) * 2
+TFLAG:经过时间 += 2
+
+;────────────────────────────────────
+;061,鞭（Ｎ/Ｈ/Ａ）[罰]（疼痛、中毒充足、心理创伤）
+;────────────────────────────────────
+@ACTION_APPLY_61
+;调教者虐待狂素質、技巧、施虐、调教等级に应じて疼痛SOURCE増加
+SOURCE:MASTER:疼痛 = 250 * (TALENT:虐待狂 + 1) + GET_ABL(TARGET, "技巧") * (GET_ABL(TARGET, "施虐") + 20) / 10 + (GET_ABL(TARGET, "技巧") + GET_ABL(TARGET, "技巧") + GET_TRAINLV(TARGET) * 10) * (TALENT:虐待狂 * 2 + 1) * (10 + TALENT:虐待狂) / 10
+;好心眼素質但存在做和疼痛SOURCE0.9倍
+SIF TALENT:好心眼
+	TIMES SOURCE:MASTER:疼痛 , 0.90
+;调教对象受虐气质、痛苦中毒、疼痛SOURCEに应じて中毒充足SOURCE増加
+SOURCE:MASTER:中毒充足 = GET_ABL(MASTER, "受虐气质") * (GET_ABL(MASTER, "痛苦中毒") - 10) * (GET_ABL(MASTER, "痛苦中毒") + 10) * SOURCE:MASTER:疼痛 / 100000
+;中毒充足SOURCE但负的値被和らないよう调整
+SOURCE:MASTER:中毒充足 = SOURCE:MASTER:中毒充足 < 0 ? 0 # SOURCE:MASTER:中毒充足
+;疼痛SOURCEに应じて心理创伤SOURCE増加、中毒充足SOURCEによって減少
+SOURCE:MASTER:心理创伤 = SOURCE:MASTER:疼痛 / 2 - SOURCE:MASTER:中毒充足
+;心理创伤SOURCE但负的値被和らないよう调整
+SOURCE:MASTER:心理创伤 = SOURCE:MASTER:心理创伤 < 0 ? 0 # SOURCE:MASTER:心理创伤
+;心理创伤(刻印)的元但こ的调教だった场合、心理创伤SOURCE被1.5倍に做
+SIF CFLAG:MASTER:心理创伤 == 61
+	TIMES SOURCE:MASTER:心理创伤 , 1.50
+;顔面骑乘系解除
+CALL FACESITTING_SET(0)
+;调教者自慰被中断
+TEQUIP:自慰中 &= ~2
+;调教者受虐气质に应じて勃起度上升
+TCVAR:MASTER:这回合的勃起 += 50 + (GET_ABL(MASTER, "受虐气质") - 20) * 3
+TFLAG:经过时间 += 2
+
+;────────────────────────────────────
+;062,针（Ｈ/Ａ）[罰]（疼痛、逃脱、中毒充足、心理创伤、出血）
+;────────────────────────────────────
+@ACTION_APPLY_62
+;调教者虐待狂素質、技巧、施虐、东方不败、调教等级に应じて疼痛SOURCE増加
+SOURCE:MASTER:疼痛 = 450 * (TALENT:虐待狂 + 1) + GET_ABL(TARGET, "技巧") * (GET_ABL(TARGET, "施虐") + 1) * (2 + TALENT:东方不败 * 3) / 100 + (GET_ABL(TARGET, "技巧") + GET_ABL(TARGET, "技巧") + GET_TRAINLV(TARGET) * 10) * (TALENT:虐待狂 + TALENT:东方不败 * 2 + 1) * (10 + TALENT:虐待狂) / 10
+;好心眼素質但存在做和疼痛SOURCE0.8倍
+SIF TALENT:好心眼
+	TIMES SOURCE:MASTER:疼痛 , 0.80
+;疼痛SOURCE、调教对象调教等级、受虐气质、痛苦中毒に应じて逃脱SOURCE増加
+SOURCE:MASTER:逃脱 = 200 + SOURCE:MASTER:疼痛 / 2 - CFLAG:MASTER:调教等级 * 30 - GET_ABL(MASTER, "受虐气质") * 6 - GET_ABL(MASTER, "痛苦中毒") * 20
+;逃脱SOURCE但负的値被和らないよう调整
+SOURCE:MASTER:逃脱 = SOURCE:MASTER:逃脱 < 0 ? 0 # SOURCE:MASTER:逃脱
+;调教对象受虐气质、痛苦中毒、疼痛SOURCEに应じて中毒充足SOURCE増加
+SOURCE:MASTER:中毒充足 = GET_ABL(MASTER, "受虐气质") * (GET_ABL(MASTER, "痛苦中毒") - 10) * (GET_ABL(MASTER, "痛苦中毒") + 10) * SOURCE:MASTER:疼痛 / 100000
+;中毒充足SOURCE但负的値被和らないよう调整
+SOURCE:MASTER:中毒充足 = SOURCE:MASTER:中毒充足 < 0 ? 0 # SOURCE:MASTER:中毒充足
+;疼痛SOURCEに应じて心理创伤SOURCE増加、中毒充足SOURCEによって減少
+SOURCE:MASTER:心理创伤 = SOURCE:MASTER:疼痛 / 2 - SOURCE:MASTER:中毒充足
+;心理创伤SOURCE但负的値被和らないよう调整
+SOURCE:MASTER:心理创伤 = SOURCE:MASTER:心理创伤 < 0 ? 0 # SOURCE:MASTER:心理创伤
+;心理创伤(刻印)的元但こ的调教だった场合、心理创伤SOURCE被1.5倍に做
+SIF CFLAG:MASTER:心理创伤 == 62
+	TIMES SOURCE:MASTER:心理创伤 , 1.50
+;出血
+;男/扶她那么阴茎、女那么小穴に血液脏污追加
+IF TALENT:MASTER:扶她 || TALENT:MASTER:扶她
+	STAIN:MASTER:阴茎 |= 32
+ELSE
+	STAIN:MASTER:小穴 |= 32
+ENDIF
+;胸に血液脏污追加
+STAIN:MASTER:胸 |= 32
+;顔面骑乘系解除
+CALL FACESITTING_SET(0)
+;调教者、调教对象自慰被中断
+TEQUIP:自慰中 = 0
+;调教者受虐气质に应じて勃起度上升
+TCVAR:MASTER:这回合的勃起 += 50 + (GET_ABL(MASTER, "受虐气质") - 20) * 4
+TFLAG:经过时间 += 2
+
+;────────────────────────────────────
+;063,绳（Ｓ/Ｎ/Ｈ/Ａ）[罰]（捆绑、中毒充足）
+;────────────────────────────────────
+@ACTION_APPLY_63
+;本当是ろんな縛り方被作り想要但面倒すぎ增加…暫定的に縛り的强度只被TEQUIP:绳に记入し增加
+;捆绑时
+IF TFLAG:ACT派生 == 0
+	;反抗刻印、调教者调教等级、技巧、擅长捆绑素質に应じて捆绑SOURCE増加
+	SOURCE:MASTER:捆绑 = 200 + (MARK:反抗刻印 + GET_TRAINLV(TARGET)) * (GET_ABL(TARGET, "技巧") + 10) * 5 * (TALENT:擅长捆绑 * 3 + 2) / 10
+	;受虐气质、捆绑中毒、捆绑SOURCEに应じて中毒充足SOURCE増加
+	SOURCE:MASTER:中毒充足 = GET_ABL(MASTER, "受虐气质") * (GET_ABL(MASTER, "捆绑中毒") - 10) * (GET_ABL(MASTER, "捆绑中毒") + 10) * SOURCE:MASTER:捆绑 / 100000
+	;中毒充足SOURCE但负的値被和らないよう调整
+	SOURCE:MASTER:中毒充足 = SOURCE:MASTER:中毒充足 < 0 ? 0 # SOURCE:MASTER:中毒充足
+	;绳で捆绑(捆绑SOURCEに应じて强度上升)
+	TEQUIP:绳 = 1 + SOURCE:MASTER:捆绑 / 500
+;解除时
+ELSE
+	;绳で捆绑解除
+	TEQUIP:绳 = 0
+ENDIF
+;顔面骑乘系解除
+CALL FACESITTING_SET(0)
+;调教者、调教对象自慰被中断
+TEQUIP:自慰中 = 0
+;调教者受虐气质に应じて勃起度上升
+TCVAR:MASTER:这回合的勃起 += 50 + (GET_ABL(MASTER, "受虐气质") - 20)
+TFLAG:经过时间 += 2
+
+;────────────────────────────────────
+;064,眼罩（Ｓ/Ｎ/Ｈ/Ａ）[罰]（捆绑、中毒充足、心理创伤）
+;────────────────────────────────────
+@ACTION_APPLY_64
+;装着时
+IF TFLAG:ACT派生 == 0
+	;施虐、调教者调教等级、技巧、擅长捆绑素質に应じて捆绑SOURCE増加
+	SOURCE:MASTER:捆绑 = 100 + (GET_ABL(TARGET, "施虐") + GET_TRAINLV(TARGET) * 10) * (GET_ABL(TARGET, "技巧") + 10) * 5 * (TALENT:擅长捆绑 + 2) / 10
+	;受虐气质、捆绑中毒、捆绑SOURCEに应じて中毒充足SOURCE増加
+	SOURCE:MASTER:中毒充足 = GET_ABL(MASTER, "受虐气质") * (GET_ABL(MASTER, "捆绑中毒") - 10) * (GET_ABL(MASTER, "捆绑中毒") + 10) * SOURCE:MASTER:捆绑 / 100000
+	;中毒充足SOURCE但负的値被和らないよう调整
+	SOURCE:MASTER:中毒充足 = SOURCE:MASTER:中毒充足 < 0 ? 0 # SOURCE:MASTER:中毒充足
+	;捆绑SOURCEに应じて心理创伤SOURCE増加、中毒充足SOURCEによって減少
+	SOURCE:MASTER:心理创伤 = SOURCE:MASTER:捆绑 / 2 - SOURCE:MASTER:中毒充足
+	;心理创伤SOURCE但负的値被和らないよう调整
+	SOURCE:MASTER:心理创伤 = SOURCE:MASTER:心理创伤 < 0 ? 0 # SOURCE:MASTER:心理创伤
+	;心理创伤(刻印)的元但こ的调教だった场合、心理创伤SOURCE被1.5倍に做
+	SIF CFLAG:MASTER:心理创伤 == 64
+		TIMES SOURCE:MASTER:心理创伤 , 1.50
+	;眼罩装着
+	TEQUIP:眼罩 = 1
+;解除时
+ELSE
+	;眼罩解除
+	TEQUIP:眼罩 = 0
+ENDIF
+;顔面骑乘系解除
+CALL FACESITTING_SET(0)
+;调教者自慰被中断
+TEQUIP:自慰中 &= ~2
+;调教者受虐气质に应じて勃起度上升
+TCVAR:MASTER:这回合的勃起 += 50 + (GET_ABL(MASTER, "受虐气质") - 20)
+TFLAG:经过时间 += 1
+
+;────────────────────────────────────
+;065,口球（Ｎ/Ｈ/Ａ）[罰]（捆绑、中毒充足、心理创伤）
+;────────────────────────────────────
+@ACTION_APPLY_65
+;装着时
+IF TFLAG:ACT派生 == 0
+	;施虐、调教者调教等级、擅长捆绑素質に应じて捆绑SOURCE増加
+	SOURCE:MASTER:捆绑 = 350 + (GET_ABL(TARGET, "施虐") + GET_TRAINLV(TARGET) * 10) * (TALENT:擅长捆绑 + 1)
+	;受虐气质、捆绑中毒、捆绑SOURCEに应じて中毒充足SOURCE増加
+	SOURCE:MASTER:中毒充足 = GET_ABL(MASTER, "受虐气质") * (GET_ABL(MASTER, "捆绑中毒") - 10) * (GET_ABL(MASTER, "捆绑中毒") + 10) * SOURCE:MASTER:捆绑 / 100000
+	;中毒充足SOURCE但负的値被和らないよう调整
+	SOURCE:MASTER:中毒充足 = SOURCE:MASTER:中毒充足 < 0 ? 0 # SOURCE:MASTER:中毒充足
+	;捆绑SOURCEに应じて心理创伤SOURCE増加、中毒充足SOURCEによって減少
+	SOURCE:MASTER:心理创伤 = SOURCE:MASTER:捆绑 / 2 - SOURCE:MASTER:中毒充足
+	;心理创伤SOURCE但负的値被和らないよう调整
+	SOURCE:MASTER:心理创伤 = SOURCE:MASTER:心理创伤 < 0 ? 0 # SOURCE:MASTER:心理创伤
+	;心理创伤(刻印)的元但こ的调教だった场合、心理创伤SOURCE被1.5倍に做
+	SIF CFLAG:MASTER:心理创伤 == 65
+		TIMES SOURCE:MASTER:心理创伤 , 1.50
+	;口球装着
+	TEQUIP:口球 = 1
+;解除时
+ELSE
+	;口球解除
+	TEQUIP:口球 = 0
+ENDIF
+;顔面骑乘系解除
+CALL FACESITTING_SET(0)
+;调教者自慰被中断
+TEQUIP:自慰中 &= ~2
+;调教者受虐气质に应じて勃起度上升
+TCVAR:MASTER:这回合的勃起 += 50 + (GET_ABL(MASTER, "受虐气质") - 2)
+TFLAG:经过时间 += 1
+
+;────────────────────────────────────
+;066,辱骂（Ｎ/Ｈ/Ａ）[罰]（逃脱、中毒充足）
+;────────────────────────────────────
+@ACTION_APPLY_66
+;调教者会话、施虐、次序に应じて逃脱SOURCE増加
+SOURCE:MASTER:逃脱 = 200 + (GET_ABL(TARGET, "会话") + 10) * (GET_ABL(TARGET, "施虐") + 10) * CFLAG:次序 * 5 / 100
+;受虐气质、捆绑中毒、逃脱SOURCEに应じて中毒充足SOURCE増加
+SOURCE:MASTER:中毒充足 = GET_ABL(MASTER, "受虐气质") * (GET_ABL(MASTER, "捆绑中毒") - 10) * (GET_ABL(MASTER, "捆绑中毒") + 10) * SOURCE:MASTER:逃脱 / 100000
+;中毒充足SOURCE但负的値被和らないよう调整
+SOURCE:MASTER:中毒充足 = SOURCE:MASTER:中毒充足 < 0 ? 0 # SOURCE:MASTER:中毒充足
+;中毒充足SOURCE分逃脱SOURCE減少(フィードバック)
+SOURCE:MASTER:逃脱 -= SOURCE:MASTER:中毒充足
+;逃脱SOURCE但负的値被和らないよう调整
+SOURCE:MASTER:逃脱 = SOURCE:MASTER:逃脱 < 0 ? 0 # SOURCE:MASTER:逃脱
+TFLAG:经过时间 += 1
+;话題『辱骂』被既出和做
+TFLAG:已经出现的话题 |= 64
+
+;────────────────────────────────────
+;067,三角木马（Ｈ/Ａ）[罰]（快Ｖ、情爱逆、疼痛、捆绑、逃脱、中毒充足、心理创伤）
+;────────────────────────────────────
+@ACTION_APPLY_67
+;开始时
+IF TFLAG:ACT派生 == 0
+	;受虐气质、痛苦中毒、抖Ｍ素質に应じて快ＶSOURCE増加
+	SOURCE:MASTER:快Ｖ = (GET_ABL(MASTER, "受虐气质") - 30) * GET_ABL(MASTER, "痛苦中毒") * (TALENT:MASTER:抖Ｍ + 2) / 2
+	;快ＶSOURCE但负的値被和らないよう调整
+	SOURCE:MASTER:快Ｖ = SOURCE:MASTER:快Ｖ < 0 ? 0 # SOURCE:MASTER:快Ｖ
+	;调教者施虐、技巧、调教等级、虐待狂素質に应じて疼痛SOURCE増加
+	SOURCE:MASTER:疼痛 = 1000 + GET_ABL(TARGET, "施虐") * GET_ABL(TARGET, "技巧") * 50 / 100 + GET_TRAINLV(TARGET) * (TALENT:虐待狂 * 3 + 2) * 20
+	;反抗刻印、技巧に应じて捆绑SOURCE増加
+	SOURCE:MASTER:捆绑 = 50 + (MARK:反抗刻印 + 1) * (GET_ABL(TARGET, "技巧") + 10)
+	;疼痛SOURCEに应じて逃脱SOURCE増加、调教等级、受虐气质、痛苦中毒によって減少
+	SOURCE:MASTER:逃脱 = 1800 + SOURCE:MASTER:疼痛 / 2 - CFLAG:MASTER:调教等级 * 50 - GET_ABL(MASTER, "受虐气质") * 20 - GET_ABL(MASTER, "痛苦中毒") * 60
+	;逃脱SOURCE但负的値被和らないよう调整
+	SOURCE:MASTER:逃脱 = SOURCE:MASTER:逃脱 < 0 ? 0 # SOURCE:MASTER:逃脱
+	;受虐气质、痛苦中毒、疼痛SOURCEに应じて中毒充足SOURCE増加
+	SOURCE:MASTER:中毒充足 = GET_ABL(MASTER, "受虐气质") * (GET_ABL(MASTER, "痛苦中毒") - 30) * (GET_ABL(MASTER, "痛苦中毒") + 10) * SOURCE:MASTER:疼痛 / 80000
+	;中毒充足SOURCE但负的値被和らないよう调整
+	SOURCE:MASTER:中毒充足 = SOURCE:MASTER:中毒充足 < 0 ? 0 # SOURCE:MASTER:中毒充足
+	;疼痛、捆绑SOURCEに应じて心理创伤SOURCE増加、中毒充足SOURCEによって減少
+	SOURCE:MASTER:心理创伤 = SOURCE:MASTER:疼痛 / 2 + SOURCE:MASTER:捆绑 / 5 - SOURCE:MASTER:中毒充足
+	;心理创伤SOURCE但负的値被和らないよう调整
+	SOURCE:MASTER:心理创伤 = SOURCE:MASTER:心理创伤 < 0 ? 0 # SOURCE:MASTER:心理创伤
+	;心理创伤(刻印)的元但こ的调教だった场合、心理创伤SOURCE被1.5倍に做
+	SIF CFLAG:MASTER:心理创伤 == 67
+		TIMES SOURCE:MASTER:心理创伤 , 1.50
+	;中毒充足SOURCEに应じて情爱SOURCE増加、疼痛、逃脱、心理创伤SOURCEによって減少
+	SOURCE:MASTER:情爱 += SOURCE:MASTER:中毒充足 - SOURCE:MASTER:疼痛 - SOURCE:MASTER:逃脱 - SOURCE:MASTER:心理创伤
+	;情爱SOURCE但正的値被和らないよう调整
+	SOURCE:MASTER:情爱 = SOURCE:MASTER:情爱 > 0 ? 0 # SOURCE:MASTER:情爱
+	;三角木马に乗せる
+	TEQUIP:三角木马 = 1
+;终了时
+ELSE
+	;三角木马から降ろす
+	TEQUIP:三角木马 = 0
+ENDIF
+;顔面骑乘系解除
+CALL FACESITTING_SET(0)
+;调教者、调教对象自慰被中断
+TEQUIP:自慰中 = 0
+;调教者受虐气质に应じて勃起度上升
+TCVAR:MASTER:这回合的勃起 += 50 + (GET_ABL(MASTER, "受虐气质") - 30) * 4
+TFLAG:经过时间 += 3
+
+@ACTION_APPLY2_67
+;MASTER但处女那么、处女丧失但起こる
+TCVAR:MASTER:处女丧失 = TALENT:MASTER:处女
+
+;────────────────────────────────────
+;068,灌肠器＋肛塞（Ｎ/Ｈ/Ａ）[罰]（快Ａ、疼痛、捆绑<=肛塞的こ和、逃脱、中毒充足、心理创伤）
+;────────────────────────────────────
+@ACTION_APPLY_68
+;注入/追加
+IF TFLAG:ACT派生 == 0 || TFLAG:ACT派生 == 2
+	;灌肠液注入(量1か2)
+	IF TFLAG:ACT派生 == 0
+		TEQUIP:灌肠器＋肛塞 = 1 + RAND:2
+	;灌肠液追加(量1から3)
+	ELSE
+		TEQUIP:灌肠器＋肛塞 += 1 + RAND:3
+	ENDIF
+	;调教对象调教等级、技巧、调教者道具使素質、调教对象抖Ｍ素質、液量に应じて快ＡSOURCE増加
+	SOURCE:MASTER:快Ａ = 20 * (CFLAG:MASTER:调教等级 + 1) + (GET_ABL(MASTER, "技巧") - 30) * GET_ABL(MASTER, "受虐气质") * (TALENT:道具使 + TALENT:MASTER:抖Ｍ + TEQUIP:灌肠器＋肛塞) * 30 / 100
+	;快ＡSOURCE但负的値被和らないよう调整
+	SOURCE:MASTER:快Ａ = SOURCE:MASTER:快Ａ < 0 ? 0 # SOURCE:MASTER:快Ａ
+	;ここ的疼痛是腹痛的处理です。経験不足的ほう是肛门未开发根据疼痛です。
+	;液量に应じて疼痛SOURCE増加
+	SOURCE:MASTER:疼痛 = 200 + TEQUIP:灌肠器＋肛塞 * 100
+	;液量に应じて捆绑SOURCE増加
+	SOURCE:MASTER:捆绑 = 50 + TEQUIP:灌肠器＋肛塞 * 100
+	;快Ａ、疼痛SOURCEに应じて逃脱SOURCE増加、调教等级、受虐气质によって減少
+	SOURCE:MASTER:逃脱 = SOURCE:MASTER:快Ａ / 2 + SOURCE:MASTER:疼痛 / 2 - CFLAG:MASTER:调教等级 * 20 - GET_ABL(MASTER, "受虐气质") * 10
+	;逃脱SOURCE但负的値被和らないよう调整
+	SOURCE:MASTER:逃脱 = SOURCE:MASTER:逃脱 < 0 ? 0 # SOURCE:MASTER:逃脱
+	;受虐气质、Ａ感觉、快ＡSOURCEに应じて中毒充足SOURCE増加
+	SOURCE:MASTER:中毒充足 = (GET_ABL(MASTER, "受虐气质") - 30) * GET_ABL(MASTER, "Ａ感觉") * 25 * SOURCE:MASTER:快Ａ / 10000
+	;中毒充足SOURCE但负的値被和らないよう调整
+	SOURCE:MASTER:中毒充足 = SOURCE:MASTER:中毒充足 < 0 ? 0 # SOURCE:MASTER:中毒充足
+	;経験不足
+	;導管是すでに入れて增加から追加的注入是経験不足的处理被行いません
+	IF TFLAG:ACT派生 == 0
+		;Ａ経験不用脚あればあるほど快ＡSOURCE減衰、疼痛、逃脱SOURCE増加
+		IF EXP:MASTER:Ａ経験 < 1
+			TIMES SOURCE:MASTER:快Ａ , 0.80
+			SOURCE:MASTER:疼痛 += 100
+			SOURCE:MASTER:逃脱 += 2000
+		ELSEIF EXP:MASTER:Ａ経験 < 6
+			TIMES SOURCE:MASTER:快Ａ , 0.90
+			SOURCE:MASTER:逃脱 += 1500
+		ELSEIF EXP:MASTER:Ａ経験 < 11
+			SOURCE:MASTER:逃脱 += 1000
+		ELSEIF EXP:MASTER:Ａ経験 < 21
+			SOURCE:MASTER:逃脱 += 500
+		ENDIF
+	ENDIF
+;排出
+ELSE
+	;液量に应じて快ＡSOURCE増加
+	SOURCE:MASTER:快Ａ = 500 * TEQUIP:灌肠器＋肛塞 * (100 + RAND:11 - RAND:11) / 100
+	;快Ａに应じて逃脱SOURCE増加、调教对象调教等级、受虐气质、倒错的、抖Ｍ素質によって減少
+	SOURCE:MASTER:逃脱 = SOURCE:MASTER:快Ａ - CFLAG:MASTER:调教等级 * 80 - GET_ABL(MASTER, "受虐气质") * 40 - TALENT:MASTER:倒错的 * 500 - TALENT:MASTER:抖Ｍ * 1000
+	;调教等级、Ａ感觉、快ＡSOURCEに应じて中毒充足SOURCE増加
+	SOURCE:MASTER:中毒充足 = (CFLAG:MASTER:调教等级 - 5) * (GET_ABL(MASTER, "Ａ感觉") + 5) * 2 * SOURCE:MASTER:快Ａ / 1000
+	;中毒充足SOURCE但负的値被和らないよう调整
+	SOURCE:MASTER:中毒充足 = SOURCE:MASTER:中毒充足 < 0 ? 0 # SOURCE:MASTER:中毒充足
+	;灌肠液排出
+	TEQUIP:灌肠器＋肛塞 = 0
+ENDIF
+;疼痛、捆绑、逃脱SOURCEに应じて心理创伤SOURCE増加
+SOURCE:MASTER:心理创伤 = SOURCE:MASTER:疼痛 / 3 + SOURCE:MASTER:捆绑 / 3 + SOURCE:MASTER:逃脱 / 3
+;中毒充足SOURCE但正であれば心理创伤SOURCE抹消
+SOURCE:MASTER:心理创伤 = SOURCE:MASTER:中毒充足 > 0 ? 0 # SOURCE:MASTER:心理创伤
+;心理创伤(刻印)的元但こ的调教だった场合、心理创伤SOURCE被1.5倍に做
+SIF CFLAG:MASTER:心理创伤 == 68
+	TIMES SOURCE:MASTER:心理创伤 , 1.50
+;顔面骑乘系解除
+CALL FACESITTING_SET(0)
+;调教者、调教对象自慰被中断
+TEQUIP:自慰中 = 0
+TFLAG:经过时间 += 3

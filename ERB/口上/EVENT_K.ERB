@@ -1,0 +1,843 @@
+﻿;≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡
+;口上呼び出し用ターミナル文件
+;≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡
+
+;-------------------------------------------------
+;口上显示前后处理@KOJO_BAA
+;口上显示前后に呼ぶこ和で口上呼び出し前的显示设定に返回@これみ
+;引数0但-1だ和前处理、-2だ和全部的后处理です
+;また、引数0に正的数値被入れるこ和で设置被行う设定被选择・除外でき增加
+;※0被入受到场合是何も不做こ和になり增加
+;-------------------------------------------------
+@KOJO_BAA(ARG)
+;前处理
+IF ARG == -1
+	;背景色保存
+	LOCAL:0 = GETBGCOLOR()
+	;字符属性保存
+	LOCAL:1 = GETSTYLE()
+	
+	;抹消予定标志的设置
+	
+;后处理
+ELSE
+	;ARG但负那么全部的后处理被行う
+	SIF ARG < 0
+		ARG = 7
+	;背景色设置
+	SIF (ARG & 1) && LOCAL:0 != GETBGCOLOR()
+		SETBGCOLOR LOCAL:0
+	;字符属性设置
+	SIF (ARG & 2) && LOCAL:1 != GETSTYLE()
+		FONTSTYLE LOCAL:1
+	;字符色设置
+	SIF (ARG & 4)
+		RESETCOLOR
+	
+	;抹消予定标志的设置
+	
+ENDIF
+;RESULT保持
+RETURN RESULT
+
+;-------------------------------------------------
+;口上あらすじ@KOJO_DIGEST
+;主人选择时に显示され增加。一次的にTARGET和して手元に呼ばれ、口上显示后にまた消え增加。
+;对象限定つきで记述した场合、そ的对象になるMASTER的场合是そちら但显示され增加。
+;引数是角色番号。省略不可です。登录番号不是こ和に要注意！
+;RESULT値但0だ和口上被显示しなかったこ和被表し增加
+;-------------------------------------------------
+@KOJO_DIGEST(ARG:0 = -1)
+;引数省略时、RESULT0で返回
+SIF ARG < 0
+	RETURN 0
+;TARGET被捏造
+ADDCHARA ARG
+TARGET = CHARANUM-1
+;前处理
+CALL KOJO_BAA(-1)
+;口上色设定
+CALL KOJO_COLOR(TARGET)
+CALL KOJO_CALL(@"DIGEST_K{ARG}", TARGET)
+;后处理
+CALL KOJO_BAA(-2)
+DELCHARA TARGET
+TARGET = -1
+RETURN RESULT
+
+;-------------------------------------------------
+;口上注意事项@KOJO_ATTENTION
+;主人选择时に显示され增加。一次的にTARGET和して手元に呼ばれ、口上显示后にまた消え增加。
+;对象限定つきで记述した场合、そ的对象になるMASTER的场合是そちら但显示され增加。
+;引数是角色番号。省略不可です。登录番号不是こ和に要注意！
+;RESULT値但0だ和口上被显示しなかったこ和被表し增加
+;-------------------------------------------------
+@KOJO_ATTENTION(ARG:0 = -1)
+;引数省略时、RESULT0で返回
+SIF ARG < 0
+	RETURN 0
+;TARGET被捏造
+ADDCHARA ARG
+TARGET = CHARANUM-1
+;前处理
+CALL KOJO_BAA(-1)
+;口上色设定
+CALL KOJO_COLOR(TARGET)
+CALL KOJO_CALL(@"ATTENTION_K{ARG}", TARGET)
+;后处理
+CALL KOJO_BAA(-2)
+DELCHARA TARGET
+TARGET = -1
+RETURN RESULT
+
+;-------------------------------------------------
+;事件口上@KOJO_EVENT
+;事件时的口上、事件开始时に出力し增加
+;引数0是事件番号、引数1是事件的派生番号（派生但ないも的是省略してよい）
+;引数2是角色的登录番号（省略做和TARGET）
+;RESULT値但0だ和口上被显示しなかったこ和被表し增加
+;-------------------------------------------------
+@KOJO_EVENT(ARG:0, ARG:1, ARG:2 = -2)
+;引数2省略时、TARGETに变换
+ARG:2 = ARG:2 != -2 ? ARG:2 # TARGET
+;口上で参照做ために事件番号被标志へ落和す
+TFLAG:事件番号 = ARG
+;引数2但-1であれば呼び出さない
+SIF ARG:2 < 0
+	RETURN 0
+;前处理
+CALL KOJO_BAA(-1)
+;口上色设定
+CALL KOJO_COLOR(ARG:2)
+;口上显示开また是口上强制呼び出し时、口上呼び出し
+SIF FLAG:口上 || RESULT
+	CALL KOJO_CALL(@"EVENT_K{NO:(ARG:2)}_{ARG}", ARG:2, 1, ARG:1)
+;后处理
+CALL KOJO_BAA(-2)
+;口上显示开那么口上但显示さ受到か被返す
+RETURN FLAG:口上 ? RESULT # 0
+
+;-------------------------------------------------
+;助手事件口上@KOJO_EVENT_ASSI
+;助手相关事件时的口上、事件开始时に出力し增加。常に右揃えになる
+;引数0是事件番号、引数1是事件的派生番号（派生但ないも的是省略してよい）
+;RESULT値但0だ和口上被显示しなかったこ和被表し增加
+;また、RESULT値但1だ和DRAWLINE、2だ和一行改行、3だ和両方し增加
+;-------------------------------------------------
+@KOJO_EVENT_ASSI(ARG:0, ARG:1)
+;助手但居なければ呼び出さない
+SIF ASSI < 0
+	RETURN 0
+TFLAG:助手事件番号 = ARG
+;前处理
+CALL KOJO_BAA(-1)
+;口上色设定
+CALL KOJO_COLOR(ASSI)
+;口上显示开また是口上强制呼び出し时、口上呼び出し
+IF FLAG:口上 || RESULT
+	;右揃え
+	ALIGNMENT RIGHT
+	CALL KOJO_CALL(@"EVENT_ASSI_K{NO:ASSI}_{ARG}", ASSI, 1, ARG:1)
+	;左揃えに戻す
+	ALIGNMENT LEFT
+ENDIF
+;后处理
+CALL KOJO_BAA(-2)
+;口上显示开那么口上但显示さ受到か被返す
+RETURN FLAG:口上 ? RESULT # 0
+
+;-------------------------------------------------
+;刻印取得口上@KOJO_MARK
+;刻印取得时に出力し增加
+;引数是それぞれ但刻印番号に对应、そ的指令で取得した刻印的数値但入り增加
+;RESULT値但0だ和口上被显示しなかったこ和被表し增加
+;-------------------------------------------------
+@KOJO_MARK(ARG:0, ARG:1, ARG:2, ARG:3, ARG:4)
+;TARGET不在时に是呼び出さない
+SIF TARGET < 0
+	RETURN 0
+;前处理
+CALL KOJO_BAA(-1)
+;口上色设定
+CALL KOJO_COLOR(TARGET)
+;口上显示开また是口上强制呼び出し时、口上呼び出し
+SIF FLAG:口上 || RESULT
+	CALL KOJO_CALL(@"MARK_K{NO:TARGET}", TARGET, 5, ARG, ARG:1, ARG:2, ARG:3, ARG:4)
+;后处理
+CALL KOJO_BAA(-2)
+;口上显示开那么口上但显示さ受到时一行あける
+SIF FLAG:口上 && RESULT
+	PRINTL 
+;口上显示开那么口上但显示さ受到か被返す
+RETURN FLAG:口上 ? RESULT # 0
+
+;-------------------------------------------------
+;脱衣活动ション口上@KOJO_DATUI
+;调教者活动ション的前、强制脱衣か自主脱衣被发生した和きに出力し增加
+;RESULT値但0だ和口上被显示しなかったこ和被表し增加
+;※同じ物被二回呼ぶこ和になる的で、
+;　调教者但脱但せた场合是调教者但脱いだ被处理しません
+;-------------------------------------------------
+@KOJO_DATUI
+;前处理
+CALL KOJO_BAA(-1)
+;调教者但脱但せた
+IF TFLAG:强制脱衣 && TFLAG:助手ACT != 70
+	;例外：主人助手（TARGET的サポート脱衣口上被呼ぶ）
+	IF ASSI >= 0 && TALENT:ASSI:主人
+		;助手被暂时的に调教者和交代做
+		CALL ASSISWAP
+		;口上色设定
+		CALL KOJO_COLOR(ASSI)
+		;口上显示开また是口上强制呼び出し时、口上呼び出し
+		SIF FLAG:口上 || RESULT
+			CALL KOJO_CALL(@"DATUI_ASSI_K{NO:ASSI}")
+		;后处理
+		CALL KOJO_BAA(-2)
+		;助手被助手に戻す
+		CALL ASSISWAP
+	;通常
+	ELSE
+		;口上色设定
+		CALL KOJO_COLOR(TARGET)
+		;口上显示开また是口上强制呼び出し时、口上呼び出し
+		SIF FLAG:口上 || RESULT
+			CALL KOJO_CALL(@"DATUI_K{NO:TARGET}")
+		;后处理
+		CALL KOJO_BAA(-2)
+	ENDIF
+	;口上显示开那么口上但显示さ受到か被返す
+	;※上记注释参照
+	RETURN FLAG:口上 ? RESULT # 0
+;助手但脱但せた
+ELSEIF TFLAG:强制脱衣 && TFLAG:助手ACT == 70
+	;右揃え
+	ALIGNMENT RIGHT
+	;例外：主人助手（ASSI的脱衣口上被呼ぶ）
+	IF ASSI >= 0 && TALENT:ASSI:主人
+		;助手被暂时的に调教者和交代做
+		CALL ASSISWAP
+		;口上色设定
+		CALL KOJO_COLOR(TARGET)
+		;口上显示开また是口上强制呼び出し时、口上呼び出し
+		SIF FLAG:口上 || RESULT
+			CALL KOJO_CALL(@"DATUI_K{NO:TARGET}")
+		;后处理
+		CALL KOJO_BAA(-2)
+		;助手被助手に戻す
+		CALL ASSISWAP
+	;通常
+	ELSE
+		;口上色设定
+		CALL KOJO_COLOR(ASSI)
+		;口上显示开また是口上强制呼び出し时、口上呼び出し
+		SIF FLAG:口上 || RESULT
+			CALL KOJO_CALL(@"DATUI_ASSI_K{NO:ASSI}")
+		;后处理
+		CALL KOJO_BAA(-2)
+	ENDIF
+	;左揃えに戻す
+	ALIGNMENT LEFT
+ENDIF
+
+;调教者但脱いだ
+IF TFLAG:自主脱衣
+	;口上色设定
+	CALL KOJO_COLOR(TARGET)
+	;口上显示开また是口上强制呼び出し时、口上呼び出し
+	SIF FLAG:口上 || RESULT
+		CALL KOJO_CALL(@"DATUI_K{NO:TARGET}")
+	;后处理
+	CALL KOJO_BAA(-2)
+ENDIF
+
+;口上显示开那么口上但显示さ受到か被返す
+RETURN FLAG:口上 ? RESULT # 0
+
+;-------------------------------------------------
+;姿势变化口上@KOJO_POSE
+;姿势的变更指示但あった和きに呼ばれる口上です
+;ACT是既に決まっている的で中で参照做こ和もでき增加。
+;ARG是调教对象的姿势、ARG:1是位置前后、ARG:2是位置上下的变化です。变わらなかった和き是-1但入り增加
+;すべて-1的时候是旁白但显示されずこ的口上も呼ばれません。
+;-------------------------------------------------
+@KOJO_POSE(ARG = -1, ARG:1 = -1, ARG:2 = -1)
+;前处理
+CALL KOJO_BAA(-1)
+;返り値初期化
+RESULT = 0
+;口上色设定
+CALL KOJO_COLOR(TARGET)
+;口上显示开また是口上强制呼び出し时、口上呼び出し
+SIF FLAG:口上 || RESULT
+	CALL KOJO_CALL(@"POSE_K{NO:TARGET}", TARGET, 3, ARG, ARG:1, ARG:2)
+;后处理
+CALL KOJO_BAA(-2)
+;口上显示开那么口上但显示さ受到か被返す
+RETURN FLAG:口上 ? RESULT # 0
+
+;-------------------------------------------------
+;旁白口上@KOJO_MESSAGE
+;旁白被置换做口上です
+;こ的口上但呼ばれ、真的値被RETURNした场合、通常的旁白但呼び出されません
+;また、RETURNにい受到値是FLAG:旁白控制に格納され增加
+;ACT口上和连携做際に使用してください
+;なお、SP口上是SP_TRAIN_MESSAGE_KX_SPACT番号　和なり增加
+;-------------------------------------------------
+@KOJO_TRAIN_MESSAGE
+;前处理
+CALL KOJO_BAA(-1)
+;返り値初期化
+RESULT = 0
+;口上呼び出し(SP行动时呼び出し位置被变更)
+IF TFLAG:ＳＰ行动 >= 200
+	CALL KOJO_CALL(@"SP_TRAIN_MESSAGE_K{NO:TARGET}_{TFLAG:ACT}")
+ELSE
+	CALL KOJO_CALL(@"TRAIN_MESSAGE_K{NO:TARGET}_{TFLAG:ACT}")
+ENDIF
+;后处理
+CALL KOJO_BAA(-2)
+;旁白控制にRESULT但负那么0、正那么そ的まま被返す
+FLAG:旁白控制 = MAX(RESULT, 0)
+;返り値に旁白控制被返す
+RETURN FLAG:旁白控制
+
+;-------------------------------------------------
+;旁白口上@KOJO_MESSAGE2
+;上记和ほぼ同じです但、こちら是反应的旁白被置き换え增加
+;反应口上和连携做场合是口上内でFLAG:旁白控制に数値被代入してください
+;-------------------------------------------------
+@KOJO_TRAIN_MESSAGE2
+;前处理
+CALL KOJO_BAA(-1)
+;返り値初期化
+RESULT = 0
+;口上呼び出し(SP行动时呼び出し位置被变更)
+IF TFLAG:ＳＰ行动 >= 200
+	CALL KOJO_CALL(@"SP_TRAIN_MESSAGE2_K{NO:TARGET}_{TFLAG:ACT}")
+ELSE
+	CALL KOJO_CALL(@"TRAIN_MESSAGE2_K{NO:TARGET}_{TFLAG:ACT}")
+ENDIF
+;后处理
+CALL KOJO_BAA(-2)
+;旁白控制にRESULT但负那么0、正那么そ的まま被返す
+FLAG:旁白控制 = MAX(RESULT, 0)
+;返り値に旁白控制被返す
+RETURN FLAG:旁白控制
+
+;-------------------------------------------------
+;活动ション口上@KOJO_ACT
+;调教者活动ション被发生した和きに出力し增加
+;RESULT値但0だ和口上被显示しなかったこ和被表し增加
+;RESULT値但2だ和次的「媚药等使用口上@KOJO_USE」被呼びません
+;活动ション口上内で媚药等使用口上被兼ねて書いた场合に指定してください
+;-------------------------------------------------
+@KOJO_ACT
+;前处理
+CALL KOJO_BAA(-1)
+;助手但媚药等使用している场合、使用标志被逃但す
+;こう不做和主人但媚药被使った口上被显示してしまうため
+LOCAL = TFLAG:媚药等使用
+;药品被使用した助手但居れば、
+;媚药使用是调教者で是ないため媚药等使用标志被0に
+SIF GET_ASSIACTMATCH("药品")
+	TFLAG:媚药等使用 = 0
+;口上色设定
+CALL KOJO_COLOR(TARGET)
+;口上显示开また是口上强制呼び出し时、口上呼び出し
+IF FLAG:口上 || RESULT
+	;まず活动ションご和的口上
+	CALL KOJO_CALL(@"ACT_K{NO:TARGET}_{TFLAG:ACT}")
+	;显示しなかった场合、コンビネーション被发生していれば派生前被呼んでみる
+	IF !RESULT && ASSI:1 >= 0 && TCVAR:(ASSI:1):助手方针 == GET_ASSIMENUNUM("コンビネーション")
+		;助手的方针（旧仕大人）被立てて伪装
+		TFLAG:助手的方针 = 1
+		CALL KOJO_CALL(@"ACT_K{NO:TARGET}_{GET_COMBIACTNUM(TFLAG:ACT)}")
+	ENDIF
+	;显示しなかった场合通用活动ション口上（EASY模板用的机能只ど他でも使えるかも）
+	SIF !RESULT
+		CALL KOJO_CALL(@"ACT_K{NO:TARGET}")
+ENDIF
+;后处理
+CALL KOJO_BAA(-2)
+;逃但した标志被復帰
+TFLAG:媚药等使用 = LOCAL
+;口上显示开那么口上但显示さ受到か被返す
+RETURN FLAG:口上 ? RESULT # 0
+
+;-------------------------------------------------
+;追加活动ション口上@KOJO_ACT_EXTRA
+;追加活动ション被发生した和きに出力し增加
+;RESULT値但0だ和口上被显示しなかったこ和被表し增加
+;引数0是追加活动ション的分类（0,用手爱抚、以下未实装）
+;相关变数 TFLAG:229
+;-------------------------------------------------
+@KOJO_ACT_EXTRA(ARG)
+;番号是追加活动ション分类和变数から生成做
+TFLAG:追加ACT = ARG * 10 + TFLAG:(229 + ARG)
+;追加行动口上标志但立っている时只处理做
+SIF !GETBIT(TFLAG:追加行动口上, ARG)
+	RETURN 0
+;前处理
+CALL KOJO_BAA(-1)
+;口上色设定
+CALL KOJO_COLOR(TARGET)
+;口上显示开また是口上强制呼び出し时、口上呼び出し
+SIF FLAG:口上 || RESULT
+	CALL KOJO_CALL(@"ACT_EXTRA_K{NO:TARGET}_{TFLAG:追加ACT}")
+;后处理
+CALL KOJO_BAA(-2)
+;追加活动ション发生标志被落和す
+CLEARBIT TFLAG:追加行动口上, ARG
+;口上显示开那么口上但显示さ受到か被返す
+RETURN FLAG:口上 ? RESULT # 0
+
+;-------------------------------------------------
+;助手活动ション口上@KOJO_ACT_ASSI
+;助手活动ション被发生した和きに出力し增加
+;RESULT値但0だ和口上被显示しなかったこ和被表し增加
+;-------------------------------------------------
+@KOJO_ACT_ASSI
+;前处理
+CALL KOJO_BAA(-1)
+;口上色设定
+CALL KOJO_COLOR(ASSI)
+;口上显示开また是口上强制呼び出し时、口上呼び出し
+SIF FLAG:口上 || RESULT
+	CALL KOJO_CALL(@"ACT_ASSI_K{NO:ASSI}_{TFLAG:助手ACT}")
+;后处理
+CALL KOJO_BAA(-2)
+;口上显示开那么口上但显示さ受到か被返す
+RETURN FLAG:口上 ? RESULT # 0
+
+;-------------------------------------------------
+;媚药等使用口上@KOJO_USE
+;媚药か润滑液但使わ受到和きに出力し增加
+;RESULT値但0だ和口上被显示しなかったこ和被表し增加
+;助手但行った场合や「活动ション口上@KOJO_ACT」的RESULT値但2だ和呼ばれません
+;活动ション口上内で媚药使用口上被兼ねて書いた场合に指定してください
+;-------------------------------------------------
+@KOJO_USE
+;前处理
+CALL KOJO_BAA(-1)
+;口上色设定
+CALL KOJO_COLOR(TARGET)
+;口上显示开また是口上强制呼び出し时、口上呼び出し
+SIF FLAG:口上 || RESULT
+	CALL KOJO_CALL(@"USE_K{NO:TARGET}")
+;后处理
+CALL KOJO_BAA(-2)
+;RESULT但0以外那么媚药等使用口上标志継续
+TFLAG:媚药等使用口上 = RESULT ? 0 # TFLAG:媚药等使用口上
+;口上显示开那么口上但显示さ受到か被返す
+RETURN FLAG:口上 ? RESULT # 0
+
+;-------------------------------------------------
+;反应口上@KOJO_REACT
+;调教对象但指令被实行した后に出力し增加
+;最初に调教指示ご和に单独的口上被参照し、そ的RESULT値但0だ和口上被显示しなかったこ和被表し、
+;显示しなかった（RESULT=0）的场合的み指令ご和に通用的口上被参照し增加
+;RESULT値但0だ和いずれ的口上も显示しなかったこ和被表し增加
+;-------------------------------------------------
+@KOJO_REACT
+;前处理
+CALL KOJO_BAA(-1)
+;口上色设定
+CALL KOJO_COLOR(TARGET)
+;口上显示开また是口上强制呼び出し时、口上呼び出し
+IF FLAG:口上 || RESULT
+	;まず反应毎的口上
+	CALL KOJO_CALL(@"REACT_K{NO:TARGET}_{TFLAG:ACT}")
+	;显示されなかった场合コンビネーション被见に行く。それでも显示されなければ派生元被呼ぶ
+	SIF !RESULT && ASSI:1 >= 0 && TCVAR:(ASSI:1):助手方针 == GET_ASSIMENUNUM("コンビネーション")
+		CALL KOJO_CALL(@"REACT_K{NO:TARGET}_{GET_COMBIACTNUM(TFLAG:ACT)}")
+	;ここ直到显示されなかった场合、顺に通用口上へ落和す
+	SIF !RESULT
+		CALL KOJO_CALL(@"COM_K{NO:TARGET}_{SELECTCOM}")
+	SIF !RESULT
+		CALL KOJO_CALL(@"REACT_K{NO:TARGET}")
+ENDIF
+;后处理
+CALL KOJO_BAA(-2)
+;口上显示开那么口上但显示さ受到か被返す
+RETURN FLAG:口上 ? RESULT # 0
+
+;-------------------------------------------------
+;口上色设定@KOJO_COLOR
+;口上的色设定被行い增加。色设定関数但无い场合是やや灰色になり增加
+;ついでに、标志管理的ため口上显示的设定被无视口上被ここで判断し增加
+;-------------------------------------------------
+@KOJO_COLOR(ARG)
+;引数但负那么处理不做
+SIF ARG < 0
+	RETURN 0
+;返り値初期化
+RESULT = 0
+;TARGET待避
+LOCAL = TARGET
+;TARGETに引数被代入
+TARGET = ARG
+;口上から色指定被引き出し、设定做
+;指定但なければデフォルトカラー
+TRYCCALLFORM KOJO_COLOR_K{NO:ARG}
+CATCH
+	SETCOLOR 160, 160, 160
+ENDCATCH
+;TARGET指定被戻す
+TARGET = LOCAL
+;口上强制呼び出し的指定被返す
+TRYCCALLFORM KOJO_ON_K{NO:(ARG)}
+	RETURN RESULT
+CATCH
+	RETURN 0
+ENDCATCH
+
+;-------------------------------------------------
+;立场限定口上呼び出し@KOJO_CALL
+;调教者的立场（主人か追加调教者か）限定的口上被设定でき增加
+;こ的下に对象限定口上的呼び出し但存在し、関数名で共存でき增加。また、限定口上にカラー的设定是できません（通用部分和食い違うため）
+;引数0是関数名的后半部分、引数1に是口上主的登录番号、引数2に是元的引数的数被入れる（现状0、1、3、5）、引数3以降是も和的引数被入れる
+;こちらも排他的设定但でき增加但、对象限定より上層で处理され增加。
+;-------------------------------------------------
+@KOJO_CALL(ARGS, ARG = -2, ARG:1, ARG:2, ARG:3, ARG:4, ARG:5, ARG:6)
+#DIM LCOUNT, 1
+#DIM 优先根据排他, 1
+ARG = ARG != -2 ? ARG # TARGET
+
+;优先口上３、２、１、通常的顺で回す
+FOR LCOUNT, 0, 4
+	RESULT = 0
+	优先根据排他 = 0
+	IF LCOUNT < 3
+		;优先口上的处理
+		TRYCALLFORM KOJO_PRIORITY{3-LCOUNT}_K{NO:(ARG)}
+		IF !RESULT
+			CONTINUE
+		ELSEIF RESULT > 1
+			优先根据排他 = 1
+		ENDIF
+		LOCALS = PRI{3-LCOUNT}_%ARGS%
+	ELSE
+		LOCALS = %ARGS%
+	ENDIF
+	;主人限定口上被みる
+	IF TALENT:主人
+		CALL KOJO_CALL2(@"MS_%LOCALS%", ARG, ARG:1, ARG:2, ARG:3, ARG:4, ARG:5, ARG:6)
+	;非主人限定口上被みる
+	ELSE
+		CALL KOJO_CALL2(@"AS_%LOCALS%", ARG, ARG:1, ARG:2, ARG:3, ARG:4, ARG:5, ARG:6)
+	ENDIF
+	;显示した场合返回
+	SIF RESULT
+		RETURN RESULT
+
+	;排他的チェック（条件被满たす立场的场合、未记入でも一般口上被显示不做设定）
+	;主人限定口上にヒット做か被みる
+	IF TALENT:主人
+		TRYCALLFORM KOJO_MS_EXCLUSION_K{NO:(ARG)}
+	;非主人限定口上にヒット做か被みる
+	ELSE
+		TRYCALLFORM KOJO_AS_EXCLUSION_K{NO:(ARG)}
+	ENDIF
+	;排他
+	SIF RESULT
+		CONTINUE
+
+	;对象限定口上へパス做
+	CALL KOJO_CALL2(LOCALS, ARG, ARG:1, ARG:2, ARG:3, ARG:4, ARG:5, ARG:6)
+	;显示した场合、あるい是优先根据排他但働く场合返回
+	SIF RESULT || 优先根据排他
+		RETURN RESULT
+NEXT
+RETURN 0
+
+;-------------------------------------------------
+;对象限定口上呼び出し@KOJO_CALL2
+;特定的调教对象でPLAYした和き限定的口上被设定でき增加
+;条件但厳しいも的ほど优先され增加。また、限定口上にカラー的设定是できません（通用部分和食い違うため）
+;记述但かなりアレになって增加但まあ今的和ころしょう但ない
+;引数0是関数名的后半部分、引数1に是口上主的登录番号、引数2に是元的引数的数被入れる（现状0、1、3、5）、引数3以降是も和的引数被入れる
+;-------------------------------------------------
+@KOJO_CALL2(ARGS, ARG = -2, ARG:1, ARG:2, ARG:3, ARG:4, ARG:5, ARG:6)
+ARG = ARG != -2 ? ARG # TARGET
+RESULT = 0
+;MASTER指定口上被みる
+;引数0
+IF !ARG:1
+	;主人公但您那么性別被见る
+	IF !NO:MASTER
+		;大棒棒是えてる
+		IF TALENT:MASTER:男人 || TALENT:MASTER:扶她
+			;男人您口上にヒット做か被见る
+			IF TALENT:MASTER:男人
+				TRYCALLFORM KOJO_MALEYOU_%ARGS%
+			;扶她您口上にヒット做か被见る
+			ELSEIF TALENT:MASTER:扶她
+				TRYCALLFORM KOJO_TWINYOU_%ARGS%
+			ENDIF
+			;ヒットしてない那么、大棒棒つき您口上にヒット做か被见る
+			SIF !RESULT
+				TRYCALLFORM KOJO_PENISYOU_%ARGS%
+		ENDIF
+		;女口上にヒット做か被见る
+		SIF !TALENT:MASTER:男人
+			TRYCALLFORM KOJO_FEMALEYOU_%ARGS%
+	ENDIF
+
+	;ヒットしてない那么、对象指定（0～99）的口上にヒット做か被见る
+	SIF !RESULT
+		TRYCALLFORM KOJO_NO{NO:MASTER}_%ARGS%
+;引数1
+ELSEIF ARG:1 == 1
+	;主人公但您那么性別被见る
+	IF !NO:MASTER
+		;大棒棒是えてる
+		IF TALENT:MASTER:男人 || TALENT:MASTER:扶她
+			;男人您口上にヒット做か被见る
+			IF TALENT:MASTER:男人
+				TRYCALLFORM KOJO_MALEYOU_%ARGS%(ARG:2)
+			;扶她您口上にヒット做か被见る
+			ELSEIF TALENT:MASTER:扶她
+				TRYCALLFORM KOJO_TWINYOU_%ARGS%(ARG:2)
+			ENDIF
+			;ヒットしてない那么、大棒棒つき您口上にヒット做か被见る
+			SIF !RESULT
+				TRYCALLFORM KOJO_PENISYOU_%ARGS%(ARG:2)
+		ENDIF
+		;女口上にヒット做か被见る
+		SIF !TALENT:MASTER:男人
+			TRYCALLFORM KOJO_FEMALEYOU_%ARGS%(ARG:2)
+	ENDIF
+
+	;ヒットしてない那么、对象指定（0～99）的口上にヒット做か被见る
+	SIF !RESULT
+		TRYCALLFORM KOJO_NO{NO:MASTER}_%ARGS%(ARG:2)
+;引数3
+ELSEIF ARG:1 == 3
+	;主人公但您那么性別被见る
+	IF !NO:MASTER
+		;大棒棒是えてる
+		IF TALENT:MASTER:男人 || TALENT:MASTER:扶她
+			;男人您口上にヒット做か被见る
+			IF TALENT:MASTER:男人
+				TRYCALLFORM KOJO_MALEYOU_%ARGS%(ARG:2, ARG:3, ARG:4)
+			;扶她您口上にヒット做か被见る
+			ELSEIF TALENT:MASTER:扶她
+				TRYCALLFORM KOJO_TWINYOU_%ARGS%(ARG:2, ARG:3, ARG:4)
+			ENDIF
+		;ヒットしてない那么、大棒棒つき您口上にヒット做か被见る
+		SIF !RESULT
+			TRYCALLFORM KOJO_PENISYOU_%ARGS%(ARG:2, ARG:3, ARG:4)
+		ENDIF
+		;女口上にヒット做か被见る
+		SIF !TALENT:MASTER:男人
+			TRYCALLFORM KOJO_FEMALEYOU_%ARGS%(ARG:2, ARG:3, ARG:4)
+	ENDIF
+
+	;ヒットしてない那么、对象指定（0～99）的口上にヒット做か被见る
+	SIF !RESULT
+		TRYCALLFORM KOJO_NO{NO:MASTER}_%ARGS%(ARG:2, ARG:3, ARG:4)
+;引数5
+ELSEIF ARG:1 == 5
+	;主人公但您那么性別被见る
+	IF !NO:MASTER
+		;大棒棒是えてる
+		IF TALENT:MASTER:男人 || TALENT:MASTER:扶她
+			;男人您口上にヒット做か被见る
+			IF TALENT:MASTER:男人
+				TRYCALLFORM KOJO_MALEYOU_%ARGS%(ARG:2, ARG:3, ARG:4, ARG:5, ARG:6)
+			;扶她您口上にヒット做か被见る
+			ELSEIF TALENT:MASTER:扶她
+				TRYCALLFORM KOJO_TWINYOU_%ARGS%(ARG:2, ARG:3, ARG:4, ARG:5, ARG:6)
+			ENDIF
+		;ヒットしてない那么、大棒棒つき您口上にヒット做か被见る
+		SIF !RESULT
+			TRYCALLFORM KOJO_PENISYOU_%ARGS%(ARG:2, ARG:3, ARG:4, ARG:5, ARG:6)
+		ENDIF
+		;女口上にヒット做か被见る
+		SIF !TALENT:MASTER:男人
+			TRYCALLFORM KOJO_FEMALEYOU_%ARGS%(ARG:2, ARG:3, ARG:4, ARG:5, ARG:6)
+	ENDIF
+
+	;ヒットしてない那么、对象指定（0～99）的口上にヒット做か被见る
+	SIF !RESULT
+		TRYCALLFORM KOJO_NO{NO:MASTER}_%ARGS%(ARG:2, ARG:3, ARG:4, ARG:5, ARG:6)
+ENDIF
+
+;显示した场合返回
+IF RESULT
+	RETURN RESULT
+ENDIF
+
+;排他的チェック（条件被满たす调教对象的场合、未记入でも一般口上被显示不做设定）
+;指定口上同士的排他设定是できない
+;主人公但您那么性別被见る
+IF !NO:MASTER
+	;大棒棒是えてる
+	IF TALENT:MASTER:男人 || TALENT:MASTER:扶她
+		;男人您口上にヒット做か被见る
+		IF TALENT:MASTER:男人
+			TRYCALLFORM KOJO_MALEYOU_EXCLUSION_K{NO:(ARG)}
+		;扶她您口上にヒット做か被见る
+		ELSEIF TALENT:MASTER:扶她
+			TRYCALLFORM KOJO_TWINYOU_EXCLUSION_K{NO:(ARG)}
+		ENDIF
+		;ヒットしてない那么、大棒棒つき您口上にヒット做か被见る
+		SIF !RESULT
+			TRYCALLFORM KOJO_PENISYOU_EXCLUSION_K{NO:(ARG)}
+	ENDIF
+	;女口上にヒット做か被见る
+	SIF !TALENT:MASTER:男人
+		TRYCALLFORM KOJO_FEMALEYOU_EXCLUSION_K{NO:(ARG)}
+ENDIF
+
+;ヒットしてない那么、对象指定（0～99）的口上にヒット做か被见る
+SIF !RESULT
+	TRYCALLFORM KOJO_NO{NO:MASTER}_EXCLUSION_K{NO:(ARG)}
+
+;排他的场合RESULTに0被返し、返回
+IF RESULT
+	RETURN 0
+ENDIF
+
+;性別指定口上被みる
+;引数0
+IF !ARG:1
+	;大棒棒是えてる
+	IF TALENT:MASTER:男人 || TALENT:MASTER:扶她
+		;男人口上にヒット做か被见る
+		IF TALENT:MASTER:男人
+			TRYCALLFORM KOJO_MALE_%ARGS%
+		;扶她口上にヒット做か被见る
+		ELSEIF TALENT:MASTER:扶她
+			TRYCALLFORM KOJO_TWIN_%ARGS%
+		ENDIF
+		;ヒットしてない那么、大棒棒つき口上にヒット做か被见る
+		SIF !RESULT
+			TRYCALLFORM KOJO_PENIS_%ARGS%
+	ENDIF
+	;女口上にヒット做か被见る
+	SIF !TALENT:MASTER:男人
+		TRYCALLFORM KOJO_FEMALE_%ARGS%
+;引数1
+ELSEIF ARG:1 == 1
+	;大棒棒是えてる
+	IF TALENT:MASTER:男人 || TALENT:MASTER:扶她
+		;男人口上にヒット做か被见る
+		IF TALENT:MASTER:男人
+			TRYCALLFORM KOJO_MALE_%ARGS%(ARG:2)
+		;扶她口上にヒット做か被见る
+		ELSEIF TALENT:MASTER:扶她
+			TRYCALLFORM KOJO_TWIN_%ARGS%(ARG:2)
+		ENDIF
+		;ヒットしてない那么、大棒棒つき口上にヒット做か被见る
+		SIF !RESULT
+			TRYCALLFORM KOJO_PENIS_%ARGS%(ARG:2)
+	ENDIF
+	;女口上にヒット做か被见る
+	SIF !TALENT:MASTER:男人
+		TRYCALLFORM KOJO_FEMALE_%ARGS%(ARG:2)
+;引数5
+ELSEIF ARG:1 == 5
+	;大棒棒是えてる
+	IF TALENT:MASTER:男人 || TALENT:MASTER:扶她
+		;男人口上にヒット做か被见る
+		IF TALENT:MASTER:男人
+			TRYCALLFORM KOJO_MALE_%ARGS%(ARG:2, ARG:3, ARG:4, ARG:5, ARG:6)
+		;扶她口上にヒット做か被见る
+		ELSEIF TALENT:MASTER:扶她
+			TRYCALLFORM KOJO_TWIN_%ARGS%(ARG:2, ARG:3, ARG:4, ARG:5, ARG:6)
+		ENDIF
+		;ヒットしてない那么、大棒棒つき口上にヒット做か被见る
+		SIF !RESULT
+			TRYCALLFORM KOJO_PENIS_%ARGS%(ARG:2, ARG:3, ARG:4, ARG:5, ARG:6)
+	ENDIF
+	;女口上にヒット做か被见る
+	SIF !TALENT:MASTER:男人
+		TRYCALLFORM KOJO_FEMALE_%ARGS%(ARG:2, ARG:3, ARG:4, ARG:5, ARG:6)
+ENDIF
+
+;显示した场合返回
+IF RESULT
+	RETURN RESULT
+ENDIF
+
+;排他的チェック
+;MASTAR指定口上但上位にあたり、排他で是じくこ和是できない
+;大棒棒是えてる
+IF TALENT:MASTER:男人 || TALENT:MASTER:扶她
+	;男人口上にヒット做か被见る
+	IF TALENT:MASTER:男人
+		TRYCALLFORM KOJO_MALE_EXCLUSION_K{NO:(ARG)}
+	;扶她口上にヒット做か被见る
+	ELSEIF TALENT:MASTER:扶她
+		TRYCALLFORM KOJO_TWIN_EXCLUSION_K{NO:(ARG)}
+	ENDIF
+	;ヒットしてない那么、大棒棒つき口上にヒット做か被见る
+	SIF !RESULT
+		TRYCALLFORM KOJO_PENIS_EXCLUSION_K{NO:(ARG)}
+	ENDIF
+;女口上にヒット做か被见る
+SIF !TALENT:MASTER:男人
+	TRYCALLFORM KOJO_FEMALE_EXCLUSION_K{NO:(ARG)}
+
+
+;排他的场合RESULTに0被返し、返回
+IF RESULT
+	RETURN 0
+ENDIF
+
+;通常的口上
+;引数0
+IF !ARG:1
+	TRYCALLFORM KOJO_%ARGS%
+;引数1
+ELSEIF ARG:1 == 1
+	TRYCALLFORM KOJO_%ARGS%(ARG:2)
+;引数5
+ELSEIF ARG:1 == 5
+	TRYCALLFORM KOJO_%ARGS%(ARG:2, ARG:3, ARG:4, ARG:5, ARG:6)
+ENDIF
+
+
+RETURN RESULT
+
+;-------------------------------------------------
+;口上存在判定@KOJO_CHECK
+;引数0的角色に对して、NO=引数1的角色是显示できる口上被持っているか返す
+;口上无是0、一般口上有是1、専用口上的对象那么2被返す
+;-------------------------------------------------
+@KOJO_CHECK(ARG, ARG:1)
+VARSET RESULT
+VARSET RESULTS
+TRYCALLFORM KOJO_K{ARG:1}
+;男您判定
+SIF NO:ARG == 0 && TALENT:ARG:男人 && STRFIND(RESULTS, @"/MALEYOU/") >= 0
+	RETURN 2
+;女您判定
+SIF NO:ARG == 0 && !TALENT:ARG:男人 && STRFIND(RESULTS, @"/FEMALEYOU/") >= 0
+	RETURN 2
+;扶她您判定
+SIF NO:ARG == 0 && TALENT:ARG:扶她 && STRFIND(RESULTS, @"/TWINYOU/") >= 0
+	RETURN 2
+;大棒棒付き您判定
+SIF NO:ARG == 0 && PENIS(ARG) && STRFIND(RESULTS, @"/PENISYOU/") >= 0
+	RETURN 2
+;角色一致判定
+SIF STRFIND(RESULTS, @"/K{NO:ARG}/") >= 0
+	RETURN 2
+;男判定
+SIF TALENT:ARG:男人 && STRFIND(RESULTS, @"/MALE/") >= 0
+	RETURN 2
+;女判定
+SIF !TALENT:ARG:男人 && STRFIND(RESULTS, @"/FEMALE/") >= 0
+	RETURN 2
+;扶她判定
+SIF TALENT:ARG:扶她 && STRFIND(RESULTS, @"/TWIN/") >= 0
+	RETURN 2
+;大棒棒付き判定
+SIF PENIS(ARG) && STRFIND(RESULTS, @"/PENIS/") >= 0
+	RETURN 2
+;通用的判定被して返回
+RETURN RESULT
+
