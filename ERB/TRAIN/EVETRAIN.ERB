@@ -155,10 +155,13 @@ IF 可能满足奖励数 && CFLAG:满足奖励 && CFLAG:好感 > 1000 && !TFLAG:
 		LOCAL = FLAG:优先大满足奖励 % 100
 		SIF LOCAL == 12
 			LOCAL = RAND:12
-		SIF !LOCAL:1 && LOCAL == 6
-			LOCAL = FLAG:优先大满足奖励 / 100
-		SIF !LOCAL:2 && LOCAL == 7
-			LOCAL = FLAG:优先大满足奖励 / 100
+		;首选选项无法执行时，进入备选判断
+		IF !SATISBONUS_ABLE(LOCAL)
+			SIF !LOCAL:1 && LOCAL == 6
+				LOCAL = FLAG:优先大满足奖励 / 100
+			SIF !LOCAL:2 && LOCAL == 7
+				LOCAL = FLAG:优先大满足奖励 / 100
+		ENDIF
 		;選んだも的但实行できない场合
 		IF !SATISBONUS_ABLE(LOCAL)
 			FOR LCOUNT, 0, 20
