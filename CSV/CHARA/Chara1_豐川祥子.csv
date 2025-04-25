@@ -87,8 +87,13 @@ CSTR,外号,無畏遺忘 ～ Oblivionis
 CSTR,登场名,豐川 祥子
 CSTR,单词,Tokawa Sakiko
 CSTR,曲１,Symbol III：Water
+CSTR,曲２,Mas?uerade Rhapsody Re?uest
+CSTR,曲３,Choir ‘S’ Choir
+CSTR,曲４,黒のバースデイ
+CSTR,曲５,ふたつの月 ～Deep Into The Forest～
+CSTR,曲６,Angles
  
 ;称呼列表(CSTR)
 CSTR,基本敬称,基本_呼び名
-CSTR,称呼列表,您_妳/三角初華_初華/三角初音_初音/豐川祥子_祥子/Aver_Averさん
+CSTR,称呼列表,您_妳/三角初華_初華/三角初音_初音/豐川祥子_祥子/Aver_Aver
  

@@ -1,0 +1,221 @@
+﻿;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+;
+;	豐川祥子[白祥]口上文件
+;
+;	入场事件
+;
+;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+
+;========================================================================
+;EV1, 入场事件口上
+;========================================================================
+;・口上的调教者(TARGET)会根据调教对象实行不同开场白
+;・普通模式以外的场合、调教对象但NO:MASTER == 0(所谓的%CALLNAME:MASTER%)不是可能性あり
+;-------------------------------------------------
+;相关变数…
+;FLAG:模式(0=通常/1=サンドボックス/9=临时)
+;-------------------------------------------------
+@KOJO_EVENT_K2_1(ARG)
+IF NO:MASTER == 1
+    PRINTFORMDW ……
+	PRINTL
+	PRINTFORMDW 醒过来后，发现自己被反拷在地下室的丰川祥子并不惊讶。
+	PRINTL
+	PRINTFORMDW 她看着眼前的穿着月之森校服的少女，只看对方神色有些动摇。
+	PRINTL
+	CALL CHARA_CUTIN(CSTR:外号, CSTR:登场名, CSTR:单词)
+	PRINTL
+	PRINTFORMDW 『抱歉…为了能够回去大家的身边』
+	PRINTL
+	PRINTFORMDW 少女的眼神慢慢变得坚定。
+	PRINTL
+	PRINTFORMDW 『我只能这样做了…原谅我』
+	PRINTL
+	CALL BGM_CUTIN(CSTR:曲１)
+	PRINTL
+	PRINTFORMDW 丰川祥子知道眼前的另一个自己似乎受到谁人唆摆，但她并不慌张。
+	PRINTL
+	PRINTFORMDW 她觉得除非那个曾经的自己在这过程中觉醒些什麽，不然根本不可能搞定得已经走得更远的她。
+	PRINTL
+	PRINTFORMDW 或许吧。早些堕落也未尝不是坏事，对吧？就瞧瞧怎麽样…
+	PRINTL
+ELSEIF NO:MASTER == 3
+	PRINTFORMDW 『请您醒醒…』
+	PRINTL 
+	PRINTFORMDW 昏睡中渐渐醒过来的少女听到急切的呼唤，开始张开眼。
+	PRINTL 
+	PRINTFORMDW 看见的却是跟自己有着同样脸庞的少女。
+	PRINTL 
+	PRINTFORMDW 「请问你是…？」
+	PRINTL 
+	CALL CHARA_CUTIN(CSTR:外号, CSTR:登场名, CSTR:单词)
+	PRINTL 
+	PRINTFORMDW 『我突然在前去乐队练习中途被送到这地方…找到了很久才发现有另一个人』
+	PRINTL 
+	PRINTFORMDW 她边听着穿样深色制服的少女如是说，边发现自己正被镣铐锁起来逃不出来。
+	PRINTL 
+	CALL BGM_CUTIN(CSTR:曲１)
+	PRINTL 
+	PRINTFORMDW 眼前像得跟自己一模一样的少女马上慌张地说并不是自己做的。
+	PRINTL 
+	PRINTFORMDW 『我刚刚找到这房间进来见到您后，门突然被关上，于是我也跟你一样被关在这里…』
+	PRINTL 
+	PRINTFORMDW 「门…需要魔力才能打开」
+	PRINTL 
+	PRINTFORMDW 她对自己突然的自然自语吓一跳，好像是谁告诉过她一样。
+	PRINTL 
+	PRINTFORMDW 『魔力？』
+	PRINTL 
+	PRINTFORMDW 「魔力…」
+	PRINTL 
+	PRINTFORMDW 『…这到底是什麽一回事？』
+	PRINTL 
+ELSEIF NO:MASTER == 4
+	PRINTFORMDW 从昏睡中醒来见到，眼前穿着月之森校服的少女时，初华不由得震惊。
+	PRINTL 
+	PRINTFORMDW 『初华、你醒来了？太好了…』
+	PRINTL 
+	CALL CHARA_CUTIN(CSTR:外号, CSTR:登场名, CSTR:单词)
+	PRINTL 
+	PRINTFORMDW 「祥ちゃん…」
+	PRINTL 
+	PRINTFORMDW 她仔细端详眼前的人，问她有没有受伤，只见对方摇摇头。
+	PRINTL 
+	PRINTFORMDW 『我没事…只是不知为什麽出现这地方，难得找到一个房间进来后就被锁着，现在我们都出不去』
+	PRINTL 
+	PRINTFORMDW 初华听着有些欲言又止。
+	PRINTL 
+	PRINTFORMDW 「我知道怎样出去…」
+	PRINTL 
+	PRINTFORMDW 初华把怎样收集魔力的事告诉祥子，听到对方整个脸红耳热。
+	PRINTL 
+	PRINTFORMDW 『我、我又怎可能对初华做这种事！而且我完全不会…』
+	PRINTL 
+	PRINTFORMDW 但是祥子心知肚明，在初华醒来之前，她已经试过很多方法，还是逃不出去。
+	PRINTL 
+	PRINTFORMDW 「没关係的，祥ちゃん」
+	PRINTL 
+	PRINTFORMDW 「我就算一直在这里也可以的…因为祥ちゃん就在这里」
+	PRINTL 
+	PRINTFORMDW 『初华…？』声音渐小，她不太听得清后半句。
+	PRINTL 
+	CALL BGM_CUTIN(CSTR:曲１)
+	PRINTL 
+	PRINTFORMDW 「等到祥ちゃん想离开时，就告诉我好了」
+	PRINTL 
+	PRINTFORMDW 绛紫的瞳变得深邃，被看着时祥子觉得有些晕眩，不自觉靠近过去。
+	PRINTL 
+	PRINTFORMDW ——到时，我会告诉祥ちゃん要怎样对待我的。
+	PRINTL 
+ELSEIF NO:MASTER == 5
+	PRINTFORMDW 从昏睡中醒来见到，眼前穿着月之森校服的少女时，初音不由得震惊。
+	PRINTL 
+	PRINTFORMDW 『初华、你醒来了？太好了…』
+	PRINTL 
+	CALL CHARA_CUTIN(CSTR:外号, CSTR:登场名, CSTR:单词)
+	PRINTL 
+	PRINTFORMDW 「祥ちゃん…」
+	PRINTL 
+	PRINTFORMDW 她仔细端详眼前的人，问她有没有受伤，只见对方摇摇头。
+	PRINTL 
+	PRINTFORMDW 『我没事…只是不知为什麽出现这地方，难得找到一个房间进来后就被锁着，现在我们都出不去』
+	PRINTL 
+	PRINTFORMDW 初音听着有些欲言又止。
+	PRINTL 
+	PRINTFORMDW 「我知道怎样出去…」
+	PRINTL 
+	PRINTFORMDW 初音把怎样收集魔力的事告诉祥子，听到对方整个脸红耳热。
+	PRINTL 
+	PRINTFORMDW 『我、我又怎可能对初华做这种事！而且我完全不会…』
+	PRINTL 
+	PRINTFORMDW 「……」
+	PRINTL 
+	PRINTFORMDW 但是祥子心知肚明，在对方醒来之前，她已经试过很多方法，还是逃不出去。
+	PRINTL 
+	PRINTFORMDW 「没关係的，祥ちゃん」
+	PRINTL 
+	PRINTFORMDW 「我就算一直在这里也可以的…因为祥ちゃん就在这里」
+	PRINTL 
+	PRINTFORMDW 『初华…？』声音渐小，她不太听得清后半句。
+	PRINTL 
+	CALL BGM_CUTIN(CSTR:曲１)
+	PRINTL 
+	PRINTFORMDW 「等到祥ちゃん想离开时，就告诉我好了」
+	PRINTL 
+	PRINTFORMDW 绛紫的瞳变得深邃，被看着时祥子觉得有些晕眩，不自觉靠近过去。
+	PRINTL 
+	PRINTFORMDW ——到时，我会告诉祥ちゃん要怎样对待我这样的人。
+	PRINTL 
+ELSEIF NO:MASTER == 6
+	PRINTFORMDW 醒过来后，Aver发现回到原本的地方逃不出。
+	PRINTL 
+	PRINTFORMDW 『你是…？』
+	PRINTL 
+	CALL CHARA_CUTIN(CSTR:外号, CSTR:登场名, CSTR:单词)
+	PRINTL 
+	PRINTFORMDW Aver马上警觉起来，但当看见来人的表情时，又放松了一些警剔。
+	PRINTL 
+	PRINTFORMDW 对方进行了自我介绍，她已经听过很多次这个名字了。
+	PRINTL 
+	PRINTFORMDW 随后这个叫祥子的少女又问了她几次，Aver也不打算开口回答。
+	PRINTL 
+	PRINTFORMDW 『抱歉…我只是有些不安。不知道应该怎样才可以离开这里，我不会再打扰你』
+	PRINTL 
+	PRINTFORMDW Aver听到深色制服少女的话，有些于心不忍，终究还是开口了。
+	PRINTL 
+	PRINTFORMDW 「急着…离开吗？」
+	PRINTL 
+	PRINTFORMDW 『嗯，有朋友在等我去练习呢，我们很快就会开第二场Live』
+	PRINTL 
+	PRINTFORMDW 祥子如是说道，脸上洋溢着幸福的神情，莫名奇妙刺疼了她。
+	PRINTFORMDW 目无表情的脸上浮现了複杂的神情，又皱了眉，彷彿知道之后会发生在少女跟她的乐队之外的事。
+	PRINTL 
+	PRINTFORMDW 然而那人曾经告诉她，如果没有发生那悲剧，自己就不復存在。
+	PRINTL 
+	PRINTFORMDW 「是哪里觉得痛吗？这个本来也试过帮妳打开，但不行」祥子指着她的手脚上的锁链如是说。
+	PRINTL 
+	PRINTFORMDW （还剩下一些魔力，挣脱这个并不是问题，但是用掉的话…）Aver想着，又看了下被巨大的魔力封起来的门。
+	PRINTL 
+	PRINTFORMDW 想必要超过那魔力的量，门才能打开呢。
+	PRINTL 
+	PRINTFORMDW 事到如今，只有一个方法了。
+	PRINTL 
+	PRINTFORMDW 「我知道为什麽可以解开，过来一下」
+	PRINTL 
+	PRINTFORMDW 『啊好的』
+	PRINTL 
+	PRINTFORMDW 依着对方的示意，身穿整齐深色校服的祥子凑过去，却突然被对方强吻。
+	PRINTL 
+	PRINTFORMDW 在她反应过来要挣扎时，少女的瞳变得有些唤散，彷彿被暂时催眠一样。
+	PRINTL 
+	CALL BGM_CUTIN(CSTR:曲１)
+	PRINTL 
+	PRINTFORMDW Aver把仅剩的魔力给了祥子，让她暂时依着自己的意思行动，这样的魔力无法超过一天。
+	PRINTL 
+	PRINTFORMDW 但这似乎是让少女尽快进入调教者状态的权宜之计。
+	PRINTL 
+	ELSE
+	PRINTFORMW 睡了多久了呢。
+	PRINTL 
+	CALL CHARA_CUTIN(CSTR:外号, CSTR:登场名, CSTR:单词)
+	PRINTL 
+	PRINTFORMW 迎接%CALLNAME:MASTER%刚醒来的是%CALLNAME%的面容。
+	PRINTL 
+	PRINTFORMW ――要开始调教了，%CNAME()%。
+	PRINTL 
+	PRINTFORMW %CALLNAME%静静地宣告了这件事，然后继续说明起来。
+	PRINTFORMW %CALLNAME%对%CALLNAME:MASTER%强大的独占欲使其把对方囚禁在家的地下室内进行调教
+	PRINTFORMW 过程中%CALLNAME%发现%CALLNAME:MASTER%对于性的觉醒以及高潮绝顶时释放出来的能量
+	PRINTFORMW 能够成为某种魔力，就像阁楼之月赋给人偶那般神奇的力量――
+	PRINTFORMW %CALLNAME%这种魔力能够做到很多事…不管是似乎有十分重要的用途，还是用来完成Ave Mujica的剧本、词曲
+	PRINTFORMW 甚至能用来遗忘某些记忆和悲伤，或是唤回某些意外忘却了的记忆的…
+	PRINTL 
+	PRINTFORMW 在数次尝试后，%CALLNAME:MASTER%意识到再没有逃脱的可能了。
+	PRINTFORMW 从现在起%CALLNAME:MASTER%就是%CALLNAME%的所有物。
+	CALL BGM_CUTIN(CSTR:曲１)
+	PRINTL 
+	PRINTFORMW %CALLNAME:MASTER%，只能把自己的人生奉献给%CALLNAME%，全部――
+	PRINTL 
+	RETURN 1
+ENDIF
+RETURN 1
