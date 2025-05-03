@@ -1,6 +1,6 @@
 <p align="center">  
-  <b>eraMujica Яeverse</b><br>  
-  Ave Mujica - 初祥初逆調教文字遊戲  
+  <b>## eraMujica Яeverse</b><br>  
+  ## Ave Mujica - 初祥初逆調教文字遊戲  
 </p>  
 
 <p align="center">  
