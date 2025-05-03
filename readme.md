@@ -105,7 +105,7 @@
 - 地文（調教反饋信息）為批量機翻，部分語句可能不通順，請見諒。  
 - 有想加的角色或其他問題，請聯絡：  
     - X → [@pudding_well](https://x.com/pudding_well)  
-    - 微博 → [@布丁井嗑](https://weibo.com/pudding120) [@井鬼](https://weibo.com/rh120)  
+    - 微博 → [@布丁井嗑](https://weibo.com/pudding120) 、[@井鬼](https://weibo.com/rh120)  
     - lofter → [https://neoatmosphere.lofter.com/](https://neoatmosphere.lofter.com/)
 - 感謝所有中日語社區對era開發的成果，僅做小更動。  
 - 特別感謝 MY（微博 → [@弦玄](https://weibo.com/u/1871485515)）協助 debug 與測試。  
@@ -138,7 +138,7 @@
  調教LOG是可以左上角清單保存的，有不明白的可以來問我，就這樣。
 
 
-RH (@pudding_well／布丁井)
+RH
 2025.4.7
 
 ---  
