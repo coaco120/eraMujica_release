@@ -1,11 +1,9 @@
-<p align="center">  
-  <b>## eraMujica Яeverse</b><br>  
-  ## Ave Mujica - 初祥初逆調教文字遊戲  
-</p>  
+<h1 align="center"><b>eraMujica Яeverse</b></h1>  
+<h2 align="center"><b>Ave Mujica - 初祥初逆調教文字遊戲</b></h2>  
 
 <p align="center">  
-  這是基於erakanon以及eratohoЯeverse 1.2.14 基礎上開發改造的逆調教SLG遊戲  
-</p>  
+  這是基於erakanon以及eratohoЯeverse 1.2.14基礎上開發改造的逆調教SLG遊戲  
+</p> 
 
 ---  
 
@@ -17,7 +15,7 @@
 
 ---
 
-# eraMujica 更新日誌  
+## eraMujica 更新日誌  
 
 ## 【5/3 2.0 更新】  
 
