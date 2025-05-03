@@ -147,5 +147,5 @@ RH
 
 ## Debug人員感言  
 
-> 以下是被壓榨的Debug人員弥玄的吶喊，以搞笑初祥黃文形式寫出，超有才！  
+> 以下是被壓榨的Debug人員弥玄的吶喊，以搞笑初祥黃文形式寫成，超有才！  
 > 原文最佳閱讀體驗：[https://mynoise.lofter.com/post/1edd2da0_2be6505cb](https://mynoise.lofter.com/post/1edd2da0_2be6505cb)  
