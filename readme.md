@@ -1,3 +1,5 @@
+[中文](README.md) | [日本語](README_ja.md)
+
 <h1 align="center"><b>eraMujica Яeverse</b></h1>  
 <h2 align="center"><b>Ave Mujica - 初祥初逆調教文字遊戲</b></h2>  
 
