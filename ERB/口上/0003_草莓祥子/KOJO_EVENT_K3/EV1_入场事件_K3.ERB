@@ -1,0 +1,104 @@
+﻿;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+;
+;	草莓祥子口上文件
+;
+;	入场事件
+;
+;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+
+;========================================================================
+;EV1, 入场事件口上
+;========================================================================
+;・口上的调教者(TARGET)会根据调教对象实行不同开场白
+;・普通模式以外的场合、调教对象但NO:MASTER == 0(所谓的%CALLNAME:MASTER%)不是可能性あり
+;-------------------------------------------------
+;相关变数…
+;FLAG:模式(0=通常/1=サンドボックス/9=临时)
+;-------------------------------------------------
+@KOJO_EVENT_K3_1(ARG)
+IF NO:MASTER == 1
+	PRINTFORMDW ——这个是意外…我很抱歉
+	PRINTL
+	PRINTFORMDW CALL CHARA_CUTIN(CSTR:外号, CSTR:登场名, CSTR:单词)
+	PRINTL
+	PRINTFORMDW 祥子不明白为什麽眼前跟自己长得一模一样的人跟自己道歉。
+	PRINTL
+	PRINTFORMDW 也不明白为什麽对方被束缚着，这奇怪的场合究竟是什麽…
+	PRINTL
+	PRINTFORMDW 她好像有什麽遗忘了，她明明记得要找一个人。
+	PRINTL
+	PRINTFORMDW 对了，她需要离开这里，需要魔力…
+	PRINTL
+ELSEIF NO:MASTER == 2
+	CALL CHARA_CUTIN(CSTR:外号, CSTR:登场名, CSTR:单词)
+	PRINTL
+	PRINTFORMDW 祥子什麽都不明白，也不知为什麽会变成这样…
+	PRINTL
+	PRINTFORMDW 看着眼前的跟自己的脸一模一样的少女，似乎已经被糟蹋过的样子，是谁做的呢。
+	PRINTL
+	PRINTFORMDW 她看着深色制服少女空洞的眼神，自己彷彿也开始沉迷入去…
+	PRINTL
+ELSEIF NO:MASTER == 4
+	CALL CHARA_CUTIN(CSTR:外号, CSTR:登场名, CSTR:单词)
+	PRINTL
+	PRINTFORMDW 祥子觉得眼前这个人非常熟悉又非常奇怪。
+	PRINTL
+	PRINTFORMDW 她也是一直跟自己说对不起，然而很快，对方看着自己双眼——
+	PRINTL
+	PRINTFORMDW 那双深邃的紫无比空洞，彷彿自己也要坠落到深处一样。
+	PRINTL
+	PRINTFORMDW 逐渐的，欲望升腾起来。
+	PRINTL
+	PRINTFORMDW 她情不自禁亲吻这个被束缚的人，魔力开始流动…
+	PRINTL
+ELSEIF NO:MASTER == 5
+	CALL CHARA_CUTIN(CSTR:外号, CSTR:登场名, CSTR:单词)
+	PRINTL
+	PRINTFORMDW 祥子觉得眼前这个人非常熟悉又非常奇怪。
+	PRINTL
+	PRINTFORMDW 她也是一直跟自己说对不起，然而很快，对方看着自己双眼——
+	PRINTL
+	PRINTFORMDW 那双深邃的紫无比空洞，彷彿自己也要坠落到深处一样。
+	PRINTL
+	PRINTFORMDW 逐渐的，欲望升腾起来。
+	PRINTL
+	PRINTFORMDW 她情不自禁亲吻这个被束缚的人，魔力开始流动…
+	PRINTL
+ELSEIF NO:MASTER == 6
+	CALL CHARA_CUTIN(CSTR:外号, CSTR:登场名, CSTR:单词)
+	PRINTL
+	PRINTFORMDW 祥子已经得到非常多的魔力，终于挣扎了束缚要离开这里找那个人。
+	PRINTL
+	PRINTFORMDW 那个高大的，她所思念的人正奄奄一息倒在八芒星的魔法阵内。
+	PRINTL
+	PRINTFORMDW 祥子把所有都魔力都给予这个人，希望能够跟她一起离开这里。
+	PRINTL
+	PRINTFORMDW 『Aver大人…Aver…』
+	PRINTL
+	PRINTFORMDW 魔力在两人之间流淌着，她抚摸着对方苍白的脸，内心生起了不该有的欲望，却再也控制不下了——
+	PRINTL
+ELSE
+	PRINTFORMW 睡了多久了呢。
+	PRINTL 
+	CALL CHARA_CUTIN(CSTR:外号, CSTR:登场名, CSTR:单词)
+	PRINTL 
+	PRINTFORMW 迎接%CALLNAME:MASTER%刚醒来的是%CALLNAME%的面容。
+	PRINTL 
+	PRINTFORMW ――要开始调教了，%CNAME()%。
+	PRINTL 
+	PRINTFORMW %CALLNAME%静静地宣告了这件事，然后继续说明起来。
+	PRINTFORMW %CALLNAME%对%CALLNAME:MASTER%强大的独占欲使其把对方囚禁在家的地下室内进行调教
+	PRINTFORMW 过程中%CALLNAME%发现%CALLNAME:MASTER%对于性的觉醒以及高潮绝顶时释放出来的能量
+	PRINTFORMW 能够成为某种魔力，就像阁楼之月赋给人偶那般神奇的力量――
+	PRINTFORMW %CALLNAME%这种魔力能够做到很多事…不管是似乎有十分重要的用途，还是用来完成Ave Mujica的剧本、词曲
+	PRINTFORMW 甚至能用来遗忘某些记忆和悲伤，或是唤回某些意外忘却了的记忆的…
+	PRINTL 
+	PRINTFORMW 在数次尝试后，%CALLNAME:MASTER%意识到再没有逃脱的可能了。
+	PRINTFORMW 从现在起%CALLNAME:MASTER%就是%CALLNAME%的所有物。
+	CALL BGM_CUTIN(CSTR:曲１)
+	PRINTL 
+	PRINTFORMW %CALLNAME:MASTER%，只能把自己的人生奉献给%CALLNAME%，全部――
+	PRINTL 
+	RETURN 1
+ENDIF
+RETURN 1

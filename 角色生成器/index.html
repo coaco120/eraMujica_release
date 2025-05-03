@@ -1,0 +1,83 @@
+<!DOCTYPE html>  
+<html lang="zh-CN">  
+<head>  
+    <meta charset="UTF-8">  
+    <title>eraMujica角色CSV生成器</title>  
+    <link rel="stylesheet" href="style.css" />  
+</head>  
+<body>  
+    <div class="container">  
+        <h1>eraMujica角色生成器</h1>  
+
+        <div>  
+            <label>角色番号(NO)</label>  
+            <input type="number" id="charNo" min="7" value="7">  
+        </div>  
+        <div>  
+            <label>名前(NAME)</label>  
+            <input type="text" id="charName" placeholder="角色名">  
+        </div>  
+        <div>  
+            <label>呼び名(CALLNAME)</label>  
+            <input type="text" id="callName" placeholder="呼び名">  
+        </div>  
+
+        <div>  
+            <h2>基礎</h2>  
+            <label>体力</label>  
+            <input type="number" id="tairyoku" value="2500"><br>  
+            <label>气力</label>  
+            <input type="number" id="kiryoku" value="2000">  
+        </div>  
+
+        <div>  
+            <h2>素質</h2>  
+            <div id="talentArea"></div>  
+        </div>  
+
+        <div>  
+            <h2>能力</h2>  
+            <div id="abilityArea"></div>  
+        </div>  
+
+        <div>  
+            <h2>经验（非必须）</h2>  
+            <label>自慰经验</label>  
+            <input type="number" id="exp1" value="0"><br>  
+            <label>道具使用经验</label>  
+            <input type="number" id="exp2" value="0">  
+        </div>  
+
+        <div>  
+            <h2>相性(可添加多行，非必须，推荐范围：0-500)</h2>  
+            <div id="relationArea"></div>  
+            <button id="addRelation">添加相性</button>  
+        </div>  
+
+        <div>  
+            <h2>装着物</h2>  
+            <div id="equipArea"></div>  
+        </div>  
+
+        <div>  
+            <h2>角色情报（曲需要选至少１首）</h2>  
+            <label>外号</label>  
+            <input type="text" id="nickname" placeholder="输入角色称号/外号"><br>  
+            <label>登场名</label>  
+            <input type="text" id="displayName" placeholder="输入角色中/日文全名"><br>  
+            <label>单词</label>  
+            <input type="text" id="englishName" placeholder="输入角色英文全名"><br>  
+            <div id="songArea"></div>  
+        </div>  
+
+        <div>  
+            <h2>称呼列表。e.g. 三角初華.csv此處寫"豐川祥子_祥ちゃん"即為初華會稱呼角色名為[豐川祥子]的角色為"祥ちゃん"，「/」分隔下一個角色]</h2>  
+            <input type="text" id="callList" placeholder="格式：角色名_称呼/角色名2_称呼2...">  
+        </div>  
+
+        <button id="generateBtn">生成并下载CSV</button>  
+        <a id="downloadLink" style="display:none;">下载CSV文件</a>  
+    </div>  
+    <script src="script.js"></script>  
+</body>  
+</html>

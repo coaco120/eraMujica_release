@@ -99,16 +99,24 @@ SELECTCASE EQUIP:ARG:配饰
 	;手套
 	CASE 1
 		RETURNF "黑色鸭舌帽"
-	;袖
 	CASE 2
 		RETURNF "墨镜"
-	;羽衣
 	CASE 3
 		RETURNF "发带"
 	CASE 4
 		RETURNF "华丽的黑金披肩"
 	CASE 5
 		RETURNF "红色发带"
+	CASE 6
+		RETURNF "领带"
+	CASE 7
+		RETURNF "面具"
+	CASE 8
+		RETURNF "细腰带"
+	CASE 9
+		RETURNF "红色贝雷帽"
+	CASE 10
+		RETURNF "黑色金边领带"
 ENDSELECT
 
 ;-------------------------------------------------
@@ -135,6 +143,10 @@ SELECTCASE EQUIP:ARG:袜子
 	;分趾袜
 	CASE 4
 		RETURNF "分趾袜"
+	CASE 5
+		RETURNF "吊帶丝袜"
+	CASE 6
+		RETURNF "黑色长丝袜"
 ENDSELECT
 
 ;-------------------------------------------------
@@ -151,19 +163,21 @@ ENDSELECT
 SELECTCASE EQUIP:ARG:下半身内衣
 	;衬裤
 	CASE 1
-		RETURNF \@ ARG:1 ? ドロワ # 衬裤 \@
+		RETURNF "衬裤"
 	;内裤
 	CASE 2
-		RETURNF \@ ARG:1 ? パンツ # 内裤 \@
+		RETURNF "白色内裤"
 	;短裤
 	CASE 3
-		RETURNF "短裤"
+		RETURNF "黑色内裤"
 	;连裤袜
 	CASE 4
-		RETURNF \@ ARG:1 ? パンスト # 连裤袜 \@
+		RETURNF "连裤袜"
 	;缠腰布
 	CASE 5
 		RETURNF "缠腰布"
+	CASE 6
+		RETURNF "短裤"
 ENDSELECT
 
 ;-------------------------------------------------
@@ -180,10 +194,10 @@ ENDSELECT
 SELECTCASE EQUIP:ARG:上半身内衣
 	;胸罩
 	CASE 1
-		RETURNF \@ ARG:1 ? ブラ # 胸罩 \@
+		RETURNF "胸罩"
 	;吊带背心
 	CASE 2
-		RETURNF \@ ARG:1 ? キャミ # 吊带背心 \@
+		RETURNF "吊带背心"
 	;裹胸布
 	CASE 3
 		RETURNF "裹胸"
@@ -219,6 +233,16 @@ SELECTCASE EQUIP:ARG:下半身外套
 		RETURNF "裤子"
 	CASE 5
 		RETURNF "深色的月之森百摺裙"
+	CASE 6
+		RETURNF "羽丘的绿色格仔裙"
+	CASE 7
+		RETURNF "高腰长裙"
+	CASE 8
+		RETURNF "红黑拼接金边裙裤"
+	CASE 9
+		RETURNF "白色阔腿裤"
+	CASE 10
+		RETURNF "灰色半身裙"
 	;无し
 	CASE 0
 		RETURNF \@ ARG:2 ? %DRESS(ARG:0, ARG:1)% # \@
@@ -245,7 +269,17 @@ SELECTCASE EQUIP:ARG:上半身外套
 	CASE 3
 		RETURNF "马甲及衬衣"
 	CASE 4
-		RETURNF "月之森制服外套"
+		RETURNF "月之森制服外套"	
+	CASE 5
+		RETURNF "羽丘灰色制服外套"
+	CASE 6
+		RETURNF "荷叶边短袖上衣"
+	CASE 7
+		RETURNF "红黑复古短斗篷"
+	CASE 8
+		RETURNF "米黄马甲拼接黑色T恤"
+	CASE 9
+		RETURNF "白色系带蝴蝶结长袖衬衫"
 	;无し
 	CASE 0
 		RETURNF \@ ARG:2 ? %DRESS(ARG:0, ARG:1)% # \@
@@ -265,13 +299,31 @@ ENDSELECT
 SELECTCASE EQUIP:ARG:全身外套
 	;和服
 	CASE 1
-		RETURNF "和服"
-	;教师服
+		RETURNF "Oblivionis全身服"
 	CASE 2
-		RETURNF "教师服"
-	;连衣裙
+		RETURNF "Doloris全身服"
 	CASE 3
-		RETURNF  \@ ARG:1 ? ワンピ # 可爱的红白色连衣裙 \@
+		RETURNF "可爱的红白色连衣裙"
+	CASE 4
+		RETURNF "花咲川学生校服"
+	CASE 5
+		RETURNF "Mortis全身服"
+	CASE 6
+		RETURNF "Timoris全身服"
+	CASE 7
+		RETURNF "Amoris全身服"
+	CASE 8
+		RETURNF "sumimi活动制服"
+	CASE 9
+		RETURNF "格纹长袖连衣裙"
+	CASE 10
+		RETURNF "和服"
+	CASE 11
+		RETURNF "全套西装"
+	CASE 12
+		RETURNF "私服" 
+	CASE 13
+		RETURNF "过宽的白色衬衣"
 ENDSELECT
 
 ;-------------------------------------------------

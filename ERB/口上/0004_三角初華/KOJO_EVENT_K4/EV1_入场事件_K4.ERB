@@ -1,0 +1,239 @@
+﻿;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+;
+;	三角初華口上文件
+;
+;	入场事件
+;
+;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+
+;========================================================================
+;EV1, 入场事件口上
+;========================================================================
+;・口上的调教者(TARGET)会根据调教对象实行不同开场白
+;・普通模式以外的场合、调教对象但NO:MASTER == 0(所谓的%CALLNAME:MASTER%)不是可能性あり
+;-------------------------------------------------
+;相关变数…
+;FLAG:模式(0=通常/1=サンドボックス/9=临时)
+;-------------------------------------------------
+@KOJO_EVENT_K4_1(ARG)
+IF NO:MASTER == 1
+	PRINTFORMDW ……
+	PRINTL
+	PRINTFORMDW …
+	PRINTL
+	PRINTFORMDW 过了不知多久，祥子从昏睡中醒过来。
+	PRINTL
+	PRINTFORMDW 动了下便听到锁链声传到耳内。
+	PRINTL
+	PRINTFORMDW 心慌起来，祥子认得这里是初华家的地下室。
+	PRINTL
+	PRINTFORMDW 『祥ちゃん，醒来了？』
+	PRINTL
+	CALL CHARA_CUTIN(CSTR:外号, CSTR:登场名, CSTR:单词)
+	PRINTL
+	PRINTFORMDW 「初华？为什麽…」
+	PRINTL
+	PRINTFORMDW 『祥ちゃん真是不知为什麽吗？』
+	PRINTL
+	PRINTFORMDW 可能因为昏之前头受伤了，记忆不由得有些混乱，闪过一些奇怪的画面。
+	PRINTL
+	PRINTFORMDW 好像，自己被那样这样对待…不，不止自己…还有初华也、被自己……？
+	PRINTL
+	PRINTFORMDW 这是什麽一回事，这不是自己的记忆？
+	PRINTL
+	PRINTFORMDW 她瑟缩一下身子，结果初华靠得越来越近。
+	PRINTL
+	PRINTFORMDW 随着那张脸靠近，自己的身体似乎有些奇怪，下面…那隐秘的地方，那蜜裂有些骚痒的…
+	PRINTL
+	PRINTFORMDW 「你、你对我做过什麽…？！」
+	PRINTL
+	PRINTFORMDW 初华没有回答，她捕捉到对方一闪而过的皱眉。
+	PRINTL
+	PRINTFORMDW 『不用担心，我会帮祥ちゃん的』
+	PRINTL
+	CALL BGM_CUTIN(CSTR:曲２)
+	PRINTL
+	PRINTFORMDW 『毕竟是祥ちゃん想让我帮你忘记一起的…对吧？』
+	PRINTL
+	PRINTFORMDW 带着吉他茧的指尖怜惜地抚模她垂落脸颊旁的蓝发。
+	PRINTL
+	PRINTFORMDW 『这次，就算被祥ちゃん讨厌了，我也会继续做下去——』
+	PRINTL
+	PRINTL
+ELSEIF NO:MASTER == 2
+	PRINTFORMDW 从昏睡中醒来时，祥子觉得身体有些轻，好像长时间劳累的身边得到了休息似的。
+	PRINTL
+	PRINTFORMDW 直到陌生的天花板和锁链的声音把刚才的感觉都赶跑了。
+	PRINTL
+	PRINTFORMDW 「这是…？初华？！」
+	PRINTL
+	CALL CHARA_CUTIN(CSTR:外号, CSTR:登场名, CSTR:单词)
+	PRINTL
+	PRINTFORMDW 祥子看见自上一次CRYCHIC首次LIVE后再没见面的初华感到意外。
+	PRINTL
+	PRINTFORMDW 然后跟那时会温柔地给自己的乐队打气的人气偶像气场完全不一样，反而多了一些危险的感觉。
+	PRINTL
+	PRINTFORMDW 『我一直在想…如果祥ちゃん没有组过CRYCHIC就好了』
+	PRINTL
+	PRINTFORMDW 「初华妳在说什麽…为什麽我会被绑着？」
+	PRINTL
+	PRINTFORMDW 『但是我又会想，没有CRYCHIC的话，CRYCHIC又没有解散的话，想必我就无法作为她们的替代品走入祥ちゃん的人生吧』
+	PRINTL
+	PRINTFORMDW 「CRYCHIC、并没有解散！是初华你把我带到这里吗？为什麽妳要这样做…？」
+	PRINTL
+	PRINTFORMDW 初华摇摇头，瞥了一眼不远处被魔力封着的门。
+	PRINTL
+	PRINTFORMDW 『我们两个现在都出不去』
+	PRINTL
+	PRINTFORMDW 祥子对对方的话倍感怀疑，却又不想再说话刺激对方。
+	PRINTL
+	CALL BGM_CUTIN(CSTR:曲２)
+	PRINTL
+	PRINTFORMDW 『祥ちゃん想离开这里的话现在只能听我了，因为我不想被别的人佔有现在的你——』
+	PRINTL
+	PRINTFORMDW ——讨厌我也可以的，已经没关係了。
+	PRINTL
+	PRINTL
+ELSEIF NO:MASTER == 3
+	PRINTFORMDW …已经不知过了多久，少女终于醒来。
+	PRINTL
+	PRINTFORMDW 「这里是…」
+	PRINTL
+	PRINTFORMDW 女孩很快发现自己被锁链囚禁起来，但并不像一些肮髒的监牢之类的地方。
+	PRINTL
+	PRINTFORMDW 反而有舒适的床还有…但这样感觉更奇怪了。
+	PRINTL
+	PRINTFORMDW 『你醒来了？那个…祥ちゃん？』
+	PRINTL
+	CALL CHARA_CUTIN(CSTR:外号, CSTR:登场名, CSTR:单词)
+	PRINTL
+	PRINTFORMDW 「你知道我的名字…？」
+	PRINTL
+	PRINTFORMDW 天真的少女抬头看向来人，却有种说不上来的熟识感。
+	PRINTL
+	PRINTFORMDW 「那个…我们是不是认识的？」
+	PRINTL
+	PRINTFORMDW 只见对方笑了笑摇摇头。
+	PRINTL
+	PRINTFORMDW 『可以说认识也可以说不认识，但是怎样都好我们现在必须离开这里』
+	PRINTL
+	PRINTFORMDW 「应该怎样做呢？能不能先帮我解开锁链？」
+	PRINTL
+	PRINTFORMDW 『抱歉…这我也做不到』
+	PRINTL
+	PRINTFORMDW 「那麽…」
+	PRINTL
+	PRINTFORMDW 她的话被不知道名字的这个人用一个僭越的吻给塞着了，她想要挣扎而不小心咬破了对方的唇。
+	PRINTL
+	PRINTFORMDW 对方虽然吃疼退开了一下，却没有生气。
+	PRINTL
+	PRINTFORMDW 『虽然会有些粗暴，但这都是为了我们好，毕竟我也想快些离开这里…』
+	PRINTL
+	CALL BGM_CUTIN(CSTR:曲３)
+	PRINTL
+	PRINTFORMDW 『放心，我不会太粗暴的，毕竟是祥ちゃん嘛』
+	PRINTL
+ELSEIF NO:MASTER == 5
+	PRINTFORMDW 不知第几次昏过去，醒来时又是那张可恨的脸——
+	PRINTL
+	PRINTFORMDW 跟自己一样的那张脸。
+	PRINTL
+	PRINTFORMDW 『醒来了？那就要继续了』
+	PRINTL
+	PRINTFORMDW 对方说着，又开始命令她把衣服脱掉。
+	PRINTL
+	CALL CHARA_CUTIN(CSTR:外号, CSTR:登场名, CSTR:单词)
+	PRINTL
+	PRINTFORMDW 初华计算着残留的魔力能不能挣脱束缚时却被对方先一步看破。
+	PRINTL
+	PRINTFORMDW 『没用的，你知道的吧』
+	PRINTL
+	PRINTFORMDW 「……」
+	PRINTL
+	PRINTFORMDW 『我跟你一样，我就是你…虽然这种状况不是我们想要的』
+	PRINTL
+	PRINTFORMDW 『但毕竟是那是「神明」的旨意，对吧？我们最爱的那个她』
+	PRINTL
+	CALL BGM_CUTIN(CSTR:曲５)
+	PRINTL
+	PRINTFORMDW 「如果…我们只能有一个活下来」
+	PRINTL
+	PRINTFORMDW 三角初音摇了摇头。
+	PRINTL
+	PRINTFORMDW 『或者最后…我们都不存在。只要这是她所期望的结局…对吧？』
+	PRINTL
+	PRINTFORMDW 只要是她们的神所期望的结果的话，她们随时都可以献出一切。
+	PRINTL
+	PRINTFORMDW 跟很多更多她们已经献出过的东西相比，现在这种小状况也不值一提吧？
+	PRINTL
+	PRINTFORMDW 「那麽动手吧…已经没所谓了』
+	PRINTL
+	PRINTFORMDW 「比我还自暴自弃呢」
+	PRINTL
+ELSEIF NO:MASTER == 6
+	PRINTFORMDW 身体的疼痛让Aver从昏迷中醒来。
+	PRINTL
+	PRINTFORMDW 这次仍然是被束缚着，动弹不得，越是挣扎痛楚越是强烈。
+	PRINTL
+	PRINTFORMDW 「啧…」
+	PRINTL
+	PRINTFORMDW 突然一下次束缚被松开来，四肢却由不得自己。
+	PRINTL
+	PRINTFORMDW 她看见眼前的罪魁祸首，有着跟自己同一张脸的——
+	PRINTL
+	CALL CHARA_CUTIN(CSTR:外号, CSTR:登场名, CSTR:单词)
+	PRINTL
+	PRINTFORMDW 『你真是不应该在这里啊…』
+	PRINTL
+	PRINTFORMDW 那责备的语气听在耳里，让Aver尤其痛苦，彷彿自己像一个辜负了父母期望的坏孩子。
+	PRINTL
+	PRINTFORMDW 板着脸的表情看着也有些扭曲。
+	PRINTL
+	PRINTFORMDW 「…创造我的人，是妳们」
+	PRINTL
+	PRINTFORMDW 『但你蛊惑了她…蛊惑了祥ちゃん』
+	PRINTL
+	PRINTFORMDW 「我没有…我不过是」
+	PRINTL
+	PRINTFORMDW 她想要反驳，但是回想起那个人当时的表情，向来嘴笨突然哑口无言。
+	PRINTL
+	PRINTFORMDW 「我不过是想要见她…」
+	PRINTL
+	PRINTFORMDW 『…』
+	PRINTL
+	PRINTFORMDW 对面的人听到这句话愣了一下，彷彿若有所思。
+	PRINTL
+	PRINTFORMDW 很快，对方似乎不想再谈到这个话题了。
+	PRINTL
+	PRINTFORMDW 『罢了』
+	PRINTL
+	CALL BGM_CUTIN(CSTR:曲４)
+	PRINTL
+	PRINTFORMDW ——把你的魔力给我吧。
+	PRINTL
+	PRINTL
+ELSE
+	PRINTFORMW 睡了多久了呢。
+	PRINTL 
+	CALL CHARA_CUTIN(CSTR:外号, CSTR:登场名, CSTR:单词)
+	PRINTL 
+	PRINTFORMW 迎接%CALLNAME:MASTER%刚醒来的是%CALLNAME%的面容。
+	PRINTL 
+	PRINTFORMW ――要开始调教了，%CNAME()%。
+	PRINTL 
+	PRINTFORMW %CALLNAME%静静地宣告了这件事，然后继续说明起来。
+	PRINTFORMW %CALLNAME%对%CALLNAME:MASTER%强大的独占欲使其把对方囚禁在家的地下室内进行调教
+	PRINTFORMW 过程中%CALLNAME%发现%CALLNAME:MASTER%对于性的觉醒以及高潮绝顶时释放出来的能量
+	PRINTFORMW 能够成为某种魔力，就像阁楼之月赋给人偶那般神奇的力量――
+	PRINTFORMW %CALLNAME%这种魔力能够做到很多事…不管是似乎有十分重要的用途，还是用来完成Ave Mujica的剧本、词曲
+	PRINTFORMW 甚至能用来遗忘某些记忆和悲伤，或是唤回某些意外忘却了的记忆的…
+	PRINTL 
+	PRINTFORMW 在数次尝试后，%CALLNAME:MASTER%意识到再没有逃脱的可能了。
+	PRINTFORMW 从现在起%CALLNAME:MASTER%就是%CALLNAME%的所有物。
+	CALL BGM_CUTIN(CSTR:曲１)
+	PRINTL 
+	PRINTFORMW %CALLNAME:MASTER%，只能把自己的人生奉献给%CALLNAME%，全部――
+	PRINTL 
+	RETURN 1
+ENDIF
+RETURN 1

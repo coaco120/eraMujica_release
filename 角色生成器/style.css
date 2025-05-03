@@ -1,0 +1,154 @@
+body {  
+    font-family: 'Microsoft YaHei', Arial, sans-serif;  
+    background: #f7f8fa;  
+    color: #222;  
+    margin: 0;  
+}  
+
+.container {  
+    max-width: 720px;  
+    margin: 30px auto;  
+    padding: 30px 30px 40px 30px;  
+    border-radius: 12px;  
+    background: #fff;  
+    box-shadow: 0 4px 32px rgba(0,0,0,0.09);  
+}  
+
+h1 {  
+    text-align: center;  
+    margin-top: 0;  
+    letter-spacing: 4px;  
+    font-size: 2.1em;  
+    color: #3086f5;  
+}  
+
+h2 {  
+    border-left: 4px solid #89b8fa;  
+    padding-left: 12px;  
+    color: #2366c5;  
+    margin-bottom: 12px;  
+    font-size: 1.15em;  
+}  
+
+label {  
+    display: inline-block;  
+    min-width: 100px;  
+    margin-right: 6px;  
+    font-weight: 500;  
+    color: #35536b;  
+    vertical-align: top;  
+}  
+
+input[type="text"], input[type="number"], select {  
+    padding: 6px 10px;  
+    border-radius: 6px;  
+    border: 1px solid #d1dbe5;  
+    background: #f1f4f8;  
+    margin-bottom: 12px;  
+    font-size: 1em;  
+    width: 220px;  
+    box-sizing: border-box;  
+}  
+
+input[type="number"]::-webkit-inner-spin-button {  
+    opacity: 0.4;  
+}  
+input[type="text"]:focus, input[type="number"]:focus, select:focus {  
+    border-color: #3086f5;  
+    outline: none;  
+    background: #fff;  
+}  
+
+.talentBtn, select {  
+    margin-right: 6px;  
+    margin-bottom: 6px;  
+}  
+.talentBtn {  
+    border: 1px solid #d5d7da;  
+    background: #c6ccde;  
+    border-radius: 6px;  
+    padding: 6px 16px;  
+    font-size: 0.98em;  
+    cursor: pointer;  
+    transition: all 0.2s;  
+}  
+.talentBtn.selected {  
+    background: #3086f5;  
+    color: #fff;  
+    border-color: #3086f5;  
+    box-shadow: 0 2px 6px rgba(48,134,245,0.07);  
+}  
+
+button, input[type="button"] {  
+    background: #3086f5;  
+    color: #fff;  
+    font-weight: 500;  
+    border: none;  
+    border-radius: 6px;  
+    padding: 7px 19px;  
+    margin-top: 8px;  
+    cursor: pointer;  
+    font-size: 1em;  
+    transition: background 0.18s;  
+}  
+button:hover, .talentBtn:hover {  
+    background: #276bc8;  
+    color: #fff;  
+}  
+
+section, div {  
+    margin-bottom: 18px;  
+}  
+
+#addRelation {  
+    margin-left: 8px;  
+    background: #89b8fa;  
+    color: #20447f;  
+}  
+#addRelation:hover {  
+    background: #3086f5; color: #fff;  
+}  
+
+#downloadLink {  
+    display: block;  
+    width: fit-content;  
+    margin: 25px auto 0 auto;  
+    padding: 10px 30px;  
+    background: #3086f5;  
+    color: #fff;  
+    font-size: 1.1em;  
+    text-align: center;  
+    text-decoration: none;  
+    border-radius: 8px;  
+    box-shadow: 0 2px 10px rgba(30,106,200,0.08);  
+}  
+
+input[placeholder] { color: #a5a5ab; }  
+
+.relationRow {  
+    margin-bottom: 6px;  
+}  
+.relationRow input {  
+    width: 70px;  
+}  
+
+::-webkit-scrollbar {  
+    width: 7px;  
+    background: #f5f7fc;  
+}  
+::-webkit-scrollbar-thumb {  
+    background: #dde6f7;  
+    border-radius: 7px;  
+}  
+
+@media (max-width: 800px) {  
+    .container {  
+        padding: 15px 4vw 24px 4vw;  
+    }  
+    label, input, select {  
+        display: block;  
+        margin-bottom: 8px;  
+        width: 90%;  
+        font-size: 1.02em;  
+    }  
+}

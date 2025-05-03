@@ -1,0 +1,162 @@
+﻿;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+;
+;	AVER口上文件
+;
+;	入场事件
+;
+;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+
+;========================================================================
+;EV1, 入场事件口上
+;========================================================================
+;・口上的调教者(TARGET)会根据调教对象实行不同开场白
+;・普通模式以外的场合、调教对象但NO:MASTER == 0(所谓的%CALLNAME:MASTER%)不是可能性あり
+;-------------------------------------------------
+;相关变数…
+;FLAG:模式(0=通常/1=サンドボックス/9=临时)
+;-------------------------------------------------
+@KOJO_EVENT_K6_1(ARG)
+IF NO:MASTER == 1
+	PRINTFORMDW …？
+	PRINTL 
+	PRINTFORMDW 当她醒来时就知道自己失算了，很快她对上的是一个不怀好意的眼神。
+	PRINTL 
+	PRINTFORMDW 顶着那张跟那人一模一样的脸，却这麽冷冰。
+	PRINTL 
+	PRINTFORMDW 『妳失败了…告诉我，她在哪里』
+	PRINTL 
+	CALL CHARA_CUTIN(CSTR:外号, CSTR:登场名, CSTR:单词)
+	PRINTL 
+	PRINTFORMDW 祥子从这句话得知眼前的人似乎误解了什麽，但自己非但不打算辩解，甚至笑了。
+	PRINTL 
+	PRINTFORMDW 「我没有告诉你的理由，如今你把我关在这里也没有用处」
+	PRINTL 
+	PRINTFORMDW Aver显然不满意对方的答案，愤怒的情绪开始溢于脸上。
+	PRINTL 
+	CALL BGM_CUTIN(CSTR:曲１)
+	PRINTL 
+	PRINTFORMDW 『那麽，这都是妳自找的…等到榨取乾淨妳的魔力后我就从这里出去找她』
+	PRINTL 
+	PRINTFORMDW 『然后妳想要的，我也不会让妳得到…活在后悔中吧』
+	PRINTL 
+	PRINTFORMDW 「——明明只是造物之一，却想让神明的我屈服麽」
+	PRINTL 
+	PRINTFORMDW 「那就来吧——」
+	PRINTL 
+ELSEIF NO:MASTER == 2
+	PRINTFORMDW 穿着深色制服的少女醒来，像兔子一脸无辜的表情让人不忍。
+	PRINTL 
+	PRINTFORMDW 但是Aver知晓自己也快到极限了。
+	PRINTL 
+	CALL CHARA_CUTIN(CSTR:外号, CSTR:登场名, CSTR:单词)
+	PRINTL 
+	PRINTFORMDW 被锁链拘束着的女孩有些惊慌，尤其畏惧觉得高大的Aver，却还是一直说着自己想要离开这里，因为有队友等着自己练习。
+	PRINTL 
+	PRINTFORMDW 少女的眼中有些令人陌生、耀眼的的光。
+	PRINTL 
+	PRINTFORMDW 她不曾在那个冷酷的女人，在Oblivionis身上见过…反而更像自己思念的那个少女。
+	PRINTL 
+	PRINTFORMDW 那个总是捧着草莓篮子的少女，现在究竟在哪里？
+	PRINTL 
+	PRINTFORMDW 她甚至不知道事情变成这样，是Oblivionis还是Doloris的缘故，或者根本不是谁的错…
+	PRINTL 
+	PRINTFORMDW 「你怎麽了…？好像很失落的样子…」
+	PRINTL 
+	PRINTFORMDW 深色制服少女突然开口，那声音和语调差点让疲累的她产生错觉，眼前的人忽然跟思念的人重叠起来。
+	PRINTL 
+	PRINTFORMDW Aver辜负了眼前这少女的期望，开始对她做出无礼的事——
+	PRINTL 
+	CALL BGM_CUTIN(CSTR:曲１)
+	PRINTL 
+	PRINTFORMDW 很累了——就让她暂且沉沦于此吧。
+	PRINTL 
+ELSEIF NO:MASTER == 3
+	PRINTFORMDW ——Aver大人…
+	PRINTL 
+	PRINTFORMDW 听到自己心念念的声音忍不着转过头来。
+	PRINTL 
+	PRINTFORMDW 是那个久违又令人温暖的笑容，目无表情的脸也变得柔和下来。
+	PRINTL 
+	PRINTFORMDW 当她一开口想要叫对方的名字时，突然梦碎了。
+	PRINTL 
+	CALL CHARA_CUTIN(CSTR:外号, CSTR:登场名, CSTR:单词)
+	PRINTL 
+	PRINTFORMDW 眼前的是被锁链扣着，被催眠了般眼神空洞的人偶。
+	PRINTL 
+	PRINTFORMDW 可爱的粉白色裙子依然整洁，不曾被糟蹋，但为什麽…
+	PRINTL 
+	CALL BGM_CUTIN(CSTR:曲１)
+	PRINTL 
+	PRINTFORMDW 『サキちゃん…』
+	PRINTL 
+	PRINTFORMDW 忽然她听到少女唸唸有词。
+	PRINTL 
+	PRINTFORMDW ——Aver…初华……初音………
+	PRINTL 
+	PRINTFORMDW 这不应该是这样。
+	PRINTL 
+	PRINTFORMDW 为什麽会变成这样…看来只好用魔力把多馀的东西清除掉，サキちゃん才能恢復正常。
+	PRINTL 
+ELSEIF NO:MASTER == 4
+	PRINTFORMDW 重撃的疼痛马上让初华从昏睡中醒来。
+	PRINTL 
+	PRINTFORMDW 她发现自己被锁链扣着，头发被一隻戴着手套的大手扯拉得头皮生痛。
+	PRINTL 
+	CALL CHARA_CUTIN(CSTR:外号, CSTR:登场名, CSTR:单词)
+	PRINTL 
+	PRINTFORMDW 『你…就是罪魁祸首？』
+	PRINTL 
+	PRINTFORMDW 「你是谁…你在说什麽？」
+	PRINTL 
+	PRINTFORMDW 初华看清一下却发现对方有一张跟自己一模一样的脸，身材比却自己高大得多，服装也不像是这世界的人，更像是…Ave Mujica世界观的服装？
+	PRINTL 
+	PRINTFORMDW 对方看到她这个反应倍感不满和失望，很快就松开手。
+	PRINTL 
+	CALL BGM_CUTIN(CSTR:曲１)
+	PRINTL 
+	PRINTFORMDW 『太愚蠢了…既然如此，你只管给我魔力就好了——』
+	PRINTL 
+ELSEIF NO:MASTER == 5
+	PRINTFORMDW 重撃的疼痛马上让初音从昏睡中醒来。
+	PRINTL 
+	PRINTFORMDW 她发现自己被锁链扣着，头发被一隻戴着手套的大手扯拉得头皮生痛。
+	PRINTL 
+	CALL CHARA_CUTIN(CSTR:外号, CSTR:登场名, CSTR:单词)
+	PRINTL 
+	PRINTFORMDW 『你…就是罪魁祸首？』
+	PRINTL 
+	PRINTFORMDW 「你是谁…你在说什麽？」
+	PRINTL 
+	PRINTFORMDW 初音看清一下却发现对方有一张跟自己一模一样的脸，身材比却自己高大得多，服装也不像是这世界的人，更像是…Ave Mujica世界观的服装？
+	PRINTL 
+	PRINTFORMDW 对方看到她这个反应倍感不满和失望，很快就松开手。
+	PRINTL 
+	CALL BGM_CUTIN(CSTR:曲１)
+	PRINTL 
+	PRINTFORMDW 『太愚蠢了…既然如此，你只管给我魔力就好了——』
+	PRINTL 
+ELSE
+	PRINTFORMW 睡了多久了呢。
+	PRINTL 
+	CALL CHARA_CUTIN(CSTR:外号, CSTR:登场名, CSTR:单词)
+	PRINTL 
+	PRINTFORMW 迎接%CALLNAME:MASTER%刚醒来的是%CALLNAME%的面容。
+	PRINTL 
+	PRINTFORMW ――要开始调教了，%CNAME()%。
+	PRINTL 
+	PRINTFORMW %CALLNAME%静静地宣告了这件事，然后继续说明起来。
+	PRINTFORMW %CALLNAME%对%CALLNAME:MASTER%强大的独占欲使其把对方囚禁在家的地下室内进行调教
+	PRINTFORMW 过程中%CALLNAME%发现%CALLNAME:MASTER%对于性的觉醒以及高潮绝顶时释放出来的能量
+	PRINTFORMW 能够成为某种魔力，就像阁楼之月赋给人偶那般神奇的力量――
+	PRINTFORMW %CALLNAME%这种魔力能够做到很多事…不管是似乎有十分重要的用途，还是用来完成Ave Mujica的剧本、词曲
+	PRINTFORMW 甚至能用来遗忘某些记忆和悲伤，或是唤回某些意外忘却了的记忆的…
+	PRINTL 
+	PRINTFORMW 在数次尝试后，%CALLNAME:MASTER%意识到再没有逃脱的可能了。
+	PRINTFORMW 从现在起%CALLNAME:MASTER%就是%CALLNAME%的所有物。
+	CALL BGM_CUTIN(CSTR:曲１)
+	PRINTL 
+	PRINTFORMW %CALLNAME:MASTER%，只能把自己的人生奉献给%CALLNAME%，全部――
+	PRINTL 
+	RETURN 1
+ENDIF
+RETURN 1
