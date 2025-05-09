@@ -3275,13 +3275,12 @@ ACTABLE_REASON:103 =
 RETURN 1
 
 ;-----------------------------------------------------------
-;关闭指定的ACT
+;设置指定ACT的概率值
 ;ARG:1 CFLAG:1000～1199 ACT封印标志
 ;ARG:2 100关闭，0开启，也可以传入中间数值，会改变概率
 ;-----------------------------------------------------------
-@ACT_ABLE_DISABLE(ARG, ARG:1 = 100)
-PRINTFORML HAHAHAHA{ARG}{ARG:1}
-SIF ARG:1 < 0 || ARG:1 >= 200
+@SET_ACT_ABLE_PROBABILITY(ARG, ARG:1 = 100)
+SIF ARG < 0 || ARG >= 200
 	;超出可改动的标志范围
 	RETURN 0
 CFLAG:(ARG+1000) = ARG:1
